@@ -1,0 +1,66 @@
+app:
+  base-uri: http://127.0.0.1:5173
+server:
+  port: 8080
+spring:
+  main:
+    web-application-type: reactive
+  application:
+     name: gateway-service
+  data:
+    redis:
+      port: 6379
+      host: 127.0.0.1
+  security:
+    oauth2:
+      client:
+        registration:
+          gateway-service-oidc:
+            provider: gateway-service
+            client-id: gateway
+            client-secret: gateway-secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
+            scope: openid, profile
+            client-name: gateway-service-oidc
+#          gateway-service-authorization-code:
+#            provider: gateway-service
+#            client-id: gateway
+#            client-secret: gateway-secret
+#            authorization-grant-type: authorization_code
+#            redirect-uri: "http://127.0.0.1:8080/authorized"
+#            scope: openid, profile
+#            client-name: gateway-service-authorization-code
+          gateway-service-client-credentials:
+            provider: gateway-service
+            client-id: gateway
+            client-secret: gateway-secret
+            authorization-grant-type: client_credentials
+            scope: openid, profile
+            client-name: gateway-service-client-credentials
+        provider:
+          gateway-service:
+            issuer-uri: http://127.0.0.1:9000/auth-service
+            user-info-uri: http://127.0.0.1:9000/auth-service/userinfo
+  cloud:
+    gateway:
+      server:
+        webflux:
+          enabled: true
+          httpclient:
+            connect-timeout: 10000
+            response-timeout: 30s
+          routes:
+            - id: test
+              uri: http://127.0.0.1:8081
+              predicates:
+                - Path=/workflow-service/**
+              filters:
+                - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment} # Rewrites the path
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG

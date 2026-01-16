@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.takypok'
+version = '0.0.1-SNAPSHOT'
+description = 'auth-service'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://repo.spring.io/snapshot" }
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:4.3.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // Use the appropriate version
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

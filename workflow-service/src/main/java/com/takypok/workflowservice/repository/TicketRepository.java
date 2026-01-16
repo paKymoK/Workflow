@@ -1,0 +1,8 @@
+package com.takypok.workflowservice.repository;
+
+import com.takypok.workflowservice.model.entity.Ticket;
+import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+
+public interface TicketRepository<T extends TicketDetail>
+    extends R2dbcRepository<Ticket<T>, Long> {}

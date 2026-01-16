@@ -1,0 +1,27 @@
+server:
+  port: 8081
+management:
+  server:
+    port: 9081
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: workflow-service
+  webflux:
+    base-path: /workflow
+  config:
+    import:
+      - 'classpath:config/liquibase.yml'
+      - 'classpath:config/r2dbc.yml'
+      - 'classpath:config/oauth2.yml'
+      - 'classpath:config/eureka-client.yml'
+      - 'classpath:config/springdoc.yml'
+      - 'classpath:management.yml'
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG

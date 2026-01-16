@@ -1,0 +1,8 @@
+rootProject.name = 'base'
+include 'core-v1',
+        'infrastructure',
+        'discovery-service',
+        'workflow-service',
+        'gateway-service',
+        'auth-service',
+        'media-service'

@@ -1,0 +1,25 @@
+server:
+  port: 9000
+  servlet:
+    context-path: /auth-service
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/authentication
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database: postgresql
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
