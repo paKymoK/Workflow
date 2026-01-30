@@ -18,6 +18,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    System.out.println(exchange.getRequest().getURI().getPath());
     return exchange
         .getPrincipal()
         .filter(principal -> principal instanceof OAuth2AuthenticationToken)

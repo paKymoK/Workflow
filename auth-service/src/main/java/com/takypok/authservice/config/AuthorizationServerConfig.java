@@ -6,14 +6,13 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import com.takypok.authservice.repository.UserInfoRepository;
-import com.takypok.authservice.service.OidcUserInfoMapper;
 import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
+import java.util.function.Function;
 import javax.sql.DataSource;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,6 +22,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
@@ -31,25 +31,33 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
-@Configuration
-@RequiredArgsConstructor
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class AuthorizationServerConfig {
-
-  private final UserInfoRepository userInfoRepository;
+  private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
 
   @Bean
-  @Order(1)
+  @Order(Ordered.HIGHEST_PRECEDENCE)
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
+    Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper =
+        (context) -> {
+          OidcUserInfoAuthenticationToken authentication = context.getAuthentication();
+          JwtAuthenticationToken principal = (JwtAuthenticationToken) authentication.getPrincipal();
+          return new OidcUserInfo(principal.getToken().getClaims());
+        };
+
     OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
         OAuth2AuthorizationServerConfigurer.authorizationServer();
 
@@ -59,12 +67,14 @@ public class AuthorizationServerConfig {
         .with(
             authorizationServerConfigurer,
             (authorizationServer) ->
-                authorizationServer.oidc(
-                    oidc ->
-                        oidc.userInfoEndpoint(
-                            oidcUserInfo ->
-                                oidcUserInfo.userInfoMapper(
-                                    new OidcUserInfoMapper(userInfoRepository)))))
+                authorizationServer
+                    .authorizationEndpoint(
+                        authorizationEndpoint ->
+                            authorizationEndpoint.consentPage(CUSTOM_CONSENT_PAGE_URI))
+                    .oidc(
+                        (oidc) ->
+                            oidc.userInfoEndpoint(
+                                (userInfo) -> userInfo.userInfoMapper(userInfoMapper))))
         .authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
         .exceptionHandling(
             (exceptions) ->
@@ -81,17 +91,15 @@ public class AuthorizationServerConfig {
             .clientId("gateway")
             .clientSecret("{noop}gateway-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(
                 TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(1)).build())
             .redirectUri("http://127.0.0.1:8080/login/oauth2/code/gateway-service-oidc")
-            .redirectUri("http://127.0.0.1:8080/authorized")
+            .redirectUri("http://127.0.0.1:8080/index")
             .postLogoutRedirectUri("http://127.0.0.1:8080/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
-            .scope(OidcScopes.EMAIL)
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
             .build();
 

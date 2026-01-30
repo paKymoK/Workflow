@@ -24,13 +24,12 @@ public class LoggingFilter implements GlobalFilter {
     String originalUri = (uris.isEmpty()) ? "Unknown" : uris.iterator().next().toString();
     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
     URI routeUri = exchange.getAttribute(GATEWAY_REQUEST_URL_ATTR);
+
     log.info(
-        "Incoming request "
-            + originalUri
-            + " is routed to id: "
-            + route.getId()
-            + ", uri:"
-            + routeUri);
+        "Incoming request {} is routed to id: {}, uri:{}",
+        originalUri,
+        route != null ? route.getId() : "",
+        routeUri);
     return chain.filter(exchange);
   }
 }

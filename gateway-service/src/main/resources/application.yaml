@@ -21,26 +21,13 @@ spring:
             client-secret: gateway-secret
             authorization-grant-type: authorization_code
             redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
-            scope: openid, profile
+            scope: openid
             client-name: gateway-service-oidc
-#          gateway-service-authorization-code:
-#            provider: gateway-service
-#            client-id: gateway
-#            client-secret: gateway-secret
-#            authorization-grant-type: authorization_code
-#            redirect-uri: "http://127.0.0.1:8080/authorized"
-#            scope: openid, profile
-#            client-name: gateway-service-authorization-code
-          gateway-service-client-credentials:
-            provider: gateway-service
-            client-id: gateway
-            client-secret: gateway-secret
-            authorization-grant-type: client_credentials
-            scope: openid, profile
-            client-name: gateway-service-client-credentials
         provider:
           gateway-service:
             issuer-uri: http://127.0.0.1:9000/auth-service
+            authorization-uri: http://127.0.0.1:9000/auth-service/oauth2/authorize
+            token-uri: http://127.0.0.1:9000/auth-service/oauth2/token
             user-info-uri: http://127.0.0.1:9000/auth-service/userinfo
   cloud:
     gateway:
