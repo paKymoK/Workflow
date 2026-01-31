@@ -1,14 +1,21 @@
 package com.takypok.workflowservice.service;
 
+import com.takypok.core.model.authentication.User;
+import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import reactor.core.publisher.Mono;
 
-public interface TicketService<T extends TicketDetail> {
-  Mono<Ticket<T>> get(Long id);
+public interface TicketService {
+  Mono<Ticket<TicketDetail>> get(Long id);
 
-  Mono<Ticket<T>> create(Ticket<T> ticket);
+  Mono<Ticket<TicketDetail>> create(CreateTicketRequest request, User user);
+
+  Mono<Sla> pause(Long id, User user);
+
+  Mono<Sla> resume(Long id, User user);
 
   Mono<Ticket<TicketDetail>> transition(TransitionRequest transitionRequest);
 }

@@ -10,9 +10,7 @@ public record Message(String code, String message) {
   public enum Application {
     SUCCESS("TAK-SUC", "Success"),
     UNKNOWN_ERROR("TAK-ERR", "Unknown Error, Please contact administrator !!!"),
-    REASON_ERROR("TAK-ERR", "Error: {}"),
-    WORKFLOW_TRANSITION_VALIDATION_FAILED("TAK-001", "{}"),
-    WORKFLOW_VALIDATION_FAILED("TAK-002", "{}"),
+    ERROR("TAK-ERR", "{}"),
     ;
     public final String code;
     public final String message;

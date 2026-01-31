@@ -23,7 +23,7 @@ public class PostFunction {
         | IllegalAccessException
         | InvocationTargetException e) {
       return Mono.error(
-          new ApplicationException(Message.Application.REASON_ERROR, "PostFunction not found !"));
+          new ApplicationException(Message.Application.ERROR, "PostFunction not found !"));
     }
   }
 }

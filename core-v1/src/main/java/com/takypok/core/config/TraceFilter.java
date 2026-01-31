@@ -39,8 +39,6 @@ public class TraceFilter implements WebFilter {
       return chain.filter(exchange);
     }
 
-    System.out.println(request.getURI());
-
     return ReactiveSecurityContextHolder.getContext()
         .map(
             securityContext -> {

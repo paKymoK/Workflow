@@ -2,7 +2,9 @@ package com.takypok.workflowservice.controller;
 
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.entity.Workflow;
+import com.takypok.workflowservice.model.request.CreateWorkflowRequest;
 import com.takypok.workflowservice.service.WorkflowService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -19,7 +21,8 @@ public class WorkflowController {
   }
 
   @PostMapping
-  public Mono<ResultMessage<Workflow>> createWorkflow() {
-    return workflowService.create().map(ResultMessage::success);
+  public Mono<ResultMessage<Workflow>> createWorkflow(
+      @Valid @RequestBody CreateWorkflowRequest request) {
+    return workflowService.create(request).map(ResultMessage::success);
   }
 }

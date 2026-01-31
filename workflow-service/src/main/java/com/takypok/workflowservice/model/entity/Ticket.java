@@ -11,8 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class Ticket<T extends TicketDetail> extends IdEntity {
-  private TicketType ticketType;
+  private Project project;
   private IssueType issueType;
+  private Priority priority;
   private String status;
   private String summary;
   private User reporter;

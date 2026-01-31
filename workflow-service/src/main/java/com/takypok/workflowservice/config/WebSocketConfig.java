@@ -9,14 +9,20 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
+import reactor.core.publisher.Sinks;
 
 @Configuration
 public class WebSocketConfig {
 
   @Bean
-  public HandlerMapping handlerMapping() {
+  public Sinks.Many<String> sink() {
+    return Sinks.many().replay().latest();
+  }
+
+  @Bean
+  public HandlerMapping handlerMapping(Sinks.Many<String> sink) {
     Map<String, WebSocketHandler> map = new HashMap<>();
-    map.put("/web-socket/sla", new SlaEventWebSocket());
+    map.put("/web-socket/sla", new SlaEventWebSocket(sink));
     int order = 1;
 
     return new SimpleUrlHandlerMapping(map, order);

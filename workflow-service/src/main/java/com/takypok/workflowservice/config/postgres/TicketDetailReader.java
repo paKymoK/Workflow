@@ -1,6 +1,6 @@
 package com.takypok.workflowservice.config.postgres;
 
-import static com.takypok.workflowservice.config.ConfigPostgres.CLAZZ_NAME;
+import static com.takypok.workflowservice.config.PostgresConfig.CLAZZ_NAME;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

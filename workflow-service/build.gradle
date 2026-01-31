@@ -28,12 +28,17 @@ dependencies {
     implementation project(':infrastructure')
     implementation project(':core-v1')
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:4.3.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
     implementation "org.springframework.boot:spring-boot-starter-security"
     implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
     implementation "org.springframework.boot:spring-boot-starter-data-r2dbc"
     implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
     implementation "org.liquibase:liquibase-core"
     implementation "org.postgresql:r2dbc-postgresql"
+    implementation 'org.reflections:reflections:0.10.2'
+    implementation 'org.springframework.boot:spring-boot-starter-quartz'
+    implementation "org.springframework.integration:spring-integration-debezium:7.0.2"
+    implementation "io.debezium:debezium-connector-postgres:3.4.0.Final"
 }
 
 tasks.named('test') {

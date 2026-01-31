@@ -12,6 +12,10 @@ import org.springframework.context.annotation.Configuration;
 public class ConfigObjectMapper {
   @Bean
   public ObjectMapper mapper() {
+    return objectMapper();
+  }
+
+  public static ObjectMapper objectMapper() {
     ObjectMapper mapper = new ObjectMapper();
     JavaTimeModule timeModule = new JavaTimeModule();
     SimpleModule module = new SimpleModule();

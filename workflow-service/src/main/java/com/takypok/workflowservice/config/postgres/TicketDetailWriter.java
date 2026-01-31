@@ -1,6 +1,6 @@
 package com.takypok.workflowservice.config.postgres;
 
-import static com.takypok.workflowservice.config.ConfigPostgres.CLAZZ_NAME;
+import static com.takypok.workflowservice.config.PostgresConfig.CLAZZ_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

@@ -25,7 +25,7 @@ public class Validator {
         | IllegalAccessException
         | InvocationTargetException e) {
       return Mono.error(
-          new ApplicationException(Message.Application.REASON_ERROR, "Validator not found !"));
+          new ApplicationException(Message.Application.ERROR, "Validator not found !"));
     }
   }
 
@@ -39,7 +39,7 @@ public class Validator {
         | InstantiationException
         | IllegalAccessException
         | InvocationTargetException e) {
-      throw new ApplicationException(Message.Application.REASON_ERROR, "Validator not found !");
+      throw new ApplicationException(Message.Application.ERROR, "Validator not found !");
     }
   }
 }
