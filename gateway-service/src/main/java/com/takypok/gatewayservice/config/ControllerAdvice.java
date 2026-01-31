@@ -18,6 +18,6 @@ public class ControllerAdvice {
   public ResultMessage<?> handleValidationExceptions(Exception ex) {
     log.error("IllegalArgumentException: ", ex);
     return ResultMessage.error(
-        Message.get(Message.Application.REASON_ERROR, getExceptionMessageChain(ex).toString()));
+        Message.get(Message.Application.ERROR, getExceptionMessageChain(ex).toString()));
   }
 }
