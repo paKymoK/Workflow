@@ -83,13 +83,13 @@ public class DebeziumConfig {
   @ServiceActivator(inputChannel = "debeziumInputChannel")
   public void handler(Message<byte[]> message) {
     Object destination = message.getHeaders().get(DebeziumHeaders.DESTINATION);
-
     if ("topix.public.sla".equals(destination)) {
       try {
         ChangeData<SlaTracker> change =
             mapper.readValue(message.getPayload(), new TypeReference<>() {});
-        System.out.println("Before: " + change.getPayload().getBefore());
-        System.out.println("After: " + change.getPayload().getAfter());
+
+        //        System.out.println("Before: " + change.getPayload().getBefore());
+        //        System.out.println("After: " + change.getPayload().getAfter());
       } catch (Exception e) {
         log.error("Sla Debezium convert error: ", e);
       }

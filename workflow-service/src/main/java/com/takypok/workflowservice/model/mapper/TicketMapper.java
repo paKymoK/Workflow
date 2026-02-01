@@ -48,11 +48,11 @@ public abstract class TicketMapper {
         Message.Application.ERROR, "IssueType config for " + issueType.getName() + " not found");
   }
 
-  protected String getTodoStatus(Workflow workflow) {
+  protected Status getTodoStatus(Workflow workflow) {
     Optional<Status> result =
         workflow.getStatuses().stream()
             .filter(status -> GroupStatus.TODO.equals(status.getGroup()))
             .findFirst();
-    return result.map(Status::getName).orElse(null);
+    return result.orElse(null);
   }
 }

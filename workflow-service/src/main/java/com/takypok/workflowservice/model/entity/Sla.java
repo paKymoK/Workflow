@@ -11,7 +11,7 @@ import lombok.*;
 @ToString
 public class Sla extends IdEntity {
   private Long ticketId;
-  private String status;
+  private SlaStatus status;
   private Priority priority;
   private ListPausedTime pausedTime;
 }

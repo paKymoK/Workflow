@@ -1,13 +1,13 @@
 package com.takypok.workflowservice.config.postgres;
 
 import static com.takypok.workflowservice.config.PostgresConfig.CLAZZ_NAME;
+import static com.takypok.workflowservice.util.PostgresUtil.readTree;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import io.r2dbc.postgresql.codec.Json;
-import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
@@ -28,6 +28,7 @@ public class TicketDetailReader implements Converter<Json, TicketDetail> {
     try {
       return objectMapper.convertValue(tree, dataClass);
     } catch (Exception ex) {
+      log.error(ex.getMessage(), ex);
       return null;
     }
   }
@@ -38,15 +39,6 @@ public class TicketDetailReader implements Converter<Json, TicketDetail> {
       return (Class<? extends TicketDetail>) Class.forName(jsonNode.path(CLAZZ_NAME).asText());
     } catch (ClassNotFoundException e) {
       log.error("Unable to resolve TicketDetail class: {}", e.getMessage(), e);
-      throw new IllegalArgumentException(e);
-    }
-  }
-
-  private JsonNode readTree(Json source) {
-    try {
-      return objectMapper.readTree(source.asArray());
-    } catch (IOException e) {
-      log.error("An error occurred while trying to read tree: {}", e.getMessage(), e);
       throw new IllegalArgumentException(e);
     }
   }

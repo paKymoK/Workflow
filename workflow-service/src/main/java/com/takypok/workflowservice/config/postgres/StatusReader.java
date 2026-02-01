@@ -4,25 +4,25 @@ import static com.takypok.workflowservice.util.PostgresUtil.readTree;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.takypok.workflowservice.model.entity.Priority;
+import com.takypok.workflowservice.model.entity.Status;
 import io.r2dbc.postgresql.codec.Json;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
-import org.springframework.lang.NonNull;
 
 @Slf4j
 @ReadingConverter
 @RequiredArgsConstructor
-public class PriorityReader implements Converter<Json, Priority> {
+public class StatusReader implements Converter<Json, Status> {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Priority convert(@NonNull Json source) {
+  public Status convert(@NonNull Json source) {
     final JsonNode tree = readTree(source);
     try {
-      return objectMapper.convertValue(tree, Priority.class);
+      return objectMapper.convertValue(tree, Status.class);
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);
       return null;

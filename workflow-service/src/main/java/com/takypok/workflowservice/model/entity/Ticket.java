@@ -14,7 +14,7 @@ public class Ticket<T extends TicketDetail> extends IdEntity {
   private Project project;
   private IssueType issueType;
   private Priority priority;
-  private String status;
+  private Status status;
   private String summary;
   private User reporter;
   private User assignee;

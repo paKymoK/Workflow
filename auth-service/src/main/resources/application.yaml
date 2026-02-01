@@ -6,6 +6,12 @@ server:
 spring:
   application:
     name: auth-service
+  security:
+    oauth2:
+      authorizationserver:
+        endpoint:
+          token-uri: /oauth2/token
+          authorization-uri: /oauth2/authorize
   datasource:
     url: jdbc:postgresql://127.0.0.1:5432/authentication
     username: postgres

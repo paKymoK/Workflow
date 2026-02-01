@@ -1,10 +1,11 @@
 package com.takypok.workflowservice.config.postgres;
 
+import static com.takypok.workflowservice.util.PostgresUtil.readTree;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.workflowservice.model.entity.custom.ListStatus;
 import io.r2dbc.postgresql.codec.Json;
-import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
@@ -23,17 +24,8 @@ public class WorkflowStatusReader implements Converter<Json, ListStatus> {
     try {
       return objectMapper.convertValue(tree, ListStatus.class);
     } catch (Exception ex) {
-      ex.printStackTrace();
+      log.error(ex.getMessage(), ex);
       return null;
-    }
-  }
-
-  private JsonNode readTree(Json source) {
-    try {
-      return objectMapper.readTree(source.asArray());
-    } catch (IOException e) {
-      log.error("An error occurred while trying to read tree: {}", e.getMessage(), e);
-      throw new IllegalArgumentException(e);
     }
   }
 }

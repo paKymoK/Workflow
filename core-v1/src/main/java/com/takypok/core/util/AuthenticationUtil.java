@@ -67,6 +67,6 @@ public class AuthenticationUtil {
 
   public static User getUserInfo(Authentication authentication) {
     Jwt jwt = (Jwt) authentication.getPrincipal();
-    return objectMapper().convertValue(jwt.getClaims().get("info"), new TypeReference<>() {});
+    return objectMapper().convertValue(jwt.getClaims().get("detail"), new TypeReference<>() {});
   }
 }

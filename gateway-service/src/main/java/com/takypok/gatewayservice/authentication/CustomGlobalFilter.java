@@ -30,8 +30,6 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         .cast(OAuth2AuthorizedClient.class)
         .flatMap(
             client -> {
-              System.out.println(client.getPrincipalName());
-              System.out.println(client.getAccessToken().getTokenValue());
               exchange
                   .getRequest()
                   .getHeaders()

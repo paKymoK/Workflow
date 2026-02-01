@@ -26,7 +26,7 @@ public class DefaultController {
       @RegisteredOAuth2AuthorizedClient(registrationId = "gateway-service-oidc")
           OAuth2AuthorizedClient client) {
     System.out.println("->> Index");
-    System.out.println(client.getAccessToken());
+    System.out.println(client.getAccessToken().getTokenValue());
     return Mono.just("Test");
   }
 }

@@ -64,6 +64,7 @@ public class TicketServiceImpl implements TicketService {
         .doOnNext(
             ticket -> {
               Sla sla = new Sla();
+              sla.setStatus(new SlaStatus());
               sla.setTicketId(ticket.getId());
               sla.setPriority(ticket.getPriority());
               sla.setPausedTime(new ListPausedTime());
@@ -81,13 +82,17 @@ public class TicketServiceImpl implements TicketService {
                     Message.Application.ERROR, "Ticket do not exist/Ticket do not have SLA")))
         .flatMap(
             sla -> {
-              ListPausedTime pausedTime = sla.getPausedTime();
-              System.out.println(isSlaIsPaused(pausedTime));
-              pausedTime.add(new PausedTime(ZonedDateTime.now()));
-              sla.setPausedTime(pausedTime);
-              return slaRepository.save(sla);
-            })
-        .doOnError(Throwable::printStackTrace);
+              ListPausedTime lstPauseTime = sla.getPausedTime();
+              if (isSlaPaused(lstPauseTime)) {
+                return Mono.error(
+                    new ApplicationException(Message.Application.ERROR, "Sla is already paused"));
+
+              } else {
+                lstPauseTime.add(new PausedTime(ZonedDateTime.now()));
+                sla.setPausedTime(lstPauseTime);
+                return slaRepository.save(sla);
+              }
+            });
   }
 
   @Override
@@ -98,14 +103,25 @@ public class TicketServiceImpl implements TicketService {
             Mono.error(
                 new ApplicationException(
                     Message.Application.ERROR, "Ticket do not exist/Ticket do not have SLA")))
-        .map(
+        .flatMap(
             sla -> {
-              System.out.println(sla.getPausedTime());
-              return sla;
+              ListPausedTime lstPauseTime = sla.getPausedTime();
+              if (isSlaPaused(lstPauseTime)) {
+                sla.setPausedTime(
+                    new ListPausedTime(
+                        lstPauseTime.stream()
+                            .filter(pausedTime -> Objects.isNull(pausedTime.getResumeTime()))
+                            .peek(pausedTime -> pausedTime.setResumeTime(ZonedDateTime.now()))
+                            .toList()));
+                return slaRepository.save(sla);
+              } else {
+                return Mono.error(
+                    new ApplicationException(Message.Application.ERROR, "Sla is not paused"));
+              }
             });
   }
 
-  private boolean isSlaIsPaused(ListPausedTime pausedTime) {
+  private boolean isSlaPaused(ListPausedTime pausedTime) {
     AtomicBoolean result = new AtomicBoolean(false);
     pausedTime.forEach(
         pause -> {
