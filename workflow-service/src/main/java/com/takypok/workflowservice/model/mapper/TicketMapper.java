@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring")
@@ -36,6 +37,11 @@ public abstract class TicketMapper {
       IssueType issueType,
       Priority priority,
       User user);
+
+  //TODO: Need fix here for bug changing id of ticket
+  @Mapping(target = "status", source = "nextStatus")
+  public abstract Ticket<TicketDetail> mapEntityUpdateStatus(
+      Status nextStatus, @MappingTarget Ticket<TicketDetail> ticket);
 
   protected TicketDetail getTicketDetail(Object detail, IssueType issueType) {
     for (Class<? extends TicketDetail> clazz : configTicket) {

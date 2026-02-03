@@ -155,8 +155,17 @@ public class TicketServiceImpl implements TicketService {
               List<Transition> lstTransition =
                   ticket.getWorkflow().getTransitions().stream()
                       .filter(
-                          transition -> request.getTransitionName().equals(transition.getName()))
+                          transition ->
+                              request.getTransitionName().equals(transition.getName())
+                                  && request
+                                      .getCurrentStatusId()
+                                      .equals(transition.getFrom().getId()))
                       .toList();
+              if (!Objects.equals(ticket.getStatus().getId(), request.getCurrentStatusId())) {
+                return Mono.error(
+                    new ApplicationException(
+                        Message.Application.ERROR, "Current Transition is not Valid "));
+              }
               if (lstTransition.isEmpty()) {
                 return Mono.error(
                     new ApplicationException(
@@ -168,8 +177,16 @@ public class TicketServiceImpl implements TicketService {
         .flatMap(
             tuples ->
                 initValidator(tuples.getT1(), tuples.getT2().getValidator())
-                    .then(initPostFunction(tuples.getT1(), tuples.getT2().getPostFunctions())))
-        .then(Mono.empty());
+                    .then(initPostFunction(tuples.getT1(), tuples.getT2().getPostFunctions()))
+                    .thenReturn(tuples))
+        .map(
+            tuples -> {
+              System.out.println(tuples.getT1().getId());
+              System.out.println(
+                  ticketMapper.mapEntityUpdateStatus(tuples.getT2().getTo(), tuples.getT1()));
+              System.out.println(tuples.getT1().getId());
+              return tuples.getT1();
+            });
   }
 
   private Mono<Workflow> getWorkflow(Long workflowId) {

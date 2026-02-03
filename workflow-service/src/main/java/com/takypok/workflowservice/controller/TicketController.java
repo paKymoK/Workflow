@@ -60,7 +60,7 @@ public class TicketController {
 
   @PostMapping("/transition")
   public Mono<ResultMessage<Ticket<TicketDetail>>> transition(
-      @RequestBody TransitionRequest transitionRequest) {
+      @RequestBody @Valid TransitionRequest transitionRequest) {
     return ticketService.transition(transitionRequest).map(ResultMessage::success);
   }
 

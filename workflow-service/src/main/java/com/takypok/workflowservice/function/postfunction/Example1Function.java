@@ -17,7 +17,7 @@ public class Example1Function implements PostFunctionInterface {
   @Override
   public Mono<Void> run(Ticket<TicketDetail> ticket) {
     return Mono.just("test")
-        .delayElement(Duration.ofSeconds(3))
+        .delayElement(Duration.ofSeconds(1))
         .doOnNext(s -> System.out.println("Ex1 func triggered !"))
         .then();
   }

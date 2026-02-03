@@ -214,7 +214,8 @@ BEGIN
                                      ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int)
                )
     FROM ticket t
-    WHERE t.id = s.ticket_id;
+    WHERE t.id = s.ticket_id
+      AND t.status ->> 'group' IN ('TODO', 'PROCESSING');
 
     -- Commit the transaction
     COMMIT;

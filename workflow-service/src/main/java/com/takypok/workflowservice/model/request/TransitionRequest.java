@@ -1,5 +1,7 @@
 package com.takypok.workflowservice.model.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Getter
@@ -8,6 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class TransitionRequest {
-  private Long ticketId;
-  private String transitionName;
+  @NotNull private Long ticketId;
+  @NotNull private Long currentStatusId;
+  @NotBlank private String transitionName;
 }

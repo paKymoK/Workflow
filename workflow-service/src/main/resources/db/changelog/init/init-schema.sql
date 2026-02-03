@@ -140,21 +140,6 @@ EXECUTE FUNCTION validate_paused_time();
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-CREATE OR REPLACE PROCEDURE calculate_sla()
-    LANGUAGE PLPGSQL
-AS
-$$
-DECLARE
-    test  integer;
-    test2 integer;
-BEGIN
-    SELECT id INTO test FROM sla;
-    test2 := calculate_office_time('2026-02-02 09:00:00+07'::TIMESTAMPTZ, '2026-02-09 18:00:00+07'::TIMESTAMPTZ, '+7');
-    RAISE EXCEPTION 'TEST: % - %', test, test2;
-    -- Commit the transaction
-    COMMIT;
-END;
-$$;
 
 
 
