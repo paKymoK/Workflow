@@ -2,26 +2,26 @@ package com.takypok.workflowservice.config.postgres;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.takypok.workflowservice.model.entity.custom.ListStatus;
+import com.takypok.workflowservice.model.entity.SlaSetting;
 import io.r2dbc.postgresql.codec.Json;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.lang.NonNull;
 
 @Slf4j
 @WritingConverter
 @RequiredArgsConstructor
-public class WorkflowStatusWriter implements Converter<ListStatus, Json> {
+public class SlaSettingWriter implements Converter<SlaSetting, Json> {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Json convert(@NonNull ListStatus source) {
+  public Json convert(@NonNull SlaSetting source) {
     try {
       return Json.of(objectMapper.writeValueAsBytes(source));
     } catch (JsonProcessingException e) {
-      log.error("Unable to convert WorkflowStatus: {}", e.getMessage(), e);
+      log.error("Unable to convert WorkflowTransition: {}", e.getMessage(), e);
       throw new IllegalArgumentException(e);
     }
   }

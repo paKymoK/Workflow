@@ -9,8 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class SlaStatus {
-  private String responseStatus;
+  private String response;
   private ZonedDateTime responseTime;
-  private String resolutionStatus;
+  private String resolution;
   private ZonedDateTime resolutionTime;
 }

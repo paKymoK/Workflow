@@ -8,6 +8,7 @@ import com.takypok.workflowservice.function.validator.index.Validator;
 import com.takypok.workflowservice.model.entity.*;
 import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.mapper.SlaMapper;
 import com.takypok.workflowservice.model.mapper.TicketMapper;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
@@ -37,7 +38,18 @@ public class TicketServiceImpl implements TicketService {
   private final PostFunction postFunction;
   private final Validator validator;
   private final TicketMapper ticketMapper;
+  private final SlaMapper slaMapper;
   private final SlaRepository slaRepository;
+
+  @Override
+  public Mono<List<Ticket<TicketDetail>>> get() {
+    return ticketRepository.findAll().collectList();
+  }
+
+  @Override
+  public Mono<List<Sla>> getSla() {
+    return slaRepository.findAll().collectList();
+  }
 
   @Override
   public Mono<Ticket<TicketDetail>> get(Long id) {
@@ -62,14 +74,11 @@ public class TicketServiceImpl implements TicketService {
                         tuples.getT4(),
                         user)))
         .doOnNext(
-            ticket -> {
-              Sla sla = new Sla();
-              sla.setStatus(new SlaStatus());
-              sla.setTicketId(ticket.getId());
-              sla.setPriority(ticket.getPriority());
-              sla.setPausedTime(new ListPausedTime());
-              slaRepository.save(sla).doOnError(Throwable::printStackTrace).toFuture();
-            });
+            ticket ->
+                slaRepository
+                    .save(slaMapper.mapToSla(ticket.getId(), ticket.getPriority()))
+                    .doOnError(Throwable::printStackTrace)
+                    .toFuture());
   }
 
   @Override
@@ -110,8 +119,12 @@ public class TicketServiceImpl implements TicketService {
                 sla.setPausedTime(
                     new ListPausedTime(
                         lstPauseTime.stream()
-                            .filter(pausedTime -> Objects.isNull(pausedTime.getResumeTime()))
-                            .peek(pausedTime -> pausedTime.setResumeTime(ZonedDateTime.now()))
+                            .peek(
+                                pausedTime -> {
+                                  if (Objects.isNull(pausedTime.getResumeTime())) {
+                                    pausedTime.setResumeTime(ZonedDateTime.now());
+                                  }
+                                })
                             .toList()));
                 return slaRepository.save(sla);
               } else {
