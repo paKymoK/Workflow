@@ -11,6 +11,7 @@ import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.ticket.annotation.IssueTypeAnnotation;
 import java.util.Optional;
 import java.util.Set;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -38,10 +39,10 @@ public abstract class TicketMapper {
       Priority priority,
       User user);
 
-  //TODO: Need fix here for bug changing id of ticket
+  @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "status", source = "nextStatus")
   public abstract Ticket<TicketDetail> mapEntityUpdateStatus(
-      Status nextStatus, @MappingTarget Ticket<TicketDetail> ticket);
+      @MappingTarget Ticket<TicketDetail> ticket, Status nextStatus);
 
   protected TicketDetail getTicketDetail(Object detail, IssueType issueType) {
     for (Class<? extends TicketDetail> clazz : configTicket) {

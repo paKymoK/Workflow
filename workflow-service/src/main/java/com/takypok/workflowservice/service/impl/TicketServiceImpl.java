@@ -179,14 +179,10 @@ public class TicketServiceImpl implements TicketService {
                 initValidator(tuples.getT1(), tuples.getT2().getValidator())
                     .then(initPostFunction(tuples.getT1(), tuples.getT2().getPostFunctions()))
                     .thenReturn(tuples))
-        .map(
-            tuples -> {
-              System.out.println(tuples.getT1().getId());
-              System.out.println(
-                  ticketMapper.mapEntityUpdateStatus(tuples.getT2().getTo(), tuples.getT1()));
-              System.out.println(tuples.getT1().getId());
-              return tuples.getT1();
-            });
+        .flatMap(
+            tuples ->
+                ticketRepository.save(
+                    ticketMapper.mapEntityUpdateStatus(tuples.getT1(), tuples.getT2().getTo())));
   }
 
   private Mono<Workflow> getWorkflow(Long workflowId) {

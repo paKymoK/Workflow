@@ -87,9 +87,8 @@ public class DebeziumConfig {
       try {
         ChangeData<SlaTracker> change =
             mapper.readValue(message.getPayload(), new TypeReference<>() {});
-
-        //        System.out.println("Before: " + change.getPayload().getBefore());
-        //        System.out.println("After: " + change.getPayload().getAfter());
+        System.out.println("Before: " + change.getPayload().getBefore());
+        System.out.println("After: " + change.getPayload().getAfter());
       } catch (Exception e) {
         log.error("Sla Debezium convert error: ", e);
       }
