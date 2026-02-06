@@ -107,6 +107,11 @@ CREATE TABLE IF NOT EXISTS issue_type
 ALTER TABLE sla
     REPLICA IDENTITY FULL;
 
+CREATE INDEX idx_ticket_status_group ON ticket USING GIN((status -> 'group'));
+
+CREATE INDEX idx_ticket_active_status ON ticket ((status ->> 'group'))
+    WHERE status ->> 'group' IN ('TODO', 'PROCESSING');
+
 CREATE OR REPLACE FUNCTION validate_paused_time()
     RETURNS TRIGGER
     LANGUAGE plpgsql
