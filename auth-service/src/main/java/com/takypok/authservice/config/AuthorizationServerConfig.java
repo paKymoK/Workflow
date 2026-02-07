@@ -10,6 +10,7 @@ import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
 import java.util.function.Function;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -45,6 +46,9 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class AuthorizationServerConfig {
+  @Value("${client.workflow-service.url}")
+  private String workflowServiceUrl;
+
   private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
 
   @Bean
@@ -95,9 +99,9 @@ public class AuthorizationServerConfig {
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(
                 TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(1)).build())
-            .redirectUri("http://127.0.0.1:8080/login/oauth2/code/gateway-service-oidc")
-            .redirectUri("http://127.0.0.1:8080/index")
-            .postLogoutRedirectUri("http://127.0.0.1:8080/logged-out")
+            .redirectUri(workflowServiceUrl + "/login/oauth2/code/gateway-service-oidc")
+            .redirectUri(workflowServiceUrl + "/index")
+            .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())

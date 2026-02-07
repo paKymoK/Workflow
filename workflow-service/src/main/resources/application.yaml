@@ -21,6 +21,7 @@ spring:
       - 'classpath:config/oauth2.yml'
       - 'classpath:config/eureka-client.yml'
       - 'classpath:config/springdoc.yml'
+      - 'classpath:config/debezium.yml'
       - 'classpath:management.yml'
 
 logging:

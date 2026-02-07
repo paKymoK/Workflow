@@ -6,16 +6,10 @@ server:
 spring:
   application:
     name: auth-service
-  security:
-    oauth2:
-      authorizationserver:
-        endpoint:
-          token-uri: /oauth2/token
-          authorization-uri: /oauth2/authorize
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/authentication
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_SCHEMA:authentication}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -23,9 +17,13 @@ spring:
     database: postgresql
     show-sql: true
 
+client:
+  workflow-service:
+    url: ${WORKFLOW_SERVICE:http://127.0.0.1:8080}
+
 logging:
   level:
-    root: INFO
-    org.springframework.web: INFO
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    org.springframework.web: ${LOGGING_LEVEL_SPRING_WEB:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_SPRING_SECURITY:DEBUG}
+    org.springframework.security.oauth2: ${LOGGING_LEVEL_SPRING_OAUTH2:DEBUG}

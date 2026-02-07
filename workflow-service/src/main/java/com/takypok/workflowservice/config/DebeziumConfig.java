@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -27,6 +28,24 @@ import org.springframework.util.ResourceUtils;
 @RequiredArgsConstructor
 @Slf4j
 public class DebeziumConfig {
+  @Value("${debezium.hostname}")
+  private String hostname;
+
+  @Value("${debezium.port}")
+  private String port;
+
+  @Value("${debezium.dbname}")
+  private String dbname;
+
+  @Value("${debezium.user}")
+  private String user;
+
+  @Value("${debezium.password}")
+  private String password;
+
+  @Value("${debezium.prefix}")
+  private String prefix;
+
   private final ObjectMapper mapper;
 
   @Bean
@@ -47,12 +66,12 @@ public class DebeziumConfig {
     props.setProperty("offset.flush.interval.ms", "60000");
 
     props.setProperty("database.server.name", "Workflow");
-    props.setProperty("topic.prefix", "topix");
-    props.setProperty("database.hostname", "127.0.0.1");
-    props.setProperty("database.port", "5432");
-    props.setProperty("database.user", "postgres");
-    props.setProperty("database.password", "postgres");
-    props.setProperty("database.dbname", "workflow");
+    props.setProperty("topic.prefix", prefix);
+    props.setProperty("database.hostname", hostname);
+    props.setProperty("database.port", port);
+    props.setProperty("database.user", user);
+    props.setProperty("database.password", password);
+    props.setProperty("database.dbname", dbname);
     props.setProperty("snapshot.mode", "initial");
     props.setProperty("plugin.name", "pgoutput");
     props.setProperty("publication.autocreate.mode", "all_tables");
@@ -61,7 +80,7 @@ public class DebeziumConfig {
     props.setProperty("table.include.list", "public.sla");
     props.setProperty("heartbeat.interval.ms", "30000");
 
-    return DebeziumEngine.create(JsonByteArray.class).using(props).notifying(System.out::println);
+    return DebeziumEngine.create(JsonByteArray.class).using(props);
   }
 
   @Bean
@@ -83,7 +102,7 @@ public class DebeziumConfig {
   @ServiceActivator(inputChannel = "debeziumInputChannel")
   public void handler(Message<byte[]> message) {
     Object destination = message.getHeaders().get(DebeziumHeaders.DESTINATION);
-    if ("topix.public.sla".equals(destination)) {
+    if ((prefix + ".public.sla").equals(destination)) {
       try {
         ChangeData<SlaTracker> change =
             mapper.readValue(message.getPayload(), new TypeReference<>() {});

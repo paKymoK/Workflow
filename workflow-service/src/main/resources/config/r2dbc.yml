@@ -1,5 +1,5 @@
 spring:
   r2dbc:
-    url: r2dbc:postgresql://127.0.0.1:5432/workflow
-    username: postgres
-    password: postgres
+    url: r2dbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_SCHEMA:workflow}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}

@@ -1,5 +1,3 @@
-app:
-  base-uri: http://127.0.0.1:5173
 server:
   port: 8080
 spring:
@@ -26,9 +24,6 @@ spring:
         provider:
           gateway-service:
             issuer-uri: http://127.0.0.1:9000/auth-service
-            authorization-uri: http://127.0.0.1:9000/auth-service/oauth2/authorize
-            token-uri: http://127.0.0.1:9000/auth-service/oauth2/token
-            user-info-uri: http://127.0.0.1:9000/auth-service/userinfo
   cloud:
     gateway:
       server:
