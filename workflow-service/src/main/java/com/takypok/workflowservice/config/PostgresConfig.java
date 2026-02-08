@@ -46,6 +46,7 @@ public class PostgresConfig {
     converters.add(new SlaSettingWriter(mapper));
     converters.add(new StatusReader(mapper));
     converters.add(new StatusWriter(mapper));
+    converters.add(new SlaReader(mapper));
     return R2dbcCustomConversions.of(PostgresDialect.INSTANCE, converters);
   }
 }
