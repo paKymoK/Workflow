@@ -386,18 +386,23 @@ AS
 $$
 BEGIN
     -- Pre-extract JSONB values to avoid repeated extraction
-    WITH ticket_data AS (SELECT t.id,
-                                t.created_at,
-                                s.id                                                            as sla_id,
-                                (s.setting ->> 'workStart')::TIME                               as work_start,
-                                (s.setting ->> 'workEnd')::TIME                                 as work_end,
-                                (s.setting ->> 'lunchStart')::TIME                              as lunch_start,
-                                (s.setting ->> 'lunchEnd')::TIME                                as lunch_end,
-                                json_to_tstzrange_array(s.paused_time)                          as paused_ranges,
-                                ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) as weekend_days
-                         FROM ticket t
-                                  INNER JOIN sla s ON t.id = s.ticket_id
-                         WHERE t.status ->> 'group' IN ('TODO', 'PROCESSING'))
+    WITH ticket_data AS (
+        SELECT
+            t.id,
+            t.created_at,
+            s.id as sla_id,
+            (s.setting ->> 'workStart')::TIME as work_start,
+            (s.setting ->> 'workEnd')::TIME as work_end,
+            (s.setting ->> 'lunchStart')::TIME as lunch_start,
+            (s.setting ->> 'lunchEnd')::TIME as lunch_end,
+            (s.priority ->> 'responseTime')::INTEGER as response_time,
+            (s.priority ->> 'resolutionTime')::INTEGER as resolution_time,
+            json_to_tstzrange_array(s.paused_time) as paused_ranges,
+            ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) as weekend_days
+        FROM ticket t
+                 INNER JOIN sla s ON t.id = s.ticket_id
+        WHERE t.status ->> 'group' IN ('TODO', 'PROCESSING')
+    )
     UPDATE sla s
     SET time = calculate_office_time(
             td.created_at,
@@ -409,7 +414,30 @@ BEGIN
             td.lunch_end,
             td.paused_ranges,
             td.weekend_days
-               )
+               ) , status = status || jsonb_build_object(
+            'responseTime', calculate_office_end_time(
+                    td.created_at,
+                    response_time,
+                    'Asia/Ho_Chi_Minh',
+                    td.work_start,
+                    td.work_end,
+                    td.lunch_start,
+                    td.lunch_end,
+                    td.paused_ranges,
+                    td.weekend_days
+                            ),
+            'resolutionTime', calculate_office_end_time(
+                    td.created_at,
+                    resolution_time,
+                    'Asia/Ho_Chi_Minh',
+                    td.work_start,
+                    td.work_end,
+                    td.lunch_start,
+                    td.lunch_end,
+                    td.paused_ranges,
+                    td.weekend_days
+                              )
+                                      )
     FROM ticket_data td
     WHERE s.id = td.sla_id;
 
@@ -417,5 +445,3 @@ BEGIN
     COMMIT;
 END;
 $$;
-
-

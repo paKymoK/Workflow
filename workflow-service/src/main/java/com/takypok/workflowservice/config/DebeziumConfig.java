@@ -1,6 +1,5 @@
 package com.takypok.workflowservice.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.workflowservice.model.debezium.ChangeData;
@@ -111,8 +110,10 @@ public class DebeziumConfig {
             mapper.readValue(message.getPayload(), new TypeReference<>() {});
         SlaStatus before = convertToSlaStatus(change.getPayload().getBefore().getStatus());
         SlaStatus after = convertToSlaStatus(change.getPayload().getAfter().getStatus());
-        System.out.println("Before: " + before);
-        System.out.println("After: " + after);
+        if (change.getPayload().getAfter().getId().equals(1L)) {
+          System.out.println("Before: " + before);
+          System.out.println("After: " + after);
+        }
 
       } catch (Exception e) {
         log.error("Sla Debezium convert error: ", e);
@@ -123,7 +124,7 @@ public class DebeziumConfig {
   private SlaStatus convertToSlaStatus(String payload) {
     try {
       return mapper.readValue(payload, SlaStatus.class);
-    } catch (JsonProcessingException e) {
+    } catch (Exception e) {
       return null;
     }
   }

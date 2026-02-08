@@ -14,7 +14,6 @@ import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.service.TicketService;
 import jakarta.validation.Valid;
 import java.time.Duration;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -29,14 +28,8 @@ public class TicketController {
   private final TicketService ticketService;
 
   @GetMapping("")
-  public Mono<ResultMessage<PageResponse<TicketSla>>> get(
-      @Valid FilterTicketRequest request) {
+  public Mono<ResultMessage<PageResponse<TicketSla>>> get(@Valid FilterTicketRequest request) {
     return ticketService.get(request).map(ResultMessage::success);
-  }
-
-  @GetMapping("/sla")
-  public Mono<ResultMessage<List<Sla>>> getSla() {
-    return ticketService.getSla().map(ResultMessage::success);
   }
 
   @GetMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.takypok.workflowservice.model.entity;
 
+import com.takypok.workflowservice.model.enums.StatusSla;
 import java.time.ZonedDateTime;
 import lombok.*;
 
@@ -9,8 +10,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class SlaStatus {
-  private String response;
+  private StatusSla response;
   private ZonedDateTime responseTime;
-  private String resolution;
+  private StatusSla resolution;
   private ZonedDateTime resolutionTime;
 }
