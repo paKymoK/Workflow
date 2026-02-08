@@ -13,15 +13,21 @@ import com.takypok.workflowservice.model.mapper.TicketMapper;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
+import com.takypok.workflowservice.model.response.PageResponse;
+import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.model.ticket.sla.PausedTime;
 import com.takypok.workflowservice.repository.*;
 import com.takypok.workflowservice.service.TicketService;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,8 +49,55 @@ public class TicketServiceImpl implements TicketService {
   private final SlaRepository slaRepository;
 
   @Override
-  public Mono<List<Ticket<TicketDetail>>> get(FilterTicketRequest request) {
-    return ticketRepository.findAll().collectList();
+  public Mono<PageResponse<TicketSla>> get(FilterTicketRequest request) {
+    int page = request.getPage().intValue();
+    int size = request.getSize().intValue();
+    // 1) paginated tickets + total count in parallel
+    return Mono.zip(
+            ticketRepository.findAllBy(PageRequest.of(page, size)).collectList(),
+            ticketRepository.count())
+        .flatMap(
+            tuple -> {
+              List<Ticket<TicketDetail>> tickets = tuple.getT1();
+              long totalElements = tuple.getT2();
+              if (tickets.isEmpty()) {
+                return Mono.just(
+                    PageResponse.<TicketSla>builder()
+                        .content(List.of())
+                        .page(page)
+                        .size(size)
+                        .totalElements(totalElements)
+                        .totalPages((totalElements + size - 1) / size)
+                        .build());
+              }
+              // 2) batch-fetch SLAs for all ticket IDs in a single IN query
+              List<Long> ticketIds = tickets.stream().map(Ticket::getId).toList();
+              return slaRepository
+                  .findByTicketIdIn(ticketIds)
+                  .collectList()
+                  .map(
+                      slas -> {
+                        Map<Long, Sla> slaMap =
+                            slas.stream()
+                                .collect(
+                                    Collectors.toMap(Sla::getTicketId, Function.identity()));
+                        // 3) combine ticket + sla
+                        List<TicketSla> content =
+                            tickets.stream()
+                                .map(
+                                    ticket ->
+                                        ticketMapper.mapToTicketSla(
+                                            ticket, slaMap.get(ticket.getId())))
+                                .toList();
+                        return PageResponse.<TicketSla>builder()
+                            .content(content)
+                            .page(page)
+                            .size(size)
+                            .totalElements(totalElements)
+                            .totalPages((totalElements + size - 1) / size)
+                            .build();
+                      });
+            });
   }
 
   @Override

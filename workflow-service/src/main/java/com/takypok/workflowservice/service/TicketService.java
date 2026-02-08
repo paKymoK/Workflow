@@ -7,11 +7,14 @@ import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
+import com.takypok.workflowservice.model.response.PageResponse;
 import java.util.List;
+
+import com.takypok.workflowservice.model.response.TicketSla;
 import reactor.core.publisher.Mono;
 
 public interface TicketService {
-  Mono<List<Ticket<TicketDetail>>> get(FilterTicketRequest request);
+  Mono<PageResponse<TicketSla>> get(FilterTicketRequest request);
 
   Mono<List<Sla>> getSla();
 

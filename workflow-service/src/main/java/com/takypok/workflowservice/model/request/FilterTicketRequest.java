@@ -10,9 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class FilterTicketRequest {
-    @Min(0)
-    private Long page;
-    @Min(1)
-    @Max(100)
-    private Long size;
+  @Min(0)
+  private Long page = 0L;
+
+  @Min(1)
+  @Max(100)
+  private Long size = 10L;
 }
