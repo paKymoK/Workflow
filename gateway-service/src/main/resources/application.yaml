@@ -23,10 +23,10 @@ spring:
             client-name: gateway-service-oidc
         provider:
           gateway-service:
-            issuer-uri: http://127.0.0.1:9000/auth-service
+            issuer-uri: http://127.0.0.1:9000
       resourceserver:
         jwt:
-          issuer-uri: http://127.0.0.1:9000/auth-service
+          issuer-uri: http://127.0.0.1:9000
   cloud:
     gateway:
       server:

@@ -101,6 +101,7 @@ public class AuthorizationServerConfig {
                 TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(1)).build())
             .redirectUri(workflowServiceUrl + "/login/oauth2/code/gateway-service-oidc")
             .redirectUri(workflowServiceUrl + "/index")
+            .redirectUri("https://oauth.pstmn.io/v1/callback")
             .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
