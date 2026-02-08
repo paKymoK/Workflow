@@ -7,6 +7,7 @@ import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
+import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import com.takypok.workflowservice.service.TicketService;
 import jakarta.validation.Valid;
@@ -26,8 +27,8 @@ public class TicketController {
   private final TicketService ticketService;
 
   @GetMapping("")
-  public Mono<ResultMessage<List<Ticket<TicketDetail>>>> get() {
-    return ticketService.get().map(ResultMessage::success);
+  public Mono<ResultMessage<List<Ticket<TicketDetail>>>> get(@Valid @RequestParam FilterTicketRequest request) {
+    return ticketService.get(request).map(ResultMessage::success);
   }
 
   @GetMapping("/sla")

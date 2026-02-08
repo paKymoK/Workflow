@@ -11,6 +11,7 @@ import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.mapper.SlaMapper;
 import com.takypok.workflowservice.model.mapper.TicketMapper;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
+import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import com.takypok.workflowservice.model.ticket.sla.PausedTime;
 import com.takypok.workflowservice.repository.*;
@@ -42,7 +43,7 @@ public class TicketServiceImpl implements TicketService {
   private final SlaRepository slaRepository;
 
   @Override
-  public Mono<List<Ticket<TicketDetail>>> get() {
+  public Mono<List<Ticket<TicketDetail>>> get(FilterTicketRequest request) {
     return ticketRepository.findAll().collectList();
   }
 

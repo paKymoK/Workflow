@@ -4,6 +4,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HomeOutlined,
+  DashboardOutlined,
   UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
@@ -29,6 +30,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       key: "/",
       icon: <HomeOutlined />,
       label: "Home",
+    },
+    {
+      key: "/dashboard",
+      icon: <DashboardOutlined />,
+      label: "Dashboard",
     },
   ];
 
