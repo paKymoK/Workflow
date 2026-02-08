@@ -95,6 +95,7 @@ public class AuthorizationServerConfig {
             .clientId("gateway")
             .clientSecret("{noop}gateway-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(
@@ -102,7 +103,7 @@ public class AuthorizationServerConfig {
             .redirectUri(workflowServiceUrl + "/login/oauth2/code/gateway-service-oidc")
             .redirectUri(workflowServiceUrl + "/index")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
-            .redirectUri("http://127.0.0.1:3000/callback")
+            .redirectUri("http://localhost:3000/callback")
             .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
