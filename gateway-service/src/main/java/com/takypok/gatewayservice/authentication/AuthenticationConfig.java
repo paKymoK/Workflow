@@ -30,7 +30,7 @@ public class AuthenticationConfig {
         .authorizeExchange(
             exchanges ->
                 exchanges
-                    .pathMatchers("/", "/login/**", "/logout/**")
+                    .pathMatchers("/", "/login/**", "/logout/**", "/workflow-service/web-socket/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())

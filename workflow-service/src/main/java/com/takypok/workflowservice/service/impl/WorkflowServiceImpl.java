@@ -39,7 +39,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public Mono<Workflow> get(Long id) {
-    return workflowRepository.findById(id);
+    return workflowRepository
+        .findById(id)
+        .switchIfEmpty(
+            Mono.error(
+                new ApplicationException(Message.Application.ERROR, "Workflow không tồn tại !")));
   }
 
   @Override

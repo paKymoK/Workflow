@@ -36,12 +36,18 @@ spring:
             connect-timeout: 10000
             response-timeout: 30s
           routes:
-            - id: test
+            - id: workflow-websocket
+              uri: ws://127.0.0.1:8081
+              predicates:
+                - Path=/workflow-service/web-socket/**
+              filters:
+                - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
+            - id: workflow
               uri: http://127.0.0.1:8081
               predicates:
                 - Path=/workflow-service/**
               filters:
-                - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment} # Rewrites the path
+                - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
 
 logging:
   level:
