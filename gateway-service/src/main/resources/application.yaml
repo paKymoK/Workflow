@@ -24,6 +24,9 @@ spring:
         provider:
           gateway-service:
             issuer-uri: http://127.0.0.1:9000/auth-service
+      resourceserver:
+        jwt:
+          issuer-uri: http://127.0.0.1:9000/auth-service
   cloud:
     gateway:
       server:

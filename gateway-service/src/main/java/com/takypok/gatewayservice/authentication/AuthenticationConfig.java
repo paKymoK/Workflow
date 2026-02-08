@@ -36,6 +36,7 @@ public class AuthenticationConfig {
                     .authenticated())
         .oauth2Login(withDefaults())
         .oauth2Client(withDefaults())
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
         .logout(withDefaults())
         .build();
   }
@@ -52,6 +53,7 @@ public class AuthenticationConfig {
     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
     config.setAllowedOriginPatterns(Collections.singletonList("*"));
     config.setAllowCredentials(true);
+    config.setMaxAge(3600L);
     source.registerCorsConfiguration("/**", config);
     return source;
   }
