@@ -33,7 +33,7 @@ public class TicketController {
   }
 
   @GetMapping("/{id}")
-  public Mono<ResultMessage<Ticket<TicketDetail>>> getById(@PathVariable Long id) {
+  public Mono<ResultMessage<TicketSla>> getById(@PathVariable Long id) {
     return ticketService.get(id).map(ResultMessage::success);
   }
 

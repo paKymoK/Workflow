@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public interface TicketService {
   Mono<PageResponse<TicketSla>> get(FilterTicketRequest request);
 
-  Mono<Ticket<TicketDetail>> get(Long id);
+  Mono<TicketSla> get(Long id);
 
   Mono<Ticket<TicketDetail>> create(CreateTicketRequest request, User user);
 

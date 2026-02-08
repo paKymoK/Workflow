@@ -66,8 +66,12 @@ public class TicketServiceImpl implements TicketService {
   }
 
   @Override
-  public Mono<Ticket<TicketDetail>> get(Long id) {
-    return ticketRepository.findById(id);
+  public Mono<TicketSla> get(Long id) {
+    return ticketRepository
+        .findWithSlaById(id)
+        .switchIfEmpty(
+            Mono.error(
+                new ApplicationException(Message.Application.ERROR, "Ticket do not Exists")));
   }
 
   @Override
