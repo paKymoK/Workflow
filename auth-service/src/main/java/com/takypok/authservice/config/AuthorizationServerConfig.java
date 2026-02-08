@@ -102,6 +102,7 @@ public class AuthorizationServerConfig {
             .redirectUri(workflowServiceUrl + "/login/oauth2/code/gateway-service-oidc")
             .redirectUri(workflowServiceUrl + "/index")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
+            .redirectUri("http://127.0.0.1:3000/callback")
             .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)

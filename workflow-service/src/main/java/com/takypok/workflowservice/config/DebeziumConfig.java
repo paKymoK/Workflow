@@ -1,9 +1,11 @@
 package com.takypok.workflowservice.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.workflowservice.model.debezium.ChangeData;
 import com.takypok.workflowservice.model.debezium.SlaTracker;
+import com.takypok.workflowservice.model.entity.SlaStatus;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.JsonByteArray;
@@ -78,6 +80,7 @@ public class DebeziumConfig {
 
     props.setProperty("schema.include.list", "public");
     props.setProperty("table.include.list", "public.sla");
+    props.setProperty("column.exclude.list", "public.sla.time");
     props.setProperty("heartbeat.interval.ms", "30000");
 
     return DebeziumEngine.create(JsonByteArray.class).using(props);
@@ -106,11 +109,22 @@ public class DebeziumConfig {
       try {
         ChangeData<SlaTracker> change =
             mapper.readValue(message.getPayload(), new TypeReference<>() {});
-        System.out.println("Before: " + change.getPayload().getBefore());
-        System.out.println("After: " + change.getPayload().getAfter());
+        SlaStatus before = convertToSlaStatus(change.getPayload().getBefore().getStatus());
+        SlaStatus after = convertToSlaStatus(change.getPayload().getAfter().getStatus());
+        System.out.println("Before: " + before);
+        System.out.println("After: " + after);
+
       } catch (Exception e) {
         log.error("Sla Debezium convert error: ", e);
       }
+    }
+  }
+
+  private SlaStatus convertToSlaStatus(String payload) {
+    try {
+      return mapper.readValue(payload, SlaStatus.class);
+    } catch (JsonProcessingException e) {
+      return null;
     }
   }
 }
