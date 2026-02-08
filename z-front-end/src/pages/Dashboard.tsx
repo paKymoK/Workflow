@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Table, Tag, Typography } from "antd";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
 import { fetchTickets, type TicketSla } from "../api/ticketApi";
 
@@ -46,6 +47,7 @@ const columns: ColumnsType<TicketSla> = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
@@ -62,6 +64,10 @@ export default function Dashboard() {
         dataSource={data?.content}
         rowKey="id"
         loading={isLoading}
+        onRow={(record) => ({
+          onClick: () => navigate(`/dashboard/${record.id}`),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           current: page + 1,
           pageSize,
