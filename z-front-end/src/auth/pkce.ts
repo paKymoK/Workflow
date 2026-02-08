@@ -1,7 +1,9 @@
-const AUTH_SERVER = "http://127.0.0.1:9000";
-const CLIENT_ID = "gateway";
-const REDIRECT_URI = "http://localhost:3000/callback";
-const SCOPES = "openid profile";
+import axios from "axios";
+
+const AUTH_SERVER = import.meta.env.VITE_AUTH_SERVER;
+const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
+const SCOPES = import.meta.env.VITE_SCOPES;
 
 export function generateCodeVerifier(): string {
   const array = new Uint8Array(64);
@@ -52,20 +54,12 @@ export async function exchangeCodeForToken(
     code_verifier: codeVerifier,
   });
 
-  const response = await fetch(`${AUTH_SERVER}/oauth2/token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: body.toString(),
-  });
+  const { data } = await axios.post<TokenResponse>(
+    `${AUTH_SERVER}/oauth2/token`,
+    body,
+  );
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Token exchange failed: ${error}`);
-  }
-
-  return response.json();
+  return data;
 }
 
 export interface TokenResponse {

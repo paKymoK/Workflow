@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   generateCodeVerifier,
   generateCodeChallenge,
@@ -13,18 +7,7 @@ import {
   parseJwtPayload,
   type TokenResponse,
 } from "./pkce";
-
-interface AuthContextType {
-  isAuthenticated: boolean;
-  accessToken: string | null;
-  user: Record<string, unknown> | null;
-  login: () => Promise<void>;
-  logout: () => void;
-  handleCallback: (code: string, codeVerifier: string) => Promise<void>;
-  setTokenResponse: (tokenResponse: TokenResponse) => void;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -95,12 +78,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }

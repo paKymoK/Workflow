@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Spin, Typography } from "antd";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth";
 
 const { Title } = Typography;
 
@@ -9,28 +9,26 @@ export default function Callback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { handleCallback } = useAuth();
-  const [error, setError] = useState<string | null>(null);
+  const [exchangeError, setExchangeError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const validationError = useMemo(() => {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const savedState = sessionStorage.getItem("pkce_state");
     const codeVerifier = sessionStorage.getItem("pkce_code_verifier");
 
-    if (!code) {
-      setError("No authorization code received");
-      return;
-    }
+    if (!code) return "No authorization code received";
+    if (state !== savedState) return "State mismatch — possible CSRF attack";
+    if (!codeVerifier)
+      return "No code verifier found — please try logging in again";
+    return null;
+  }, [searchParams]);
 
-    if (state !== savedState) {
-      setError("State mismatch — possible CSRF attack");
-      return;
-    }
+  useEffect(() => {
+    if (validationError) return;
 
-    if (!codeVerifier) {
-      setError("No code verifier found — please try logging in again");
-      return;
-    }
+    const code = searchParams.get("code")!;
+    const codeVerifier = sessionStorage.getItem("pkce_code_verifier")!;
 
     handleCallback(code, codeVerifier)
       .then(() => {
@@ -39,9 +37,13 @@ export default function Callback() {
         navigate("/", { replace: true });
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Token exchange failed");
+        setExchangeError(
+          err instanceof Error ? err.message : "Token exchange failed"
+        );
       });
-  }, [searchParams, handleCallback, navigate]);
+  }, [searchParams, validationError, handleCallback, navigate]);
+
+  const error = validationError ?? exchangeError;
 
   if (error) {
     return (
