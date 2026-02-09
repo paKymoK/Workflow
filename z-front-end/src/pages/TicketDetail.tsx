@@ -1,22 +1,40 @@
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Button, Card, Descriptions, Spin, Tag, Typography } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { fetchTicketById } from "../api/ticketApi";
+import { streamTicketById, type TicketSla } from "../api/ticketApi";
 
 const { Title } = Typography;
 
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [ticket, setTicket] = useState<TicketSla | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const { data: ticket, isLoading } = useQuery({
-    queryKey: ["ticket", id],
-    queryFn: () => fetchTicketById(Number(id)),
-    enabled: !!id,
-  });
+  useEffect(() => {
+    if (!id) return;
 
-  if (isLoading) {
+    setLoading(true);
+    setTicket(null);
+
+    const controller = streamTicketById(
+      Number(id),
+      (data) => {
+        setTicket(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Ticket detail stream error:", error);
+        setLoading(false);
+      },
+      () => setLoading(false),
+    );
+
+    return () => controller.abort();
+  }, [id]);
+
+  if (loading) {
     return (
       <div className="flex justify-center py-20">
         <Spin size="large" />

@@ -1,3 +1,7 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://127.0.0.1:8761/eureka}
 server:
   port: 8080
 spring:
@@ -35,15 +39,30 @@ spring:
           httpclient:
             connect-timeout: 10000
             response-timeout: 30s
+            compression: false
           routes:
+            - id: ticket-sse-route
+              uri: lb://workflow-service
+              predicates:
+                - Path=/workflow-service/v1/ticket/stream/**
+                - Method=GET
+              filters:
+                - name: PreserveHostHeader
+                - name: RemoveResponseHeader
+                  args:
+                    name: Transfer-Encoding
+                - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
+              metadata:
+                response-timeout: 1800000
+                connect-timeout: 60000
             - id: workflow-websocket
-              uri: ws://127.0.0.1:8081
+              uri: lb:ws://workflow-service
               predicates:
                 - Path=/workflow-service/web-socket/**
               filters:
                 - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
             - id: workflow
-              uri: http://127.0.0.1:8081
+              uri: lb://workflow-service
               predicates:
                 - Path=/workflow-service/**
               filters:
