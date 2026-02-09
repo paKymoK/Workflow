@@ -1,5 +1,3 @@
-import api from "./axios";
-
 export interface PageResponse<T> {
   content: T[];
   page: number;
@@ -35,22 +33,6 @@ export interface TicketSla {
     priority: { id: number; name: string; responseTime: number; resolutionTime: number };
   } | null;
 }
-
-export async function fetchTickets(page: number, size: number) {
-  const { data } = await api.get<ResultMessage<PageResponse<TicketSla>>>(
-    "/workflow-service/v1/ticket",
-    { params: { page, size } },
-  );
-  return data.data;
-}
-
-export async function fetchTicketById(id: number) {
-  const { data } = await api.get<ResultMessage<TicketSla>>(
-    `/workflow-service/v1/ticket/${id}`,
-  );
-  return data.data;
-}
-
 function parseSSEEvents(buffer: string): { events: string[]; remaining: string } {
   // Handle both \r\n and \n line endings
   const normalized = buffer.replace(/\r\n/g, "\n");

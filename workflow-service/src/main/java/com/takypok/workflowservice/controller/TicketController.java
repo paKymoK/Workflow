@@ -64,7 +64,7 @@ public class TicketController {
 
   @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<ResultMessage<PageResponse<TicketSla>>>> streamTicketSla(
-      @Valid FilterTicketRequest request, @RequestParam(defaultValue = "5") int intervalSeconds) {
+      @Valid FilterTicketRequest request, @RequestParam(defaultValue = "1") int intervalSeconds) {
     return Flux.interval(Duration.ZERO, Duration.ofSeconds(intervalSeconds))
         .flatMap(
             sequence ->
@@ -82,7 +82,7 @@ public class TicketController {
 
   @GetMapping(value = "/stream/id", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<ResultMessage<TicketSla>>> streamTicketSlaById(
-      @Valid @RequestParam Long id, @RequestParam(defaultValue = "5") int intervalSeconds) {
+      @Valid @RequestParam Long id, @RequestParam(defaultValue = "1") int intervalSeconds) {
     return Flux.interval(Duration.ZERO, Duration.ofSeconds(intervalSeconds))
         .flatMap(
             sequence ->

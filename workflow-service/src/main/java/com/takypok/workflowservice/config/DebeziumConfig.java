@@ -108,8 +108,9 @@ public class DebeziumConfig {
       try {
         ChangeData<SlaTracker> change =
             mapper.readValue(message.getPayload(), new TypeReference<>() {});
-//        SlaStatus before = convertToSlaStatus(change.getPayload().getBefore().getStatus());
-//        SlaStatus after = convertToSlaStatus(change.getPayload().getAfter().getStatus());
+        //        SlaStatus before =
+        // convertToSlaStatus(change.getPayload().getBefore().getStatus());
+        //        SlaStatus after = convertToSlaStatus(change.getPayload().getAfter().getStatus());
         //        if (change.getPayload().getAfter().getId().equals(1L)) {
         //          System.out.println("Before: " + before);
         //          System.out.println("After: " + after);

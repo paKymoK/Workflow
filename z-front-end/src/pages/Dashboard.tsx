@@ -38,7 +38,7 @@ const columns: ColumnsType<TicketSla> = [
       assignee?.preferred_username ?? assignee?.name ?? "-",
   },
   {
-    title: "SLA Time (min)",
+    title: "SLA Time (seconds)",
     dataIndex: ["sla", "time"],
     width: 130,
     render: (time: number | undefined) => time ?? "-",
