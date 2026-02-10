@@ -52,7 +52,25 @@ function extractEventData(event: string): string | null {
   return dataLines.length > 0 ? dataLines.join("") : null;
 }
 
-function unwrapTicket(parsed: unknown): TicketSla | TicketSla[] | null {
+function unwrapPagingTicket(parsed: unknown): PageResponse<TicketSla> | null {
+  if (!parsed || typeof parsed !== "object") return null;
+
+  const obj = parsed as Record<string, unknown>;
+
+  if ("status" in obj && "data" in obj && obj.data) {
+    const inner = obj.data as Record<string, unknown>;
+    if ("content" in inner && Array.isArray(inner.content)) {
+      return inner as unknown as PageResponse<TicketSla>;
+    }
+
+    return null;
+  }
+  return null;
+}
+
+
+
+function unwrapTicketDetail(parsed: unknown): TicketSla | null {
   if (!parsed || typeof parsed !== "object") return null;
 
   const obj = parsed as Record<string, unknown>;
@@ -60,31 +78,11 @@ function unwrapTicket(parsed: unknown): TicketSla | TicketSla[] | null {
   // Wrapped in ResultMessage: { status: {...}, data: ... }
   if ("status" in obj && "data" in obj && obj.data) {
     const inner = obj.data as Record<string, unknown>;
-    // ResultMessage<PageResponse<TicketSla>>
-    if ("content" in inner && Array.isArray(inner.content)) {
-      return inner.content as TicketSla[];
-    }
-    // ResultMessage<TicketSla>
     if ("id" in inner) {
       return inner as unknown as TicketSla;
     }
-    // ResultMessage<TicketSla[]>
-    if (Array.isArray(inner)) {
-      return inner as TicketSla[];
-    }
     return null;
   }
-
-  // Raw PageResponse: { content: [...], page: ... }
-  if ("content" in obj && Array.isArray(obj.content)) {
-    return obj.content as TicketSla[];
-  }
-
-  // Raw TicketSla: { id: ..., summary: ... }
-  if ("id" in obj) {
-    return obj as unknown as TicketSla;
-  }
-
   return null;
 }
 
@@ -130,21 +128,21 @@ async function connectSSE(
 }
 
 export function streamTickets(
-  onTicket: (ticket: TicketSla) => void,
+  page: number,
+  size: number,
+  onTicket: (ticket: PageResponse<TicketSla>) => void,
   onError?: (error: Error) => void,
   onComplete?: () => void,
 ): AbortController {
   const controller = new AbortController();
 
   connectSSE(
-    "/workflow-service/v1/ticket/stream",
+    `/workflow-service/v1/ticket/stream?page=${page}&size=${size}`,
     (json) => {
       try {
         const parsed = JSON.parse(json);
-        const result = unwrapTicket(parsed);
-        if (Array.isArray(result)) {
-          result.forEach(onTicket);
-        } else if (result) {
+        const result = unwrapPagingTicket(parsed);
+        if (result) {
           onTicket(result);
         }
       } catch (e) {
@@ -176,7 +174,7 @@ export function streamTicketById(
     (json) => {
       try {
         const parsed = JSON.parse(json);
-        const result = unwrapTicket(parsed);
+        const result = unwrapTicketDetail(parsed);
         if (Array.isArray(result)) {
           if (result.length > 0) onTicket(result[0]);
         } else if (result) {

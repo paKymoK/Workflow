@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Table, Tag, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
-import { streamTickets, type TicketSla } from "../api/ticketApi";
+import { streamTickets, type PageResponse, type TicketSla } from "../api/ticketApi";
 
 const { Title } = Typography;
 
@@ -10,7 +10,7 @@ const columns: ColumnsType<TicketSla> = [
   {
     title: "ID",
     dataIndex: "id",
-    width: 80,
+    width: 120,
   },
   {
     title: "Summary",
@@ -47,48 +47,63 @@ const columns: ColumnsType<TicketSla> = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<Map<number, TicketSla>>(new Map());
+  const [tickets, setTickets] = useState<TicketSla[]>([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const initialLoadDone = useRef(false);
-
-  const handleTicket = useCallback((ticket: TicketSla) => {
-    if (!initialLoadDone.current) {
-      initialLoadDone.current = true;
-      setLoading(false);
-    }
-    setTickets((prev) => {
-      const next = new Map(prev);
-      next.set(ticket.id, ticket);
-      return next;
-    });
-  }, []);
+  const loadingRef = useRef(false);
 
   useEffect(() => {
-    initialLoadDone.current = false;
-    setLoading(true);
+    let isMounted = true;
+
+    const wrappedHandleTicket = (pageResponse: PageResponse<TicketSla>) => {
+      if (isMounted) {
+        setTickets(pageResponse.content);
+        setTotal(pageResponse.totalElements);
+        setLoading(false);
+        loadingRef.current = false;
+      }
+    };
 
     const controller = streamTickets(
-      handleTicket,
+      page,
+      pageSize,
+      wrappedHandleTicket,
       (error) => {
         console.error("Ticket stream error:", error);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          loadingRef.current = false;
+        }
       },
-      () => setLoading(false),
+      () => {
+        if (isMounted) {
+          setLoading(false);
+          loadingRef.current = false;
+        }
+      },
     );
 
-    return () => controller.abort();
-  }, [handleTicket]);
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [page, pageSize]);
 
-  const allTickets = Array.from(tickets.values()).sort((a, b) => b.id - a.id);
+  const handlePaginationChange = (p: number, size: number) => {
+    setLoading(true);
+    loadingRef.current = true;
+    setPage(p - 1);
+    setPageSize(size);
+  };
 
   return (
     <>
       <Title level={3}>Dashboard</Title>
       <Table<TicketSla>
         columns={columns}
-        dataSource={allTickets}
+        dataSource={tickets}
         rowKey="id"
         loading={loading}
         onRow={(record) => ({
@@ -98,13 +113,10 @@ export default function Dashboard() {
         pagination={{
           current: page + 1,
           pageSize,
-          total: allTickets.length,
+          total: total,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} tickets`,
-          onChange: (p, size) => {
-            setPage(p - 1);
-            setPageSize(size);
-          },
+          onChange: handlePaginationChange,
         }}
       />
     </>

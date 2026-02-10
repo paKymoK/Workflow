@@ -15,23 +15,33 @@ export default function TicketDetail() {
   useEffect(() => {
     if (!id) return;
 
-    setLoading(true);
-    setTicket(null);
+    let isMounted = true;
 
     const controller = streamTicketById(
       Number(id),
       (data) => {
-        setTicket(data);
-        setLoading(false);
+        if (isMounted) {
+          setTicket(data);
+          setLoading(false);
+        }
       },
       (error) => {
         console.error("Ticket detail stream error:", error);
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       },
-      () => setLoading(false),
+      () => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      },
     );
 
-    return () => controller.abort();
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [id]);
 
   if (loading) {
@@ -90,7 +100,7 @@ export default function TicketDetail() {
       {ticket.sla && (
         <Card title="SLA">
           <Descriptions column={2} bordered size="small">
-            <Descriptions.Item label="Time (min)">
+            <Descriptions.Item label="Time (second)">
               {ticket.sla.time}
             </Descriptions.Item>
             <Descriptions.Item label="Response Status">
