@@ -3,7 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: tqthai/postgres # The explicit image name and tag
+    image: tqthai/postgres
+    deploy:
+      resources:
+        limits:
+          memory: 2024M
     container_name: tqthai_postgres
     environment:
       POSTGRES_USER: postgres
