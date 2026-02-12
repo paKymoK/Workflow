@@ -13,16 +13,15 @@ import reactor.core.publisher.Sinks;
 
 @Configuration
 public class WebSocketConfig {
-
   @Bean
   public Sinks.Many<String> sink() {
     return Sinks.many().replay().latest();
   }
 
   @Bean
-  public HandlerMapping handlerMapping(Sinks.Many<String> sink) {
+  public HandlerMapping handlerMapping(SlaEventWebSocket slaEventWebSocket) {
     Map<String, WebSocketHandler> map = new HashMap<>();
-    map.put("/web-socket/sla", new SlaEventWebSocket(sink));
+    map.put("/web-socket/sla", slaEventWebSocket);
     int order = 1;
 
     return new SimpleUrlHandlerMapping(map, order);
