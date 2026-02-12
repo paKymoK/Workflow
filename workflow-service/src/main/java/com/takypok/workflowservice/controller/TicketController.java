@@ -13,13 +13,9 @@ import com.takypok.workflowservice.model.response.PageResponse;
 import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.service.TicketService;
 import jakarta.validation.Valid;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -60,41 +56,5 @@ public class TicketController {
   public Mono<ResultMessage<Ticket<TicketDetail>>> transition(
       @RequestBody @Valid TransitionRequest transitionRequest) {
     return ticketService.transition(transitionRequest).map(ResultMessage::success);
-  }
-
-  @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<ServerSentEvent<ResultMessage<PageResponse<TicketSla>>>> streamTicketSla(
-      @Valid FilterTicketRequest request, @RequestParam(defaultValue = "1") int intervalSeconds) {
-    return Flux.interval(Duration.ZERO, Duration.ofSeconds(intervalSeconds))
-        .flatMap(
-            sequence ->
-                ticketService
-                    .get(request)
-                    .map(ResultMessage::success)
-                    .map(
-                        messages ->
-                            ServerSentEvent.<ResultMessage<PageResponse<TicketSla>>>builder()
-                                .id(String.valueOf(sequence))
-                                .event("sla-update")
-                                .data(messages)
-                                .build()));
-  }
-
-  @GetMapping(value = "/stream/id", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<ServerSentEvent<ResultMessage<TicketSla>>> streamTicketSlaById(
-      @Valid @RequestParam Long id, @RequestParam(defaultValue = "1") int intervalSeconds) {
-    return Flux.interval(Duration.ZERO, Duration.ofSeconds(intervalSeconds))
-        .flatMap(
-            sequence ->
-                ticketService
-                    .get(id)
-                    .map(ResultMessage::success)
-                    .map(
-                        messages ->
-                            ServerSentEvent.<ResultMessage<TicketSla>>builder()
-                                .id(String.valueOf(sequence))
-                                .event("sla-update")
-                                .data(messages)
-                                .build()));
   }
 }
