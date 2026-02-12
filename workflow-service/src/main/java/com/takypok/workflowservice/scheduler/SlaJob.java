@@ -8,10 +8,9 @@ import reactor.core.publisher.Sinks;
 @Component
 @RequiredArgsConstructor
 public class SlaJob extends CoreJob {
-  private final Sinks.Many<String> sink;
 
   @Override
   public void execute(JobExecutionContext context) {
-    sink.tryEmitNext("Test");
+    //TODO: do something here
   }
 }
