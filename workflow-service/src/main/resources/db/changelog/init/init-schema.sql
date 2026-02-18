@@ -31,11 +31,11 @@ CREATE TABLE IF NOT EXISTS priority
 CREATE TABLE IF NOT EXISTS sla
 (
     id          bigserial NOT NULL,
-    status      jsonb     NOT NULL,
-    time        bigint    NOT NULL DEFAULT 0,
     ticket_id   bigint    NOT NULL,
-    priority    jsonb     NOT NULL,
+    status      jsonb     NOT NULL,
+    event       jsonb     NOT NULL,
     paused_time jsonb     NOT NULL,
+    priority    jsonb     NOT NULL,
     setting     jsonb     NOT NULL,
     created_at  timestamp with time zone,
     created_by  character varying,
@@ -142,6 +142,24 @@ CREATE OR REPLACE TRIGGER validate_paused_time
     ON sla
     FOR EACH ROW
 EXECUTE FUNCTION validate_paused_time();
+
+CREATE OR REPLACE FUNCTION ticket_event_trigger()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    RAISE EXCEPTION 'DATA % - %', OLD.status ->> 'group' , NEW.status ->> 'group';
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER ticket_event_trigger
+    AFTER UPDATE OF status
+    ON ticket
+    FOR EACH ROW
+    WHEN (OLD.status ->> 'group' IS DISTINCT FROM NEW.status ->> 'group')
+EXECUTE FUNCTION ticket_event_trigger();
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 

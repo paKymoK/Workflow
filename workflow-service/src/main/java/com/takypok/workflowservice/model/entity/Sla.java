@@ -1,6 +1,7 @@
 package com.takypok.workflowservice.model.entity;
 
 import com.takypok.core.model.IdEntity;
+import com.takypok.workflowservice.model.entity.custom.ListEvent;
 import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import lombok.*;
 
@@ -11,9 +12,9 @@ import lombok.*;
 @ToString
 public class Sla extends IdEntity {
   private Long ticketId;
-  private Long time;
   private SlaStatus status;
-  private Priority priority;
+  private ListEvent event;
   private ListPausedTime pausedTime;
+  private Priority priority;
   private SlaSetting setting;
 }

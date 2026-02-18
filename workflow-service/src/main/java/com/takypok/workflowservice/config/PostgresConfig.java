@@ -44,6 +44,8 @@ public class PostgresConfig {
     converters.add(new SlaStatusWriter(mapper));
     converters.add(new SlaSettingReader(mapper));
     converters.add(new SlaSettingWriter(mapper));
+    converters.add(new SlaEventReader(mapper));
+    converters.add(new SlaEventWriter(mapper));
     converters.add(new StatusReader(mapper));
     converters.add(new StatusWriter(mapper));
     converters.add(new SlaReader(mapper));
