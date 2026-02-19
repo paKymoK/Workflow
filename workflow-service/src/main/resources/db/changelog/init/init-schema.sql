@@ -107,10 +107,9 @@ CREATE TABLE IF NOT EXISTS issue_type
 ALTER TABLE sla
     REPLICA IDENTITY FULL;
 
-CREATE INDEX idx_ticket_status_group ON ticket USING GIN((status -> 'group'));
-
-CREATE INDEX idx_ticket_active_status ON ticket ((status ->> 'group'))
-    WHERE status ->> 'group' IN ('TODO', 'PROCESSING');
+CREATE INDEX IF NOT EXISTS idx_sla_ticket_id ON sla(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla((status ->> 'response'));
+CREATE INDEX IF NOT EXISTS idx_sla_status_resolution ON sla((status ->> 'resolution'));
 
 CREATE OR REPLACE FUNCTION validate_paused_time()
     RETURNS TRIGGER
@@ -149,7 +148,17 @@ CREATE OR REPLACE FUNCTION ticket_event_trigger()
 AS
 $$
 BEGIN
-    RAISE EXCEPTION 'DATA % - %', OLD.status ->> 'group' , NEW.status ->> 'group';
+    IF (OLD.status ->> 'group' = 'TODO') AND (NEW.status ->> 'group' = 'PROCESSING') THEN
+        UPDATE sla SET status = status || jsonb_build_object(
+                'response', 'DONE'
+                                          );
+    END IF;
+
+    IF (OLD.status ->> 'group' = 'PROCESSING') AND (NEW.status ->> 'group' = 'DONE') THEN
+        UPDATE sla SET status = status || jsonb_build_object(
+                'resolution', 'DONE'
+                                          );
+    END IF;
     RETURN NEW;
 END;
 $$;

@@ -7,26 +7,27 @@ CREATE OR REPLACE FUNCTION calculate_office_end_time(
     p_lunch_start TIME DEFAULT '12:00:00',
     p_lunch_end TIME DEFAULT '13:00:00',
     p_out_of_office TSTZRANGE[] DEFAULT NULL,
-    p_weekend_days INTEGER[] DEFAULT ARRAY[0, 6]
+    p_weekend_days INTEGER[] DEFAULT ARRAY [0, 6]
 )
-    RETURNS TIMESTAMPTZ AS $$
+    RETURNS TIMESTAMPTZ AS
+$$
 DECLARE
-    v_current_date DATE;
+    v_current_date      DATE;
     v_remaining_seconds INTEGER;
-    v_work_day_start TIMESTAMPTZ;
-    v_work_day_end TIMESTAMPTZ;
-    v_lunch_start_ts TIMESTAMPTZ;
-    v_lunch_end_ts TIMESTAMPTZ;
-    v_work_start TIMESTAMPTZ;
-    v_work_end TIMESTAMPTZ;
-    v_period_seconds INTEGER;
-    v_ooo_range TSTZRANGE;
-    v_overlap_start TIMESTAMPTZ;
-    v_overlap_end TIMESTAMPTZ;
-    v_overlap_seconds INTEGER;
-    v_day_of_week INTEGER;
-    v_max_iterations INTEGER := 365; -- Prevent infinite loops
-    v_iteration_count INTEGER := 0;
+    v_work_day_start    TIMESTAMPTZ;
+    v_work_day_end      TIMESTAMPTZ;
+    v_lunch_start_ts    TIMESTAMPTZ;
+    v_lunch_end_ts      TIMESTAMPTZ;
+    v_work_start        TIMESTAMPTZ;
+    v_work_end          TIMESTAMPTZ;
+    v_period_seconds    INTEGER;
+    v_ooo_range         TSTZRANGE;
+    v_overlap_start     TIMESTAMPTZ;
+    v_overlap_end       TIMESTAMPTZ;
+    v_overlap_seconds   INTEGER;
+    v_day_of_week       INTEGER;
+    v_max_iterations    INTEGER := 365; -- Prevent infinite loops
+    v_iteration_count   INTEGER := 0;
 BEGIN
     -- Validate input
     IF p_from IS NULL OR p_hours_to_work IS NULL OR p_hours_to_work <= 0 THEN
@@ -55,14 +56,15 @@ BEGIN
     v_current_date := (p_from AT TIME ZONE p_timezone)::DATE;
 
     -- Loop through days until we accumulate enough work time
-    WHILE v_remaining_seconds > 0 AND v_iteration_count < v_max_iterations LOOP
+    WHILE v_remaining_seconds > 0 AND v_iteration_count < v_max_iterations
+        LOOP
             v_iteration_count := v_iteration_count + 1;
 
             -- Get day of week
             v_day_of_week := EXTRACT(DOW FROM v_current_date)::INTEGER;
 
             -- Check if current day is a working day
-            IF p_weekend_days IS NULL OR NOT (v_day_of_week = ANY(p_weekend_days)) THEN
+            IF p_weekend_days IS NULL OR NOT (v_day_of_week = ANY (p_weekend_days)) THEN
 
                 -- Create work day timestamps
                 v_work_day_start := make_timestamptz(
@@ -114,7 +116,8 @@ BEGIN
 
                     -- Subtract out-of-office overlaps
                     IF p_out_of_office IS NOT NULL THEN
-                        FOREACH v_ooo_range IN ARRAY p_out_of_office LOOP
+                        FOREACH v_ooo_range IN ARRAY p_out_of_office
+                            LOOP
                                 v_overlap_start := GREATEST(v_work_start, LOWER(v_ooo_range));
                                 v_overlap_end := LEAST(v_work_end, UPPER(v_ooo_range));
 
@@ -144,12 +147,14 @@ BEGIN
 
                         -- Subtract out-of-office overlaps
                         IF p_out_of_office IS NOT NULL THEN
-                            FOREACH v_ooo_range IN ARRAY p_out_of_office LOOP
+                            FOREACH v_ooo_range IN ARRAY p_out_of_office
+                                LOOP
                                     v_overlap_start := GREATEST(v_work_start, LOWER(v_ooo_range));
                                     v_overlap_end := LEAST(v_work_end, UPPER(v_ooo_range));
 
                                     IF v_overlap_start < v_overlap_end THEN
-                                        v_overlap_seconds := EXTRACT(EPOCH FROM (v_overlap_end - v_overlap_start))::INTEGER;
+                                        v_overlap_seconds :=
+                                                EXTRACT(EPOCH FROM (v_overlap_end - v_overlap_start))::INTEGER;
                                         v_period_seconds := v_period_seconds - v_overlap_seconds;
                                     END IF;
                                 END LOOP;
@@ -385,61 +390,58 @@ CREATE OR REPLACE PROCEDURE calculate_sla()
 AS
 $$
 BEGIN
-    -- Pre-extract JSONB values to avoid repeated extraction
-    WITH ticket_data AS (
-        SELECT
-            t.id,
-            t.created_at,
-            s.id as sla_id,
-            (s.setting ->> 'workStart')::TIME as work_start,
-            (s.setting ->> 'workEnd')::TIME as work_end,
-            (s.setting ->> 'lunchStart')::TIME as lunch_start,
-            (s.setting ->> 'lunchEnd')::TIME as lunch_end,
-            (s.priority ->> 'responseTime')::INTEGER as response_time,
-            (s.priority ->> 'resolutionTime')::INTEGER as resolution_time,
-            json_to_tstzrange_array(s.paused_time) as paused_ranges,
-            ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) as weekend_days
-        FROM ticket t
-                 INNER JOIN sla s ON t.id = s.ticket_id
-        WHERE t.status ->> 'group' IN ('TODO', 'PROCESSING')
-    )
+    WITH ticket_data AS (SELECT t.id,
+                                t.created_at,
+                                s.id                                                            as sla_id,
+                                (s.setting ->> 'workStart')::TIME                               as work_start,
+                                (s.setting ->> 'workEnd')::TIME                                 as work_end,
+                                (s.setting ->> 'lunchStart')::TIME                              as lunch_start,
+                                (s.setting ->> 'lunchEnd')::TIME                                as lunch_end,
+                                (s.priority ->> 'responseTime')::INTEGER                        as response_time,
+                                (s.priority ->> 'resolutionTime')::INTEGER                      as resolution_time,
+                                json_to_tstzrange_array(s.paused_time)                          as paused_ranges,
+                                ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) as weekend_days
+                         FROM ticket t
+                                  INNER JOIN sla s ON t.id = s.ticket_id)
     UPDATE sla s
-    SET time = calculate_office_time(
-            td.created_at,
-            NOW(),
-            'Asia/Ho_Chi_Minh',
-            td.work_start,
-            td.work_end,
-            td.lunch_start,
-            td.lunch_end,
-            td.paused_ranges,
-            td.weekend_days
-               ) , status = status || jsonb_build_object(
-            'responseTime', calculate_office_end_time(
-                    td.created_at,
-                    response_time,
-                    'Asia/Ho_Chi_Minh',
-                    td.work_start,
-                    td.work_end,
-                    td.lunch_start,
-                    td.lunch_end,
-                    td.paused_ranges,
-                    td.weekend_days
-                            ),
-            'resolutionTime', calculate_office_end_time(
-                    td.created_at,
-                    resolution_time,
-                    'Asia/Ho_Chi_Minh',
-                    td.work_start,
-                    td.work_end,
-                    td.lunch_start,
-                    td.lunch_end,
-                    td.paused_ranges,
-                    td.weekend_days
-                              )
-                                      )
+    SET status = status || jsonb_build_object(
+            'isResponseOverdue', true
+                           )
     FROM ticket_data td
-    WHERE s.id = td.sla_id;
+    WHERE s.id = td.sla_id
+      AND (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+      AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
+      AND calculate_office_time(
+                  td.created_at,
+                  NOW(),
+                  'Asia/Ho_Chi_Minh',
+                  td.work_start,
+                  td.work_end,
+                  td.lunch_start,
+                  td.lunch_end,
+                  td.paused_ranges,
+                  td.weekend_days
+          ) > response_time * 60 * 60;
+
+    UPDATE sla s
+    SET status = status || jsonb_build_object(
+            'isResolutionOverdue', true
+                           )
+    FROM ticket_data td
+    WHERE s.id = td.sla_id
+      AND (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
+      AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
+      AND calculate_office_time(
+                  td.created_at,
+                  NOW(),
+                  'Asia/Ho_Chi_Minh',
+                  td.work_start,
+                  td.work_end,
+                  td.lunch_start,
+                  td.lunch_end,
+                  td.paused_ranges,
+                  td.weekend_days
+          ) > resolution_time * 60 * 60;
 
     -- Commit the transaction
     COMMIT;
