@@ -8,7 +8,6 @@ import com.takypok.workflowservice.model.entity.*;
 import com.takypok.workflowservice.model.entity.custom.GroupStatus;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
-import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.model.ticket.annotation.IssueTypeAnnotation;
 import java.util.Optional;
 import java.util.Set;
@@ -54,22 +53,6 @@ public abstract class TicketMapper {
     }
     throw new ApplicationException(
         Message.Application.ERROR, "IssueType config for " + issueType.getName() + " not found");
-  }
-
-  public TicketSla mapToTicketSla(Ticket<TicketDetail> ticket, Sla sla) {
-    TicketSla ticketSla = new TicketSla();
-    ticketSla.setId(ticket.getId());
-    ticketSla.setProject(ticket.getProject());
-    ticketSla.setIssueType(ticket.getIssueType());
-    ticketSla.setPriority(ticket.getPriority());
-    ticketSla.setStatus(ticket.getStatus());
-    ticketSla.setSummary(ticket.getSummary());
-    ticketSla.setReporter(ticket.getReporter());
-    ticketSla.setAssignee(ticket.getAssignee());
-    ticketSla.setDetail(ticket.getDetail());
-    ticketSla.setWorkflow(ticket.getWorkflow());
-    ticketSla.setSla(sla);
-    return ticketSla;
   }
 
   protected Status getTodoStatus(Workflow workflow) {

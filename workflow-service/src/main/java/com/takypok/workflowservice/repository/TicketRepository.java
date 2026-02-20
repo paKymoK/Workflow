@@ -18,6 +18,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                     'id',         s.id,
                     'ticketId',   s.ticket_id,
                     'status',     s.status,
+                    'isPaused',   s.is_paused,
                     'priority',   s.priority,
                     'pausedTime', s.paused_time,
                     'setting',    s.setting

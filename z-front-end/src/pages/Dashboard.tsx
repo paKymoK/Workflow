@@ -71,8 +71,11 @@ const columns: ColumnsType<TicketSla> = [
         title: "Actions",
         width: 80,
         render: (_, record) => {
+            const isPaused = record.sla?.isPaused ?? false;
+
             const menuItems: MenuProps['items'] = [
-                {
+                // Show Pause only when ticket is NOT paused
+                !isPaused && {
                     key: 'pause',
                     label: 'Pause',
                     onClick: () => {
@@ -80,7 +83,8 @@ const columns: ColumnsType<TicketSla> = [
                         // Add your pause logic here
                     },
                 },
-                {
+                // Show Resume only when ticket IS paused
+                isPaused && {
                     key: 'resume',
                     label: 'Resume',
                     onClick: () => {
@@ -96,7 +100,7 @@ const columns: ColumnsType<TicketSla> = [
                         // Add your transition logic here
                     },
                 },
-            ];
+            ].filter(Boolean);
 
             return (
                 <Dropdown

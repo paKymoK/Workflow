@@ -13,7 +13,7 @@ import org.mapstruct.Mapping;
 public abstract class SlaMapper {
   @Mapping(target = "id", expression = "java(null)")
   @Mapping(target = "status", expression = "java(defaultStatus())")
-  @Mapping(target = "isPaused", expression = "java(false)")
+  @Mapping(target = "isPaused", expression = "java(defaultIsPaused())")
   @Mapping(target = "priority", source = "priority")
   @Mapping(target = "pausedTime", expression = "java(defaultPausedTime())")
   @Mapping(target = "setting", expression = "java(defaultSlaSetting())")
@@ -25,6 +25,10 @@ public abstract class SlaMapper {
 
   protected ListPausedTime defaultPausedTime() {
     return new ListPausedTime();
+  }
+
+  protected Boolean defaultIsPaused() {
+    return Boolean.FALSE;
   }
 
   protected SlaSetting defaultSlaSetting() {
