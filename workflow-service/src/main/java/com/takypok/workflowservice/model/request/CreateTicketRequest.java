@@ -13,7 +13,6 @@ public class CreateTicketRequest {
   @NotBlank private String summary;
   @NotNull private Long issueTypeId;
   @NotNull private Long projectId;
-  @NotNull private Long workflowId;
   @NotNull private Long priority;
   @NotNull private Object detail;
 }

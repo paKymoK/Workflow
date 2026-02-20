@@ -392,58 +392,44 @@ $$
 BEGIN
     WITH ticket_data AS (SELECT t.id,
                                 t.created_at,
-                                s.id                                                            as sla_id,
-                                (s.setting ->> 'workStart')::TIME                               as work_start,
-                                (s.setting ->> 'workEnd')::TIME                                 as work_end,
-                                (s.setting ->> 'lunchStart')::TIME                              as lunch_start,
-                                (s.setting ->> 'lunchEnd')::TIME                                as lunch_end,
-                                (s.priority ->> 'responseTime')::INTEGER                        as response_time,
-                                (s.priority ->> 'resolutionTime')::INTEGER                      as resolution_time,
-                                json_to_tstzrange_array(s.paused_time)                          as paused_ranges,
-                                ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) as weekend_days
+                                s.id                                                            AS sla_id,
+                                (s.setting ->> 'workStart')::TIME                               AS work_start,
+                                (s.setting ->> 'workEnd')::TIME                                 AS work_end,
+                                (s.setting ->> 'lunchStart')::TIME                              AS lunch_start,
+                                (s.setting ->> 'lunchEnd')::TIME                                AS lunch_end,
+                                (s.priority ->> 'responseTime')::INTEGER                        AS response_time,
+                                (s.priority ->> 'resolutionTime')::INTEGER                      AS resolution_time,
+                                json_to_tstzrange_array(s.paused_time)                          AS paused_ranges,
+                                ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) AS weekend_days
                          FROM ticket t
-                                  INNER JOIN sla s ON t.id = s.ticket_id)
+                                  INNER JOIN sla s ON t.id = s.ticket_id),
+         office_time_data AS (SELECT td.*,
+                                     calculate_office_time(
+                                             td.created_at, NOW(), 'Asia/Ho_Chi_Minh',
+                                             td.work_start, td.work_end,
+                                             td.lunch_start, td.lunch_end,
+                                             td.paused_ranges, td.weekend_days
+                                     ) AS office_seconds
+                              FROM ticket_data td),
+         update_response AS (
+             UPDATE sla s
+                 SET status = status || jsonb_build_object('isResponseOverdue', true)
+                 FROM office_time_data td
+                 WHERE s.id = td.sla_id
+                     AND (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+                     AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
+                     AND td.office_seconds > td.response_time * 60 * 60
+                 RETURNING s.id)
     UPDATE sla s
-    SET status = status || jsonb_build_object(
-            'isResponseOverdue', true
-                           )
-    FROM ticket_data td
-    WHERE s.id = td.sla_id
-      AND (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
-      AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
-      AND calculate_office_time(
-                  td.created_at,
-                  NOW(),
-                  'Asia/Ho_Chi_Minh',
-                  td.work_start,
-                  td.work_end,
-                  td.lunch_start,
-                  td.lunch_end,
-                  td.paused_ranges,
-                  td.weekend_days
-          ) > response_time * 60 * 60;
-
-    UPDATE sla s
-    SET status = status || jsonb_build_object(
-            'isResolutionOverdue', true
-                           )
-    FROM ticket_data td
+    SET status = status || jsonb_build_object('isResolutionOverdue', true)
+    FROM office_time_data td
     WHERE s.id = td.sla_id
       AND (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
       AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
-      AND calculate_office_time(
-                  td.created_at,
-                  NOW(),
-                  'Asia/Ho_Chi_Minh',
-                  td.work_start,
-                  td.work_end,
-                  td.lunch_start,
-                  td.lunch_end,
-                  td.paused_ranges,
-                  td.weekend_days
-          ) > resolution_time * 60 * 60;
+      AND td.office_seconds > td.resolution_time * 60 * 60;
 
     -- Commit the transaction
     COMMIT;
 END;
 $$;
+

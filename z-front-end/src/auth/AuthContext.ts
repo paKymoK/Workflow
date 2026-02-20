@@ -3,6 +3,7 @@ import type { TokenResponse } from "./pkce";
 
 export interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   accessToken: string | null;
   user: Record<string, unknown> | null;
   login: () => Promise<void>;

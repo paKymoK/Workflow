@@ -38,7 +38,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   private final TransitionMapper transitionMapper;
 
   @Override
-  public Mono<Workflow> get(Long id) {
+  public Mono<List<Workflow>> get(Long id) {
+    return workflowRepository.findAll().collectList();
+  }
+
+  @Override
+  public Mono<Workflow> getById(Long id) {
     return workflowRepository
         .findById(id)
         .switchIfEmpty(

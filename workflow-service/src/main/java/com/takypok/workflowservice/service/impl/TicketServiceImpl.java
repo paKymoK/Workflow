@@ -77,8 +77,8 @@ public class TicketServiceImpl implements TicketService {
   @Override
   public Mono<Ticket<TicketDetail>> create(CreateTicketRequest request, User user) {
     return Mono.zip(
-            getWorkflow(request.getWorkflowId()),
-            getProject(request.getProjectId()),
+            getProject(request.getProjectId())
+                .zipWhen(project -> getWorkflow(project.getWorkflowId())),
             getIssueType(request.getIssueTypeId(), request.getProjectId()),
             getPriority(request.getPriority()))
         .flatMap(
@@ -86,10 +86,10 @@ public class TicketServiceImpl implements TicketService {
                 ticketRepository.save(
                     ticketMapper.mapToTicket(
                         request,
-                        tuples.getT1(),
+                        tuples.getT1().getT1(),
+                        tuples.getT1().getT2(),
                         tuples.getT2(),
                         tuples.getT3(),
-                        tuples.getT4(),
                         user)))
         .doOnNext(
             ticket ->

@@ -1,5 +1,6 @@
 import {useRef, useState, useEffect, useCallback} from "react";
-import {Spin, Table, Tag, Typography} from "antd";
+import {Spin, Table, Tag, Typography, Button, Modal} from "antd";
+import {PlusOutlined} from "@ant-design/icons";
 import {useNavigate} from "react-router-dom";
 import type {ColumnsType} from "antd/es/table";
 import {fetchTickets, fetchTicketById} from "../api/ticketApi";
@@ -73,6 +74,7 @@ export default function Dashboard() {
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const token = sessionStorage.getItem("access_token");
 
     // Keep a ref of currently visible IDs for quick lookup
@@ -150,7 +152,17 @@ export default function Dashboard() {
 
     return (
         <>
-            <Title level={3}>Dashboard</Title>
+            <div className="flex justify-between items-center mb-4">
+                <Title level={3} className="mb-0">Dashboard</Title>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setIsModalOpen(true)}
+                >
+                    Create Ticket
+                </Button>
+            </div>
+
             <Table<TicketSla>
                 columns={columnsWithLoading}
                 dataSource={tickets}
@@ -169,6 +181,16 @@ export default function Dashboard() {
                     onChange: handlePaginationChange,
                 }}
             />
+
+            <Modal
+                title="Create Ticket"
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                footer={null}
+                width={800}
+            >
+                {/* Popup content will be added here */}
+            </Modal>
         </>
     );
 }

@@ -34,8 +34,8 @@ public abstract class TicketMapper {
   @Mapping(target = "detail", expression = "java(getTicketDetail(request.getDetail(), issueType))")
   public abstract Ticket<TicketDetail> mapToTicket(
       CreateTicketRequest request,
-      Workflow workflow,
       Project project,
+      Workflow workflow,
       IssueType issueType,
       Priority priority,
       User user);

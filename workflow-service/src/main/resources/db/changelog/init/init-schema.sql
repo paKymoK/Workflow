@@ -80,13 +80,14 @@ CREATE TABLE IF NOT EXISTS workflow
 
 CREATE TABLE IF NOT EXISTS project
 (
-    id          bigserial         NOT NULL,
-    name        character varying NOT NULL,
-    code        character varying NOT NULL,
-    created_at  timestamp with time zone,
-    created_by  character varying,
-    modified_at timestamp with time zone,
-    modified_by character varying,
+    id           bigserial         NOT NULL,
+    name         character varying NOT NULL,
+    code         character varying NOT NULL,
+    workflow_id  bigint            NOT NULL,
+    created_at   timestamp with time zone,
+    created_by   character varying,
+    modified_at  timestamp with time zone,
+    modified_by  character varying,
     PRIMARY KEY (id),
     UNIQUE (code)
 );
@@ -107,9 +108,9 @@ CREATE TABLE IF NOT EXISTS issue_type
 ALTER TABLE sla
     REPLICA IDENTITY FULL;
 
-CREATE INDEX IF NOT EXISTS idx_sla_ticket_id ON sla(ticket_id);
-CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla((status ->> 'response'));
-CREATE INDEX IF NOT EXISTS idx_sla_status_resolution ON sla((status ->> 'resolution'));
+CREATE INDEX IF NOT EXISTS idx_sla_ticket_id ON sla (ticket_id);
+CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla ((status ->> 'response'));
+CREATE INDEX IF NOT EXISTS idx_sla_status_resolution ON sla ((status ->> 'resolution'));
 
 CREATE OR REPLACE FUNCTION validate_paused_time()
     RETURNS TRIGGER
@@ -149,15 +150,17 @@ AS
 $$
 BEGIN
     IF (OLD.status ->> 'group' = 'TODO') AND (NEW.status ->> 'group' = 'PROCESSING') THEN
-        UPDATE sla SET status = status || jsonb_build_object(
+        UPDATE sla
+        SET status = status || jsonb_build_object(
                 'response', 'DONE'
-                                          );
+                               );
     END IF;
 
     IF (OLD.status ->> 'group' = 'PROCESSING') AND (NEW.status ->> 'group' = 'DONE') THEN
-        UPDATE sla SET status = status || jsonb_build_object(
+        UPDATE sla
+        SET status = status || jsonb_build_object(
                 'resolution', 'DONE'
-                                          );
+                               );
     END IF;
     RETURN NEW;
 END;

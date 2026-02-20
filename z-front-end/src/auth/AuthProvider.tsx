@@ -12,6 +12,7 @@ import { AuthContext } from "./AuthContext";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = sessionStorage.getItem("access_token");
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem("access_token");
       }
     }
+    setIsLoading(false);
   }, []);
 
   const login = async () => {
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         isAuthenticated: !!accessToken,
+        isLoading,
         accessToken,
         user,
         login,

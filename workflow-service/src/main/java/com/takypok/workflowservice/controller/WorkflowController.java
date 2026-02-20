@@ -5,6 +5,7 @@ import com.takypok.workflowservice.model.entity.Workflow;
 import com.takypok.workflowservice.model.request.CreateWorkflowRequest;
 import com.takypok.workflowservice.service.WorkflowService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -15,9 +16,14 @@ import reactor.core.publisher.Mono;
 public class WorkflowController {
   private final WorkflowService workflowService;
 
-  @GetMapping("/{id}")
-  public Mono<ResultMessage<?>> getWorkflow(@PathVariable Long id) {
+  @GetMapping("")
+  public Mono<ResultMessage<List<Workflow>>> get(@PathVariable Long id) {
     return workflowService.get(id).map(ResultMessage::success);
+  }
+
+  @GetMapping("/{id}")
+  public Mono<ResultMessage<Workflow>> getById(@PathVariable Long id) {
+    return workflowService.getById(id).map(ResultMessage::success);
   }
 
   @PostMapping
