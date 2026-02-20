@@ -1,124 +1,174 @@
-import { useEffect, useRef, useState } from "react";
-import { Table, Tag, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
-import type { ColumnsType } from "antd/es/table";
-import { streamTickets, type PageResponse, type TicketSla } from "../api/ticketApi";
+import {useRef, useState, useEffect, useCallback} from "react";
+import {Spin, Table, Tag, Typography} from "antd";
+import {useNavigate} from "react-router-dom";
+import type {ColumnsType} from "antd/es/table";
+import {fetchTickets, fetchTicketById} from "../api/ticketApi";
+import type {TicketSla} from "../api/types.ts";
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 const columns: ColumnsType<TicketSla> = [
-  {
-    title: "ID",
-    dataIndex: "id",
-    width: 120,
-  },
-  {
-    title: "Summary",
-    dataIndex: "summary",
-    ellipsis: true,
-  },
-  {
-    title: "Status",
-    dataIndex: ["status", "name"],
-    width: 120,
-    render: (name: string, record) => (
-      <Tag color={record.status?.color}>{name}</Tag>
-    ),
-  },
-  {
-    title: "Priority",
-    dataIndex: ["priority", "name"],
-    width: 100,
-  },
-  {
-    title: "Assignee",
-    dataIndex: "assignee",
-    width: 140,
-    render: (assignee: TicketSla["assignee"]) =>
-      assignee?.preferred_username ?? assignee?.name ?? "-",
-  },
-  {
-    title: "SLA Time (seconds)",
-    dataIndex: ["sla", "time"],
-    width: 130,
-    render: (time: number | undefined) => time ?? "-",
-  },
+    {
+        title: "ID",
+        dataIndex: "id",
+        width: 120,
+    },
+    {
+        title: "Summary",
+        dataIndex: "summary",
+        ellipsis: true,
+    },
+    {
+        title: "Status",
+        dataIndex: ["status", "name"],
+        width: 120,
+        render: (name: string, record) => (
+            <Tag color={record.status?.color}>{name}</Tag>
+        ),
+    },
+    {
+        title: "Response Status",
+        dataIndex: ["sla", "status", "response"],
+        width: 140,
+        render: (_, record) => {
+            if (!record.sla?.status?.response) return "-";
+            return (
+                <Tag color={record.sla.status.isResponseOverdue ? "red" : "green"}>
+                    {record.sla.status.response}
+                </Tag>
+            );
+        },
+    },
+    {
+        title: "Resolution Status",
+        dataIndex: ["sla", "status", "resolution"],
+        width: 140,
+        render: (_, record) => {
+            if (!record.sla?.status?.resolution) return "-";
+            return (
+                <Tag color={record.sla.status.isResolutionOverdue ? "red" : "green"}>
+                    {record.sla.status.resolution}
+                </Tag>
+            );
+        },
+    },
+    {
+        title: "Priority",
+        dataIndex: ["priority", "name"],
+        width: 100,
+    },
+    {
+        title: "Assignee",
+        dataIndex: "assignee",
+        width: 140,
+        render: (assignee: TicketSla["assignee"]) =>
+            assignee?.preferred_username ?? assignee?.name ?? "-",
+    }
 ];
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const [tickets, setTickets] = useState<TicketSla[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const loadingRef = useRef(false);
+    const navigate = useNavigate();
+    const [tickets, setTickets] = useState<TicketSla[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [total, setTotal] = useState(0);
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const token = sessionStorage.getItem("access_token");
 
-  useEffect(() => {
-    let isMounted = true;
+    // Keep a ref of currently visible IDs for quick lookup
+    const visibleIdsRef = useRef<Set<string | number>>(new Set());
 
-    const wrappedHandleTicket = (pageResponse: PageResponse<TicketSla>) => {
-      if (isMounted) {
-        setTickets(pageResponse.content);
-        setTotal(pageResponse.totalElements);
-        setLoading(false);
-        loadingRef.current = false;
-      }
+    // Track which rows are being refreshed individually
+    const [refreshingIds, setRefreshingIds] = useState<Set<string | number>>(new Set());
+
+    const loadPage = useCallback(async (p: number, size: number) => {
+        setLoading(true);
+        try {
+            const {content, totalElements} = await fetchTickets(p, size);
+            setTickets(content);
+            setTotal(totalElements);
+            visibleIdsRef.current = new Set(content.map((t) => t.id));
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadPage(page, pageSize);
+    }, [page, pageSize, loadPage]);
+
+    // Patch a single row without re-fetching the whole table
+    const refreshRow = useCallback(async (id: string | number) => {
+        if (!visibleIdsRef.current.has(id)) return; // not on current page, ignore
+
+        setRefreshingIds((prev) => new Set(prev).add(id));
+        try {
+            const updated = await fetchTicketById(id);
+            setTickets((prev) =>
+                prev.map((t) => (t.id === id ? updated : t))
+            );
+        } finally {
+            setRefreshingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+        }
+    }, []);
+
+    // WebSocket setup
+    useEffect(() => {
+        const ws = new WebSocket("ws://localhost:8080/workflow-service/web-socket/sla");
+
+        ws.onopen = () => {
+            ws.send(token ?? "");
+        };
+
+        ws.onmessage = (event) => {
+            const id = Number(event.data);
+            refreshRow(id);
+        };
+
+        return () => ws.close();
+    }, [refreshRow, token]);
+
+    const handlePaginationChange = (p: number, size: number) => {
+        setPage(p - 1);
+        setPageSize(size);
     };
 
-    const controller = streamTickets(
-      page,
-      pageSize,
-      wrappedHandleTicket,
-      (error) => {
-        console.error("Ticket stream error:", error);
-        if (isMounted) {
-          setLoading(false);
-          loadingRef.current = false;
-        }
-      },
-      () => {
-        if (isMounted) {
-          setLoading(false);
-          loadingRef.current = false;
-        }
-      },
+    // Optionally show a per-row loading indicator in your columns
+    const columnsWithLoading: ColumnsType<TicketSla> = [
+        ...columns,
+        {
+            title: "",
+            width: 40,
+            render: (_, record) =>
+                refreshingIds.has(record.id) ? <Spin size="small"/> : null,
+        },
+    ];
+
+    return (
+        <>
+            <Title level={3}>Dashboard</Title>
+            <Table<TicketSla>
+                columns={columnsWithLoading}
+                dataSource={tickets}
+                rowKey="id"
+                loading={loading}
+                onRow={(record) => ({
+                    onClick: () => navigate(`/dashboard/${record.id}`),
+                    style: {cursor: "pointer"},
+                })}
+                pagination={{
+                    current: page + 1,
+                    pageSize,
+                    total,
+                    showSizeChanger: true,
+                    showTotal: (t) => `Total ${t} tickets`,
+                    onChange: handlePaginationChange,
+                }}
+            />
+        </>
     );
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [page, pageSize]);
-
-  const handlePaginationChange = (p: number, size: number) => {
-    setLoading(true);
-    loadingRef.current = true;
-    setPage(p - 1);
-    setPageSize(size);
-  };
-
-  return (
-    <>
-      <Title level={3}>Dashboard</Title>
-      <Table<TicketSla>
-        columns={columns}
-        dataSource={tickets}
-        rowKey="id"
-        loading={loading}
-        onRow={(record) => ({
-          onClick: () => navigate(`/dashboard/${record.id}`),
-          style: { cursor: "pointer" },
-        })}
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total: total,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} tickets`,
-          onChange: handlePaginationChange,
-        }}
-      />
-    </>
-  );
 }

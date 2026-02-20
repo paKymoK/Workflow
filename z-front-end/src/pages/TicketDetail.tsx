@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button, Card, Descriptions, Spin, Tag, Typography } from "antd";
+import { Spin, Typography, Card, Descriptions, Tag, Button } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { streamTicketById, type TicketSla } from "../api/ticketApi";
+import type {TicketSla} from "../api/types.ts";
+import {useState, useEffect, useCallback} from "react";
+import { fetchTicketById } from "../api/ticketApi";
 
 const { Title } = Typography;
 
@@ -11,38 +12,65 @@ export default function TicketDetail() {
   const navigate = useNavigate();
   const [ticket, setTicket] = useState<TicketSla | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const token = sessionStorage.getItem("access_token");
 
+  // Load ticket data
+  const loadTicket = useCallback(async () => {
+    if (!id) return;
+
+    setLoading(true);
+    try {
+      const data = await fetchTicketById(id);
+      setTicket(data);
+    } catch (error) {
+      console.error("Failed to fetch ticket:", error);
+      setTicket(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  // Refresh ticket data (for websocket updates)
+  const refreshTicket = useCallback(async () => {
+    if (!id) return;
+
+    setRefreshing(true);
+    try {
+      const data = await fetchTicketById(id);
+      setTicket(data);
+    } catch (error) {
+      console.error("Failed to refresh ticket:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [id]);
+
+  // Initial load
+  useEffect(() => {
+    loadTicket();
+  }, [loadTicket]);
+
+  // WebSocket setup
   useEffect(() => {
     if (!id) return;
 
-    let isMounted = true;
+    const ws = new WebSocket("ws://localhost:8080/workflow-service/web-socket/sla");
 
-    const controller = streamTicketById(
-      Number(id),
-      (data) => {
-        if (isMounted) {
-          setTicket(data);
-          setLoading(false);
-        }
-      },
-      (error) => {
-        console.error("Ticket detail stream error:", error);
-        if (isMounted) {
-          setLoading(false);
-        }
-      },
-      () => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      },
-    );
-
-    return () => {
-      isMounted = false;
-      controller.abort();
+    ws.onopen = () => {
+      ws.send(token ?? "");
     };
-  }, [id]);
+
+    ws.onmessage = (event) => {
+      const ticketId = Number(event.data);
+      // Only refresh if the update is for this ticket
+      if (ticketId === Number(id)) {
+        refreshTicket();
+      }
+    };
+
+    return () => ws.close();
+  }, [id, token, refreshTicket]);
 
   if (loading) {
     return (
@@ -53,74 +81,93 @@ export default function TicketDetail() {
   }
 
   if (!ticket) {
-    return <Title level={4}>Ticket not found</Title>;
+    return (
+      <div>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate("/dashboard")}
+          className="mb-4"
+        >
+          Back to Dashboard
+        </Button>
+        <Title level={4}>Ticket not found</Title>
+      </div>
+    );
   }
 
   return (
-    <>
-      <div className="mb-4 flex items-center gap-3">
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/dashboard")}
-        />
-        <Title level={3} className="!mb-0">
-          Ticket #{ticket.id}
-        </Title>
-      </div>
+    <div>
+      <Button
+        icon={<ArrowLeftOutlined />}
+        onClick={() => navigate("/dashboard")}
+        className="mb-4"
+      >
+        Back to Dashboard
+      </Button>
 
-      <Card className="mb-4">
-        <Descriptions column={2} bordered size="small">
+      <Card title={<Title level={3}>Ticket #{ticket.id}</Title>} extra={refreshing && <Spin size="small" />}>
+        <Descriptions bordered column={2}>
           <Descriptions.Item label="Summary" span={2}>
             {ticket.summary}
           </Descriptions.Item>
+
           <Descriptions.Item label="Project">
-            {ticket.project?.name} ({ticket.project?.code})
+            {ticket.project.name} ({ticket.project.code})
           </Descriptions.Item>
+
           <Descriptions.Item label="Issue Type">
-            {ticket.issueType?.name}
+            {ticket.issueType.name}
           </Descriptions.Item>
+
           <Descriptions.Item label="Status">
-            <Tag color={ticket.status?.color}>{ticket.status?.name}</Tag>
+            <Tag color={ticket.status.color}>{ticket.status.name}</Tag>
           </Descriptions.Item>
+
           <Descriptions.Item label="Priority">
-            {ticket.priority?.name}
+            {ticket.priority.name}
           </Descriptions.Item>
+
           <Descriptions.Item label="Reporter">
-            {ticket.reporter?.preferred_username ?? ticket.reporter?.name ?? "-"}
+            {ticket.reporter.preferred_username ?? ticket.reporter.name ?? ticket.reporter.sub}
           </Descriptions.Item>
+
           <Descriptions.Item label="Assignee">
-            {ticket.assignee?.preferred_username ??
-              ticket.assignee?.name ??
-              "-"}
+            {ticket.assignee
+              ? (ticket.assignee.preferred_username ?? ticket.assignee.name ?? ticket.assignee.sub)
+              : "-"}
           </Descriptions.Item>
         </Descriptions>
-      </Card>
 
-      {ticket.sla && (
-        <Card title="SLA">
-          <Descriptions column={2} bordered size="small">
-            <Descriptions.Item label="Time (second)">
-              {ticket.sla.time}
-            </Descriptions.Item>
-            <Descriptions.Item label="Response Status">
-              {ticket.sla.status?.response ?? "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Response Time">
-              {ticket.sla.status?.responseTime ?? "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Resolution Status">
-              {ticket.sla.status?.resolution ?? "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Resolution Time">
-              {ticket.sla.status?.resolutionTime ?? "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Resolution Target (hrs)">
-              {ticket.sla.priority?.resolutionTime}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-      )}
-    </>
+        {ticket.sla && (
+          <Card title="SLA Information" className="mt-4" type="inner">
+            <Descriptions bordered column={2}>
+              <Descriptions.Item label="Response Time">
+                {ticket.sla.priority.responseTime} hours
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Resolution Time">
+                {ticket.sla.priority.resolutionTime} hours
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Response Status">
+                {ticket.sla.status.response ? (
+                  <Tag color={ticket.sla.status.isResponseOverdue ? "red" : "green"}>
+                    {ticket.sla.status.response}
+                  </Tag>
+                ) : "-"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Resolution Status">
+                {ticket.sla.status.resolution ? (
+                  <Tag color={ticket.sla.status.isResolutionOverdue ? "red" : "green"}>
+                    {ticket.sla.status.resolution}
+                  </Tag>
+                ) : "-"}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        )}
+      </Card>
+    </div>
   );
 }

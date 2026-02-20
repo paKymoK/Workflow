@@ -167,6 +167,8 @@ public class TicketServiceImpl implements TicketService {
   public Mono<Ticket<TicketDetail>> transition(TransitionRequest request) {
     return ticketRepository
         .findById(request.getTicketId())
+        .switchIfEmpty(
+            Mono.error(new ApplicationException(Message.Application.ERROR, "Ticket do not exist")))
         .flatMap(
             ticket -> {
               // TODO: Validate transition here

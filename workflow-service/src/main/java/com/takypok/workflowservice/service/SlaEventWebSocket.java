@@ -46,11 +46,8 @@ public class SlaEventWebSocket implements WebSocketHandler {
                     if (isValid) {
                       log.info("Client {} authenticated successfully", session.getId());
                       authenticatedSessions.put(session.getId(), true);
-
-                      sink.tryEmitNext("Authentication successful");
                     } else {
                       log.warn("Client {} authentication failed", session.getId());
-
                       session.close(CloseStatus.POLICY_VIOLATION).subscribe();
                     }
                   } else {

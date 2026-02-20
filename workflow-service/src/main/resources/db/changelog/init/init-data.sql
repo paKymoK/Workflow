@@ -1,8 +1,8 @@
 INSERT INTO
     status (name, "group", color, "created_at", "created_by", "modified_at", "modified_by")
     VALUES ('Todo', 'TODO', '#808080', now(),'admin', now(), 'admin'),
-           ('In-Progress', 'PROCESSING', '#0000FF', now(),'admin', now(), 'admin'),
-           ('Done', 'DONE', '#808080', now(),'admin', now(), 'admin');
+           ('In-Progress', 'PROCESSING', '#FFFF00', now(),'admin', now(), 'admin'),
+           ('Done', 'DONE', '#0000FF', now(),'admin', now(), 'admin');
 
 INSERT INTO
     priority (name, response_time, resolution_time, "created_at", "created_by", "modified_at", "modified_by")

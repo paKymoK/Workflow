@@ -17,7 +17,6 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                   jsonb_build_object(
                     'id',         s.id,
                     'ticketId',   s.ticket_id,
-                    'time',       s.time,
                     'status',     s.status,
                     'priority',   s.priority,
                     'pausedTime', s.paused_time,
@@ -38,7 +37,6 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       jsonb_build_object(
                         'id',         s.id,
                         'ticketId',   s.ticket_id,
-                        'time',       s.time,
                         'status',     s.status,
                         'priority',   s.priority,
                         'pausedTime', s.paused_time,
