@@ -41,15 +41,38 @@ export interface CreateTicketRequest {
     };
 }
 
+export interface WorkflowStatus {
+    id: number;
+    name: string;
+    color: string;
+    group: string;
+}
+
+export interface WorkflowTransition {
+    name: string;
+    from: WorkflowStatus;
+    to: WorkflowStatus;
+    validator: string[];
+    postFunctions: string[];
+}
+
 export interface TicketSla {
     id: number;
-    project: { id: number; name: string; code: string };
-    issueType: { id: number; name: string };
+    createdAt: string;
+    project: { id: number; name: string; code: string; workflowId: number };
+    issueType: { id: number; name: string; projectId: number };
     priority: { id: number; name: string; responseTime: number; resolutionTime: number };
-    status: { id: number; name: string; color: string; group: string };
+    status: WorkflowStatus;
     summary: string;
-    reporter: { sub: string; preferred_username?: string; name?: string };
-    assignee: { sub: string; preferred_username?: string; name?: string } | null;
+    reporter: { name: string; email: string };
+    assignee: { name: string; email: string } | null;
+    detail: { data: string } | null;
+    workflow: {
+        id: number;
+        name: string;
+        statuses: WorkflowStatus[];
+        transitions: WorkflowTransition[];
+    } | null;
     sla: {
         id: number;
         ticketId: number;
@@ -59,6 +82,16 @@ export interface TicketSla {
             resolution: string | null;
             isResolutionOverdue: boolean | null;
         };
+        isPaused: boolean | null;
+        pausedTime: [string, string][];
         priority: { id: number; name: string; responseTime: number; resolutionTime: number };
+        setting: {
+            timezone: string;
+            workStart: string;
+            workEnd: string;
+            lunchStart: string;
+            lunchEnd: string;
+            weekend: number[];
+        };
     } | null;
 }

@@ -1,8 +1,8 @@
 INSERT INTO
     status (name, "group", color, "created_at", "created_by", "modified_at", "modified_by")
     VALUES ('Todo', 'TODO', '#808080', now(),'admin', now(), 'admin'),
-           ('In-Progress', 'PROCESSING', '#FFFF00', now(),'admin', now(), 'admin'),
-           ('Done', 'DONE', '#0000FF', now(),'admin', now(), 'admin');
+           ('In-Progress', 'PROCESSING', '#0000FF', now(),'admin', now(), 'admin'),
+           ('Done', 'DONE', '#008000', now(),'admin', now(), 'admin');
 
 INSERT INTO
     priority (name, response_time, resolution_time, "created_at", "created_by", "modified_at", "modified_by")
@@ -22,13 +22,13 @@ VALUES (1, 'Test', '[
   {
     "id": 2,
     "name": "In-Progress",
-    "color": "#FFFF00",
+    "color": "#0000FF",
     "group": "PROCESSING"
   },
   {
     "id": 3,
     "name": "Done",
-    "color": "#0000FF",
+    "color": "#008000",
     "group": "DONE"
   }
 ]', '[
@@ -36,7 +36,7 @@ VALUES (1, 'Test', '[
     "to": {
       "id": 2,
       "name": "In-Progress",
-      "color": "#FFFF00",
+      "color": "#0000FF",
       "group": "PROCESSING"
     },
     "from": {
@@ -57,13 +57,13 @@ VALUES (1, 'Test', '[
     "to": {
       "id": 3,
       "name": "Done",
-      "color": "#0000FF",
+      "color": "#008000",
       "group": "DONE"
     },
     "from": {
       "id": 2,
       "name": "In-Progress",
-      "color": "#FFFF00",
+      "color": "#0000FF",
       "group": "PROCESSING"
     },
     "name": "Approve",
