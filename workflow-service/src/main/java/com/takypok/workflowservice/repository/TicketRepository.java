@@ -38,6 +38,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       jsonb_build_object(
                         'id',         s.id,
                         'ticketId',   s.ticket_id,
+                        'isPaused',   s.is_paused,
                         'status',     s.status,
                         'priority',   s.priority,
                         'pausedTime', s.paused_time,

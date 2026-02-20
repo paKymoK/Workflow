@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert } from "antd";
-import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, RightOutlined, DownOutlined } from "@ant-design/icons";
+import { Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert, Dropdown, message } from "antd";
+import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, RightOutlined, DownOutlined, MoreOutlined } from "@ant-design/icons";
+import type { MenuProps } from "antd";
 import type { TicketSla } from "../api/types.ts";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchTicketById } from "../api/ticketApi";
+import { fetchTicketById, pauseTicket, resumeTicket } from "../api/ticketApi";
 import { calculateOfficeEndTime } from "../utils/sla.ts";
 import dayjs from "dayjs";
 
@@ -30,7 +31,36 @@ export default function TicketDetail() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const token = sessionStorage.getItem("access_token");
+
+  const handlePause = useCallback(async () => {
+    if (!id) return;
+    setActionLoading(true);
+    try {
+      await pauseTicket(id);
+      const data = await fetchTicketById(id);
+      setTicket(data);
+    } catch {
+      message.error("Failed to pause ticket");
+    } finally {
+      setActionLoading(false);
+    }
+  }, [id]);
+
+  const handleResume = useCallback(async () => {
+    if (!id) return;
+    setActionLoading(true);
+    try {
+      await resumeTicket(id);
+      const data = await fetchTicketById(id);
+      setTicket(data);
+    } catch {
+      message.error("Failed to resume ticket");
+    } finally {
+      setActionLoading(false);
+    }
+  }, [id]);
 
   const loadTicket = useCallback(async () => {
     if (!id) return;
@@ -140,8 +170,97 @@ export default function TicketDetail() {
             <Tag color={ticket.status.color}>{ticket.status.name}</Tag>
           </div>
         }
-        extra={refreshing && <Spin size="small" />}
+        extra={
+          <div className="flex items-center gap-2">
+            {(refreshing || actionLoading) && <Spin size="small" />}
+            {ticket.sla && (() => {
+              const isPaused = ticket.sla.isPaused;
+              const menuItems: MenuProps["items"] = [
+                ...(!isPaused ? [{
+                  key: "pause",
+                  label: "Pause",
+                  disabled: actionLoading,
+                  onClick: handlePause,
+                }] : []),
+                ...(isPaused ? [{
+                  key: "resume",
+                  label: "Resume",
+                  disabled: actionLoading,
+                  onClick: handleResume,
+                }] : []),
+                {
+                  key: "transition",
+                  label: "Transition",
+                  onClick: () => console.log("Transition ticket:", ticket.id),
+                },
+              ];
+              return (
+                <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
+                  <Button type="text" icon={<MoreOutlined rotate={90} />} />
+                </Dropdown>
+              );
+            })()}
+          </div>
+        }
       >
+        {/* SLA Information */}
+        {ticket.sla && (
+          <Card
+            title={
+              <div className="flex items-center gap-2">
+                SLA Information
+                {ticket.sla.isPaused ? (
+                  <Tag icon={<PauseCircleOutlined />} color="orange">Paused</Tag>
+                ) : (
+                  <Tag icon={<PlayCircleOutlined />} color="green">Active</Tag>
+                )}
+              </div>
+            }
+            className="mb-4"
+            type="inner"
+          >
+            <Descriptions bordered column={2}>
+              <Descriptions.Item label="Response Time">
+                {ticket.sla.priority.responseTime} {ticket.sla.priority.responseTime === 1 ? "hour" : "hours"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Resolution Time">
+                {ticket.sla.priority.resolutionTime} {ticket.sla.priority.resolutionTime === 1 ? "hour" : "hours"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Response Status">
+                {ticket.sla.status.response ? (
+                  <Tag color={ticket.sla.status.isResponseOverdue ? "red" : "green"}>
+                    {ticket.sla.status.response}
+                    {ticket.sla.status.isResponseOverdue && " (Overdue)"}
+                  </Tag>
+                ) : "-"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Resolution Status">
+                {ticket.sla.status.resolution ? (
+                  <Tag color={ticket.sla.status.isResolutionOverdue ? "red" : "green"}>
+                    {ticket.sla.status.resolution}
+                    {ticket.sla.status.isResolutionOverdue && " (Overdue)"}
+                  </Tag>
+                ) : "-"}
+              </Descriptions.Item>
+
+              {slaDeadlines && (
+                <>
+                  <Descriptions.Item label="Response Deadline">
+                    <Text>{formatDeadline(slaDeadlines.response, ticket.sla.setting.timezone)}</Text>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Resolution Deadline">
+                    <Text>{formatDeadline(slaDeadlines.resolution, ticket.sla.setting.timezone)}</Text>
+                  </Descriptions.Item>
+                </>
+              )}
+            </Descriptions>
+          </Card>
+        )}
+
         {/* Basic Information */}
         <Descriptions bordered column={2}>
           <Descriptions.Item label="Summary" span={2}>
@@ -249,64 +368,6 @@ export default function TicketDetail() {
           </Card>
         )}
 
-        {/* SLA Information */}
-        {ticket.sla && (
-          <Card
-            title={
-              <div className="flex items-center gap-2">
-                SLA Information
-                {ticket.sla.isPaused ? (
-                  <Tag icon={<PauseCircleOutlined />} color="orange">Paused</Tag>
-                ) : (
-                  <Tag icon={<PlayCircleOutlined />} color="green">Active</Tag>
-                )}
-              </div>
-            }
-            className="mt-4"
-            type="inner"
-          >
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Response Time">
-                {ticket.sla.priority.responseTime} {ticket.sla.priority.responseTime === 1 ? "hour" : "hours"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Resolution Time">
-                {ticket.sla.priority.resolutionTime} {ticket.sla.priority.resolutionTime === 1 ? "hour" : "hours"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Response Status">
-                {ticket.sla.status.response ? (
-                  <Tag color={ticket.sla.status.isResponseOverdue ? "red" : "green"}>
-                    {ticket.sla.status.response}
-                    {ticket.sla.status.isResponseOverdue && " (Overdue)"}
-                  </Tag>
-                ) : "-"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Resolution Status">
-                {ticket.sla.status.resolution ? (
-                  <Tag color={ticket.sla.status.isResolutionOverdue ? "red" : "green"}>
-                    {ticket.sla.status.resolution}
-                    {ticket.sla.status.isResolutionOverdue && " (Overdue)"}
-                  </Tag>
-                ) : "-"}
-              </Descriptions.Item>
-
-              {slaDeadlines && (
-                <>
-                  <Descriptions.Item label="Response Deadline">
-                    <Text>{formatDeadline(slaDeadlines.response, ticket.sla.setting.timezone)}</Text>
-                  </Descriptions.Item>
-
-                  <Descriptions.Item label="Resolution Deadline">
-                    <Text>{formatDeadline(slaDeadlines.resolution, ticket.sla.setting.timezone)}</Text>
-                  </Descriptions.Item>
-                </>
-              )}
-
-            </Descriptions>
-          </Card>
-        )}
       </Card>
     </div>
   );

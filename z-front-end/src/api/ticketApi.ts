@@ -44,3 +44,17 @@ export async function createTicket(payload: CreateTicketRequest) {
     );
     return data.data;
 }
+
+export async function pauseTicket(id: string | number) {
+    const { data } = await api.post<ResultMessage<void>>(
+        `/workflow-service/v1/ticket/pause/${id}`,
+    );
+    return data;
+}
+
+export async function resumeTicket(id: string | number) {
+    const { data } = await api.post<ResultMessage<void>>(
+        `/workflow-service/v1/ticket/resume/${id}`,
+    );
+    return data;
+}
