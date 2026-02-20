@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS sla
     id          bigserial NOT NULL,
     ticket_id   bigint    NOT NULL,
     status      jsonb     NOT NULL,
-    event       jsonb     NOT NULL,
+    is_paused   bool      NOT NULL,
     paused_time jsonb     NOT NULL,
     priority    jsonb     NOT NULL,
     setting     jsonb     NOT NULL,

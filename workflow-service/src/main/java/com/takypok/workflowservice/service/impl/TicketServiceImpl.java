@@ -117,6 +117,7 @@ public class TicketServiceImpl implements TicketService {
               } else {
                 lstPauseTime.add(new PausedTime(ZonedDateTime.now()));
                 sla.setPausedTime(lstPauseTime);
+                sla.setIsPaused(Boolean.TRUE);
                 return slaRepository.save(sla);
               }
             });
@@ -144,6 +145,7 @@ public class TicketServiceImpl implements TicketService {
                                   }
                                 })
                             .toList()));
+                sla.setIsPaused(Boolean.FALSE);
                 return slaRepository.save(sla);
               } else {
                 return Mono.error(

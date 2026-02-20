@@ -1,6 +1,7 @@
 import {useRef, useState, useEffect, useCallback} from "react";
-import {Spin, Table, Tag, Typography, Button} from "antd";
-import {PlusOutlined} from "@ant-design/icons";
+import {Spin, Table, Tag, Typography, Button, Dropdown} from "antd";
+import {PlusOutlined, MoreOutlined} from "@ant-design/icons";
+import type {MenuProps} from "antd";
 import {useNavigate} from "react-router-dom";
 import type {ColumnsType} from "antd/es/table";
 import {fetchTickets, fetchTicketById} from "../api/ticketApi";
@@ -65,6 +66,52 @@ const columns: ColumnsType<TicketSla> = [
         width: 140,
         render: (assignee: TicketSla["assignee"]) =>
             assignee?.preferred_username ?? assignee?.name ?? "-",
+    },
+    {
+        title: "Actions",
+        width: 80,
+        render: (_, record) => {
+            const menuItems: MenuProps['items'] = [
+                {
+                    key: 'pause',
+                    label: 'Pause',
+                    onClick: () => {
+                        console.log('Pause ticket:', record.id);
+                        // Add your pause logic here
+                    },
+                },
+                {
+                    key: 'resume',
+                    label: 'Resume',
+                    onClick: () => {
+                        console.log('Resume ticket:', record.id);
+                        // Add your resume logic here
+                    },
+                },
+                {
+                    key: 'transition',
+                    label: 'Transition',
+                    onClick: () => {
+                        console.log('Transition ticket:', record.id);
+                        // Add your transition logic here
+                    },
+                },
+            ];
+
+            return (
+                <Dropdown
+                    menu={{ items: menuItems }}
+                    trigger={['click']}
+                    placement="bottomRight"
+                >
+                    <Button
+                        type="text"
+                        icon={<MoreOutlined rotate={90} />}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </Dropdown>
+            );
+        },
     }
 ];
 

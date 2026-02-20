@@ -1,7 +1,6 @@
 package com.takypok.workflowservice.model.mapper;
 
 import com.takypok.workflowservice.model.entity.*;
-import com.takypok.workflowservice.model.entity.custom.ListEvent;
 import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.enums.StatusSla;
 import java.time.LocalTime;
@@ -14,8 +13,8 @@ import org.mapstruct.Mapping;
 public abstract class SlaMapper {
   @Mapping(target = "id", expression = "java(null)")
   @Mapping(target = "status", expression = "java(defaultStatus())")
+  @Mapping(target = "isPaused", expression = "java(false)")
   @Mapping(target = "priority", source = "priority")
-  @Mapping(target = "event", expression = "java(defaultSlaEvent())")
   @Mapping(target = "pausedTime", expression = "java(defaultPausedTime())")
   @Mapping(target = "setting", expression = "java(defaultSlaSetting())")
   public abstract Sla mapToSla(Long ticketId, Priority priority);
@@ -26,10 +25,6 @@ public abstract class SlaMapper {
 
   protected ListPausedTime defaultPausedTime() {
     return new ListPausedTime();
-  }
-
-  protected ListEvent defaultSlaEvent() {
-    return new ListEvent();
   }
 
   protected SlaSetting defaultSlaSetting() {
