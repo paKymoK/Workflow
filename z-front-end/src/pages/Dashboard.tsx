@@ -1,10 +1,11 @@
 import {useRef, useState, useEffect, useCallback} from "react";
-import {Spin, Table, Tag, Typography, Button, Modal} from "antd";
+import {Spin, Table, Tag, Typography, Button} from "antd";
 import {PlusOutlined} from "@ant-design/icons";
 import {useNavigate} from "react-router-dom";
 import type {ColumnsType} from "antd/es/table";
 import {fetchTickets, fetchTicketById} from "../api/ticketApi";
 import type {TicketSla} from "../api/types.ts";
+import CreateTicketModal from "../components/CreateTicketModal";
 
 const {Title} = Typography;
 
@@ -139,6 +140,12 @@ export default function Dashboard() {
         setPageSize(size);
     };
 
+    const handleCreateSuccess = () => {
+        setIsModalOpen(false);
+        // Refresh the ticket list after successful creation
+        loadPage(page, pageSize);
+    };
+
     // Optionally show a per-row loading indicator in your columns
     const columnsWithLoading: ColumnsType<TicketSla> = [
         ...columns,
@@ -182,15 +189,11 @@ export default function Dashboard() {
                 }}
             />
 
-            <Modal
-                title="Create Ticket"
+            <CreateTicketModal
                 open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                footer={null}
-                width={800}
-            >
-                {/* Popup content will be added here */}
-            </Modal>
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={handleCreateSuccess}
+            />
         </>
     );
 }

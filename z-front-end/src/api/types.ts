@@ -11,6 +11,13 @@ export interface ResultMessage<T> {
     data: T;
 }
 
+export interface Project {
+    id: number;
+    name: string;
+    code: string;
+    workflowId: number;
+}
+
 export interface TicketSla {
     id: number;
     project: { id: number; name: string; code: string };
