@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Form, Input, Select, Button, message } from "antd";
-import { fetchProjects } from "../api/ticketApi";
-import type { Project } from "../api/types";
+import { fetchProjects, fetchPriorities, fetchIssueTypes, createTicket } from "../api/ticketApi";
+import type { Project, Priority, IssueType, CreateTicketRequest } from "../api/types";
 
 const { TextArea } = Input;
 
@@ -18,13 +18,19 @@ export default function CreateTicketModal({
 }: CreateTicketModalProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [priorities, setPriorities] = useState<Priority[]>([]);
+  const [issueTypes, setIssueTypes] = useState<IssueType[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingPriorities, setLoadingPriorities] = useState(false);
+  const [loadingIssueTypes, setLoadingIssueTypes] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
 
-  // Fetch projects when modal opens
+  // Fetch data when modal opens
   useEffect(() => {
     if (open) {
       loadProjects();
+      loadPriorities();
     }
   }, [open]);
 
@@ -41,48 +47,65 @@ export default function CreateTicketModal({
     }
   };
 
-  const issueTypes = [
-    { id: 1, name: "Bug", projectId: 1 },
-    { id: 2, name: "Feature", projectId: 1 },
-    { id: 3, name: "Task", projectId: 1 },
-    { id: 4, name: "Bug", projectId: 2 },
-    { id: 5, name: "Enhancement", projectId: 2 },
-  ];
+  const loadPriorities = async () => {
+    setLoadingPriorities(true);
+    try {
+      const data = await fetchPriorities();
+      setPriorities(data);
+    } catch (error) {
+      console.error("Failed to fetch priorities:", error);
+      message.error("Failed to load priorities");
+    } finally {
+      setLoadingPriorities(false);
+    }
+  };
 
-  const priorities = [
-    { id: 1, name: "Low" },
-    { id: 2, name: "Medium" },
-    { id: 3, name: "High" },
-    { id: 4, name: "Critical" },
-  ];
-
-  // Filter issue types based on selected project
-  const filteredIssueTypes = selectedProjectId
-    ? issueTypes.filter((type) => type.projectId === selectedProjectId)
-    : [];
+  const loadIssueTypes = async (projectId: number) => {
+    setLoadingIssueTypes(true);
+    try {
+      const data = await fetchIssueTypes(projectId);
+      setIssueTypes(data);
+    } catch (error) {
+      console.error("Failed to fetch issue types:", error);
+      message.error("Failed to load issue types");
+      setIssueTypes([]);
+    } finally {
+      setLoadingIssueTypes(false);
+    }
+  };
 
   const handleProjectChange = (projectId: number) => {
     setSelectedProjectId(projectId);
     // Reset issueType when project changes
     form.setFieldValue("issueTypeId", undefined);
+    // Clear previous issue types
+    setIssueTypes([]);
+    // Fetch issue types for the selected project
+    loadIssueTypes(projectId);
   };
 
-  const handleCreateTicket = async (values: any) => {
-    console.log("Form values:", values);
-    // API call will be added here
-    // After successful creation:
-    // - Close modal
-    // - Refresh ticket list
-    // - Show success message
-
-    form.resetFields();
-    setSelectedProjectId(null);
-    onSuccess();
+  const handleCreateTicket = async (values: CreateTicketRequest) => {
+    setSubmitting(true);
+    try {
+      await createTicket(values);
+      message.success("Ticket created successfully");
+      form.resetFields();
+      setSelectedProjectId(null);
+      setIssueTypes([]);
+      onSuccess();
+    } catch (error: any) {
+      console.error("Failed to create ticket:", error);
+      const errorMessage = error?.response?.data?.status?.message || "Failed to create ticket";
+      message.error(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
     form.resetFields();
     setSelectedProjectId(null);
+    setIssueTypes([]);
     onClose();
   };
 
@@ -136,7 +159,8 @@ export default function CreateTicketModal({
                 : "Please select a project first"
             }
             disabled={!selectedProjectId}
-            options={filteredIssueTypes.map((type) => ({
+            loading={loadingIssueTypes}
+            options={issueTypes.map((type) => ({
               label: type.name,
               value: type.id,
             }))}
@@ -150,6 +174,7 @@ export default function CreateTicketModal({
         >
           <Select
             placeholder="Select priority"
+            loading={loadingPriorities}
             options={priorities.map((p) => ({
               label: p.name,
               value: p.id,
@@ -166,10 +191,10 @@ export default function CreateTicketModal({
         </Form.Item>
 
         <Form.Item className="mb-0 text-right">
-          <Button onClick={handleClose} className="mr-2">
+          <Button onClick={handleClose} className="mr-2" disabled={submitting}>
             Cancel
           </Button>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={submitting}>
             Create
           </Button>
         </Form.Item>

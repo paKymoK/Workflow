@@ -18,6 +18,29 @@ export interface Project {
     workflowId: number;
 }
 
+export interface Priority {
+    id: number;
+    name: string;
+    responseTime: number;
+    resolutionTime: number;
+}
+
+export interface IssueType {
+    id: number;
+    name: string;
+    projectId: number;
+}
+
+export interface CreateTicketRequest {
+    summary: string;
+    projectId: number;
+    issueTypeId: number;
+    priority: number;
+    detail: {
+        data: string;
+    };
+}
+
 export interface TicketSla {
     id: number;
     project: { id: number; name: string; code: string };
