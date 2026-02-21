@@ -7,6 +7,7 @@ import type {ColumnsType} from "antd/es/table";
 import {fetchTickets, fetchTicketById, pauseTicket, resumeTicket} from "../api/ticketApi";
 import type {TicketSla} from "../api/types.ts";
 import CreateTicketModal from "../components/CreateTicketModal";
+import DeadlineTag from "../components/DeadlineTag.tsx";
 
 const {Title} = Typography;
 
@@ -67,29 +68,19 @@ export default function Dashboard() {
             ),
         },
         {
-            title: "Response Status",
-            dataIndex: ["sla", "status", "response"],
-            width: 140,
+            title: "Response",
+            width: 200,
             render: (_, record) => {
-                if (!record.sla?.status?.response) return "-";
-                return (
-                    <Tag color={record.sla.status.isResponseOverdue ? "red" : "green"}>
-                        {record.sla.status.response}
-                    </Tag>
-                );
+                if (!record.sla) return "-";
+                return <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="response" />;
             },
         },
         {
-            title: "Resolution Status",
-            dataIndex: ["sla", "status", "resolution"],
-            width: 140,
+            title: "Resolution",
+            width: 200,
             render: (_, record) => {
-                if (!record.sla?.status?.resolution) return "-";
-                return (
-                    <Tag color={record.sla.status.isResolutionOverdue ? "red" : "green"}>
-                        {record.sla.status.resolution}
-                    </Tag>
-                );
+                if (!record.sla) return "-";
+                return <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="resolution" />;
             },
         },
         {

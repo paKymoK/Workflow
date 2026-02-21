@@ -5,24 +5,10 @@ import type { MenuProps } from "antd";
 import type { TicketSla } from "../api/types.ts";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { fetchTicketById, pauseTicket, resumeTicket } from "../api/ticketApi";
-import { calculateOfficeEndTime } from "../utils/sla.ts";
+import SlaDeadlines from "../components/SlaDeadlines.tsx";
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
-
-
-function formatDeadline(date: Date, timezone: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(date);
-}
 
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +18,6 @@ export default function TicketDetail() {
   const [refreshing, setRefreshing] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [now, setNow] = useState(() => new Date());
   const token = sessionStorage.getItem("access_token");
 
   const handlePause = useCallback(async () => {
@@ -95,12 +80,6 @@ export default function TicketDetail() {
   }, [loadTicket]);
 
   useEffect(() => {
-    if (!ticket?.sla?.isPaused) return;
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, [ticket?.sla?.isPaused]);
-
-  useEffect(() => {
     if (!id) return;
     const ws = new WebSocket("ws://localhost:8080/workflow-service/web-socket/sla");
     ws.onopen = () => { ws.send(token ?? ""); };
@@ -109,32 +88,6 @@ export default function TicketDetail() {
     };
     return () => ws.close();
   }, [id, token, refreshTicket]);
-
-  const slaDeadlines = useMemo(() => {
-    if (!ticket?.sla || !ticket.createdAt) return null;
-    const { setting, priority } = ticket.sla;
-    const from = new Date(ticket.createdAt);
-    const opts = {
-      from,
-      timezone: setting.timezone,
-      workStart: setting.workStart,
-      workEnd: setting.workEnd,
-      lunchStart: setting.lunchStart,
-      lunchEnd: setting.lunchEnd,
-      weekendDays: setting.weekend,
-      pausedTime: ticket.sla.pausedTime,
-    };
-    try {
-      return {
-        response: calculateOfficeEndTime({ ...opts, hoursToWork: priority.responseTime }),
-        resolution: calculateOfficeEndTime({ ...opts, hoursToWork: priority.resolutionTime }),
-      };
-    } catch (error) {
-      console.log(error)
-      return null;
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket, now]);
 
   const availableTransitions = useMemo(() => {
     if (!ticket?.workflow) return [];
@@ -229,45 +182,7 @@ export default function TicketDetail() {
             className="mb-4"
             type="inner"
           >
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Response Time">
-                {ticket.sla.priority.responseTime} {ticket.sla.priority.responseTime === 1 ? "hour" : "hours"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Resolution Time">
-                {ticket.sla.priority.resolutionTime} {ticket.sla.priority.resolutionTime === 1 ? "hour" : "hours"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Response Status">
-                {ticket.sla.status.response ? (
-                  <Tag color={ticket.sla.status.isResponseOverdue ? "red" : "green"}>
-                    {ticket.sla.status.response}
-                    {ticket.sla.status.isResponseOverdue && " (Overdue)"}
-                  </Tag>
-                ) : "-"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Resolution Status">
-                {ticket.sla.status.resolution ? (
-                  <Tag color={ticket.sla.status.isResolutionOverdue ? "red" : "green"}>
-                    {ticket.sla.status.resolution}
-                    {ticket.sla.status.isResolutionOverdue && " (Overdue)"}
-                  </Tag>
-                ) : "-"}
-              </Descriptions.Item>
-
-              {slaDeadlines && (
-                <>
-                  <Descriptions.Item label="Response Deadline">
-                    <Text>{formatDeadline(slaDeadlines.response, ticket.sla.setting.timezone)}</Text>
-                  </Descriptions.Item>
-
-                  <Descriptions.Item label="Resolution Deadline">
-                    <Text>{formatDeadline(slaDeadlines.resolution, ticket.sla.setting.timezone)}</Text>
-                  </Descriptions.Item>
-                </>
-              )}
-            </Descriptions>
+            <SlaDeadlines createdAt={ticket.createdAt} sla={ticket.sla} />
           </Card>
         )}
 
