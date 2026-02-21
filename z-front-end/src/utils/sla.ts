@@ -60,20 +60,36 @@ function getDatePartsInTimezone(date: Date, timezone: string) {
   };
 }
 
-function normalizePausedTime(pausedTime: PausedTimeRange[]): [Date, Date][] {
-  return pausedTime
-    .map(({ pausedTime, resumeTime }) => {
-      const start = pausedTime instanceof Date ? pausedTime : new Date(pausedTime);
-      const end   = resumeTime == null
-        ? new Date()                                          // null → now
-        : resumeTime instanceof Date ? resumeTime : new Date(resumeTime);
+// Add this function
+function mergeRanges(ranges: [Date, Date][]): [Date, Date][] {
+  if (ranges.length === 0) return [];
+  const sorted = [...ranges].sort((a, b) => a[0].getTime() - b[0].getTime());
+  const merged: [Date, Date][] = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const last = merged[merged.length - 1];
+    const curr = sorted[i];
+    if (curr[0].getTime() <= last[1].getTime()) {
+      // Overlapping or adjacent — extend end if needed
+      last[1] = new Date(Math.max(last[1].getTime(), curr[1].getTime()));
+    } else {
+      merged.push(curr);
+    }
+  }
+  return merged;
+}
 
-      if (isNaN(start.getTime())) throw new Error(`Invalid pausedTime: ${pausedTime}`);
-      if (isNaN(end.getTime()))   throw new Error(`Invalid resumeTime: ${resumeTime}`);
-      if (start >= end)           throw new Error(`pausedTime must be before resumeTime`);
-      return [start, end] as [Date, Date];
-    })
-    .sort((a, b) => a[0].getTime() - b[0].getTime());
+function normalizePausedTime(pausedTime: PausedTimeRange[]): [Date, Date][] {
+  const ranges = pausedTime.map(({ pausedTime, resumeTime }) => {
+    const start = pausedTime instanceof Date ? pausedTime : new Date(pausedTime);
+    const end   = resumeTime == null
+      ? new Date()                          // null → now
+      : resumeTime instanceof Date ? resumeTime : new Date(resumeTime);
+    if (isNaN(start.getTime())) throw new Error(`Invalid pausedTime: ${pausedTime}`);
+    if (isNaN(end.getTime()))   throw new Error(`Invalid resumeTime: ${resumeTime}`);
+    if (start >= end)           throw new Error(`pausedTime must be before resumeTime`);
+    return [start, end] as [Date, Date];
+  });
+  return mergeRanges(ranges); // ← merge overlapping/adjacent ranges
 }
 
 /**

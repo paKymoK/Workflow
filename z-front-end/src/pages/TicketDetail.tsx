@@ -122,7 +122,8 @@ export default function TicketDetail() {
         response: calculateOfficeEndTime({ ...opts, hoursToWork: priority.responseTime }),
         resolution: calculateOfficeEndTime({ ...opts, hoursToWork: priority.resolutionTime }),
       };
-    } catch {
+    } catch (error) {
+      console.log(error)
       return null;
     }
   }, [ticket]);
