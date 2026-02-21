@@ -115,6 +115,7 @@ export default function TicketDetail() {
       lunchStart: setting.lunchStart,
       lunchEnd: setting.lunchEnd,
       weekendDays: setting.weekend,
+      pausedTime: ticket.sla.pausedTime,
     };
     try {
       return {

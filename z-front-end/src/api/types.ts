@@ -83,7 +83,7 @@ export interface TicketSla {
             isResolutionOverdue: boolean | null;
         };
         isPaused: boolean | null;
-        pausedTime: [string, string][];
+        pausedTime: { pausedTime: string; resumeTime: string | null }[];
         priority: { id: number; name: string; responseTime: number; resolutionTime: number };
         setting: {
             timezone: string;
