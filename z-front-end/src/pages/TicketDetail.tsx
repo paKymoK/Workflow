@@ -32,6 +32,7 @@ export default function TicketDetail() {
   const [refreshing, setRefreshing] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const token = sessionStorage.getItem("access_token");
 
   const handlePause = useCallback(async () => {
@@ -94,6 +95,12 @@ export default function TicketDetail() {
   }, [loadTicket]);
 
   useEffect(() => {
+    if (!ticket?.sla?.isPaused) return;
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, [ticket?.sla?.isPaused]);
+
+  useEffect(() => {
     if (!id) return;
     const ws = new WebSocket("ws://localhost:8080/workflow-service/web-socket/sla");
     ws.onopen = () => { ws.send(token ?? ""); };
@@ -126,7 +133,8 @@ export default function TicketDetail() {
       console.log(error)
       return null;
     }
-  }, [ticket]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket, now]);
 
   const availableTransitions = useMemo(() => {
     if (!ticket?.workflow) return [];
