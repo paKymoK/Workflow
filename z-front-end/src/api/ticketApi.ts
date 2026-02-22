@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile} from "./types.ts";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -57,6 +57,19 @@ export async function resumeTicket(id: string | number) {
         `/workflow-service/v1/ticket/resume/${id}`,
     );
     return data;
+}
+
+export async function uploadFile(file: File) {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await api.post<UploadFile>("/media-service/v1/upload/single", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+}
+
+export function getFileUrl(id: string, extension: string) {
+    return `${import.meta.env.VITE_API_BASE_URL}/media-service/images/${id}${extension}`;
 }
 
 export async function fetchComments(ticketId: string | number) {

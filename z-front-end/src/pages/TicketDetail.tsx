@@ -3,7 +3,7 @@ import { Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert, Dropdo
 import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, RightOutlined, DownOutlined, MoreOutlined, SendOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import type { TicketSla } from "../api/types.ts";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchTicketById, pauseTicket, resumeTicket, transitionTicket, createComment, fetchComments } from "../api/ticketApi";
 import type { Comment } from "../api/types.ts";
 import SlaDeadlines from "../components/SlaDeadlines.tsx";
@@ -21,8 +21,9 @@ export default function TicketDetail() {
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const token = sessionStorage.getItem("access_token");
-  const [commentHtml, setCommentHtml] = useState("");
+  const commentHtmlRef = useRef("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
 
@@ -42,20 +43,22 @@ export default function TicketDetail() {
   }, [loadComments]);
 
   const handleSubmitComment = useCallback(async () => {
-    const isEmpty = commentHtml.replace(/<[^>]*>/g, "").trim() === "";
+    const html = commentHtmlRef.current;
+    const isEmpty = html.replace(/<[^>]*>/g, "").trim() === "";
     if (isEmpty) return;
     setCommentSubmitting(true);
     try {
-      await createComment(id!, commentHtml);
+      await createComment(id!, html);
       message.success("Comment submitted");
-      setCommentHtml("");
+      commentHtmlRef.current = "";
+      setEditorKey((k) => k + 1);
       loadComments();
     } catch {
       message.error("Failed to submit comment");
     } finally {
       setCommentSubmitting(false);
     }
-  }, [commentHtml, id, loadComments]);
+  }, [id, loadComments]);
 
   const handlePause = useCallback(async () => {
     if (!id) return;
@@ -377,10 +380,9 @@ export default function TicketDetail() {
         {/* Add Comment */}
         <Card title="Add Comment" className="mt-4" type="inner">
           <RichTextEditor
-            key={commentSubmitting ? "reset" : "editor"}
-            content={commentHtml}
+            key={editorKey}
             editable={true}
-            onChange={setCommentHtml}
+            onChange={(html: string) => { commentHtmlRef.current = html; }}
             placeholder="Write a comment..."
           />
           <div className="flex justify-end mt-2">

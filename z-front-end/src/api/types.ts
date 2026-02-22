@@ -41,6 +41,12 @@ export interface CreateTicketRequest {
     };
 }
 
+export interface UploadFile {
+    id: string;
+    name: string;
+    extension: string;
+}
+
 export interface Comment {
     id: string;
     ticketId: number;

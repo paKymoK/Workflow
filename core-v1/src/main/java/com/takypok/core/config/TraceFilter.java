@@ -35,6 +35,10 @@ public class TraceFilter implements WebFilter {
       return chain.filter(exchange);
     }
 
+    if (String.valueOf(request.getURI()).contains("/images/")) {
+      return chain.filter(exchange);
+    }
+
     if (String.valueOf(request.getURI()).contains("/actuator/")) {
       return chain.filter(exchange);
     }
