@@ -1,5 +1,6 @@
 package com.takypok.mediaservice.model.entity;
 
+import com.takypok.core.model.authentication.User;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.data.annotation.Id;
 @NoArgsConstructor
 public class Comment {
   @Id private UUID id;
-  private String name;
-  private String path;
+  private Long ticketId;
+  private User user;
+  private String content;
 }

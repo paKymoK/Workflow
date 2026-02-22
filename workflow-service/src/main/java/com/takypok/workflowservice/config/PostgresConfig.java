@@ -16,7 +16,6 @@ import org.springframework.data.r2dbc.dialect.PostgresDialect;
 @Slf4j
 @RequiredArgsConstructor
 public class PostgresConfig {
-  public static final String CLAZZ_NAME = "_clazz";
   private final ObjectMapper mapper;
 
   @Bean

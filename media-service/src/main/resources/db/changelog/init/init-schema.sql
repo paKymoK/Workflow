@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS upload_file
 CREATE TABLE IF NOT EXISTS comment
 (
     id          uuid              NOT NULL DEFAULT uuid_generate_v4(),
-    "user"      character varying NOT NULL,
+    "user"      jsonb NOT NULL,
     content     text              NOT NULL,
     ticket_id   bigint            NOT NULL,
     created_at  timestamp with time zone,

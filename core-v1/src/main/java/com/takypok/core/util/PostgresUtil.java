@@ -1,4 +1,4 @@
-package com.takypok.workflowservice.util;
+package com.takypok.core.util;
 
 import static com.takypok.core.config.ConfigObjectMapper.objectMapper;
 
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PostgresUtil {
+  public static final String CLAZZ_NAME = "_clazz";
 
   public static JsonNode readTree(Json source) {
     try {

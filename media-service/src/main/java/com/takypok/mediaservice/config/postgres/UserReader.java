@@ -1,28 +1,28 @@
-package com.takypok.workflowservice.config.postgres;
+package com.takypok.mediaservice.config.postgres;
 
 import static com.takypok.core.util.PostgresUtil.readTree;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.takypok.workflowservice.model.entity.SlaStatus;
+import com.takypok.core.model.authentication.User;
 import io.r2dbc.postgresql.codec.Json;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
+import org.springframework.lang.NonNull;
 
 @Slf4j
 @ReadingConverter
 @RequiredArgsConstructor
-public class SlaStatusReader implements Converter<Json, SlaStatus> {
+public class UserReader implements Converter<Json, User> {
   private final ObjectMapper objectMapper;
 
   @Override
-  public SlaStatus convert(@NonNull Json source) {
+  public User convert(@NonNull Json source) {
     final JsonNode tree = readTree(source);
     try {
-      return objectMapper.convertValue(tree, SlaStatus.class);
+      return objectMapper.convertValue(tree, User.class);
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);
       return null;

@@ -23,6 +23,8 @@ dependencies {
     compileOnly "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
     compileOnly 'org.springframework.boot:spring-boot-starter-security'
     compileOnly "org.springframework.boot:spring-boot-starter-data-r2dbc"
+    compileOnly "org.postgresql:r2dbc-postgresql"
+
 }
 
 tasks.named('test') {
