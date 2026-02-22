@@ -20,7 +20,8 @@ public class CommentController {
   private final CommentService commentService;
 
   @PostMapping("")
-  public Mono<Comment> comment(@RequestBody @Valid CommentRequest request, Authentication authentication) {
+  public Mono<Comment> comment(
+      @RequestBody @Valid CommentRequest request, Authentication authentication) {
     return commentService.comment(request, getUserInfo(authentication));
   }
 }

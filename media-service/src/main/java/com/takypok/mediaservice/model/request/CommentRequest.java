@@ -10,8 +10,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class CommentRequest {
-  @NotNull
-  private Long ticketId;
-  @NotBlank
-  private String content;
+  @NotNull private Long ticketId;
+  @NotBlank private String content;
 }

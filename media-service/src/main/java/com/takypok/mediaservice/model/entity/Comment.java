@@ -13,6 +13,6 @@ import org.springframework.data.annotation.Id;
 public class Comment {
   @Id private UUID id;
   private Long ticketId;
-  private User user;
+  private User commenter;
   private String content;
 }
