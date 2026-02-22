@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown } from "antd";
+import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -49,6 +49,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
+    <App>
     <Layout className="min-h-screen">
       <Sider
         trigger={null}
@@ -91,5 +92,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </Content>
       </Layout>
     </Layout>
+    </App>
   );
+
 }
