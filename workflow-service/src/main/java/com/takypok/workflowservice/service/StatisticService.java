@@ -1,10 +1,13 @@
 package com.takypok.workflowservice.service;
 
-import com.takypok.workflowservice.model.request.OverviewStatisticRequest;
-import com.takypok.workflowservice.model.response.OverviewStatistic;
+import com.takypok.workflowservice.model.request.StatisticRequest;
+import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
+import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
 import java.util.List;
 import reactor.core.publisher.Mono;
 
 public interface StatisticService {
-  Mono<List<OverviewStatistic>> overview(OverviewStatisticRequest request);
+  Mono<List<TicketByStatusStatistic>> ticketByStatus(StatisticRequest request);
+
+  Mono<List<TicketByIssueTypeStatistic>> ticketByIssueType(StatisticRequest request);
 }

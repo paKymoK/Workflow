@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class OverviewStatisticRequest {
+public class StatisticRequest {
   private ZonedDateTime from;
   private ZonedDateTime to;
 }

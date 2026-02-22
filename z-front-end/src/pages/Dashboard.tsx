@@ -5,6 +5,7 @@ import type {MenuProps} from "antd";
 import {useNavigate} from "react-router-dom";
 import type {ColumnsType} from "antd/es/table";
 import {fetchTickets, fetchTicketById, pauseTicket, resumeTicket} from "../api/ticketApi";
+import { wsBaseUrl } from "../api/axios.ts";
 import type {TicketSla} from "../api/types.ts";
 import CreateTicketModal from "../components/CreateTicketModal";
 import DeadlineTag from "../components/DeadlineTag.tsx";
@@ -180,7 +181,7 @@ export default function Dashboard() {
 
     // WebSocket setup
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8080/workflow-service/web-socket/sla");
+        const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
 
         ws.onopen = () => {
             ws.send(token ?? "");

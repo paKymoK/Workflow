@@ -74,6 +74,11 @@ export interface StatisticItem {
     value: number;
 }
 
+export interface TicketByIssueType {
+    name: string;
+    [status: string]: string | number;
+}
+
 export interface TicketSla {
     id: number;
     createdAt: string;

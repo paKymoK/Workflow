@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType} from "./types.ts";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -85,6 +85,13 @@ export async function createComment(ticketId: string | number, content: string) 
         { ticketId, content },
     );
     return data;
+}
+
+export async function fetchTicketByIssueType() {
+    const { data } = await api.get<ResultMessage<TicketByIssueType[]>>(
+        "/workflow-service/v1/statistic/ticket-by-issue-type",
+    );
+    return data.data;
 }
 
 export async function fetchOverviewStatistic() {

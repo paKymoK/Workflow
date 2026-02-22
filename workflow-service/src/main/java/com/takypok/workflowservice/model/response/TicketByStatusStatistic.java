@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OverviewStatistic {
+public class TicketByStatusStatistic {
   @JsonSerialize(using = GroupStatusSerializer.class)
   private GroupStatus name;
 

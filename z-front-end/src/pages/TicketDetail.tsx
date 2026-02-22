@@ -5,6 +5,7 @@ import type { MenuProps } from "antd";
 import type { TicketSla } from "../api/types.ts";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchTicketById, pauseTicket, resumeTicket, transitionTicket, createComment, fetchComments } from "../api/ticketApi";
+import { wsBaseUrl } from "../api/axios.ts";
 import type { Comment } from "../api/types.ts";
 import DeadlineTag from "../components/DeadlineTag.tsx";
 import RichTextEditor from "../components/RichTextEditor.tsx";
@@ -135,7 +136,7 @@ export default function TicketDetail() {
 
   useEffect(() => {
     if (!id) return;
-    const ws = new WebSocket("ws://localhost:8080/workflow-service/web-socket/sla");
+    const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
     ws.onopen = () => { ws.send(token ?? ""); };
     ws.onmessage = (event) => {
       if (Number(event.data) === Number(id)) refreshTicket();

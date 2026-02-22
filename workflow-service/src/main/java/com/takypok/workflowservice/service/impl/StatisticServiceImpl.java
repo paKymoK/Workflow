@@ -1,8 +1,9 @@
 package com.takypok.workflowservice.service.impl;
 
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
-import com.takypok.workflowservice.model.request.OverviewStatisticRequest;
-import com.takypok.workflowservice.model.response.OverviewStatistic;
+import com.takypok.workflowservice.model.request.StatisticRequest;
+import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
+import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
 import com.takypok.workflowservice.repository.TicketRepository;
 import com.takypok.workflowservice.service.StatisticService;
 import java.util.List;
@@ -18,7 +19,16 @@ public class StatisticServiceImpl implements StatisticService {
   private final TicketRepository<TicketDetail> ticketRepository;
 
   @Override
-  public Mono<List<OverviewStatistic>> overview(OverviewStatisticRequest request) {
-    return ticketRepository.overviewStatistic(request.getFrom(), request.getTo()).collectList();
+  public Mono<List<TicketByStatusStatistic>> ticketByStatus(StatisticRequest request) {
+    return ticketRepository
+        .ticketByStatusStatistic(request.getFrom(), request.getTo())
+        .collectList();
+  }
+
+  @Override
+  public Mono<List<TicketByIssueTypeStatistic>> ticketByIssueType(StatisticRequest request) {
+    return ticketRepository
+        .ticketByIssueTypeStatistic(request.getFrom(), request.getTo())
+        .collectList();
   }
 }
