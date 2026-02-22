@@ -41,20 +41,6 @@ spring:
             response-timeout: 30s
             compression: false
           routes:
-            - id: ticket-sse-route
-              uri: lb://workflow-service
-              predicates:
-                - Path=/workflow-service/v1/ticket/stream/**
-                - Method=GET
-              filters:
-                - name: PreserveHostHeader
-                - name: RemoveResponseHeader
-                  args:
-                    name: Transfer-Encoding
-                - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
-              metadata:
-                response-timeout: 1800000
-                connect-timeout: 60000
             - id: workflow-websocket
               uri: lb:ws://workflow-service
               predicates:
@@ -67,6 +53,12 @@ spring:
                 - Path=/workflow-service/**
               filters:
                 - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
+            - id: media
+              uri: lb://media-service
+              predicates:
+                - Path=/media-service/**
+              filters:
+                - RewritePath=/media-service/(?<segment>.*), /media/${segment}
 
 logging:
   level:

@@ -18,6 +18,9 @@ spring:
       - 'classpath:config/eureka-client.yml'
       - 'classpath:config/springdoc.yml'
       - 'classpath:management.yml'
+  http:
+    codecs:
+      max-in-memory-size: 10MB
 
 logging:
   config: classpath:log4j2-spring.xml
