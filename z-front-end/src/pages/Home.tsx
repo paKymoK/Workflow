@@ -59,6 +59,11 @@ export default function Home() {
           <div style={{ textAlign: "center", padding: "48px 0" }}>
             <Spin />
           </div>
+        ) : chartData.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "48px 0", color: "#bfbfbf" }}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>📭</div>
+            <Text type="secondary">No data available</Text>
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
