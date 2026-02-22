@@ -5,7 +5,6 @@ import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.enums.StatusSla;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -34,10 +33,10 @@ public abstract class SlaMapper {
   protected SlaSetting defaultSlaSetting() {
     return new SlaSetting(
         "Asia/Ho_Chi_Minh",
-        LocalTime.of(9, 0, 0),
-        LocalTime.of(18, 0, 0),
+        LocalTime.of(1, 0, 0),
+        LocalTime.of(23, 59, 0),
         LocalTime.of(12, 0, 0),
         LocalTime.of(13, 0, 0),
-        new ArrayList<>(Arrays.asList(0, 6)));
+        new ArrayList<>());
   }
 }

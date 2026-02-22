@@ -107,13 +107,15 @@ export default function Dashboard() {
                         key: 'pause',
                         label: 'Pause',
                         disabled: isLoading,
-                        onClick: ({ domEvent }: { domEvent: React.MouseEvent }) => { domEvent.stopPropagation(); handlePause(record.id); },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); handlePause(record.id); },
                     }] : []),
                     ...(isPaused ? [{
                         key: 'resume',
                         label: 'Resume',
                         disabled: isLoading,
-                        onClick: ({ domEvent }: { domEvent: React.MouseEvent }) => { domEvent.stopPropagation(); handleResume(record.id); },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); handleResume(record.id); },
                     }] : []),
                 ];
 
