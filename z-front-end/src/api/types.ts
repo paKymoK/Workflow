@@ -69,6 +69,11 @@ export interface WorkflowTransition {
     postFunctions: string[];
 }
 
+export interface StatisticItem {
+    name: string;
+    value: number;
+}
+
 export interface TicketSla {
     id: number;
     createdAt: string;

@@ -1,21 +1,89 @@
-import { Card, Typography } from "antd";
-import { useAuth } from "../auth/useAuth";
+import { useEffect, useState } from "react";
+import { Card, Spin, Typography } from "antd";
+import {
+  PieChart,
+  Pie,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { fetchOverviewStatistic } from "../api/ticketApi.ts";
+import type { StatisticItem } from "../api/types.ts";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+const DEFAULT_COLORS = [
+  "#4f86c6",
+  "#f5a623",
+  "#7ed321",
+  "#d0021b",
+  "#9b59b6",
+  "#1abc9c",
+];
 
 export default function Home() {
-  const { user } = useAuth();
+  const [stat, setStat] = useState<StatisticItem[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOverviewStatistic()
+      .then(setStat)
+      .finally(() => {
+        console.log(stat);
+        setLoading(false);
+      });
+  }, []);
+
+  const total = stat?.reduce((sum, s) => sum + s.value, 0) ?? 0;
+
+  const chartData = (stat ?? []).map((s, i) => ({
+    name: s.name,
+    value: s.value,
+    fill: DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+  }));
 
   return (
-    <>
-      <Title level={3}>Home</Title>
-      {user && (
-        <Card>
-          <pre className="max-h-96 overflow-auto rounded-lg bg-gray-100 p-4 text-sm">
-            {JSON.stringify(user, null, 2)}
-          </pre>
-        </Card>
-      )}
-    </>
+    <div style={{ padding: "24px" }}>
+      <Title level={3}>Overview</Title>
+
+      <Card
+        title="Tickets by Status"
+        extra={
+          stat && (
+            <Text type="secondary">Total: {total} tickets</Text>
+          )
+        }
+        style={{ maxWidth: 600 }}
+      >
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "48px 0" }}>
+            <Spin />
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={320}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="45%"
+                outerRadius={110}
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
+                }
+                labelLine={false}
+              />
+              <Tooltip
+                formatter={(value: number | undefined) => [
+                  `${value ?? 0} tickets`,
+                  "Count",
+                ]}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </Card>
+    </div>
   );
 }
