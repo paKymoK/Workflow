@@ -1,5 +1,6 @@
 package com.takypok.mediaservice.controller;
 
+import com.takypok.mediaservice.model.entity.UploadFile;
 import com.takypok.mediaservice.service.UploadFileService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,12 @@ public class UploadFileController {
   private final UploadFileService uploadFileService;
 
   @PostMapping("/single")
-  public Mono<String> uploadSingleFile(@RequestPart("file") Mono<FilePart> filePartMono) {
+  public Mono<UploadFile> uploadSingleFile(@RequestPart("file") Mono<FilePart> filePartMono) {
     return filePartMono.flatMap(uploadFileService::upload);
   }
 
   @PostMapping("/multiple")
-  public Mono<List<String>> uploadMultipleFiles(
+  public Mono<List<UploadFile>> uploadMultipleFiles(
       @RequestPart("files") Flux<FilePart> filePartsFlux) {
     return filePartsFlux.flatMap(uploadFileService::upload).collectList();
   }

@@ -1,6 +1,3 @@
--- init-databases.sql
--- This script runs automatically when container first starts
-
 -- Create authentication database
 CREATE DATABASE authentication
     WITH
@@ -21,6 +18,17 @@ CREATE DATABASE workflow
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
+-- Create media database
+CREATE DATABASE media
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.utf8'
+    LC_CTYPE = 'en_US.utf8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
 -- Grant all privileges
-GRANT ALL PRIVILEGES ON DATABASE authentication TO myuser;
-GRANT ALL PRIVILEGES ON DATABASE workflow TO myuser;
+GRANT ALL PRIVILEGES ON DATABASE authentication TO postgres;
+GRANT ALL PRIVILEGES ON DATABASE workflow TO postgres;
+GRANT ALL PRIVILEGES ON DATABASE media TO postgres;
