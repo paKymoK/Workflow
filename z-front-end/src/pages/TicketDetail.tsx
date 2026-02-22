@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert, Dropdown, message } from "antd";
-import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, RightOutlined, DownOutlined, MoreOutlined } from "@ant-design/icons";
+import { Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert, Dropdown, message, Avatar, List } from "antd";
+import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, RightOutlined, DownOutlined, MoreOutlined, SendOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import type { TicketSla } from "../api/types.ts";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchTicketById, pauseTicket, resumeTicket, transitionTicket } from "../api/ticketApi";
+import { fetchTicketById, pauseTicket, resumeTicket, transitionTicket, createComment, fetchComments } from "../api/ticketApi";
+import type { Comment } from "../api/types.ts";
 import SlaDeadlines from "../components/SlaDeadlines.tsx";
+import RichTextEditor from "../components/RichTextEditor.tsx";
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
@@ -19,6 +21,41 @@ export default function TicketDetail() {
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const token = sessionStorage.getItem("access_token");
+  const [commentHtml, setCommentHtml] = useState("");
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+
+  const loadComments = useCallback(async () => {
+    if (!id) return;
+    setCommentsLoading(true);
+    try {
+      const data = await fetchComments(id);
+      setComments(data);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
+
+  const handleSubmitComment = useCallback(async () => {
+    const isEmpty = commentHtml.replace(/<[^>]*>/g, "").trim() === "";
+    if (isEmpty) return;
+    setCommentSubmitting(true);
+    try {
+      await createComment(id!, commentHtml);
+      message.success("Comment submitted");
+      setCommentHtml("");
+      loadComments();
+    } catch {
+      message.error("Failed to submit comment");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  }, [commentHtml, id, loadComments]);
 
   const handlePause = useCallback(async () => {
     if (!id) return;
@@ -310,6 +347,53 @@ export default function TicketDetail() {
             )}
           </Card>
         )}
+
+        {/* Comments */}
+        <Card title="Comments" className="mt-4" type="inner" loading={commentsLoading}>
+          {comments.length === 0 && !commentsLoading ? (
+            <Text type="secondary">No comments yet.</Text>
+          ) : (
+            <List
+              dataSource={comments}
+              rowKey="id"
+              renderItem={(comment) => (
+                <List.Item style={{ alignItems: "flex-start" }}>
+                  <List.Item.Meta
+                    avatar={<Avatar>{comment.commenter.name.charAt(0).toUpperCase()}</Avatar>}
+                    title={<Text strong>{comment.commenter.name}</Text>}
+                    description={
+                      <div
+                        className="prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: comment.content }}
+                      />
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          )}
+        </Card>
+
+        {/* Add Comment */}
+        <Card title="Add Comment" className="mt-4" type="inner">
+          <RichTextEditor
+            key={commentSubmitting ? "reset" : "editor"}
+            content={commentHtml}
+            editable={true}
+            onChange={setCommentHtml}
+            placeholder="Write a comment..."
+          />
+          <div className="flex justify-end mt-2">
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              loading={commentSubmitting}
+              onClick={handleSubmitComment}
+            >
+              Submit
+            </Button>
+          </div>
+        </Card>
 
       </Card>
     </div>

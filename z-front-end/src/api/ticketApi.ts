@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment} from "./types.ts";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -55,6 +55,21 @@ export async function pauseTicket(id: string | number) {
 export async function resumeTicket(id: string | number) {
     const { data } = await api.post<ResultMessage<void>>(
         `/workflow-service/v1/ticket/resume/${id}`,
+    );
+    return data;
+}
+
+export async function fetchComments(ticketId: string | number) {
+    const { data } = await api.get<Comment[]>(
+        `/media-service/v1/comment/${ticketId}`,
+    );
+    return data;
+}
+
+export async function createComment(ticketId: string | number, content: string) {
+    const { data } = await api.post<ResultMessage<void>>(
+        "/media-service/v1/comment",
+        { ticketId, content },
     );
     return data;
 }

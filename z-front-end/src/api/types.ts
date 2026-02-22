@@ -41,6 +41,13 @@ export interface CreateTicketRequest {
     };
 }
 
+export interface Comment {
+    id: string;
+    ticketId: number;
+    commenter: { name: string; email: string };
+    content: string;
+}
+
 export interface WorkflowStatus {
     id: number;
     name: string;

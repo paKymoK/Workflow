@@ -6,6 +6,7 @@ import com.takypok.mediaservice.model.entity.Comment;
 import com.takypok.mediaservice.model.request.CommentRequest;
 import com.takypok.mediaservice.service.CommentService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/v1/comment")
 public class CommentController {
   private final CommentService commentService;
+
+  @GetMapping("/{id}")
+  public Mono<List<Comment>> get(@PathVariable @Valid Long id) {
+    return commentService.get(id);
+  }
 
   @PostMapping("")
   public Mono<Comment> comment(

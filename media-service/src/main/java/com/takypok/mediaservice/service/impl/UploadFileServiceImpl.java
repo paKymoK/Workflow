@@ -25,7 +25,7 @@ public class UploadFileServiceImpl implements UploadFileService {
     String filename = filePart.filename();
     String extension = getFileExtension(filename);
     return uploadFileRepository
-        .save(uploadFileMapper.mapToEntity(filename))
+        .save(uploadFileMapper.mapToEntity(filename, extension))
         .flatMap(
             uploadFile ->
                 filePart

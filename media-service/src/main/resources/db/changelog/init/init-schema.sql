@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS upload_file
 (
     id          uuid              NOT NULL DEFAULT uuid_generate_v4(),
     name        character varying NOT NULL,
+    extension   character varying NOT NULL,
     created_at  timestamp with time zone,
     created_by  character varying,
     modified_at timestamp with time zone,

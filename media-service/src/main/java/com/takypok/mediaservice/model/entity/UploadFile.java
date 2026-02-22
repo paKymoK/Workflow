@@ -15,4 +15,5 @@ import org.springframework.data.annotation.Id;
 public class UploadFile extends BaseEntity {
   @Id private UUID id;
   private String name;
+  private String extension;
 }

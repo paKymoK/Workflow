@@ -7,5 +7,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public abstract class UploadFileMapper {
   @Mapping(target = "name", source = "filename")
-  public abstract UploadFile mapToEntity(String filename);
+  @Mapping(target = "extension", source = "extension")
+  public abstract UploadFile mapToEntity(String filename, String extension);
 }
