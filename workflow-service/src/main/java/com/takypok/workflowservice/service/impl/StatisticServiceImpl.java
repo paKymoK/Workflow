@@ -19,6 +19,6 @@ public class StatisticServiceImpl implements StatisticService {
 
   @Override
   public Mono<List<OverviewStatistic>> overview(OverviewStatisticRequest request) {
-    return ticketRepository.overviewStatistic().collectList();
+    return ticketRepository.overviewStatistic(request.getFrom(), request.getTo()).collectList();
   }
 }

@@ -4,6 +4,7 @@ import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.response.OverviewStatistic;
 import com.takypok.workflowservice.model.response.TicketSla;
+import java.time.ZonedDateTime;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import reactor.core.publisher.Flux;
@@ -54,11 +55,14 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
 
   @Query(
       """
-            SELECT
-                status->>'group' AS name,
-                COUNT(*) AS value
-            FROM ticket
-            GROUP BY status->>'group';
-            """)
-  Flux<OverviewStatistic> overviewStatistic();
+          SELECT
+              status->>'group' AS name,
+              COUNT(*) AS value
+          FROM ticket
+          WHERE
+              (:from::timestamptz IS NULL OR created_at >= :from::timestamptz)
+              AND (:to::timestamptz IS NULL OR created_at <= :to::timestamptz)
+          GROUP BY status->>'group'
+          """)
+  Flux<OverviewStatistic> overviewStatistic(ZonedDateTime from, ZonedDateTime to);
 }

@@ -3,8 +3,11 @@ package com.takypok.workflowservice.model.entity.custom;
 import lombok.*;
 
 @Getter
+@AllArgsConstructor
 public enum GroupStatus {
-  TODO,
-  PROCESSING,
-  DONE
+  TODO("To Do"),
+  PROCESSING("Processing"),
+  DONE("Done");
+
+  private final String displayName;
 }

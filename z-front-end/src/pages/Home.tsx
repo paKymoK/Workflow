@@ -29,7 +29,6 @@ export default function Home() {
     fetchOverviewStatistic()
       .then(setStat)
       .finally(() => {
-        console.log(stat);
         setLoading(false);
       });
   }, []);
@@ -65,7 +64,7 @@ export default function Home() {
             <Text type="secondary">No data available</Text>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
                 data={chartData}
