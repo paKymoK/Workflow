@@ -58,3 +58,11 @@ export async function resumeTicket(id: string | number) {
     );
     return data;
 }
+
+export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {
+    const { data } = await api.post<ResultMessage<void>>(
+        `/workflow-service/v1/ticket/transition`,
+        { ticketId, currentStatusId, transitionName },
+    );
+    return data;
+}

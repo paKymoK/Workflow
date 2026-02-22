@@ -80,14 +80,14 @@ CREATE TABLE IF NOT EXISTS workflow
 
 CREATE TABLE IF NOT EXISTS project
 (
-    id           bigserial         NOT NULL,
-    name         character varying NOT NULL,
-    code         character varying NOT NULL,
-    workflow_id  bigint            NOT NULL,
-    created_at   timestamp with time zone,
-    created_by   character varying,
-    modified_at  timestamp with time zone,
-    modified_by  character varying,
+    id          bigserial         NOT NULL,
+    name        character varying NOT NULL,
+    code        character varying NOT NULL,
+    workflow_id bigint            NOT NULL,
+    created_at  timestamp with time zone,
+    created_by  character varying,
+    modified_at timestamp with time zone,
+    modified_by character varying,
     PRIMARY KEY (id),
     UNIQUE (code)
 );
@@ -152,14 +152,16 @@ BEGIN
     IF (OLD.status ->> 'group' = 'TODO') AND (NEW.status ->> 'group' = 'PROCESSING') THEN
         UPDATE sla
         SET status = status || jsonb_build_object(
-                'response', 'DONE'
+                'response', 'DONE',
+                'responseTime', NOW()
                                );
     END IF;
 
     IF (OLD.status ->> 'group' = 'PROCESSING') AND (NEW.status ->> 'group' = 'DONE') THEN
         UPDATE sla
         SET status = status || jsonb_build_object(
-                'resolution', 'DONE'
+                'resolution', 'DONE',
+                'responseTime', NOW()
                                );
     END IF;
     RETURN NEW;

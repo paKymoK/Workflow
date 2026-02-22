@@ -1,6 +1,7 @@
 package com.takypok.workflowservice.model.entity;
 
 import com.takypok.workflowservice.model.enums.StatusSla;
+import java.time.ZonedDateTime;
 import lombok.*;
 
 @Getter
@@ -11,8 +12,10 @@ import lombok.*;
 public class SlaStatus {
   private StatusSla response;
   private Boolean isResponseOverdue;
+  private ZonedDateTime responseTime;
   private StatusSla resolution;
   private Boolean isResolutionOverdue;
+  private ZonedDateTime resolutionTime;
 
   @Override
   public boolean equals(Object o) {

@@ -20,7 +20,7 @@ public abstract class SlaMapper {
   public abstract Sla mapToSla(Long ticketId, Priority priority);
 
   protected SlaStatus defaultStatus() {
-    return new SlaStatus(StatusSla.TODO, false, StatusSla.TODO, false);
+    return new SlaStatus(StatusSla.TODO, false, null, StatusSla.TODO, false, null);
   }
 
   protected ListPausedTime defaultPausedTime() {

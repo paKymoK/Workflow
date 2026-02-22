@@ -107,21 +107,14 @@ export default function Dashboard() {
                         key: 'pause',
                         label: 'Pause',
                         disabled: isLoading,
-                        onClick: () => handlePause(record.id),
+                        onClick: ({ domEvent }: { domEvent: React.MouseEvent }) => { domEvent.stopPropagation(); handlePause(record.id); },
                     }] : []),
                     ...(isPaused ? [{
                         key: 'resume',
                         label: 'Resume',
                         disabled: isLoading,
-                        onClick: () => handleResume(record.id),
+                        onClick: ({ domEvent }: { domEvent: React.MouseEvent }) => { domEvent.stopPropagation(); handleResume(record.id); },
                     }] : []),
-                    {
-                        key: 'transition',
-                        label: 'Transition',
-                        onClick: () => {
-                            console.log('Transition ticket:', record.id);
-                        },
-                    },
                 ];
 
                 return (

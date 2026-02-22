@@ -4,7 +4,7 @@ import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, RightOutlin
 import type { MenuProps } from "antd";
 import type { TicketSla } from "../api/types.ts";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchTicketById, pauseTicket, resumeTicket } from "../api/ticketApi";
+import { fetchTicketById, pauseTicket, resumeTicket, transitionTicket } from "../api/ticketApi";
 import SlaDeadlines from "../components/SlaDeadlines.tsx";
 import dayjs from "dayjs";
 
@@ -47,6 +47,20 @@ export default function TicketDetail() {
       setActionLoading(false);
     }
   }, [id]);
+
+  const handleTransition = useCallback(async (transitionName: string) => {
+    if (!id || !ticket) return;
+    setActionLoading(true);
+    try {
+      await transitionTicket(id, ticket.status.id, transitionName);
+      const data = await fetchTicketById(id);
+      setTicket(data);
+    } catch {
+      message.error("Failed to transition ticket");
+    } finally {
+      setActionLoading(false);
+    }
+  }, [id, ticket]);
 
   const loadTicket = useCallback(async () => {
     if (!id) return;
@@ -151,11 +165,15 @@ export default function TicketDetail() {
                   disabled: actionLoading,
                   onClick: handleResume,
                 }] : []),
-                {
-                  key: "transition",
-                  label: "Transition",
-                  onClick: () => console.log("Transition ticket:", ticket.id),
-                },
+                ...(availableTransitions.length > 0 ? [
+                  { type: "divider" as const },
+                  ...availableTransitions.map((t) => ({
+                    key: t.name,
+                    label: t.name,
+                    disabled: actionLoading,
+                    onClick: () => handleTransition(t.name),
+                  })),
+                ] : []),
               ];
               return (
                 <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
