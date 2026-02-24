@@ -157,7 +157,8 @@ BEGIN
         SET status = status || jsonb_build_object(
                 'response', 'DONE',
                 'responseTime', NOW()
-                               );
+                               )
+        WHERE NEW.id = ticket_id;
     END IF;
 
     IF (OLD.status ->> 'group' = 'PROCESSING') AND (NEW.status ->> 'group' = 'DONE') THEN
@@ -165,7 +166,8 @@ BEGIN
         SET status = status || jsonb_build_object(
                 'resolution', 'DONE',
                 'responseTime', NOW()
-                               );
+                               )
+        WHERE NEW.id = ticket_id;
     END IF;
     RETURN NEW;
 END;
