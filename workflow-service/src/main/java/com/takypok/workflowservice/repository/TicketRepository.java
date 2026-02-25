@@ -2,9 +2,7 @@ package com.takypok.workflowservice.repository;
 
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
-import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
-import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
-import com.takypok.workflowservice.model.response.TicketSla;
+import com.takypok.workflowservice.model.response.*;
 import java.time.ZonedDateTime;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;

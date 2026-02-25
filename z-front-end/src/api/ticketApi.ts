@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution} from "./types.ts";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -87,16 +87,34 @@ export async function createComment(ticketId: string | number, content: string) 
     return data;
 }
 
-export async function fetchTicketByIssueType() {
+export async function fetchTicketByIssueType(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<TicketByIssueType[]>>(
         "/workflow-service/v1/statistic/ticket-by-issue-type",
+        { params: { from, to } },
     );
     return data.data;
 }
 
-export async function fetchOverviewStatistic() {
+export async function fetchOverviewStatistic(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<StatisticItem[]>>(
         "/workflow-service/v1/statistic/overview",
+        { params: { from, to } },
+    );
+    return data.data;
+}
+
+export async function fetchSlaByStatus(from?: string, to?: string) {
+    const { data } = await api.get<ResultMessage<SlaStatusDistribution[]>>(
+        "/workflow-service/v1/statistic/sla-by-status",
+        { params: { from, to } },
+    );
+    return data.data;
+}
+
+export async function fetchSlaByPriority(from?: string, to?: string) {
+    const { data } = await api.get<ResultMessage<SlaPriorityDistribution[]>>(
+        "/workflow-service/v1/statistic/sla-by-priority",
+        { params: { from, to } },
     );
     return data.data;
 }

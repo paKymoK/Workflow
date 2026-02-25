@@ -2,6 +2,8 @@ package com.takypok.workflowservice.controller;
 
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.request.StatisticRequest;
+import com.takypok.workflowservice.model.response.SlaPriorityDistribution;
+import com.takypok.workflowservice.model.response.SlaStatusDistribution;
 import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
 import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
 import com.takypok.workflowservice.service.StatisticService;
@@ -29,5 +31,17 @@ public class StatisticController {
   public Mono<ResultMessage<List<TicketByIssueTypeStatistic>>> ticketByIssueType(
       @Valid StatisticRequest request) {
     return statisticService.ticketByIssueType(request).map(ResultMessage::success);
+  }
+
+  @GetMapping("/sla-by-status")
+  public Mono<ResultMessage<List<SlaStatusDistribution>>> slaByStatus(
+      @Valid StatisticRequest request) {
+    return statisticService.slaByStatusDistribution(request).map(ResultMessage::success);
+  }
+
+  @GetMapping("/sla-by-priority")
+  public Mono<ResultMessage<List<SlaPriorityDistribution>>> slaByPriority(
+      @Valid StatisticRequest request) {
+    return statisticService.slaByPriorityDistribution(request).map(ResultMessage::success);
   }
 }

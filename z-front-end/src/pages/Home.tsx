@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { Card, Spin, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { Card, DatePicker, Spin, Typography } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import {
   PieChart,
   Pie,
+  Cell,
   Tooltip,
   Legend,
   ResponsiveContainer,
@@ -12,11 +14,16 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { fetchOverviewStatistic, fetchTicketByIssueType } from "../api/ticketApi.ts";
+import { fetchOverviewStatistic, fetchTicketByIssueType, fetchSlaByStatus, fetchSlaByPriority } from "../api/ticketApi.ts";
 import { wsBaseUrl } from "../api/axios.ts";
-import type { StatisticItem, TicketByIssueType } from "../api/types.ts";
+import type { StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution } from "../api/types.ts";
 
 const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
+
+type DateRange = [Dayjs, Dayjs];
+
+const defaultRange = (): DateRange => [dayjs().subtract(6, "day"), dayjs()];
 
 const DEFAULT_COLORS = [
   "#4f86c6",
@@ -37,32 +44,61 @@ const EmptyPlaceholder = () => (
 export default function Home() {
   const [stat, setStat] = useState<StatisticItem[] | null>(null);
   const [issueTypeStat, setIssueTypeStat] = useState<TicketByIssueType[] | null>(null);
+  const [slaStatusStat, setSlaStatusStat] = useState<SlaStatusDistribution[] | null>(null);
+  const [slaPriorityStat, setSlaPriorityStat] = useState<SlaPriorityDistribution[] | null>(null);
   const [loadingStat, setLoadingStat] = useState(true);
   const [loadingIssue, setLoadingIssue] = useState(true);
-
-  const loadStat = useCallback(() => {
-    fetchOverviewStatistic().then(setStat).finally(() => setLoadingStat(false));
-  }, []);
-
-  const loadIssueTypeStat = useCallback(() => {
-    fetchTicketByIssueType().then(setIssueTypeStat).finally(() => setLoadingIssue(false));
-  }, []);
+  const [loadingSlaStatus, setLoadingSlaStatus] = useState(true);
+  const [loadingSlaPriority, setLoadingSlaPriority] = useState(true);
+  const [statRange, setStatRange] = useState<DateRange>(defaultRange);
+  const [issueRange, setIssueRange] = useState<DateRange>(defaultRange);
+  const [slaStatusRange, setSlaStatusRange] = useState<DateRange>(defaultRange);
+  const [slaPriorityRange, setSlaPriorityRange] = useState<DateRange>(defaultRange);
+  const [refetchKey, setRefetchKey] = useState(0);
 
   useEffect(() => {
-    loadStat();
-    loadIssueTypeStat();
-  }, [loadStat, loadIssueTypeStat]);
+    let active = true;
+    fetchOverviewStatistic(
+      statRange[0].startOf("day").toISOString(),
+      statRange[1].endOf("day").toISOString(),
+    ).then((data) => { if (active) { setStat(data); setLoadingStat(false); } });
+    return () => { active = false; };
+  }, [statRange, refetchKey]);
+
+  useEffect(() => {
+    let active = true;
+    fetchTicketByIssueType(
+      issueRange[0].startOf("day").toISOString(),
+      issueRange[1].endOf("day").toISOString(),
+    ).then((data) => { if (active) { setIssueTypeStat(data); setLoadingIssue(false); } });
+    return () => { active = false; };
+  }, [issueRange, refetchKey]);
+
+  useEffect(() => {
+    let active = true;
+    fetchSlaByStatus(
+      slaStatusRange[0].startOf("day").toISOString(),
+      slaStatusRange[1].endOf("day").toISOString(),
+    ).then((data) => { if (active) { setSlaStatusStat(data); setLoadingSlaStatus(false); } });
+    return () => { active = false; };
+  }, [slaStatusRange, refetchKey]);
+
+  useEffect(() => {
+    let active = true;
+    fetchSlaByPriority(
+      slaPriorityRange[0].startOf("day").toISOString(),
+      slaPriorityRange[1].endOf("day").toISOString(),
+    ).then((data) => { if (active) { setSlaPriorityStat(data); setLoadingSlaPriority(false); } });
+    return () => { active = false; };
+  }, [slaPriorityRange, refetchKey]);
 
   useEffect(() => {
     const token = sessionStorage.getItem("access_token");
     const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
     ws.onopen = () => { ws.send(token ?? ""); };
-    ws.onmessage = () => {
-      loadStat();
-      loadIssueTypeStat();
-    };
+    ws.onmessage = () => { setRefetchKey((k) => k + 1); };
     return () => ws.close();
-  }, [loadStat, loadIssueTypeStat]);
+  }, []);
 
   const total = stat?.reduce((sum, s) => sum + s.value, 0) ?? 0;
 
@@ -77,16 +113,38 @@ export default function Home() {
     ? Object.keys(issueTypeStat[0]).filter((k) => k !== "name")
     : [];
 
+  const slaStatusDonutData = (slaStatusStat ?? []).map((s, i) => ({
+    name: `${s.responseStatus} / ${s.resolutionStatus}`,
+    value: s.count,
+    fill: DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+  }));
+
+  const SLA_PRIORITY_KEYS: { key: keyof SlaPriorityDistribution; color: string }[] = [
+    { key: "onTime", color: "#7ed321" },
+    { key: "responseOverdue", color: "#f5a623" },
+    { key: "resolutionOverdue", color: "#d0021b" },
+    { key: "pending", color: "#4f86c6" },
+  ];
+
   return (
     <div style={{ padding: "24px" }}>
       <Title level={3}>Overview</Title>
 
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         {/* Pie chart — Tickets by Status */}
         <Card
           title="Tickets by Status"
-          extra={stat && <Text type="secondary">Total: {total} tickets</Text>}
-          style={{ flex: 1, minWidth: 320 }}
+          extra={
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <RangePicker
+                value={statRange}
+                onChange={(v) => { if (v) { setStatRange(v as DateRange); setLoadingStat(true); } }}
+                allowClear={false}
+              />
+              {stat && <Text type="secondary">Total: {total} tickets</Text>}
+            </div>
+          }
+          style={{ minWidth: 0 }}
         >
           {loadingStat ? (
             <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
@@ -122,7 +180,14 @@ export default function Home() {
         {/* Stacked bar chart — Tickets by Issue Type */}
         <Card
           title="Tickets by Issue Type"
-          style={{ flex: 1, minWidth: 320 }}
+          extra={
+            <RangePicker
+              value={issueRange}
+              onChange={(v) => { if (v) { setIssueRange(v as DateRange); setLoadingIssue(true); } }}
+              allowClear={false}
+            />
+          }
+          style={{ minWidth: 0 }}
         >
           {loadingIssue ? (
             <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
@@ -143,6 +208,80 @@ export default function Home() {
                     stackId="a"
                     fill={DEFAULT_COLORS[i % DEFAULT_COLORS.length]}
                   />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+        {/* Donut chart — SLA by Status */}
+        <Card
+          title="SLA by Status"
+          extra={
+            <RangePicker
+              value={slaStatusRange}
+              onChange={(v) => { if (v) { setSlaStatusRange(v as DateRange); setLoadingSlaStatus(true); } }}
+              allowClear={false}
+            />
+          }
+          style={{ minWidth: 0 }}
+        >
+          {loadingSlaStatus ? (
+            <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
+          ) : slaStatusDonutData.length === 0 ? (
+            <EmptyPlaceholder />
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie
+                  data={slaStatusDonutData}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={70}
+                  outerRadius={110}
+                  dataKey="value"
+                  isAnimationActive={false}
+                  label={({ name, percent }) =>
+                    `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
+                  }
+                  labelLine={false}
+                >
+                  {slaStatusDonutData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number | undefined) => [`${value ?? 0} tickets`, "Count"]} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+
+        {/* Grouped bar chart — SLA by Priority */}
+        <Card
+          title="SLA by Priority"
+          extra={
+            <RangePicker
+              value={slaPriorityRange}
+              onChange={(v) => { if (v) { setSlaPriorityRange(v as DateRange); setLoadingSlaPriority(true); } }}
+              allowClear={false}
+            />
+          }
+          style={{ minWidth: 0 }}
+        >
+          {loadingSlaPriority ? (
+            <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
+          ) : !slaPriorityStat || slaPriorityStat.length === 0 ? (
+            <EmptyPlaceholder />
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={slaPriorityStat} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="priorityName" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                {SLA_PRIORITY_KEYS.map(({ key, color }) => (
+                  <Bar key={key} dataKey={key} fill={color} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
