@@ -47,6 +47,12 @@ spring:
                 - Path=/workflow-service/web-socket/**
               filters:
                 - RewritePath=/workflow-service/(?<segment>.*), /workflow/${segment}
+            - id: auth
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth-service/**
+              filters:
+                - RewritePath=/auth-service/(?<segment>.*), /${segment}
             - id: workflow
               uri: lb://workflow-service
               predicates:

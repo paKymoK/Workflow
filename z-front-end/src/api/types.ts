@@ -69,6 +69,13 @@ export interface WorkflowTransition {
     postFunctions: string[];
 }
 
+export interface Workflow {
+    id: number;
+    name: string;
+    statuses: WorkflowStatus[];
+    transitions: WorkflowTransition[];
+}
+
 export interface StatisticItem {
     name: string;
     value: number;

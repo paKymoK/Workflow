@@ -6,6 +6,8 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import TicketDetail from "./pages/TicketDetail";
 import Callback from "./pages/Callback";
+import Settings from "./pages/Settings";
+import WorkflowDetail from "./pages/WorkflowDetail";
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/:id" element={<TicketDetail />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/workflow/:id" element={<WorkflowDetail />} />
           </Route>
         </Routes>
       </AuthProvider>

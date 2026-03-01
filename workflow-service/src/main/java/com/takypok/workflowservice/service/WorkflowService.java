@@ -6,7 +6,7 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 public interface WorkflowService {
-  Mono<List<Workflow>> get(Long id);
+  Mono<List<Workflow>> get();
 
   Mono<Workflow> getById(Long id);
 

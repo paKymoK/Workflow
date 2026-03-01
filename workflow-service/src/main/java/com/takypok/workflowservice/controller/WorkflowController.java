@@ -17,8 +17,8 @@ public class WorkflowController {
   private final WorkflowService workflowService;
 
   @GetMapping("")
-  public Mono<ResultMessage<List<Workflow>>> get(@PathVariable Long id) {
-    return workflowService.get(id).map(ResultMessage::success);
+  public Mono<ResultMessage<List<Workflow>>> get() {
+    return workflowService.get().map(ResultMessage::success);
   }
 
   @GetMapping("/{id}")

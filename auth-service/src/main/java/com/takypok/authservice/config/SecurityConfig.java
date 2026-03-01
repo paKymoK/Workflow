@@ -26,7 +26,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             (authorize) ->
                 authorize
-                    .requestMatchers("/assets/**", "/login", "/logout")
+                    .requestMatchers("/assets/**", "/login", "/logout", "/v1/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

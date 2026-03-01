@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfo {
+public class Userinfo {
   @JsonIgnore @Id private String sub;
   private String name;
   private String email;

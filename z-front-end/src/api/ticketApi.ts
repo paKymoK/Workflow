@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow} from "./types.ts";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -115,6 +115,20 @@ export async function fetchSlaByPriority(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<SlaPriorityDistribution[]>>(
         "/workflow-service/v1/statistic/sla-by-priority",
         { params: { from, to } },
+    );
+    return data.data;
+}
+
+export async function fetchWorkflows() {
+    const { data } = await api.get<ResultMessage<Workflow[]>>(
+        "/workflow-service/v1/workflow",
+    );
+    return data.data;
+}
+
+export async function fetchWorkflowById(id: string | number) {
+    const { data } = await api.get<ResultMessage<Workflow>>(
+        `/workflow-service/v1/workflow/${id}`,
     );
     return data.data;
 }
