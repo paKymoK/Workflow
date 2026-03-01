@@ -120,11 +120,9 @@ export default function Home() {
   }));
 
   const SLA_PRIORITY_KEYS: { key: keyof SlaPriorityDistribution; color: string }[] = [
-    { key: "onTime", color: "#7ed321" },
-    { key: "responseOverdue", color: "#f5a623" },
-    { key: "resolutionOverdue", color: "#d0021b" },
-    { key: "pending", color: "#4f86c6" },
-  ];
+    { key: "Success", color: "#7ed321" },
+    { key: "Response Overdue", color: "#f5a623" },
+    { key: "Resolution Overdue", color: "#d0021b" }  ];
 
   return (
     <div className="p-6">

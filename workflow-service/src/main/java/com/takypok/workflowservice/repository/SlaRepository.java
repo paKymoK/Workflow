@@ -41,20 +41,18 @@ public interface SlaRepository extends R2dbcRepository<Sla, Long> {
           SELECT
               s.priority->>'name' AS priority_name,
               COUNT(*) FILTER (
-                  WHERE (s.status->>'isResponseOverdue')::boolean = true
+                  WHERE s.status->>'response' = 'TODO'
+                  AND (s.status->>'isResponseOverdue')::boolean = true
               ) AS response_overdue,
               COUNT(*) FILTER (
-                  WHERE (s.status->>'isResolutionOverdue')::boolean = true
+                  WHERE s.status->>'response' <> 'DONE'
+                  AND (s.status->>'isResolutionOverdue')::boolean = true
               ) AS resolution_overdue,
               COUNT(*) FILTER (
                   WHERE (s.status->>'isResponseOverdue')::boolean = false
                   AND (s.status->>'isResolutionOverdue')::boolean = false
-                  AND s.status->>'response' != 'TODO'
+                  AND s.status->>'response' = 'DONE'
               ) AS on_time,
-              COUNT(*) FILTER (
-                  WHERE s.status->>'response' = 'TODO'
-                  AND (s.status->>'isResponseOverdue')::boolean = false
-              ) AS pending,
               COUNT(*) AS total
           FROM sla s
           JOIN ticket t on t.id = s.ticket_id
@@ -62,14 +60,7 @@ public interface SlaRepository extends R2dbcRepository<Sla, Long> {
               (:from::timestamptz IS NULL OR t.created_at >= :from::timestamptz)
               AND (:to::timestamptz IS NULL OR t.created_at <= :to::timestamptz)
           GROUP BY s.priority->>'name'
-          ORDER BY
-              CASE s.priority->>'name'
-                  WHEN 'Critical' THEN 1
-                  WHEN 'High' THEN 2
-                  WHEN 'Medium' THEN 3
-                  WHEN 'Low' THEN 4
-                  ELSE 5
-              END
+          ORDER BY s.priority->>'name'
           """)
   Flux<SlaPriorityDistribution> getSlaByPriorityDistribution(ZonedDateTime from, ZonedDateTime to);
 }

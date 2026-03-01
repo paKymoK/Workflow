@@ -3,14 +3,13 @@ package com.takypok.workflowservice.controller;
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.entity.Priority;
 import com.takypok.workflowservice.service.PriorityService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

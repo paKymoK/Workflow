@@ -96,10 +96,9 @@ export interface SlaStatusDistribution {
 
 export interface SlaPriorityDistribution {
   priorityName: string;
-  responseOverdue: number;
-  resolutionOverdue: number;
-  onTime: number;
-  pending: number;
+  "Response Overdue": number;
+  "Resolution Overdue": number;
+  Success: number;
   total: number;
 }
 
