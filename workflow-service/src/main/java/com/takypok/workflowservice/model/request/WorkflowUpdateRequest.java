@@ -1,5 +1,6 @@
 package com.takypok.workflowservice.model.request;
 
+import com.takypok.workflowservice.model.entity.WorkflowNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -11,8 +12,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class CreateWorkflowRequest {
+public class WorkflowUpdateRequest {
+  @NotNull private Long id;
   @NotNull private String name;
-  @NotEmpty private List<Long> statuses;
-  @NotEmpty private List<@Valid CreateWorkflowTransitionRequest> transitions;
+  @NotEmpty private List<@Valid WorkflowNode> statuses;
+  @NotEmpty private List<@Valid WorkflowTransitionRequest> transitions;
 }

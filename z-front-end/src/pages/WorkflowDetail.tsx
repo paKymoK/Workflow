@@ -246,23 +246,6 @@ function EmptyChip() {
   return <div style={{ fontFamily: "monospace", fontSize: 10, color: "#d1d5db" }}>— none</div>;
 }
 
-// ─── Layout Toggle Button ─────────────────────────────────────────────────────
-
-function LayoutBtn({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      fontFamily: "monospace", fontSize: 10, padding: "4px 10px",
-      borderRadius: 4, cursor: "pointer", border: "1px solid",
-      borderColor: active ? "#6366f1" : "#e5e7eb",
-      background:  active ? "#eef2ff"  : "#ffffff",
-      color:       active ? "#6366f1"  : "#6b7280",
-      transition: "all 0.15s",
-    }}>
-      {label}
-    </button>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function WorkflowDetail() {
@@ -274,7 +257,6 @@ export default function WorkflowDetail() {
   const [loading,      setLoading]      = useState(true);
   const [saving,       setSaving]       = useState(false);
   const [isDirty,      setIsDirty]      = useState(false);
-  const [direction,    setDirection]    = useState<"LR" | "TB">("LR");
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -331,15 +313,6 @@ export default function WorkflowDetail() {
       })
       .finally(() => setLoading(false));
   }, [id, setNodes, setEdges]);
-
-  // Re-layout on direction change
-  const onLayout = useCallback((dir: "LR" | "TB") => {
-    const { nodes: ln, edges: le } = getLayoutedElements(nodes, edges, dir);
-    setNodes([...ln]);
-    setEdges([...le]);
-    setDirection(dir);
-    setIsDirty(true);
-  }, [nodes, edges, setNodes, setEdges]);
 
   // ── Render ──
 
@@ -415,22 +388,6 @@ export default function WorkflowDetail() {
               nodeColor={(n) => GROUP_STYLES[n.data?.group as string]?.dot ?? "#9ca3af"}
               style={{ background: "#ffffff", border: "1px solid #e5e7eb" }}
             />
-
-            {/* Layout toggle */}
-            <Panel position="top-left">
-              <div style={{
-                background: "#ffffff", border: "1px solid #e5e7eb",
-                borderRadius: 8, padding: "7px 10px",
-                display: "flex", alignItems: "center", gap: 6,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              }}>
-                <span style={{ fontFamily: "monospace", fontSize: 10, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  Layout
-                </span>
-                <LayoutBtn active={direction === "LR"} label="→ LR" onClick={() => onLayout("LR")} />
-                <LayoutBtn active={direction === "TB"} label="↓ TB" onClick={() => onLayout("TB")} />
-              </div>
-            </Panel>
 
             {/* Unsaved indicator */}
             {isDirty && (

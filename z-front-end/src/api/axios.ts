@@ -1,4 +1,5 @@
 import axios from "axios";
+import { message } from "antd";
 import { navigate } from "../lib/navigate";
 
 const api = axios.create({
@@ -16,10 +17,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+
+    if (status === 401) {
       sessionStorage.removeItem("access_token");
       navigate("/login");
+      return Promise.reject(error);
     }
+
+    if (status >= 400 && status < 500) {
+      const msg: string = error.response?.data?.status?.message;
+      message.error(msg || "Internal Server Error");
+    }
+
     return Promise.reject(error);
   }
 );

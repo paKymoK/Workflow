@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class CreateWorkflowTransitionRequest {
+public class WorkflowTransitionRequest {
   @NotBlank private String name;
   @NotNull private Long from;
   @NotNull private Long to;
@@ -22,7 +22,7 @@ public class CreateWorkflowTransitionRequest {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CreateWorkflowTransitionRequest request = (CreateWorkflowTransitionRequest) o;
+    WorkflowTransitionRequest request = (WorkflowTransitionRequest) o;
     return Objects.equals(name, request.name)
         && Objects.equals(from, request.from)
         && Objects.equals(to, request.to);

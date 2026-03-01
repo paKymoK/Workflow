@@ -15,11 +15,14 @@ import com.takypok.workflowservice.model.entity.custom.GroupStatus;
 import com.takypok.workflowservice.model.entity.custom.ListTransition;
 import com.takypok.workflowservice.model.entity.custom.ListWorkflowNode;
 import com.takypok.workflowservice.model.mapper.TransitionMapper;
-import com.takypok.workflowservice.model.request.CreateWorkflowRequest;
-import com.takypok.workflowservice.model.request.CreateWorkflowTransitionRequest;
+import com.takypok.workflowservice.model.mapper.WorkflowMapper;
+import com.takypok.workflowservice.model.request.WorkflowCreateRequest;
+import com.takypok.workflowservice.model.request.WorkflowTransitionRequest;
+import com.takypok.workflowservice.model.request.WorkflowUpdateRequest;
 import com.takypok.workflowservice.repository.StatusRepository;
 import com.takypok.workflowservice.repository.WorkflowRepository;
 import com.takypok.workflowservice.service.WorkflowService;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +40,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private final WorkflowRepository workflowRepository;
   private final StatusRepository statusRepository;
   private final TransitionMapper transitionMapper;
+  private final WorkflowMapper workflowMapper;
 
   @Override
   public Mono<List<Workflow>> get() {
@@ -53,18 +57,29 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public Mono<Workflow> create(CreateWorkflowRequest request) {
+  public Mono<Workflow> create(WorkflowCreateRequest request) {
     return statusRepository
         .findAllById(request.getStatuses())
         .collectList()
         .flatMap(
             statuses ->
                 workflowRepository.save(
-                    new Workflow(
+                    workflowMapper.mapToEntity(
                         request.getName(),
                         new ListWorkflowNode(validatedStatus(request, statuses)),
                         new ListTransition(
                             validatedTransition(request.getTransitions(), statuses)))));
+  }
+
+  @Override
+  public Mono<Workflow> update(WorkflowUpdateRequest request) {
+    return workflowRepository.save(
+        workflowMapper.mapToEntity(
+            request.getId(),
+            request.getName(),
+            new ListWorkflowNode(request.getStatuses()),
+            new ListTransition(
+                validatedTransition(request.getTransitions(), request.getStatuses()))));
   }
 
   private String findStatusNotExist(List<Long> request, List<Long> database) {
@@ -74,7 +89,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private List<Transition> validatedTransition(
-      List<CreateWorkflowTransitionRequest> transitions, List<Status> statuses) {
+      List<WorkflowTransitionRequest> transitions, List<? extends Status> statuses) {
     AtomicLong todoNodeCount = new AtomicLong(0L);
     statuses.forEach(
         status -> {
@@ -104,12 +119,13 @@ public class WorkflowServiceImpl implements WorkflowService {
             transitionRequest -> {
               validateValidator(transitionRequest);
               validatePostFunction(transitionRequest);
-              return transitionMapper.mapToTransition(transitionRequest, statuses);
+              return transitionMapper.mapToTransition(transitionRequest, new ArrayList<>(statuses));
             })
         .toList();
   }
 
-  private List<WorkflowNode> validatedStatus(CreateWorkflowRequest request, List<Status> statuses) {
+  private List<WorkflowNode> validatedStatus(
+      WorkflowCreateRequest request, List<? extends Status> statuses) {
     if (statuses.size() == request.getStatuses().size()) {
       return statuses.stream().map(WorkflowNode::new).toList();
     } else {
@@ -121,7 +137,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private void validateValidator(CreateWorkflowTransitionRequest transitionRequest) {
+  private void validateValidator(WorkflowTransitionRequest transitionRequest) {
     transitionRequest
         .getValidator()
         .forEach(
@@ -139,7 +155,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             });
   }
 
-  private void validatePostFunction(CreateWorkflowTransitionRequest transitionRequest) {
+  private void validatePostFunction(WorkflowTransitionRequest transitionRequest) {
     transitionRequest
         .getPostFunctions()
         .forEach(

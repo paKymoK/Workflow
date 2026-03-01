@@ -2,7 +2,8 @@ package com.takypok.workflowservice.controller;
 
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.entity.Workflow;
-import com.takypok.workflowservice.model.request.CreateWorkflowRequest;
+import com.takypok.workflowservice.model.request.WorkflowCreateRequest;
+import com.takypok.workflowservice.model.request.WorkflowUpdateRequest;
 import com.takypok.workflowservice.service.WorkflowService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -28,13 +29,13 @@ public class WorkflowController {
 
   @PostMapping
   public Mono<ResultMessage<Workflow>> createWorkflow(
-      @Valid @RequestBody CreateWorkflowRequest request) {
+      @Valid @RequestBody WorkflowCreateRequest request) {
     return workflowService.create(request).map(ResultMessage::success);
   }
 
   @PutMapping
   public Mono<ResultMessage<Workflow>> updateWorkflow(
-      @Valid @RequestBody CreateWorkflowRequest request) {
-    return workflowService.create(request).map(ResultMessage::success);
+      @Valid @RequestBody WorkflowUpdateRequest request) {
+    return workflowService.update(request).map(ResultMessage::success);
   }
 }
