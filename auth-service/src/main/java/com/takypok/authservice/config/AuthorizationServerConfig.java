@@ -95,11 +95,14 @@ public class AuthorizationServerConfig {
             .clientId("gateway")
             .clientSecret("{noop}gateway-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(
-                TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(1)).build())
+                TokenSettings.builder()
+                    .accessTokenTimeToLive(Duration.ofMinutes(10))
+                    .refreshTokenTimeToLive(Duration.ofDays(1))
+                    .reuseRefreshTokens(false)
+                    .build())
             .redirectUri(workflowServiceUrl + "/login/oauth2/code/gateway-service-oidc")
             .redirectUri(workflowServiceUrl + "/index")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
@@ -108,6 +111,7 @@ public class AuthorizationServerConfig {
             .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
+            .scope("offline_access")
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
             .build();
 

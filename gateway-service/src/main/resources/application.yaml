@@ -21,9 +21,9 @@ spring:
             provider: gateway-service
             client-id: gateway
             client-secret: gateway-secret
-            authorization-grant-type: authorization_code
+            authorization-grant-type: authorization_code,refresh_token
             redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
-            scope: openid
+            scope: openid,profile,offline_access
             client-name: gateway-service-oidc
         provider:
           gateway-service:
