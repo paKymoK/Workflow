@@ -61,7 +61,7 @@ export default function Callback() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <Spin size="large" tip="Completing login...">
+      <Spin size="large" description="Completing login...">
         <div className="p-12" />
       </Spin>
     </div>

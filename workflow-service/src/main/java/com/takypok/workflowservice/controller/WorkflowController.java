@@ -31,4 +31,10 @@ public class WorkflowController {
       @Valid @RequestBody CreateWorkflowRequest request) {
     return workflowService.create(request).map(ResultMessage::success);
   }
+
+  @PutMapping
+  public Mono<ResultMessage<Workflow>> updateWorkflow(
+      @Valid @RequestBody CreateWorkflowRequest request) {
+    return workflowService.create(request).map(ResultMessage::success);
+  }
 }

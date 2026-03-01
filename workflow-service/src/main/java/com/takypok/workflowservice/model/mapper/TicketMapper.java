@@ -56,7 +56,7 @@ public abstract class TicketMapper {
   }
 
   protected Status getTodoStatus(Workflow workflow) {
-    Optional<Status> result =
+    Optional<WorkflowNode> result =
         workflow.getStatuses().stream()
             .filter(status -> GroupStatus.TODO.equals(status.getGroup()))
             .findFirst();

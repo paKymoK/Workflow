@@ -18,12 +18,11 @@ import {
   type Edge,
   type Connection,
   type NodeProps,
-  type NodeDragHandler,
 } from "@xyflow/react";
 import dagre from "dagre";
 import "@xyflow/react/dist/style.css";
 import { fetchWorkflowById } from "../api/ticketApi";
-import type { Workflow, WorkflowStatus, WorkflowTransition } from "../api/types";
+import type { Workflow } from "../api/types";
 
 const { Title } = Typography;
 
@@ -295,7 +294,7 @@ export default function WorkflowDetail() {
   }, []);
 
   // Mark dirty when user finishes dragging — no API call yet
-  const onNodeDragStop: NodeDragHandler = useCallback(() => {
+  const onNodeDragStop = useCallback(() => {
     setIsDirty(true);
   }, []);
 

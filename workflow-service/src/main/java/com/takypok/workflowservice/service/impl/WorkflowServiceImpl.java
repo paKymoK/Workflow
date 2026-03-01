@@ -10,9 +10,10 @@ import com.takypok.workflowservice.function.validator.index.ValidatorInterface;
 import com.takypok.workflowservice.model.entity.Status;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.Workflow;
+import com.takypok.workflowservice.model.entity.WorkflowNode;
 import com.takypok.workflowservice.model.entity.custom.GroupStatus;
-import com.takypok.workflowservice.model.entity.custom.ListStatus;
 import com.takypok.workflowservice.model.entity.custom.ListTransition;
+import com.takypok.workflowservice.model.entity.custom.ListWorkflowNode;
 import com.takypok.workflowservice.model.mapper.TransitionMapper;
 import com.takypok.workflowservice.model.request.CreateWorkflowRequest;
 import com.takypok.workflowservice.model.request.CreateWorkflowTransitionRequest;
@@ -61,7 +62,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                 workflowRepository.save(
                     new Workflow(
                         request.getName(),
-                        new ListStatus(validatedStatus(request, statuses)),
+                        new ListWorkflowNode(validatedStatus(request, statuses)),
                         new ListTransition(
                             validatedTransition(request.getTransitions(), statuses)))));
   }
@@ -108,9 +109,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         .toList();
   }
 
-  private List<Status> validatedStatus(CreateWorkflowRequest request, List<Status> statuses) {
+  private List<WorkflowNode> validatedStatus(CreateWorkflowRequest request, List<Status> statuses) {
     if (statuses.size() == request.getStatuses().size()) {
-      return statuses;
+      return statuses.stream().map(WorkflowNode::new).toList();
     } else {
       throw new ApplicationException(
           Message.Application.ERROR,

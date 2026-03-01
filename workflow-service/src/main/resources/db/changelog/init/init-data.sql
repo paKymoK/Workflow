@@ -11,8 +11,8 @@ VALUES ('Low', 1, 30, now(),'admin', now(), 'admin'),
        ('High', 1, 4, now(),'admin', now(), 'admin');
 
 INSERT INTO workflow(
-    id, name, statuses, transitions, created_at, created_by, modified_at, modified_by)
-VALUES (1, 'Test', '[
+     name, statuses, transitions, created_at, created_by, modified_at, modified_by)
+VALUES ('Test', '[
   {
     "id": 1,
     "name": "Todo",
@@ -73,8 +73,8 @@ VALUES (1, 'Test', '[
 ]', now(), 'admin', now(), 'admin');
 
 INSERT INTO
-    project (id, name, code, workflow_id, "created_at", "created_by", "modified_at", "modified_by")
-VALUES (1, 'Internal Application', 'IA', 1, now(), 'admin', now(), 'admin');
+    project ( name, code, workflow_id, "created_at", "created_by", "modified_at", "modified_by")
+VALUES ('Internal Application', 'IA', 1, now(), 'admin', now(), 'admin');
 
 INSERT INTO
     issue_type (name, project_id, "created_at", "created_by", "modified_at", "modified_by")

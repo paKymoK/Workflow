@@ -1,8 +1,8 @@
 package com.takypok.workflowservice.model.entity;
 
 import com.takypok.core.model.IdEntity;
-import com.takypok.workflowservice.model.entity.custom.ListStatus;
 import com.takypok.workflowservice.model.entity.custom.ListTransition;
+import com.takypok.workflowservice.model.entity.custom.ListWorkflowNode;
 import lombok.*;
 
 @Getter
@@ -12,6 +12,6 @@ import lombok.*;
 @ToString
 public class Workflow extends IdEntity {
   private String name;
-  private ListStatus statuses;
+  private ListWorkflowNode statuses;
   private ListTransition transitions;
 }

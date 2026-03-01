@@ -25,6 +25,8 @@ public class PostgresConfig {
     converters.add(new WorkflowStatusWriter(mapper));
     converters.add(new WorkflowTransitionReader(mapper));
     converters.add(new WorkflowTransitionWriter(mapper));
+    converters.add(new WorkflowNodeReader(mapper));
+    converters.add(new WorkflowNodeWriter(mapper));
     converters.add(new IssueTypeReader(mapper));
     converters.add(new IssueTypeWriter(mapper));
     converters.add(new TicketDetailReader(mapper));
