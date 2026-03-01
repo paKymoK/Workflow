@@ -66,6 +66,25 @@ export async function exchangeCodeForToken(
   return data;
 }
 
+export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+  const body = new URLSearchParams({
+    grant_type: "refresh_token",
+    client_id: CLIENT_ID,
+    refresh_token: refreshToken,
+  });
+
+  const { data } = await axios.post<TokenResponse>(
+    `${AUTH_SERVER}/oauth2/token`,
+    body,
+  );
+
+  if (!data.access_token) {
+    throw new Error(`Token refresh failed: ${JSON.stringify(data)}`);
+  }
+
+  return data;
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token?: string;
