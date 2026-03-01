@@ -133,6 +133,21 @@ export async function fetchWorkflowById(id: string | number) {
     return data.data;
 }
 
+export interface WorkflowUpdatePayload {
+  id: number;
+  name: string;
+  statuses: { id: number; name: string; color: string; group: string; x: number; y: number }[];
+  transitions: { name: string; from: number; to: number; validator: string[]; postFunctions: string[] }[];
+}
+
+export async function updateWorkflow(payload: WorkflowUpdatePayload) {
+  const { data } = await api.put<ResultMessage<Workflow>>(
+    "/workflow-service/v1/workflow",
+    payload,
+  );
+  return data.data;
+}
+
 export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {
     const { data } = await api.post<ResultMessage<void>>(
         `/workflow-service/v1/ticket/transition`,

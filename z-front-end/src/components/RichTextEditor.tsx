@@ -95,7 +95,7 @@ function RichTextEditor({
                         icon={<StrikethroughOutlined />}
                         onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleStrike().run(); }}
                     />
-                    <Divider type="vertical" style={{ margin: "0 2px" }} />
+                    <Divider type="vertical" className="!my-0 !mx-0.5" />
                     <Button
                         size="small"
                         type={editor.isActive("bulletList") ? "primary" : "text"}
@@ -108,7 +108,7 @@ function RichTextEditor({
                         icon={<OrderedListOutlined />}
                         onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleOrderedList().run(); }}
                     />
-                    <Divider type="vertical" style={{ margin: "0 2px" }} />
+                    <Divider type="vertical" className="!my-0 !mx-0.5" />
                     <Button
                         size="small"
                         type="text"
@@ -123,7 +123,7 @@ function RichTextEditor({
                         disabled={!editor.can().redo()}
                         onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().redo().run(); }}
                     />
-                    <Divider type="vertical" style={{ margin: "0 2px" }} />
+                    <Divider type="vertical" className="!my-0 !mx-0.5" />
                     <Tooltip title="Attach file or image">
                         <Button
                             size="small"

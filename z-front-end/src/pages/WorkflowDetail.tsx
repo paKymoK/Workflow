@@ -21,7 +21,7 @@ import {
 } from "@xyflow/react";
 import dagre from "dagre";
 import "@xyflow/react/dist/style.css";
-import { fetchWorkflowById } from "../api/ticketApi";
+import { fetchWorkflowById, updateWorkflow } from "../api/ticketApi";
 import type { Workflow } from "../api/types";
 
 const { Title } = Typography;
@@ -31,14 +31,49 @@ const { Title } = Typography;
 const NODE_WIDTH  = 180;
 const NODE_HEIGHT = 70;
 
-// Light-mode palette
-const GROUP_STYLES: Record<string, { border: string; bg: string; text: string; dot: string }> = {
-  TODO:       { border: "#d1d5db", bg: "#f9fafb", text: "#6b7280", dot: "#9ca3af"  },
-  PROCESSING: { border: "#bfdbfe", bg: "#eff6ff", text: "#3b82f6", dot: "#3b82f6"  },
-  DONE:       { border: "#bbf7d0", bg: "#f0fdf4", text: "#16a34a", dot: "#22c55e"  },
+// Tailwind class sets per group — all strings are complete for static Tailwind scanning
+const GROUP_STYLES: Record<string, {
+  borderColor: string;
+  bg:          string;
+  text:        string;
+  dot:         string;
+  handleDot:   string; // uses ! prefix so ReactFlow handle default bg is overridden
+  badge:       string;
+}> = {
+  TODO: {
+    borderColor: "border-gray-300",
+    bg:          "bg-gray-50",
+    text:        "text-gray-500",
+    dot:         "bg-gray-400",
+    handleDot:   "!bg-gray-400",
+    badge:       "bg-gray-300/30 text-gray-500",
+  },
+  PROCESSING: {
+    borderColor: "border-blue-200",
+    bg:          "bg-blue-50",
+    text:        "text-blue-500",
+    dot:         "bg-blue-500",
+    handleDot:   "!bg-blue-500",
+    badge:       "bg-blue-200/30 text-blue-500",
+  },
+  DONE: {
+    borderColor: "border-green-200",
+    bg:          "bg-green-50",
+    text:        "text-green-600",
+    dot:         "bg-green-500",
+    handleDot:   "!bg-green-500",
+    badge:       "bg-green-200/30 text-green-600",
+  },
 };
 
-const fallbackStyle = { border: "#d1d5db", bg: "#f9fafb", text: "#6b7280", dot: "#9ca3af" };
+const fallbackStyle = GROUP_STYLES.TODO;
+
+// Hex values needed for ReactFlow MiniMap's nodeColor callback (expects CSS color, not class)
+const DOT_COLORS: Record<string, string> = {
+  TODO:       "#9ca3af",
+  PROCESSING: "#3b82f6",
+  DONE:       "#22c55e",
+};
 
 // ─── Dagre Layout ─────────────────────────────────────────────────────────────
 
@@ -54,7 +89,6 @@ function getLayoutedElements(nodes: Node[], edges: Edge[], direction: "LR" | "TB
 
   return {
     nodes: nodes.map((node) => {
-      // Keep saved position, only update handle directions
       if (node.data?.positionSaved) {
         return {
           ...node,
@@ -65,7 +99,6 @@ function getLayoutedElements(nodes: Node[], edges: Edge[], direction: "LR" | "TB
           },
         };
       }
-      // Use dagre-calculated position
       const { x, y } = g.node(node.id);
       return {
         ...node,
@@ -90,38 +123,29 @@ function StateNode({ data }: NodeProps) {
 
   return (
     <>
-      <Handle type="target" position={targetPos}
-        style={{ background: s.dot, border: "2px solid #fff", width: 10, height: 10 }} />
+      <Handle
+        type="target"
+        position={targetPos}
+        className={`${s.handleDot} !border-2 !border-white !w-2.5 !h-2.5`}
+      />
 
-      <div style={{
-        width: NODE_WIDTH, height: NODE_HEIGHT,
-        border: `1.5px solid ${s.border}`,
-        background: s.bg,
-        borderRadius: 10,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        gap: 4,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-          <span style={{ color: "#111827", fontWeight: 600, fontSize: 13 }}>
+      <div className={`w-[180px] h-[70px] border-[1.5px] ${s.borderColor} ${s.bg} rounded-[10px] shadow-sm flex flex-col items-center justify-center gap-1`}>
+        <div className="flex items-center gap-1.5">
+          <div className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
+          <span className="text-gray-900 font-semibold text-[13px]">
             {data.label as string}
           </span>
         </div>
-        <span style={{
-          fontFamily: "monospace", fontSize: 9,
-          letterSpacing: "0.1em", textTransform: "uppercase",
-          color: s.text,
-          background: `${s.border}55`,
-          padding: "1px 6px", borderRadius: 3,
-        }}>
+        <span className={`font-mono text-[9px] tracking-[0.1em] uppercase px-1.5 py-px rounded-[3px] ${s.badge}`}>
           {data.group as string}
         </span>
       </div>
 
-      <Handle type="source" position={sourcePos}
-        style={{ background: s.dot, border: "2px solid #fff", width: 10, height: 10 }} />
+      <Handle
+        type="source"
+        position={sourcePos}
+        className={`${s.handleDot} !border-2 !border-white !w-2.5 !h-2.5`}
+      />
     </>
   );
 }
@@ -150,9 +174,9 @@ function buildElements(workflow: Workflow): { nodes: Node[]; edges: Edge[] } {
     type:   ConnectionLineType.SmoothStep,
     animated: true,
     label:  t.name,
-    labelStyle:         { fontFamily: "monospace", fontSize: 10, fill: "#6366f1", letterSpacing: "0.06em" },
-    labelBgStyle:       { fill: "#eef2ff", fillOpacity: 1 },
-    labelBgPadding:     [4, 6] as [number, number],
+    labelStyle:          { fontFamily: "monospace", fontSize: 10, fill: "#6366f1", letterSpacing: "0.06em" },
+    labelBgStyle:        { fill: "#eef2ff", fillOpacity: 1 },
+    labelBgPadding:      [4, 6] as [number, number],
     labelBgBorderRadius: 4,
     style: { stroke: "#94a3b8", strokeWidth: 1.5 },
     data: {
@@ -175,28 +199,25 @@ function DetailPanel({ edge, onClose }: { edge: Edge | null; onClose: () => void
   const shortName = (s: string) => s.includes(".") ? s.split(".").pop()! : s;
 
   return (
-    <div style={{
-      position: "absolute", top: 12, right: 12, zIndex: 10,
-      background: "#ffffff", border: "1px solid #e5e7eb",
-      borderRadius: 10, padding: "16px 18px", width: 256,
-      boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+    <div className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-[10px] px-[18px] py-4 w-64 shadow-lg">
+      <div className="flex justify-between items-start mb-3.5">
         <div>
-          <div style={{ fontFamily: "monospace", fontSize: 9, color: "#6366f1", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 3 }}>
+          <div className="font-mono text-[9px] text-indigo-500 tracking-[0.15em] uppercase mb-[3px]">
             Transition
           </div>
-          <div style={{ color: "#111827", fontWeight: 700, fontSize: 14 }}>
+          <div className="text-gray-900 font-bold text-sm">
             {edge.data?.transitionName as string ?? edge.label as string}
           </div>
-          <div style={{ fontFamily: "monospace", fontSize: 10, color: "#9ca3af", marginTop: 2 }}>
+          <div className="font-mono text-[10px] text-gray-400 mt-0.5">
             {edge.source} → {edge.target}
           </div>
         </div>
-        <button onClick={onClose} style={{
-          color: "#9ca3af", background: "none", border: "none",
-          cursor: "pointer", fontSize: 18, lineHeight: 1, padding: 0, marginTop: 2,
-        }}>✕</button>
+        <button
+          onClick={onClose}
+          className="text-gray-400 bg-transparent border-none cursor-pointer text-lg leading-none p-0 mt-0.5"
+        >
+          ✕
+        </button>
       </div>
 
       <Section label="Validators">
@@ -205,7 +226,7 @@ function DetailPanel({ edge, onClose }: { edge: Edge | null; onClose: () => void
           : <EmptyChip />}
       </Section>
 
-      <Section label="Post Functions" style={{ marginTop: 12 }}>
+      <Section label="Post Functions" className="mt-3">
         {postFunctions.length > 0
           ? postFunctions.map((f, i) => <Chip key={i} label={shortName(f)} variant="postfn" />)
           : <EmptyChip />}
@@ -214,13 +235,13 @@ function DetailPanel({ edge, onClose }: { edge: Edge | null; onClose: () => void
   );
 }
 
-function Section({ label, children, style }: { label: string; children: React.ReactNode; style?: React.CSSProperties }) {
+function Section({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div style={style}>
-      <div style={{ fontFamily: "monospace", fontSize: 9, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>
+    <div className={className}>
+      <div className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.12em] mb-1.5">
         {label}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
+      <div className="flex flex-col gap-1">{children}</div>
     </div>
   );
 }
@@ -228,22 +249,19 @@ function Section({ label, children, style }: { label: string; children: React.Re
 function Chip({ label, variant }: { label: string; variant: "validator" | "postfn" }) {
   const isV = variant === "validator";
   return (
-    <div style={{
-      fontFamily: "monospace", fontSize: 10,
-      color:      isV ? "#d97706" : "#7c3aed",
-      background: isV ? "#fef3c7"  : "#ede9fe",
-      border:     `1px solid ${isV ? "#fde68a" : "#ddd6fe"}`,
-      borderRadius: 4, padding: "3px 8px",
-      display: "flex", alignItems: "center", gap: 5,
-    }}>
-      <span style={{ opacity: 0.5, fontSize: 9 }}>{isV ? "V" : "F"}</span>
+    <div className={`font-mono text-[10px] rounded px-2 py-[3px] flex items-center gap-[5px] border ${
+      isV
+        ? "text-amber-600 bg-amber-100 border-amber-200"
+        : "text-violet-600 bg-violet-100 border-violet-200"
+    }`}>
+      <span className="opacity-50 text-[9px]">{isV ? "V" : "F"}</span>
       {label}
     </div>
   );
 }
 
 function EmptyChip() {
-  return <div style={{ fontFamily: "monospace", fontSize: 10, color: "#d1d5db" }}>— none</div>;
+  return <div className="font-mono text-[10px] text-gray-300">— none</div>;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -262,7 +280,6 @@ export default function WorkflowDetail() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  // Keep a ref to latest nodes so onSave always reads current positions
   const nodesRef = useRef<Node[]>(nodes);
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
 
@@ -275,22 +292,34 @@ export default function WorkflowDetail() {
     setSelectedEdge(edge);
   }, []);
 
-  // Mark dirty when user finishes dragging — no API call yet
   const onNodeDragStop = useCallback(() => {
     setIsDirty(true);
   }, []);
 
-  // Save button handler
   const onSave = useCallback(async () => {
-    if (!id) return;
+    if (!id || !workflow) return;
     setSaving(true);
     try {
-      // const positions = nodesRef.current.map((n) => ({
-      //   id: Number(n.id),
-      //   x:  Math.round(n.position.x),
-      //   y:  Math.round(n.position.y),
-      // }));
-      // await saveWorkflowNodePositions(id, positions);
+      const currentNodes = nodesRef.current;
+      const statuses = workflow.statuses.map((s) => {
+        const node = currentNodes.find((n) => n.id === String(s.id));
+        return {
+          id:    s.id,
+          name:  s.name,
+          color: s.color,
+          group: s.group,
+          x:     Math.round(node?.position.x ?? s.x ?? 0),
+          y:     Math.round(node?.position.y ?? s.y ?? 0),
+        };
+      });
+      const transitions = workflow.transitions.map((t) => ({
+        name:          t.name,
+        from:          t.from.id,
+        to:            t.to.id,
+        validator:     t.validator ?? [],
+        postFunctions: t.postFunctions ?? [],
+      }));
+      await updateWorkflow({ id: workflow.id, name: workflow.name, statuses, transitions });
       setIsDirty(false);
       messageApi.success("Layout saved");
     } catch {
@@ -298,9 +327,8 @@ export default function WorkflowDetail() {
     } finally {
       setSaving(false);
     }
-  }, [id, messageApi]);
+  }, [id, workflow, messageApi]);
 
-  // Initial load
   useEffect(() => {
     if (!id) return;
     fetchWorkflowById(id)
@@ -318,33 +346,33 @@ export default function WorkflowDetail() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "80px 0" }}>
+      <div className="text-center py-20">
         <Spin size="large" />
       </div>
     );
   }
 
   if (!workflow) {
-    return <span style={{ color: "#ef4444" }}>Workflow not found.</span>;
+    return <span className="text-red-500">Workflow not found.</span>;
   }
 
   return (
     <>
       {contextHolder}
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 0 }}>
+      <div className="flex flex-col h-full">
 
         {/* Top bar */}
-        <div style={{ padding: "12px 0 16px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div className="pt-3 pb-4 flex items-end justify-between">
           <div>
             <Button
               icon={<ArrowLeftOutlined />}
               type="text"
               onClick={() => navigate("/settings")}
-              style={{ paddingLeft: 0, marginBottom: 8 }}
+              className="!pl-0 !mb-2"
             >
               Back to Settings
             </Button>
-            <Title level={3} style={{ margin: 0 }}>{workflow.name}</Title>
+            <Title level={3} className="!m-0">{workflow.name}</Title>
           </div>
 
           <Button
@@ -359,13 +387,7 @@ export default function WorkflowDetail() {
         </div>
 
         {/* Flow canvas */}
-        <div style={{
-          flex: 1, minHeight: 520,
-          borderRadius: 12, overflow: "hidden",
-          border: "1px solid #e5e7eb",
-          position: "relative",
-          boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-        }}>
+        <div className="flex-1 min-h-[520px] rounded-xl overflow-hidden border border-gray-200 relative shadow-sm">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -380,30 +402,24 @@ export default function WorkflowDetail() {
             fitView
             fitViewOptions={{ padding: 0.3 }}
             proOptions={{ hideAttribution: true }}
-            style={{ background: "#f8fafc" }}
+            className="bg-slate-50"
           >
             <Background color="#e2e8f0" gap={20} />
-            <Controls style={{ background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }} />
+            <Controls className="bg-white border border-gray-200 shadow-sm" />
             <MiniMap
-              nodeColor={(n) => GROUP_STYLES[n.data?.group as string]?.dot ?? "#9ca3af"}
-              style={{ background: "#ffffff", border: "1px solid #e5e7eb" }}
+              nodeColor={(n) => DOT_COLORS[n.data?.group as string] ?? "#9ca3af"}
+              className="bg-white border border-gray-200"
             />
 
-            {/* Unsaved indicator */}
             {isDirty && (
               <Panel position="top-right">
-                <div style={{
-                  background: "#fffbeb", border: "1px solid #fde68a",
-                  borderRadius: 6, padding: "5px 10px",
-                  fontFamily: "monospace", fontSize: 10, color: "#d97706",
-                }}>
+                <div className="bg-amber-50 border border-amber-200 rounded px-2.5 py-[5px] font-mono text-[10px] text-amber-600">
                   Unsaved changes
                 </div>
               </Panel>
             )}
           </ReactFlow>
 
-          {/* Transition detail panel */}
           <DetailPanel edge={selectedEdge} onClose={() => setSelectedEdge(null)} />
         </div>
 

@@ -35,8 +35,8 @@ const DEFAULT_COLORS = [
 ];
 
 const EmptyPlaceholder = () => (
-  <div style={{ textAlign: "center", padding: "48px 0" }}>
-    <div style={{ fontSize: 48, marginBottom: 8 }}>📭</div>
+  <div className="text-center py-12">
+    <div className="text-5xl mb-2">📭</div>
     <Text type="secondary">No data available</Text>
   </div>
 );
@@ -127,15 +127,15 @@ export default function Home() {
   ];
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div className="p-6">
       <Title level={3}>Overview</Title>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+      <div className="grid grid-cols-2 gap-6">
         {/* Pie chart — Tickets by Status */}
         <Card
           title="Tickets by Status"
           extra={
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="flex items-center gap-3">
               <RangePicker
                 value={statRange}
                 onChange={(v) => { if (v) { setStatRange(v as DateRange); setLoadingStat(true); } }}
@@ -144,10 +144,10 @@ export default function Home() {
               {stat && <Text type="secondary">Total: {total} tickets</Text>}
             </div>
           }
-          style={{ minWidth: 0 }}
+          className="min-w-0"
         >
           {loadingStat ? (
-            <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
+            <div className="text-center py-12"><Spin /></div>
           ) : pieData.length === 0 ? (
             <EmptyPlaceholder />
           ) : (
@@ -187,10 +187,10 @@ export default function Home() {
               allowClear={false}
             />
           }
-          style={{ minWidth: 0 }}
+          className="min-w-0"
         >
           {loadingIssue ? (
-            <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
+            <div className="text-center py-12"><Spin /></div>
           ) : !issueTypeStat || issueTypeStat.length === 0 ? (
             <EmptyPlaceholder />
           ) : (
@@ -213,6 +213,7 @@ export default function Home() {
             </ResponsiveContainer>
           )}
         </Card>
+
         {/* Donut chart — SLA by Status */}
         <Card
           title="SLA by Status"
@@ -223,10 +224,10 @@ export default function Home() {
               allowClear={false}
             />
           }
-          style={{ minWidth: 0 }}
+          className="min-w-0"
         >
           {loadingSlaStatus ? (
-            <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
+            <div className="text-center py-12"><Spin /></div>
           ) : slaStatusDonutData.length === 0 ? (
             <EmptyPlaceholder />
           ) : (
@@ -266,10 +267,10 @@ export default function Home() {
               allowClear={false}
             />
           }
-          style={{ minWidth: 0 }}
+          className="min-w-0"
         >
           {loadingSlaPriority ? (
-            <div style={{ textAlign: "center", padding: "48px 0" }}><Spin /></div>
+            <div className="text-center py-12"><Spin /></div>
           ) : !slaPriorityStat || slaPriorityStat.length === 0 ? (
             <EmptyPlaceholder />
           ) : (

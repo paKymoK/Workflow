@@ -32,7 +32,7 @@ function WorkflowList() {
       title: "Statuses",
       dataIndex: "statuses",
       render: (statuses: WorkflowStatus[]) => (
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div className="flex gap-1.5 flex-wrap">
           {statuses.map((s) => (
             <Tag key={s.id} color={s.color}>
               {s.name}
@@ -45,13 +45,13 @@ function WorkflowList() {
       title: "Transitions",
       dataIndex: "transitions",
       render: (transitions: Workflow["transitions"]) => (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div className="flex flex-col gap-1">
           {transitions.map((t, i) => (
             <span key={i}>
               <Tag color={t.from.color}>{t.from.name}</Tag>
               {"→"}
-              <Tag color={t.to.color} style={{ marginLeft: 4 }}>{t.to.name}</Tag>
-              <span style={{ color: "#888", fontSize: 12, marginLeft: 4 }}>({t.name})</span>
+              <Tag color={t.to.color} className="!ml-1">{t.to.name}</Tag>
+              <span className="text-gray-400 text-xs ml-1">({t.name})</span>
             </span>
           ))}
         </div>
@@ -61,7 +61,7 @@ function WorkflowList() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "48px 0" }}>
+      <div className="text-center py-12">
         <Spin />
       </div>
     );

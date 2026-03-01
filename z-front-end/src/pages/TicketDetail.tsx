@@ -217,8 +217,8 @@ export default function TicketDetail() {
 
       {/* Title row */}
       <div className="flex items-center gap-3 mb-4">
-        <Title level={3} style={{ margin: 0 }}>Ticket #{ticket.id}</Title>
-        <Tag color={ticket.status.color} style={{ fontSize: 13, padding: "2px 10px" }}>
+        <Title level={3} className="!m-0">Ticket #{ticket.id}</Title>
+        <Tag color={ticket.status.color} className="!text-[13px] !py-[2px] !px-[10px]">
           {ticket.status.name}
         </Tag>
         {ticket.sla && (
@@ -230,17 +230,17 @@ export default function TicketDetail() {
 
       {/* Workflow — always visible, full width */}
       {ticket.workflow && (
-        <Card style={{ marginBottom: 16 }}>
+        <Card className="!mb-4">
           <Steps
             size="small"
             current={currentStepIndex}
             items={ticket.workflow.statuses.map((s) => ({
-              title: <Tag color={s.color} style={{ margin: 0 }}>{s.name}</Tag>,
-              description: <Text type="secondary" style={{ fontSize: 11 }}>{s.group}</Text>,
+              title: <Tag color={s.color} className="!m-0">{s.name}</Tag>,
+              description: <Text type="secondary" className="!text-[11px]">{s.group}</Text>,
             }))}
           />
           {currentStepIndex === ticket.workflow.statuses.length - 1 && (
-            <Alert message="This ticket has reached its final status." type="success" showIcon style={{ marginTop: 12 }} />
+            <Alert message="This ticket has reached its final status." type="success" showIcon className="!mt-3" />
           )}
         </Card>
       )}
@@ -249,20 +249,20 @@ export default function TicketDetail() {
         {/* Left column — main content */}
         <Col xs={24} lg={16}>
           {/* Summary */}
-          <Card style={{ marginBottom: 16 }}>
+          <Card className="!mb-4">
             <Text strong>Summary: </Text>
-            <Text style={{ fontSize: 15 }}>{ticket.summary}</Text>
+            <Text className="text-[15px]">{ticket.summary}</Text>
           </Card>
 
           {/* Description */}
           {ticket.detail?.data && (
-            <Card title="Description" style={{ marginBottom: 16 }}>
+            <Card title="Description" className="!mb-4">
               <Text>{ticket.detail.data}</Text>
             </Card>
           )}
 
           {/* Comments */}
-          <Card title={`Comments (${comments.length})`} style={{ marginBottom: 16 }} loading={commentsLoading}>
+          <Card title={`Comments (${comments.length})`} className="!mb-4" loading={commentsLoading}>
             {comments.length === 0 && !commentsLoading ? (
               <Text type="secondary">No comments yet.</Text>
             ) : (
@@ -270,10 +270,10 @@ export default function TicketDetail() {
                 dataSource={comments}
                 rowKey="id"
                 renderItem={(comment) => (
-                  <List.Item style={{ alignItems: "flex-start", padding: "12px 0" }}>
+                  <List.Item className="!items-start !py-3 !px-0">
                     <List.Item.Meta
                       avatar={
-                        <Avatar style={{ backgroundColor: "#1677ff" }}>
+                        <Avatar className="!bg-[#1677ff]">
                           {comment.commenter.name.charAt(0).toUpperCase()}
                         </Avatar>
                       }
@@ -323,20 +323,20 @@ export default function TicketDetail() {
                 {ticket.priority.name}
               </Descriptions.Item>
               <Descriptions.Item label={<Text type="secondary">Project</Text>}>
-                {ticket.project.name} <Text style={{paddingLeft:2}} type="secondary">({ticket.project.code})</Text>
+                {ticket.project.name} <Text className="pl-0.5" type="secondary">({ticket.project.code})</Text>
               </Descriptions.Item>
               <Descriptions.Item label={<Text type="secondary">Issue Type</Text>}>
                 {ticket.issueType.name}
               </Descriptions.Item>
               <Descriptions.Item label={<Text type="secondary">Reporter</Text>}>
                 <div>{ticket.reporter.name}</div>
-                <Text type="secondary" style={{ fontSize: 11, paddingLeft:2 }}>({ticket.reporter.email})</Text>
+                <Text type="secondary" className="!text-[11px] pl-0.5">({ticket.reporter.email})</Text>
               </Descriptions.Item>
               <Descriptions.Item label={<Text type="secondary">Assignee</Text>}>
                 {ticket.assignee ? (
                   <>
                     <div>{ticket.assignee.name}</div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{ticket.assignee.email}</Text>
+                    <Text type="secondary" className="!text-[11px]">{ticket.assignee.email}</Text>
                   </>
                 ) : (
                   <Text type="secondary">Unassigned</Text>
@@ -346,7 +346,7 @@ export default function TicketDetail() {
 
             {ticket.sla && (
               <>
-                <Divider style={{ margin: "12px 0" }} />
+                <Divider className="!my-3 !mx-0" />
                 <Descriptions column={1} size="small" colon={false}>
                   <Descriptions.Item label={<Text type="secondary">Response Time</Text>}>
                     {ticket.sla.priority.responseTime} {ticket.sla.priority.responseTime === 1 ? "hour" : "hours"}

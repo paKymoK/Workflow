@@ -62,7 +62,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         collapsible
         collapsed={collapsed}
         theme="dark"
-        style={{ overflow: "auto", height: "100vh", position: "sticky", top: 0, left: 0 }}
+        className="overflow-auto h-screen sticky top-0 left-0"
       >
         <div className="flex h-16 items-center justify-center">
           <span className="text-lg font-bold text-white">

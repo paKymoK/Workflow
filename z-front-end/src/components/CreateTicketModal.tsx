@@ -93,9 +93,10 @@ export default function CreateTicketModal({
       setSelectedProjectId(null);
       setIssueTypes([]);
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create ticket:", error);
-      const errorMessage = error?.response?.data?.status?.message || "Failed to create ticket";
+      const axiosError = error as { response?: { data?: { status?: { message?: string } } } };
+      const errorMessage = axiosError?.response?.data?.status?.message ?? "Failed to create ticket";
       message.error(errorMessage);
     } finally {
       setSubmitting(false);
