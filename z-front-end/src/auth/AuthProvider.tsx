@@ -1,4 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   generateCodeVerifier,
   generateCodeChallenge,
@@ -8,8 +9,12 @@ import {
   type TokenResponse,
 } from "./pkce";
 import { AuthContext } from "./AuthContext";
+import { registerNavigate } from "../lib/navigate";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigateFn = useNavigate();
+  useEffect(() => { registerNavigate(navigateFn); }, [navigateFn]);
+
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,11 +22,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedToken = sessionStorage.getItem("access_token");
     if (storedToken) {
-      setAccessToken(storedToken);
       try {
-        setUser(parseJwtPayload(storedToken));
+        const claims = parseJwtPayload(storedToken);
+        const exp = claims["exp"] as number | undefined;
+        if (exp && Date.now() / 1000 >= exp) {
+          sessionStorage.removeItem("access_token");
+        } else {
+          setAccessToken(storedToken);
+          setUser(claims);
+        }
       } catch {
-        sessionStorage.removeItem("access_token");
+        // opaque token or parse failure — trust it, no user claims (same as original)
+        setAccessToken(storedToken);
       }
     }
     setIsLoading(false);

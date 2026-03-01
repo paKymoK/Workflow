@@ -59,6 +59,10 @@ export async function exchangeCodeForToken(
     body,
   );
 
+  if (!data.access_token) {
+    throw new Error(`Token exchange failed: ${JSON.stringify(data)}`);
+  }
+
   return data;
 }
 

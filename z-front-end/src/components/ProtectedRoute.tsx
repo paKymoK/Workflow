@@ -14,7 +14,7 @@ export default function ProtectedRoute() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !sessionStorage.getItem("access_token")) {
     return <Navigate to="/login" replace />;
   }
 
