@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User} from "./types.ts";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -146,6 +146,11 @@ export async function updateWorkflow(payload: WorkflowUpdatePayload) {
     payload,
   );
   return data.data;
+}
+
+export async function fetchUsers() {
+  const { data } = await api.get<User[]>("/auth-service/v1/users");
+  return data;
 }
 
 export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {

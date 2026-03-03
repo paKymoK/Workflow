@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Tabs, Table, Tag, Typography, Spin } from "antd";
+import { Tabs, Table, Tag, Typography, Spin, Button, Modal, Form, Input, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { fetchWorkflows } from "../api/ticketApi";
-import type { Workflow, WorkflowStatus } from "../api/types";
+import { fetchWorkflows, fetchUsers } from "../api/ticketApi";
+import type { Workflow, WorkflowStatus, User } from "../api/types";
 
 const { Title } = Typography;
+
+// ─── Workflow Tab ─────────────────────────────────────────────────────────────
 
 function WorkflowList() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -81,11 +84,143 @@ function WorkflowList() {
   );
 }
 
+// ─── Add User Modal ───────────────────────────────────────────────────────────
+
+interface AddUserModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function AddUserModal({ open, onClose, onSuccess }: AddUserModalProps) {
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (values: { name: string; email: string }) => {
+    setSubmitting(true);
+    try {
+      // TODO: wire up POST /auth-service/v1/users when endpoint is available
+      console.log("Add user payload:", values);
+      message.info("Add user endpoint not implemented yet");
+      onSuccess();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    form.resetFields();
+    onClose();
+  };
+
+  return (
+    <Modal
+      title="Add User"
+      open={open}
+      onCancel={handleClose}
+      footer={null}
+      width={480}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        className="mt-4"
+      >
+        <Form.Item
+          label="Name"
+          name="name"
+          rules={[{ required: true, message: "Please enter the user's name" }]}
+        >
+          <Input placeholder="Full name" />
+        </Form.Item>
+
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: "Please enter an email address" },
+            { type: "email", message: "Please enter a valid email address" },
+          ]}
+        >
+          <Input placeholder="user@example.com" />
+        </Form.Item>
+
+        <Form.Item className="mb-0 flex justify-end">
+          <Button onClick={handleClose} className="mr-2" disabled={submitting}>
+            Cancel
+          </Button>
+          <Button type="primary" htmlType="submit" loading={submitting}>
+            Add User
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+}
+
+// ─── User Tab ─────────────────────────────────────────────────────────────────
+
+function UserList() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    fetchUsers()
+      .then(setUsers)
+      .finally(() => setLoading(false));
+  }, [refreshKey]);
+
+  const columns: ColumnsType<User> = [
+    {
+      title: "Name",
+      dataIndex: "name",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+    },
+  ];
+
+  return (
+    <>
+      <div className="flex justify-end mb-3">
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+          Add User
+        </Button>
+      </div>
+
+      <Table
+        rowKey="email"
+        columns={columns}
+        dataSource={users}
+        loading={loading}
+        pagination={false}
+      />
+
+      <AddUserModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={() => { setModalOpen(false); setRefreshKey((k) => k + 1); }}
+      />
+    </>
+  );
+}
+
+// ─── Settings Page ────────────────────────────────────────────────────────────
+
 const tabs = [
   {
     key: "workflow",
     label: "Workflow",
     children: <WorkflowList />,
+  },
+  {
+    key: "user",
+    label: "User",
+    children: <UserList />,
   },
 ];
 

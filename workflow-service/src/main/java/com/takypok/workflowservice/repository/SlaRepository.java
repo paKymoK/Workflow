@@ -45,7 +45,7 @@ public interface SlaRepository extends R2dbcRepository<Sla, Long> {
                   AND (s.status->>'isResponseOverdue')::boolean = true
               ) AS response_overdue,
               COUNT(*) FILTER (
-                  WHERE s.status->>'response' <> 'DONE'
+                  WHERE s.status->>'resolution' <> 'DONE'
                   AND (s.status->>'isResolutionOverdue')::boolean = true
               ) AS resolution_overdue,
               COUNT(*) FILTER (

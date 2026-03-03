@@ -78,6 +78,11 @@ export interface Workflow {
   transitions: WorkflowTransition[];
 }
 
+export interface User {
+  name:  string;
+  email: string;
+}
+
 export interface StatisticItem {
   name: string;
   value: number;

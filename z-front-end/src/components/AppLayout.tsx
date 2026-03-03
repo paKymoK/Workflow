@@ -56,13 +56,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <App>
-    <Layout className="min-h-screen">
+    <Layout className="h-screen">
       <Sider
         trigger={null}
         collapsible
         collapsed={collapsed}
         theme="dark"
-        className="overflow-auto h-screen sticky top-0 left-0"
+        className="overflow-auto h-full"
       >
         <div className="flex h-16 items-center justify-center">
           <span className="text-lg font-bold text-white">
@@ -78,7 +78,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         />
       </Sider>
 
-      <Layout>
+      <Layout className="overflow-auto">
         <Header className="flex items-center justify-between !bg-white !px-4 shadow-sm">
           <Button
             type="text"
