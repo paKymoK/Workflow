@@ -27,12 +27,6 @@ public final class ResultMessage<T> implements Serializable {
     this.data = data;
   }
 
-  public static <T> ResultMessage<T> success() {
-    return new ResultMessage<>(
-        new ResultStatus(Message.Application.SUCCESS.code, Message.Application.SUCCESS.message),
-        null);
-  }
-
   public static <T> ResultMessage<T> success(T data) {
     return new ResultMessage<>(
         new ResultStatus(Message.Application.SUCCESS.code, Message.Application.SUCCESS.message),

@@ -1,4 +1,4 @@
-package com.takypok.authservice.model;
+package com.takypok.authservice.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;

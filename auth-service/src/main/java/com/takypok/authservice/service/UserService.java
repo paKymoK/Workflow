@@ -1,10 +1,13 @@
 package com.takypok.authservice.service;
 
-import com.takypok.authservice.model.Userinfo;
+import com.takypok.authservice.model.request.UserinfoRequest;
+import com.takypok.authservice.model.response.UserinfoResponse;
 import java.util.List;
 
 public interface UserService {
-  List<Userinfo> getUsers();
+  List<UserinfoResponse> getUsers();
 
-  Userinfo getUserById(Long id);
+  UserinfoResponse getUserById(String sub);
+
+  UserinfoResponse create(UserinfoRequest request);
 }

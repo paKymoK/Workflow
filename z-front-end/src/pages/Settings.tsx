@@ -193,7 +193,7 @@ function UserList() {
       </div>
 
       <Table
-        rowKey="email"
+        rowKey="name"
         columns={columns}
         dataSource={users}
         loading={loading}
