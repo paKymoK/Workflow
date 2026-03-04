@@ -5,7 +5,7 @@ INSERT INTO authorities(username, authority)
 VALUES ('admin', 'ROLE_ADMIN'), ('admin', 'ROLE_USER');
 
 INSERT INTO userinfo(sub, name, email)
-VALUES ('admin', 'admin', 'tqthai@gmail.com');
+VALUES ('admin', 'admin', 'admin@gmail.com');
 
 INSERT INTO users(username, password, enabled)
 VALUES ('tqthai', '{noop}123456', true);

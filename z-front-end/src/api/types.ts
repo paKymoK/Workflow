@@ -83,6 +83,14 @@ export interface User {
   email: string;
 }
 
+export interface UserDetail {
+  sub: string;
+  name: string;
+  email: string;
+  title: string;
+  department: string;
+}
+
 export interface StatisticItem {
   name: string;
   value: number;

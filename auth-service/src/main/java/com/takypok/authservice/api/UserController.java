@@ -1,4 +1,4 @@
-package com.takypok.authservice.web;
+package com.takypok.authservice.api;
 
 import com.takypok.authservice.model.request.UserinfoRequest;
 import com.takypok.authservice.model.response.UserinfoResponse;

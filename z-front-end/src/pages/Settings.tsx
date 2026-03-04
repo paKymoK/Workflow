@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
-import { Tabs, Table, Tag, Typography, Spin, Button, Modal, Form, Input, message } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Tabs, Table, Tag, Typography, Spin, Button, Modal, Form, Input, message, Drawer, Descriptions } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { fetchWorkflows, fetchUsers } from "../api/ticketApi";
-import type { Workflow, WorkflowStatus, User } from "../api/types";
+import { ReactFlow, Background, Controls, MiniMap } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { fetchWorkflows, fetchUsers, fetchOrgChart, fetchUserBySub } from "../api/ticketApi";
+import type { Workflow, WorkflowStatus, User, UserDetail } from "../api/types";
+import { buildOrgChart } from "../utils/buildOrgChart";
+import OrgNode from "../components/OrgNode";
 
 const { Title } = Typography;
 
@@ -209,6 +213,82 @@ function UserList() {
   );
 }
 
+// ─── Org Chart Tab ────────────────────────────────────────────────────────────
+
+const nodeTypes = { orgNode: OrgNode };
+
+function OrgChartView() {
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<Awaited<ReturnType<typeof fetchOrgChart>>>([]);
+  const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    fetchOrgChart()
+      .then(setUsers)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleViewDetail = useCallback((sub: string) => {
+    setDrawerOpen(true);
+    setDetailLoading(true);
+    fetchUserBySub(sub)
+      .then(setSelectedUser)
+      .finally(() => setDetailLoading(false));
+  }, []);
+
+  const { nodes, edges } = useMemo(
+    () => buildOrgChart(users ?? [], handleViewDetail),
+    [users, handleViewDetail],
+  );
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <Spin />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div style={{ height: 600, border: "1px solid #f0f0f0", borderRadius: 8 }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.3}
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+      </div>
+
+      <Drawer
+        title="User Detail"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        styles={{ wrapper: { width: 360 } }}
+      >
+        {detailLoading ? (
+          <div className="text-center py-12"><Spin /></div>
+        ) : selectedUser ? (
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="Name">{selectedUser.name}</Descriptions.Item>
+            <Descriptions.Item label="Email">{selectedUser.email}</Descriptions.Item>
+            <Descriptions.Item label="Title">{selectedUser.title || "—"}</Descriptions.Item>
+            <Descriptions.Item label="Department">{selectedUser.department || "—"}</Descriptions.Item>
+          </Descriptions>
+        ) : null}
+      </Drawer>
+    </>
+  );
+}
+
 // ─── Settings Page ────────────────────────────────────────────────────────────
 
 const tabs = [
@@ -221,6 +301,11 @@ const tabs = [
     key: "user",
     label: "User",
     children: <UserList />,
+  },
+  {
+    key: "orgChart",
+    label: "Org Chart",
+    children: <OrgChartView />,
   },
 ];
 

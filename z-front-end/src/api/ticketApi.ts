@@ -1,4 +1,5 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail} from "./types.ts";
+import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
 export async function fetchTickets(page: number, size: number) {
@@ -151,6 +152,18 @@ export async function updateWorkflow(payload: WorkflowUpdatePayload) {
 export async function fetchUsers() {
   const { data } = await api.get<User[]>("/auth-service/v1/users");
   return data;
+}
+
+export async function fetchUserBySub(sub: string) {
+  const { data } = await api.get<ResultMessage<UserDetail>>(`/auth-service/v1/users/${sub}`);
+  return data.data;
+}
+
+export async function fetchOrgChart() {
+  const { data } = await api.get<ResultMessage<OrgChartUser[]>>(
+    "/auth-service/v1/organization/chart",
+  );
+  return data.data;
 }
 
 export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {
