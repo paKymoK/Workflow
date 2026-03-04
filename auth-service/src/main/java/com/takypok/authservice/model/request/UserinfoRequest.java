@@ -1,6 +1,7 @@
 package com.takypok.authservice.model.request;
 
 import com.takypok.authservice.model.entity.Userinfo;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,5 +14,5 @@ import lombok.NoArgsConstructor;
 public class UserinfoRequest {
   @NotBlank private String username;
   @NotBlank private String password;
-  @NotNull private Userinfo userinfo;
+  @Valid @NotNull private Userinfo userinfo;
 }

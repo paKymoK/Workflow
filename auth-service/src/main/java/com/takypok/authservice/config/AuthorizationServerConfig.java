@@ -130,7 +130,7 @@ public class AuthorizationServerConfig {
   @Bean
   public JdbcOAuth2AuthorizationConsentService authorizationConsentService(
       JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
-    // Will be used by the ConsentController
+
     return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
   }
 

@@ -10,8 +10,6 @@ import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.JsonByteArray;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +24,6 @@ import org.springframework.integration.debezium.support.DebeziumHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.util.ResourceUtils;
-import reactor.core.publisher.Sinks;
 
 @Configuration
 @RequiredArgsConstructor
@@ -52,8 +49,6 @@ public class DebeziumConfig {
 
   private final ObjectMapper mapper;
 
-  private final Sinks.Many<String> sink;
-
   @Bean
   public DebeziumEngine.Builder<ChangeEvent<byte[], byte[]>> debeziumEngineBuilder() {
     String path;
@@ -78,13 +73,12 @@ public class DebeziumConfig {
     props.setProperty("database.user", user);
     props.setProperty("database.password", password);
     props.setProperty("database.dbname", dbname);
-    props.setProperty("snapshot.mode", "initial");
+    props.setProperty("snapshot.mode", "never");
     props.setProperty("plugin.name", "pgoutput");
     props.setProperty("publication.autocreate.mode", "all_tables");
 
     props.setProperty("schema.include.list", "public");
     props.setProperty("table.include.list", "public.sla");
-    props.setProperty("column.exclude.list", "public.sla.time");
     props.setProperty("heartbeat.interval.ms", "30000");
 
     return DebeziumEngine.create(JsonByteArray.class).using(props);
@@ -113,19 +107,13 @@ public class DebeziumConfig {
       try {
         ChangeData<SlaTracker> change =
             mapper.readValue(message.getPayload(), new TypeReference<>() {});
-        SlaStatus before =
-            convertToSlaStatus(
-                Optional.ofNullable(change.getPayload().getBefore())
-                    .map(SlaTracker::getStatus)
-                    .orElse(null));
-        SlaStatus after =
-            convertToSlaStatus(
-                Optional.ofNullable(change.getPayload().getAfter())
-                    .map(SlaTracker::getStatus)
-                    .orElse(null));
-        if (!Objects.equals(before, after)) {
-          sink.tryEmitNext(String.valueOf(change.getPayload().getAfter().getId())).orThrow();
-        }
+        //        SlaStatus before =
+        // convertToSlaStatus(change.getPayload().getBefore().getStatus());
+        //        SlaStatus after = convertToSlaStatus(change.getPayload().getAfter().getStatus());
+        //        if (change.getPayload().getAfter().getId().equals(1L)) {
+        //          System.out.println("Before: " + before);
+        //          System.out.println("After: " + after);
+        //        }
       } catch (Exception e) {
         log.error("Sla Debezium convert error: ", e);
       }
