@@ -2,13 +2,16 @@ package com.takypok.authservice.service.impl;
 
 import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.model.mapper.UserinfoMapper;
+import com.takypok.authservice.model.request.FilterUserRequest;
 import com.takypok.authservice.model.request.UserinfoRequest;
 import com.takypok.authservice.model.response.UserinfoResponse;
 import com.takypok.authservice.repository.UserInfoRepository;
 import com.takypok.authservice.service.UserService;
-import java.util.List;
+import com.takypok.core.model.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -26,8 +29,9 @@ public class UserServiceImpl implements UserService {
   private final UserinfoMapper userinfoMapper;
 
   @Override
-  public List<UserinfoResponse> getUsers() {
-    return userinfoMapper.toListResponse(userInfoRepository.findAll());
+  public PageResponse<UserinfoResponse> getUsers(FilterUserRequest request) {
+    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+    return userinfoMapper.toPageResponse(userInfoRepository.findAll(pageable));
   }
 
   @Override

@@ -1,11 +1,12 @@
 package com.takypok.authservice.api;
 
+import com.takypok.authservice.model.request.FilterUserRequest;
 import com.takypok.authservice.model.request.UserinfoRequest;
 import com.takypok.authservice.model.response.UserinfoResponse;
 import com.takypok.authservice.service.UserService;
+import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.ResultMessage;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +18,9 @@ public class UserController {
   private final UserService userService;
 
   @GetMapping
-  public ResponseEntity<ResultMessage<List<UserinfoResponse>>> get() {
-    return ResponseEntity.ok(ResultMessage.success(userService.getUsers()));
+  public ResponseEntity<ResultMessage<PageResponse<UserinfoResponse>>> get(
+      @Valid FilterUserRequest request) {
+    return ResponseEntity.ok(ResultMessage.success(userService.getUsers(request)));
   }
 
   @GetMapping("/{sub}")

@@ -73,7 +73,7 @@ public class DebeziumConfig {
     props.setProperty("database.user", user);
     props.setProperty("database.password", password);
     props.setProperty("database.dbname", dbname);
-    props.setProperty("snapshot.mode", "never");
+    props.setProperty("snapshot.mode", "no_data");
     props.setProperty("plugin.name", "pgoutput");
     props.setProperty("publication.autocreate.mode", "all_tables");
 

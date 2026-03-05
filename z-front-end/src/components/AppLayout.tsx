@@ -93,7 +93,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </Dropdown>
         </Header>
 
-        <Content className="m-4 rounded-lg bg-white p-6">
+        <Content className="m-4 overflow-auto rounded-lg bg-white p-6">
           {children}
         </Content>
       </Layout>

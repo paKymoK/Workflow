@@ -170,22 +170,21 @@ function UserList() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    fetchUsers()
-      .then(setUsers)
+    fetchUsers(page - 1, pageSize)
+      .then((res) => { setUsers(res.content); setTotal(res.totalElements); })
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, page, pageSize]);
 
   const columns: ColumnsType<User> = [
-    {
-      title: "Name",
-      dataIndex: "name",
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-    },
+    { title: "Name", dataIndex: "name" },
+    { title: "Email", dataIndex: "email" },
+    { title: "Title", dataIndex: "title" },
+    { title: "Department", dataIndex: "department" },
   ];
 
   return (
@@ -197,17 +196,23 @@ function UserList() {
       </div>
 
       <Table
-        rowKey="name"
+        rowKey="sub"
         columns={columns}
         dataSource={users}
         loading={loading}
-        pagination={false}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          onChange: (p, ps) => { setLoading(true); setPage(p); setPageSize(ps); },
+        }}
       />
 
       <AddUserModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSuccess={() => { setModalOpen(false); setRefreshKey((k) => k + 1); }}
+        onSuccess={() => { setModalOpen(false); setLoading(true); setRefreshKey((k) => k + 1); }}
       />
     </>
   );
@@ -282,6 +287,7 @@ function OrgChartView() {
             <Descriptions.Item label="Email">{selectedUser.email}</Descriptions.Item>
             <Descriptions.Item label="Title">{selectedUser.title || "—"}</Descriptions.Item>
             <Descriptions.Item label="Department">{selectedUser.department || "—"}</Descriptions.Item>
+            <Descriptions.Item label="User ID">{selectedUser.sub}</Descriptions.Item>
           </Descriptions>
         ) : null}
       </Drawer>

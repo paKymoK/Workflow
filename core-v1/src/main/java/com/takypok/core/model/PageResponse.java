@@ -1,4 +1,4 @@
-package com.takypok.workflowservice.model.response;
+package com.takypok.core.model;
 
 import java.util.List;
 import lombok.*;

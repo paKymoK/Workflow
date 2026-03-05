@@ -1,5 +1,6 @@
 package com.takypok.workflowservice.service;
 
+import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
@@ -7,7 +8,6 @@ import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
-import com.takypok.workflowservice.model.response.PageResponse;
 import com.takypok.workflowservice.model.response.TicketSla;
 import reactor.core.publisher.Mono;
 

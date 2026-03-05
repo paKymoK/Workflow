@@ -79,17 +79,14 @@ export interface Workflow {
 }
 
 export interface User {
-  name:  string;
-  email: string;
-}
-
-export interface UserDetail {
   sub: string;
   name: string;
   email: string;
   title: string;
   department: string;
 }
+
+export type UserDetail = User;
 
 export interface StatisticItem {
   name: string;

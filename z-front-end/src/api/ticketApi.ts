@@ -149,9 +149,11 @@ export async function updateWorkflow(payload: WorkflowUpdatePayload) {
   return data.data;
 }
 
-export async function fetchUsers() {
-  const { data } = await api.get<User[]>("/auth-service/v1/users");
-  return data;
+export async function fetchUsers(page = 0, size = 10) {
+  const { data } = await api.get<ResultMessage<PageResponse<User>>>("/auth-service/v1/users", {
+    params: { page, size },
+  });
+  return data.data;
 }
 
 export async function fetchUserBySub(sub: string) {

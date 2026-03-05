@@ -2,6 +2,7 @@ package com.takypok.workflowservice.controller;
 
 import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
 
+import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
@@ -9,7 +10,6 @@ import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
-import com.takypok.workflowservice.model.response.PageResponse;
 import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.service.TicketService;
 import jakarta.validation.Valid;
