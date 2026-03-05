@@ -16,39 +16,37 @@ public interface UserInfoRepository extends JpaRepository<Userinfo, String> {
   @Query(
       value =
           """
-                            WITH RECURSIVE org_tree AS (
-                                SELECT
-                                    u.sub,
-                                    u.name,
-                                    u.email,
-                                    u.title,
-                                    u.department,
-                                    u.manager_sub,
-                                    0                        AS depth,
-                                    ARRAY[u.sub]::VARCHAR[]  AS path
-                                FROM userinfo u
-                                WHERE u.manager_sub IS NULL
-                                  AND u.is_active = TRUE
+                  WITH RECURSIVE org_tree AS (
+                      SELECT
+                          u.sub,
+                          u.name,
+                          u.email,
+                          u.title,
+                          u.department,
+                          u.manager_sub,
+                          0                        AS depth,
+                          ARRAY[u.sub]::VARCHAR[]  AS path
+                      FROM userinfo u
+                      WHERE u.manager_sub IS NULL
 
-                                UNION ALL
+                      UNION ALL
 
-                                SELECT
-                                    u.sub,
-                                    u.name,
-                                    u.email,
-                                    u.title,
-                                    u.department,
-                                    u.manager_sub,
-                                    ot.depth + 1,
-                                    ot.path || u.sub
-                                FROM userinfo u
-                                JOIN org_tree ot ON u.manager_sub = ot.sub
-                                WHERE u.sub != ALL(ot.path)
-                                  AND u.is_active = TRUE
-                            )
-                            SELECT * FROM org_tree
-                            ORDER BY depth, name;
-                            """,
+                      SELECT
+                          u.sub,
+                          u.name,
+                          u.email,
+                          u.title,
+                          u.department,
+                          u.manager_sub,
+                          ot.depth + 1,
+                          ot.path || u.sub
+                      FROM userinfo u
+                      JOIN org_tree ot ON u.manager_sub = ot.sub
+                      WHERE u.sub != ALL(ot.path)
+                  )
+                  SELECT * FROM org_tree
+                  ORDER BY depth, name;
+                  """,
       nativeQuery = true)
   List<OrgChartProjection> getOrgChart();
 }

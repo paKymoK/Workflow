@@ -21,6 +21,6 @@ public class Userinfo {
 
   @NotBlank private String name;
   @NotBlank private String email;
-  private String title;
-  private String department;
+  @NotBlank private String title;
+  @NotBlank private String department;
 }

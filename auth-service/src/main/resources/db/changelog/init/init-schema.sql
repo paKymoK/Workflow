@@ -86,7 +86,6 @@ CREATE TABLE IF NOT EXISTS userinfo
     title       VARCHAR(100),
     department  VARCHAR(100),
     manager_sub VARCHAR(50),
-    is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
     CONSTRAINT userinfo_pkey PRIMARY KEY (sub),
     CONSTRAINT fk_userinfo_users FOREIGN KEY (sub) REFERENCES users (username) ON DELETE CASCADE,
     CONSTRAINT fk_manager_sub FOREIGN KEY (manager_sub) REFERENCES userinfo (sub)
@@ -94,7 +93,5 @@ CREATE TABLE IF NOT EXISTS userinfo
 
 CREATE INDEX IF NOT EXISTS ix_userinfo_manager_sub ON userinfo (manager_sub);
 CREATE INDEX IF NOT EXISTS ix_userinfo_department ON userinfo (department);
-CREATE INDEX IF NOT EXISTS ix_userinfo_is_active ON userinfo(is_active) WHERE is_active = TRUE;
-
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
