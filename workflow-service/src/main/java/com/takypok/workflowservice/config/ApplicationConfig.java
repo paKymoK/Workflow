@@ -1,8 +1,8 @@
 package com.takypok.workflowservice.config;
 
+import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
-import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
 import com.takypok.workflowservice.repository.SlaRepository;
 import java.util.Objects;
 import java.util.Set;
