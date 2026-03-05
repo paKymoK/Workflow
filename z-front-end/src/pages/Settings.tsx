@@ -253,7 +253,7 @@ function OrgChartView() {
 
   return (
     <>
-      <div style={{ height: 600, border: "1px solid #f0f0f0", borderRadius: 8 }}>
+      <div className="h-[600px] border border-gray-100 rounded-lg">
         <ReactFlow
           nodes={nodes}
           edges={edges}

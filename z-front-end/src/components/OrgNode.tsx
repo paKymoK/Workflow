@@ -22,7 +22,7 @@ export default function OrgNode({ id, data }: NodeProps) {
         size="small"
         hoverable
         styles={{ body: { padding: "8px 12px" } }}
-        style={{ width: 200, borderRadius: 8, boxShadow: "0 1px 4px rgba(0,0,0,.12)", cursor: "pointer" }}
+        className="!w-[200px] !rounded-lg !shadow-sm !cursor-pointer"
         onClick={() => (onViewDetail as (sub: string) => void)(id)}
       >
         <div className="flex items-center gap-2">
