@@ -8,7 +8,7 @@ import com.takypok.workflowservice.model.entity.*;
 import com.takypok.workflowservice.model.entity.custom.GroupStatus;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
-import com.takypok.workflowservice.model.ticket.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
 import java.util.Optional;
 import java.util.Set;
 import org.mapstruct.BeanMapping;

@@ -1,4 +1,4 @@
-package com.takypok.workflowservice.model.ticket.annotation;
+package com.takypok.workflowservice.model.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

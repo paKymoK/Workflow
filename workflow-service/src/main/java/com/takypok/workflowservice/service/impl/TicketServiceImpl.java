@@ -15,7 +15,7 @@ import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import com.takypok.workflowservice.model.response.PageResponse;
 import com.takypok.workflowservice.model.response.TicketSla;
-import com.takypok.workflowservice.model.ticket.sla.PausedTime;
+import com.takypok.workflowservice.model.entity.PausedTime;
 import com.takypok.workflowservice.repository.*;
 import com.takypok.workflowservice.service.TicketService;
 import java.time.ZonedDateTime;

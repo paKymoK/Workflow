@@ -1,7 +1,7 @@
 package com.takypok.workflowservice.model.ticket;
 
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
-import com.takypok.workflowservice.model.ticket.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
 import lombok.*;
 
 @Getter

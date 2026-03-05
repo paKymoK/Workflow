@@ -1,6 +1,6 @@
 package com.takypok.workflowservice.model.entity.custom;
 
-import com.takypok.workflowservice.model.ticket.sla.PausedTime;
+import com.takypok.workflowservice.model.entity.PausedTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;

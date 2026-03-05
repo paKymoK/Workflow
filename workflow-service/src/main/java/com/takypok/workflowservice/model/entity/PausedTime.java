@@ -1,4 +1,4 @@
-package com.takypok.workflowservice.model.ticket.sla;
+package com.takypok.workflowservice.model.entity;
 
 import com.takypok.core.model.BaseEntity;
 import java.time.ZonedDateTime;
