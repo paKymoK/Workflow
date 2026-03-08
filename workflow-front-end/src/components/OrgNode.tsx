@@ -1,6 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
-import { Avatar, Card, Tag } from "antd";
+import { Avatar, Tag } from "antd";
 import { UserOutlined, PlusCircleOutlined, MinusCircleOutlined } from "@ant-design/icons";
 
 interface OrgNodeData {
@@ -22,44 +22,49 @@ export default function OrgNode({ id, data }: NodeProps) {
     <>
       <Handle type="target" position={Position.Top} />
 
-      <Card
-        size="small"
-        hoverable
-        styles={{ body: { padding: "8px 12px" } }}
-        className="!w-[200px] !rounded-lg !shadow-sm !cursor-pointer"
-      >
+      <div className="w-[200px] bg-[var(--dark)] border border-[rgba(255,229,0,0.3)] hover:border-[var(--neon-yellow)] hover:shadow-[0_0_12px_rgba(255,229,0,0.2)] transition-all cursor-pointer px-3 pt-2 pb-4">
         <div className="flex items-center gap-2">
-          <Avatar size={36} icon={<UserOutlined />} />
+          <Avatar
+            size={34}
+            icon={<UserOutlined />}
+            className="!bg-[var(--neon-yellow)] !text-black flex-shrink-0"
+          />
           <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-sm leading-tight truncate">{name}</span>
+            <span className="font-mono-tech text-[12px] text-[var(--white)] leading-tight truncate font-semibold">
+              {name}
+            </span>
             {title && (
-              <span className="text-xs text-gray-500 truncate">{title}</span>
+              <span className="font-mono-tech text-[10px] text-[rgba(240,240,240,0.45)] truncate">
+                {title}
+              </span>
             )}
             {department && (
-              <Tag color="blue" className="!mt-1 !text-xs w-fit">{department}</Tag>
+              <Tag className="!mt-1 !text-[9px] !px-1.5 !py-0 w-fit !border-[rgba(0,245,255,0.4)] !bg-[rgba(0,245,255,0.08)] !text-[var(--neon-cyan)]">
+                {department}
+              </Tag>
             )}
           </div>
         </div>
-      </Card>
+      </div>
 
       <Handle type="source" position={Position.Bottom} />
 
-      {/* Expand / collapse toggle — only shown if node has children */}
+      {/* Expand / collapse toggle */}
       {hasChildren && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             onExpandToggle(id);
           }}
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 
-                     bg-white rounded-full shadow border border-gray-200
-                     flex items-center justify-center
-                     w-6 h-6 z-10 hover:border-blue-400 
-                     hover:text-blue-500 transition-colors"
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2
+                     w-4 h-4 rounded-full z-10 flex items-center justify-center
+                     bg-[var(--neon-yellow)] border border-[var(--neon-yellow)]
+                     text-black hover:bg-[var(--neon-pink)] hover:border-[var(--neon-pink)]
+                     hover:text-white transition-colors shadow-[0_0_6px_rgba(255,229,0,0.6)]"
         >
           {isExpanded
-            ? <MinusCircleOutlined className="text-xs" />
-            : <PlusCircleOutlined  className="text-xs" />
+            ? <MinusCircleOutlined className="!text-[9px]" />
+            : <PlusCircleOutlined  className="!text-[9px]" />
           }
         </button>
       )}

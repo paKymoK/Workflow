@@ -217,7 +217,7 @@ export default function TicketDetail() {
 
       {/* Title row */}
       <div className="flex items-center gap-3 mb-4">
-        <Title level={3} className="!m-0">Ticket #{ticket.id}</Title>
+        <h2 className="font-bebas text-3xl tracking-[0.1em] neon-text-yellow m-0">▸ TICKET #{ticket.id}</h2>
         <Tag color={ticket.status.color} className="!text-[13px] !py-[2px] !px-[10px]">
           {ticket.status.name}
         </Tag>

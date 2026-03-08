@@ -164,13 +164,13 @@ function OrgChartInner() {
           status={searchError ? "error" : undefined}
         />
         {searchError && (
-          <div className="text-red-500 text-xs mt-1">
-            {searchError}
+          <div className="font-mono-tech text-[11px] mt-1 neon-text-pink tracking-wide">
+            ⚠ {searchError}
           </div>
         )}
       </div>
 
-      <div className="h-[calc(100vh-180px)] min-h-[500px] border border-gray-100 rounded-xl overflow-hidden bg-gray-50">
+      <div className="h-[calc(100vh-180px)] min-h-[500px] border border-[rgba(255,229,0,0.25)] overflow-hidden bg-[var(--darker)]">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -182,7 +182,7 @@ function OrgChartInner() {
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
         >
-          <Background color="#e5e7eb" gap={20} />
+          <Background color="rgba(255,229,0,0.08)" gap={24} />
           <Controls />
         </ReactFlow>
       </div>

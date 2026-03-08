@@ -18,7 +18,7 @@ import { fetchOverviewStatistic, fetchTicketByIssueType, fetchSlaByStatus, fetch
 import { wsBaseUrl } from "../api/axios.ts";
 import type { StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution } from "../api/types.ts";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 type DateRange = [Dayjs, Dayjs];
@@ -26,18 +26,18 @@ type DateRange = [Dayjs, Dayjs];
 const defaultRange = (): DateRange => [dayjs().subtract(6, "day"), dayjs()];
 
 const DEFAULT_COLORS = [
-  "#4f86c6",
-  "#f5a623",
-  "#7ed321",
-  "#d0021b",
-  "#9b59b6",
-  "#1abc9c",
+  "#FFE500",
+  "#FF2D6B",
+  "#00F5FF",
+  "#FF6B35",
+  "#A855F7",
+  "#22D3EE",
 ];
 
 const EmptyPlaceholder = () => (
   <div className="text-center py-12">
-    <div className="text-5xl mb-2">📭</div>
-    <Text type="secondary">No data available</Text>
+    <div className="font-bebas text-4xl neon-text-yellow tracking-widest mb-2">[ EMPTY ]</div>
+    <Text type="secondary" className="font-mono-tech text-xs tracking-widest">// No data available</Text>
   </div>
 );
 
@@ -120,13 +120,17 @@ export default function Home() {
   }));
 
   const SLA_PRIORITY_KEYS: { key: keyof SlaPriorityDistribution; color: string }[] = [
-    { key: "Success", color: "#7ed321" },
-    { key: "Response Overdue", color: "#f5a623" },
-    { key: "Resolution Overdue", color: "#d0021b" }  ];
+    { key: "Success", color: "#00F5FF" },
+    { key: "Response Overdue", color: "#FFE500" },
+    { key: "Resolution Overdue", color: "#FF2D6B" },
+  ];
 
   return (
-    <div className="p-6">
-      <Title level={3}>Overview</Title>
+    <div className="p-2">
+      <div className="flex items-center gap-3 mb-6">
+        <h2 className="font-bebas text-3xl tracking-[0.15em] neon-text-yellow m-0">▸ OVERVIEW</h2>
+        <span className="font-mono-tech text-xs text-[rgba(240,240,240,0.3)] tracking-widest">// ANALYTICS TERMINAL</span>
+      </div>
 
       <div className="grid grid-cols-2 gap-6">
         {/* Pie chart — Tickets by Status */}
@@ -194,9 +198,9 @@ export default function Home() {
           ) : (
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={issueTypeStat} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,229,0,0.1)" />
+                <XAxis dataKey="name" tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
                 {statusKeys.map((key, i) => (
@@ -274,9 +278,9 @@ export default function Home() {
           ) : (
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={slaPriorityStat} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="priorityName" />
-                <YAxis allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,229,0,0.1)" />
+                <XAxis dataKey="priorityName" tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
                 {SLA_PRIORITY_KEYS.map(({ key, color }) => (

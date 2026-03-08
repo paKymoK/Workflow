@@ -1,5 +1,5 @@
 import {useRef, useState, useEffect, useCallback} from "react";
-import {Spin, Table, Tag, Typography, Button, Dropdown, message} from "antd";
+import {Spin, Table, Tag, Button, Dropdown, message} from "antd";
 import {PlusOutlined, MoreOutlined} from "@ant-design/icons";
 import type {MenuProps} from "antd";
 import {useNavigate} from "react-router-dom";
@@ -9,8 +9,6 @@ import { wsBaseUrl } from "../api/axios.ts";
 import type {TicketSla} from "../api/types.ts";
 import CreateTicketModal from "../components/CreateTicketModal";
 import DeadlineTag from "../components/DeadlineTag.tsx";
-
-const {Title} = Typography;
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -219,14 +217,18 @@ export default function Dashboard() {
 
     return (
         <>
-            <div className="flex justify-between items-center mb-4">
-                <Title level={3} className="mb-0">Dashboard</Title>
+            <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-3">
+                  <h2 className="font-bebas text-3xl tracking-[0.15em] neon-text-yellow m-0">▸ DASHBOARD</h2>
+                  <span className="font-mono-tech text-xs text-[rgba(240,240,240,0.3)] tracking-widest hidden sm:block">// TICKET QUEUE</span>
+                </div>
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => setIsModalOpen(true)}
+                    className="neon-btn font-bebas! tracking-widest!"
                 >
-                    Create Ticket
+                    <span className="neon-btn-content">Create Ticket</span>
                 </Button>
             </div>
 
