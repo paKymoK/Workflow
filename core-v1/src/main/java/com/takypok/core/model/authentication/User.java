@@ -11,4 +11,6 @@ import lombok.*;
 public class User {
   @NotNull private String name;
   private String email;
+  private String title;
+  private String department;
 }

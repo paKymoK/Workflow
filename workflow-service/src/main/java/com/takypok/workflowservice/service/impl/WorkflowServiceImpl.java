@@ -66,7 +66,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                 workflowRepository.save(
                     workflowMapper.mapToEntity(
                         request.getName(),
-                        new ListWorkflowNode(validatedStatus(request, statuses)),
+                        new ListWorkflowNode(validatedWorkflowNode(request, statuses)),
                         new ListTransition(
                             validatedTransition(request.getTransitions(), statuses)))));
   }
@@ -124,7 +124,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         .toList();
   }
 
-  private List<WorkflowNode> validatedStatus(
+  private List<WorkflowNode> validatedWorkflowNode(
       WorkflowCreateRequest request, List<? extends Status> statuses) {
     if (statuses.size() == request.getStatuses().size()) {
       return statuses.stream().map(WorkflowNode::new).toList();

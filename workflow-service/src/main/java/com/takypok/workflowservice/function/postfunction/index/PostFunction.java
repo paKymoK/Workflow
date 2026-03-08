@@ -2,6 +2,7 @@ package com.takypok.workflowservice.function.postfunction.index;
 
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
+import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import java.lang.reflect.InvocationTargetException;
@@ -12,11 +13,11 @@ import reactor.core.publisher.Mono;
 @Component
 @Slf4j
 public class PostFunction {
-  public final Mono<Void> apply(String clazzName, Ticket<TicketDetail> ticket) {
+  public final Mono<Ticket<TicketDetail>> apply(String clazzName, Ticket<TicketDetail> ticket, User currentUser) {
     try {
       PostFunctionInterface myInstance =
           (PostFunctionInterface) Class.forName(clazzName).getDeclaredConstructor().newInstance();
-      return myInstance.run(ticket);
+      return myInstance.run(ticket,currentUser);
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | InstantiationException

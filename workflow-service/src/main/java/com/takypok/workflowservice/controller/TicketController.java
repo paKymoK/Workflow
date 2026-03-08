@@ -54,7 +54,7 @@ public class TicketController {
 
   @PostMapping("/transition")
   public Mono<ResultMessage<Ticket<TicketDetail>>> transition(
-      @RequestBody @Valid TransitionRequest transitionRequest) {
-    return ticketService.transition(transitionRequest).map(ResultMessage::success);
+      @RequestBody @Valid TransitionRequest transitionRequest, Authentication authentication) {
+    return ticketService.transition(transitionRequest, getUserInfo(authentication)).map(ResultMessage::success);
   }
 }

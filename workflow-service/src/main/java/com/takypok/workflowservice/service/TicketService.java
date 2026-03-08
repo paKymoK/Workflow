@@ -22,5 +22,5 @@ public interface TicketService {
 
   Mono<Sla> resume(Long id, User user);
 
-  Mono<Ticket<TicketDetail>> transition(TransitionRequest transitionRequest);
+  Mono<Ticket<TicketDetail>> transition(TransitionRequest transitionRequest, User currentUser);
 }

@@ -166,7 +166,7 @@ public class TicketServiceImpl implements TicketService {
   }
 
   @Override
-  public Mono<Ticket<TicketDetail>> transition(TransitionRequest request) {
+  public Mono<Ticket<TicketDetail>> transition(TransitionRequest request,User currentUser) {
     return ticketRepository
         .findById(request.getTicketId())
         .switchIfEmpty(
@@ -199,7 +199,7 @@ public class TicketServiceImpl implements TicketService {
         .flatMap(
             tuples ->
                 initValidator(tuples.getT1(), tuples.getT2().getValidator())
-                    .then(initPostFunction(tuples.getT1(), tuples.getT2().getPostFunctions()))
+                    .then(initPostFunction(tuples.getT1(), tuples.getT2().getPostFunctions(),currentUser))
                     .thenReturn(tuples))
         .flatMap(
             tuples ->
@@ -271,7 +271,12 @@ public class TicketServiceImpl implements TicketService {
         .then();
   }
 
-  private Mono<Void> initPostFunction(Ticket<TicketDetail> ticket, List<String> function) {
-    return Flux.fromIterable(function).concatMap(s -> postFunction.apply(s, ticket)).then();
+  private Mono<Ticket<TicketDetail>> initPostFunction(
+      Ticket<TicketDetail> ticket, List<String> function, User currentUser) {
+    return Flux.fromIterable(function)
+        .reduce(
+            Mono.just(ticket),
+            (accMono, s) -> accMono.flatMap(latestTicket -> postFunction.apply(s, latestTicket, currentUser)))
+        .flatMap(mono -> mono);
   }
 }

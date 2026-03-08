@@ -1,5 +1,6 @@
 package com.takypok.workflowservice.function.postfunction;
 
+import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.function.postfunction.index.PostFunctionInterface;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
@@ -15,10 +16,10 @@ import reactor.core.publisher.Mono;
 public class Example1Function implements PostFunctionInterface {
 
   @Override
-  public Mono<Void> run(Ticket<TicketDetail> ticket) {
-    return Mono.just("test")
+  public Mono<Ticket<TicketDetail>> run(Ticket<TicketDetail> ticket, User currentUser) {
+    ticket.setAssignee(currentUser);
+    return Mono.empty()
         .delayElement(Duration.ofSeconds(5))
-        .doOnNext(s -> System.out.println("Ex1 func triggered !"))
-        .then();
+        .thenReturn(ticket);
   }
 }
