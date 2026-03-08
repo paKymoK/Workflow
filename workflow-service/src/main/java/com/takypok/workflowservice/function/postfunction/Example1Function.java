@@ -18,8 +18,6 @@ public class Example1Function implements PostFunctionInterface {
   @Override
   public Mono<Ticket<TicketDetail>> run(Ticket<TicketDetail> ticket, User currentUser) {
     ticket.setAssignee(currentUser);
-    return Mono.empty()
-        .delayElement(Duration.ofSeconds(5))
-        .thenReturn(ticket);
+    return Mono.empty().delayElement(Duration.ofSeconds(5)).thenReturn(ticket);
   }
 }

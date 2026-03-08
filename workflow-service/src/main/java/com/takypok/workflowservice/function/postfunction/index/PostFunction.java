@@ -13,11 +13,12 @@ import reactor.core.publisher.Mono;
 @Component
 @Slf4j
 public class PostFunction {
-  public final Mono<Ticket<TicketDetail>> apply(String clazzName, Ticket<TicketDetail> ticket, User currentUser) {
+  public final Mono<Ticket<TicketDetail>> apply(
+      String clazzName, Ticket<TicketDetail> ticket, User currentUser) {
     try {
       PostFunctionInterface myInstance =
           (PostFunctionInterface) Class.forName(clazzName).getDeclaredConstructor().newInstance();
-      return myInstance.run(ticket,currentUser);
+      return myInstance.run(ticket, currentUser);
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | InstantiationException
