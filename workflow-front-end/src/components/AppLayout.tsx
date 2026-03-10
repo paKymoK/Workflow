@@ -68,9 +68,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <App>
       {/* Global overlay effects */}
       <div className="scanlines-overlay" />
-      <div className="corner-tl" />
+      {/* <div className="corner-tl" /> */}
       <div className="corner-tr" />
-      <div className="corner-bl" />
+      {/* <div className="corner-bl" /> */}
       <div className="corner-br" />
 
       <Layout className="h-screen">
@@ -85,7 +85,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           {/* Brand */}
           <div className="flex h-16 flex-col items-center justify-center border-b border-[rgba(255,229,0,0.15)] px-3 flex-shrink-0">
             <span className="font-bebas text-2xl tracking-[0.2em] glitch-anim neon-text-yellow leading-none">
-              {collapsed ? "Z//" : "Z//APP"}
+              {collapsed ? "T//" : "T//APP"}
             </span>
             {!collapsed && (
               <span className="font-mono-tech text-[8px] tracking-[0.3em] text-[rgba(240,240,240,0.3)] uppercase mt-0.5">
