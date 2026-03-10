@@ -3,6 +3,7 @@ import { ConfigProvider, theme } from "antd";
 import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
+import Portfolio from "./pages/Portfolio";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import TicketDetail from "./pages/TicketDetail";
@@ -157,6 +158,7 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/callback" element={<Callback />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Home />} />
