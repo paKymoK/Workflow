@@ -33,17 +33,17 @@ const PROJECTS = [
 
 const SKILLS = [
   { name: "REACT",      colorClass: "pf-skill-cyan"   },
-  { name: "NEXT.JS",    colorClass: "pf-skill-white"  },
-  { name: "NODE.JS",    colorClass: "pf-skill-green"  },
-  { name: "TYPESCRIPT", colorClass: "pf-skill-cyan"   },
-  { name: "POSTGRES",   colorClass: "pf-skill-yellow" },
-  { name: "WEBGL",      colorClass: "pf-skill-orange" },
-  { name: "THREE.JS",   colorClass: "pf-skill-green"  },
-  { name: "GSAP",       colorClass: "pf-skill-pink"   },
-  { name: "FIGMA",      colorClass: "pf-skill-orange" },
-  { name: "DOCKER",     colorClass: "pf-skill-cyan"   },
-  { name: "AWS",        colorClass: "pf-skill-yellow" },
-  { name: "SHOPIFY",    colorClass: "pf-skill-green"  },
+  { name: "ANGULAR",    colorClass: "pf-skill-white"  },
+  { name: "VUE",    colorClass: "pf-skill-green"  },
+  { name: "NODE.JS", colorClass: "pf-skill-cyan"   },
+  { name: "TYPESCRIPT",   colorClass: "pf-skill-yellow" },
+  { name: "JAVA",      colorClass: "pf-skill-orange" },
+  { name: "SPRING BOOT",   colorClass: "pf-skill-green"  },
+  { name: "WEBFLUX",       colorClass: "pf-skill-pink"   },
+  { name: "POSTGRES",      colorClass: "pf-skill-orange" },
+  { name: "MYSQL",     colorClass: "pf-skill-cyan"   },
+  { name: "JENKINS",        colorClass: "pf-skill-yellow" },
+  { name: "K8S",    colorClass: "pf-skill-green"  },
 ];
 
 const SOCIAL_LINKS = [
