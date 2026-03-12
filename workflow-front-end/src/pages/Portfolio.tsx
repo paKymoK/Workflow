@@ -146,23 +146,23 @@ export default function Portfolio() {
       {/* Particle background */}
       <canvas ref={canvasRef} className="pf-canvas" />
 
-      {/* CRT scanlines */}
-      <div className="pf-scanlines" />
+      {/*/!* CRT scanlines *!/*/}
+      {/*<div className="pf-scanlines" />*/}
 
       <div className="pf-page">
 
         {/* ── Ticker ──────────────────────────────────── */}
         <div className="pf-ticker">
           <div className="pf-ticker-inner">
-            <span>★ AVAILABLE FOR WORK ★ FULL-STACK DEVELOPER ★ OPEN TO FREELANCE ★ BASED IN BERLIN ★ LET'S BUILD ★</span>
-            <span>★ AVAILABLE FOR WORK ★ FULL-STACK DEVELOPER ★ OPEN TO FREELANCE ★ BASED IN BERLIN ★ LET'S BUILD ★</span>
-            <span>★ AVAILABLE FOR WORK ★ FULL-STACK DEVELOPER ★ OPEN TO FREELANCE ★ BASED IN BERLIN ★ LET'S BUILD ★</span>
+            <span>★ AVAILABLE FOR WORK ★ FULL-STACK DEVELOPER ★ OPEN TO FREELANCE ★ BASED IN HANOI ★ LET'S BUILD ★</span>
+            <span>★ AVAILABLE FOR WORK ★ FULL-STACK DEVELOPER ★ OPEN TO FREELANCE ★ BASED IN HANOI ★ LET'S BUILD ★</span>
+            <span>★ AVAILABLE FOR WORK ★ FULL-STACK DEVELOPER ★ OPEN TO FREELANCE ★ BASED IN HANOI ★ LET'S BUILD ★</span>
           </div>
         </div>
 
         {/* ── Nav ─────────────────────────────────────── */}
         <nav className="pf-nav">
-          <div className="pf-logo">▸ ALEX.KOVA</div>
+          <div className="pf-logo">▸ TQTHAI</div>
           <div className="pf-nav-links">
             <button className="pf-nav-link" onClick={() => scrollTo("work")}>WORK</button>
             <button className="pf-nav-link" onClick={() => scrollTo("about")}>ABOUT</button>
@@ -186,7 +186,7 @@ export default function Portfolio() {
 
           <div className="pf-hero-sub">
             <div className="pf-hero-line" />
-            <p>BUILDING RAW, FUNCTIONAL, UNAPOLOGETIC DIGITAL EXPERIENCES SINCE 2018.</p>
+            <p>BUILDING RAW, FUNCTIONAL, UNAPOLOGETIC DIGITAL EXPERIENCES SINCE 2020.</p>
           </div>
 
           <div className="pf-hero-btns">
@@ -263,9 +263,9 @@ export default function Portfolio() {
             </div>
             <div className="pf-about-text">
               <p>
-                HEY — I'M ALEX. A BERLIN-BASED DEVELOPER WHO BUILDS THINGS THAT REFUSE TO BLEND IN.<br /><br />
+                HEY — I'M THAI. A HANOI-BASED DEVELOPER WHO BUILDS THINGS THAT REFUSE TO BLEND IN.<br /><br />
                 I SPECIALIZE IN PERFORMANT WEB APPS, CREATIVE INTERFACES, AND SYSTEMS THAT ACTUALLY SCALE.
-                SIX YEARS IN THE INDUSTRY, I'VE WORKED WITH STARTUPS AND AGENCIES ACROSS EUROPE AND THE US.<br /><br />
+                SIX YEARS IN THE INDUSTRY, I'VE WORKED WITH AGENCIES ACROSS VIETNAM.<br /><br />
                 IF YOUR PROJECT NEEDS TO STAND OUT — NOT JUST SHOW UP — LET'S TALK.
               </p>
               <div className="pf-social-links">
@@ -284,13 +284,12 @@ export default function Portfolio() {
             LET'S BUILD<br />
             <span className="pf-blink-accent">SOMETHING<span className="pf-blink-cursor">_</span></span>
           </h2>
-          <a href="mailto:alex@kova.dev" className="pf-contact-email">ALEX@KOVA.DEV</a>
+          <a href="mailto:thaimeo0210@gmail.com" className="pf-contact-email">THAIMEO0210@GMAIL.COM</a>
         </section>
 
         {/* ── Footer ──────────────────────────────────── */}
         <footer className="pf-footer">
-          <span>©2025 ALEX.KOVA — ALL RIGHTS RESERVED</span>
-          <span>BUILT WITH BRUTALISM + NEON + ZERO REGRETS</span>
+          <span>©2026 TQTHAI — ALL RIGHTS RESERVED</span>
         </footer>
 
       </div>
