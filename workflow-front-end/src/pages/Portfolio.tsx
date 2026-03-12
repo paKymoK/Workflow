@@ -73,15 +73,20 @@ export default function Portfolio() {
     return () => document.body.classList.remove("pf-active");
   }, []);
 
-  // Custom diamond cursor
+  // Custom diamond cursor — RAF-throttled to avoid style writes faster than screen refresh
   useEffect(() => {
     const el = cursorRef.current;
     if (!el) return;
-    const onMove = (e: MouseEvent) => {
-      el.style.transform = `translate(${e.clientX - 11}px, ${e.clientY - 11}px) rotate(45deg)`;
+    let rafId: number;
+    let mx = 0, my = 0;
+    const onMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; };
+    const tick = () => {
+      el.style.transform = `translate(${mx - 11}px, ${my - 11}px) rotate(45deg)`;
+      rafId = requestAnimationFrame(tick);
     };
+    tick();
     document.addEventListener("mousemove", onMove);
-    return () => document.removeEventListener("mousemove", onMove);
+    return () => { document.removeEventListener("mousemove", onMove); cancelAnimationFrame(rafId); };
   }, []);
 
   // Particle canvas
@@ -109,25 +114,38 @@ export default function Portfolio() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Update positions first
       dots.forEach((d) => {
         d.x += d.vx; d.y += d.vy;
         if (d.x < 0 || d.x > canvas.width)  d.vx *= -1;
         if (d.y < 0 || d.y > canvas.height) d.vy *= -1;
+      });
+
+      // Batch draw by color — reduces canvas state changes from 90 to 5
+      ctx.shadowBlur = 10;
+      const byColor: Record<string, Dot[]> = {};
+      dots.forEach((d) => { (byColor[d.color] ??= []).push(d); });
+      Object.entries(byColor).forEach(([color, group]) => {
+        ctx.fillStyle   = color;
+        ctx.shadowColor = color;
         ctx.beginPath();
-        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx.fillStyle   = d.color;
-        ctx.shadowBlur  = 10;
-        ctx.shadowColor = d.color;
+        group.forEach((d) => { ctx.moveTo(d.x + d.r, d.y); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); });
         ctx.fill();
       });
+
       animRef.current = requestAnimationFrame(draw);
     };
 
-    window.addEventListener("resize", init);
+    // Debounce resize so rapid window drags don't spam particle resets
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(init, 150); };
+    window.addEventListener("resize", onResize);
     init();
     draw();
     return () => {
-      window.removeEventListener("resize", init);
+      window.removeEventListener("resize", onResize);
+      clearTimeout(resizeTimer);
       cancelAnimationFrame(animRef.current);
     };
   }, []);

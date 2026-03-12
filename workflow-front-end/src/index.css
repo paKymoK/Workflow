@@ -298,7 +298,7 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   z-index: 9999;
   will-change: transform;
   box-shadow: 0 0 10px var(--pf-pink), 0 0 20px var(--pf-pink);
-  mix-blend-mode: screen;
+  /* mix-blend-mode removed — it prevents compositor layer isolation, causing full-page composite on every cursor move */
 }
 
 /* ── Canvas bg ───────────────────────────────────────── */
@@ -376,6 +376,7 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   line-height: 0.92; letter-spacing: 2px;
   color: var(--pf-fg); text-transform: uppercase;
   animation: pf-neonPulse 3s ease-in-out infinite;
+  will-change: filter;
 }
 .pf-accent { color: var(--pf-pink); }
 .pf-glitch {
@@ -385,6 +386,7 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   line-height: 0.92; letter-spacing: 2px;
   text-transform: uppercase;
   pointer-events: none; opacity: 0;
+  will-change: clip-path, transform;
 }
 .pf-glitch.g1 { color: var(--pf-green); animation: pf-glitchA 5s infinite; }
 .pf-glitch.g2 { color: var(--pf-cyan);  animation: pf-glitchB 5s 0.07s infinite; }
@@ -545,7 +547,7 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   font-size: clamp(44px, 8vw, 100px);
   line-height: 0.95; text-transform: uppercase;
 }
-.pf-blink-accent  { color: var(--pf-green); animation: pf-neonPulse 2s ease-in-out infinite; }
+.pf-blink-accent  { color: var(--pf-green); animation: pf-neonPulse 2s ease-in-out infinite; will-change: filter; }
 .pf-blink-cursor  { animation: pf-blink 1s step-end infinite; }
 .pf-contact-email {
   display: inline-block; margin-top: 44px;
@@ -572,8 +574,9 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   95% { opacity: 0.3; } 97% { opacity: 0.8; } 98% { opacity: 0.2; } 99% { opacity: 1; }
 }
 @keyframes pf-neonPulse {
-  0%,100% { text-shadow: 0 0 7px currentColor, 0 0 14px currentColor; }
-  50%     { text-shadow: 0 0 3px currentColor, 0 0  6px currentColor; }
+  /* filter: drop-shadow is GPU-composited unlike text-shadow which triggers CPU repaint */
+  0%,100% { filter: drop-shadow(0 0 7px currentColor) drop-shadow(0 0 14px currentColor); }
+  50%     { filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0  6px currentColor); }
 }
 @keyframes pf-glitchA {
   0%,89%,100% { opacity: 0; }
