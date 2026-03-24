@@ -10,6 +10,7 @@ import TicketDetail from "./pages/TicketDetail";
 import Callback from "./pages/Callback";
 import Settings from "./pages/Settings";
 import WorkflowDetail from "./pages/WorkflowDetail";
+import Diary from "./pages/Diary";
 
 function App() {
   return (
@@ -159,6 +160,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/diary" element={<Diary />} />
             <Route path="/callback" element={<Callback />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Home />} />

@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import avatar from "../assets/avatar.jpeg";
 
 const PARTICLE_COLORS = ["#FF006E", "#00FF94", "#FFE600", "#00CFFF", "#FF4D00"];
 
 const PROJECTS = [
   {
-    id: "001", title: "SYNTHWAVE OS", tag: "WEB APP", year: "2025",
+    id: "001", title: "AION", tag: "WEB APP", year: "2025",
     colorClass: "pf-c-pink",
-    desc: "A fully browser-based OS-style interface with draggable windows, a working music player, and a retro aesthetic. 40K+ visitors in launch week.",
+    desc: "Developed the frontend of HDBank internal back-office system designed to calculate and track employee KPIs. The system enables managers to monitor individual performance by displaying KPI completion percentages over a defined period. Responsible for building and maintaining the user interface using React.js, ensuring an intuitive and responsive experience for end users.",
   },
   {
-    id: "002", title: "NEON_CITY", tag: "3D / WEBGL", year: "2024",
+    id: "002", title: "HDBANK", tag: "MOBILE APP", year: "2025",
     colorClass: "pf-c-green",
     desc: "Procedural cyberpunk cityscape rendered in raw WebGL. Infinite parallax scroll, dynamic neon lighting, zero libraries.",
   },
@@ -43,7 +44,7 @@ const SKILLS = [
   { name: "POSTGRES",      colorClass: "pf-skill-orange" },
   { name: "MYSQL",     colorClass: "pf-skill-cyan"   },
   { name: "JENKINS",        colorClass: "pf-skill-yellow" },
-  { name: "K8S",    colorClass: "pf-skill-green"  },
+  { name: "AI PROMT",    colorClass: "pf-skill-green"  },
 ];
 
 const SOCIAL_LINKS = [
@@ -273,17 +274,14 @@ export default function Portfolio() {
           <div className="pf-section-label"><span>▸ ABOUT_ME</span></div>
           <div className="pf-about-grid">
             <div className="pf-photo-frame">
-              <div className="pf-photo-placeholder">
-                <div className="pf-photo-icon">◈</div>
-                <p>PHOTO HERE</p>
-              </div>
+              <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               <div className="pf-photo-rec">● REC</div>
             </div>
             <div className="pf-about-text">
               <p>
                 HEY — I'M THAI. A HANOI-BASED DEVELOPER WHO BUILDS THINGS THAT REFUSE TO BLEND IN.<br /><br />
                 I SPECIALIZE IN PERFORMANT WEB APPS, CREATIVE INTERFACES, AND SYSTEMS THAT ACTUALLY SCALE.
-                SIX YEARS IN THE INDUSTRY, I'VE WORKED WITH AGENCIES ACROSS VIETNAM.<br /><br />
+                SIX YEARS IN THE INDUSTRY, I'VE WORKED WITH AGENCIES ACROSS VIETNAM AND KOREA.<br /><br />
                 IF YOUR PROJECT NEEDS TO STAND OUT — NOT JUST SHOW UP — LET'S TALK.
               </p>
               <div className="pf-social-links">
