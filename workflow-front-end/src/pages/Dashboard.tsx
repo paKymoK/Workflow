@@ -1,12 +1,13 @@
 import {useRef, useState, useEffect, useCallback} from "react";
-import {Spin, Table, Tag, Button, Dropdown, message} from "antd";
-import {PlusOutlined, MoreOutlined} from "@ant-design/icons";
+import {Spin, Table, Tag, Button, Dropdown, message, Input, Select} from "antd";
+import {PlusOutlined, MoreOutlined, SearchOutlined} from "@ant-design/icons";
 import type {MenuProps} from "antd";
 import {useNavigate} from "react-router-dom";
 import type {ColumnsType} from "antd/es/table";
-import {fetchTickets, fetchTicketById, pauseTicket, resumeTicket} from "../api/ticketApi";
+import {fetchTickets, fetchTicketById, pauseTicket, resumeTicket, fetchPriorities} from "../api/ticketApi";
+import type {FilterTicketRequest} from "../api/ticketApi";
 import { wsBaseUrl } from "../api/axios.ts";
-import type {TicketSla} from "../api/types.ts";
+import type {TicketSla, Priority} from "../api/types.ts";
 import CreateTicketModal from "../components/CreateTicketModal";
 import DeadlineTag from "../components/DeadlineTag.tsx";
 
@@ -20,6 +21,20 @@ export default function Dashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const token = sessionStorage.getItem("access_token");
     const [actionLoadingIds, setActionLoadingIds] = useState<Set<string | number>>(new Set());
+
+    // Filter state
+    const [summary, setSummary] = useState("");
+    const [statusId, setStatusId] = useState<number | undefined>();
+    const [priorityId, setPriorityId] = useState<number | undefined>();
+    const [assigneeEmail, setAssigneeEmail] = useState("");
+    const [priorities, setPriorities] = useState<Priority[]>([]);
+
+    // Collect all unique statuses from loaded tickets for the status filter
+    const [knownStatuses, setKnownStatuses] = useState<{ id: number; name: string; color: string }[]>([]);
+
+    useEffect(() => {
+        fetchPriorities().then(setPriorities);
+    }, []);
 
     const handlePause = useCallback(async (id: string | number) => {
         setActionLoadingIds((prev) => new Set(prev).add(id));
@@ -136,31 +151,42 @@ export default function Dashboard() {
         }
     ];
 
-    // Keep a ref of currently visible IDs for quick lookup
     const visibleIdsRef = useRef<Set<string | number>>(new Set());
-
-    // Track which rows are being refreshed individually
     const [refreshingIds, setRefreshingIds] = useState<Set<string | number>>(new Set());
+
+    const buildParams = useCallback((p: number, size: number): FilterTicketRequest => ({
+        page: p,
+        size,
+        ...(summary.trim()    && { summary: summary.trim() }),
+        ...(statusId != null  && { statusId }),
+        ...(priorityId != null && { priorityId }),
+        ...(assigneeEmail.trim() && { assigneeEmail: assigneeEmail.trim() }),
+    }), [summary, statusId, priorityId, assigneeEmail]);
 
     const loadPage = useCallback(async (p: number, size: number) => {
         setLoading(true);
         try {
-            const {content, totalElements} = await fetchTickets(p, size);
+            const {content, totalElements} = await fetchTickets(buildParams(p, size));
             setTickets(content);
             setTotal(totalElements);
             visibleIdsRef.current = new Set(content.map((t) => t.id));
+            // Collect statuses for the filter dropdown
+            setKnownStatuses((prev) => {
+                const map = new Map(prev.map((s) => [s.id, s]));
+                content.forEach((t) => { if (t.status) map.set(t.status.id, t.status); });
+                return Array.from(map.values());
+            });
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [buildParams]);
 
     useEffect(() => {
         loadPage(page, pageSize);
     }, [page, pageSize, loadPage]);
 
-    // Patch a single row without re-fetching the whole table
     const refreshRow = useCallback(async (id: string | number) => {
-        if (!visibleIdsRef.current.has(id)) return; // not on current page, ignore
+        if (!visibleIdsRef.current.has(id)) return;
 
         setRefreshingIds((prev) => new Set(prev).add(id));
         try {
@@ -177,21 +203,24 @@ export default function Dashboard() {
         }
     }, []);
 
-    // WebSocket setup
     useEffect(() => {
         const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
-
-        ws.onopen = () => {
-            ws.send(token ?? "");
-        };
-
-        ws.onmessage = (event) => {
-            const id = Number(event.data);
-            refreshRow(id);
-        };
-
+        ws.onopen = () => { ws.send(token ?? ""); };
+        ws.onmessage = (event) => { refreshRow(Number(event.data)); };
         return () => ws.close();
     }, [refreshRow, token]);
+
+    const handleSearch = () => {
+        setPage(0);
+        loadPage(0, pageSize);
+    };
+
+    const handleReset = () => {
+        setSummary("");
+        setStatusId(undefined);
+        setPriorityId(undefined);
+        setAssigneeEmail("");
+    };
 
     const handlePaginationChange = (p: number, size: number) => {
         setPage(p - 1);
@@ -200,11 +229,9 @@ export default function Dashboard() {
 
     const handleCreateSuccess = () => {
         setIsModalOpen(false);
-        // Refresh the ticket list after successful creation
         loadPage(page, pageSize);
     };
 
-    // Optionally show a per-row loading indicator in your columns
     const columnsWithLoading: ColumnsType<TicketSla> = [
         ...columns,
         {
@@ -230,6 +257,46 @@ export default function Dashboard() {
                 >
                     <span className="neon-btn-content">Create Ticket</span>
                 </Button>
+            </div>
+
+            {/* Filter bar */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                <Input
+                    placeholder="Search summary"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    onPressEnter={handleSearch}
+                    allowClear
+                    className="!w-[200px]"
+                />
+                <Select
+                    placeholder="Status"
+                    value={statusId}
+                    onChange={setStatusId}
+                    allowClear
+                    className="!w-[160px]"
+                    options={knownStatuses.map((s) => ({ value: s.id, label: s.name }))}
+                />
+                <Select
+                    placeholder="Priority"
+                    value={priorityId}
+                    onChange={setPriorityId}
+                    allowClear
+                    className="!w-[160px]"
+                    options={priorities.map((p) => ({ value: p.id, label: p.name }))}
+                />
+                <Input
+                    placeholder="Assignee email"
+                    value={assigneeEmail}
+                    onChange={(e) => setAssigneeEmail(e.target.value)}
+                    onPressEnter={handleSearch}
+                    allowClear
+                    className="!w-[200px]"
+                />
+                <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+                    Search
+                </Button>
+                <Button onClick={handleReset}>Reset</Button>
             </div>
 
             <Table<TicketSla>

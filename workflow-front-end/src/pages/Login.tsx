@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import AddUserModal from "../components/settings/AddUserModal";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [clock, setClock] = useState("");
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   useEffect(() => {
     const update = () =>
@@ -110,6 +112,14 @@ export default function Login() {
             <span className="neon-btn-content">INITIATE ACCESS ⚡</span>
           </button>
 
+          {/* Register button */}
+          <button
+            onClick={() => setRegisterOpen(true)}
+            className="w-full mt-3 py-4 font-bebas text-[22px] tracking-[0.25em] bg-transparent border-2 border-[rgba(255,229,0,0.3)] text-[rgba(240,240,240,0.6)] hover:border-[var(--neon-cyan)] hover:text-[var(--neon-cyan)] hover:shadow-[0_0_16px_rgba(0,245,255,0.2)] transition-all cursor-crosshair"
+          >
+            REGISTER ◈
+          </button>
+
           {/* Portfolio button */}
           <button
             onClick={() => navigate("/portfolio")}
@@ -124,6 +134,12 @@ export default function Login() {
           </p>
         </div>
       </div>
+
+      <AddUserModal
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onSuccess={() => setRegisterOpen(false)}
+      />
 
       {/* Status bar */}
       <div className="fixed bottom-0 left-0 right-0 h-7 bg-[var(--neon-pink)] flex items-center px-4 gap-6 z-10">

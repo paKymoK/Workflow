@@ -2,10 +2,19 @@ import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueTyp
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
-export async function fetchTickets(page: number, size: number) {
+export interface FilterTicketRequest {
+    page: number;
+    size: number;
+    summary?: string;
+    statusId?: number;
+    priorityId?: number;
+    assigneeEmail?: string;
+}
+
+export async function fetchTickets(params: FilterTicketRequest) {
     const { data } = await api.get<ResultMessage<PageResponse<TicketSla>>>(
         "/workflow-service/v1/ticket",
-        { params: { page, size } },
+        { params },
     );
     return data.data;
 }
@@ -147,6 +156,15 @@ export async function updateWorkflow(payload: WorkflowUpdatePayload) {
     payload,
   );
   return data.data;
+}
+
+export async function createUser(payload: {
+  username: string;
+  password: string;
+  userinfo: { name: string; email: string; title: string; department: string };
+}) {
+  const { data } = await api.post<ResultMessage<void>>("/auth-service/v1/users", payload);
+  return data;
 }
 
 export async function fetchUsers(page = 0, size = 10) {
