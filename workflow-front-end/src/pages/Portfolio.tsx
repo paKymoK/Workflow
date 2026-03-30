@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.jpeg";
 import { useTheme } from "../context/useTheme";
 import { SunOutlined, MoonOutlined } from "@ant-design/icons";
+import { useFont } from "../context/useFont";
 
 const PARTICLE_COLORS = ["#00CFFF", "#48CAE4", "#90E0EF", "#ADE8F4", "#00F5C4"];
 
@@ -70,6 +71,7 @@ export default function Portfolio() {
   const navigate   = useNavigate();
   const [openProject, setOpenProject] = useState<string | null>(null);
   const { isDark, toggleTheme } = useTheme();
+  const { isCustomFont, toggleFont } = useFont();
 
   // Hide default cursor while on portfolio page
   useEffect(() => {
@@ -201,6 +203,13 @@ export default function Portfolio() {
             <button className="pf-nav-link" onClick={() => scrollTo("about")}>ABOUT</button>
             <button className="pf-nav-link" onClick={() => scrollTo("contact")}>CONTACT</button>
             <button className="pf-nav-link pf-nav-back" onClick={() => navigate("/login")}>← LOGIN</button>
+            <button
+              className="pf-nav-link"
+              onClick={toggleFont}
+              title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
+            >
+              Aa
+            </button>
             <button
               className="pf-nav-link"
               onClick={toggleTheme}

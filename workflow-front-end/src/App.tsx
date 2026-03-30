@@ -13,16 +13,20 @@ import WorkflowDetail from "./pages/WorkflowDetail";
 import Diary from "./pages/Diary";
 import { ThemeProvider } from "./context/ThemeContext";
 import { useTheme } from "./context/useTheme";
+import { FontProvider } from "./context/FontContext";
+import { useFont } from "./context/useFont";
 
 function ThemedApp() {
   const { isDark } = useTheme();
+  const { isCustomFont } = useFont();
+  const fontFamily = isCustomFont ? "'AegirSeaborn', monospace" : "'Share Tech Mono', monospace";
 
   const darkTokens = {
     colorPrimary: "#00CFFF",
     colorBgBase: "#020B18",
     colorTextBase: "#C8F0FF",
     borderRadius: 0,
-    fontFamily: "'Share Tech Mono', monospace",
+    fontFamily,
     colorBorder: "rgba(0,207,255,0.2)",
     colorBgContainer: "#041428",
     colorBgLayout: "#020B18",
@@ -40,7 +44,7 @@ function ThemedApp() {
     colorBgBase: "#E0F4FF",
     colorTextBase: "#0A2540",
     borderRadius: 0,
-    fontFamily: "'Share Tech Mono', monospace",
+    fontFamily,
     colorBorder: "rgba(0,102,187,0.25)",
     colorBgContainer: "#F0FAFF",
     colorBgLayout: "#D6EEFF",
@@ -245,9 +249,11 @@ function ThemedApp() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <ThemedApp />
-    </ThemeProvider>
+    <FontProvider>
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
+    </FontProvider>
   );
 }
 

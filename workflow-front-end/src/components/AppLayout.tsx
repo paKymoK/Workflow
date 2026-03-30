@@ -13,6 +13,7 @@ import {
   MoonOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../context/useTheme";
+import { useFont } from "../context/useFont";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 
@@ -34,6 +35,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { isCustomFont, toggleFont } = useFont();
 
   useEffect(() => {
     const update = () =>
@@ -161,6 +163,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex items-center gap-2">
+            <Button
+              type="text"
+              onClick={toggleFont}
+              title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
+              className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)] !font-bold !text-xs !tracking-wider"
+            >
+              Aa
+            </Button>
             <Button
               type="text"
               icon={isDark ? <SunOutlined /> : <MoonOutlined />}

@@ -4,6 +4,7 @@ import { useAuth } from "../auth/useAuth";
 import AddUserModal from "../components/settings/AddUserModal";
 import { useTheme } from "../context/useTheme";
 import { SunOutlined, MoonOutlined } from "@ant-design/icons";
+import { useFont } from "../context/useFont";
 import BubbleBackground from "../components/BubbleBackground";
 
 export default function Login() {
@@ -12,6 +13,7 @@ export default function Login() {
   const [clock, setClock] = useState("");
   const [registerOpen, setRegisterOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { isCustomFont, toggleFont } = useFont();
 
   useEffect(() => {
     const update = () =>
@@ -50,14 +52,23 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Theme toggle */}
-      <button
-        onClick={toggleTheme}
-        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        className="fixed top-10 right-4 z-20 w-9 h-9 flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--darker)] text-[var(--neon-yellow)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all"
-      >
-        {isDark ? <SunOutlined /> : <MoonOutlined />}
-      </button>
+      {/* Font + Theme toggles */}
+      <div className="fixed top-10 right-4 z-20 flex gap-2">
+        <button
+          onClick={toggleFont}
+          title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
+          className="w-9 h-9 flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--darker)] text-[var(--neon-yellow)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all text-xs font-bold tracking-wider"
+        >
+          Aa
+        </button>
+        <button
+          onClick={toggleTheme}
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className="w-9 h-9 flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--darker)] text-[var(--neon-yellow)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all"
+        >
+          {isDark ? <SunOutlined /> : <MoonOutlined />}
+        </button>
+      </div>
 
       {/* Main card */}
       <div className="relative z-10 slide-in grid grid-cols-1 md:grid-cols-2 w-[min(900px,95vw)] mt-8">

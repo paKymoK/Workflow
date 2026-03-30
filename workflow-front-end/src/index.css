@@ -42,6 +42,18 @@ body {
 ::-webkit-scrollbar-track { background: var(--darker); }
 ::-webkit-scrollbar-thumb { background: var(--neon-yellow); border-radius: 2px; }
 
+/* ── Custom font ─────────────────────────────────────── */
+@font-face {
+  font-family: 'AegirSeaborn';
+  src: url('./assets/font/AegirSeaborn.woff2') format('woff2');
+  font-display: swap;
+}
+
+[data-font="custom"] body,
+[data-font="custom"] .font-mono-tech {
+  font-family: 'AegirSeaborn', monospace !important;
+}
+
 /* ── Typography helpers ──────────────────────────────── */
 .font-bebas  { font-family: 'Bebas Neue', sans-serif !important; }
 .font-mono-tech { font-family: 'Share Tech Mono', monospace !important; }
@@ -77,10 +89,7 @@ body {
   z-index: 9997;
 }
 [data-theme="light"] .scanlines-overlay {
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px
-  );
+  display: none;
 }
 
 /* ── Corner decorations ──────────────────────────────── */
