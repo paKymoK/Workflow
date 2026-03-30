@@ -1,5 +1,6 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
+import BubbleBackground from "./BubbleBackground";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -70,6 +71,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <App>
+      <BubbleBackground />
       {/* Global overlay effects */}
       <div className="scanlines-overlay" />
       {/* <div className="corner-tl" /> */}
@@ -83,16 +85,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           trigger={null}
           collapsible
           collapsed={collapsed}
-          theme="dark"
+          theme={isDark ? "dark" : "light"}
           className="neon-sider-border overflow-hidden flex flex-col"
         >
           {/* Brand */}
-          <div className="flex h-16 flex-col items-center justify-center border-b border-[rgba(255,229,0,0.15)] px-3 flex-shrink-0">
+          <div className="flex h-16 flex-col items-center justify-center border-b border-[var(--border-subtle)] px-3 flex-shrink-0">
             <span className="font-bebas text-2xl tracking-[0.2em] glitch-anim neon-text-yellow leading-none">
               {collapsed ? "T//" : "T//APP"}
             </span>
             {!collapsed && (
-              <span className="font-mono-tech text-[8px] tracking-[0.3em] text-[rgba(240,240,240,0.3)] uppercase mt-0.5">
+              <span className="font-mono-tech text-[8px] tracking-[0.3em] text-[var(--text-muted)] uppercase mt-0.5">
                 ▸ Secure Portal
               </span>
             )}
@@ -100,7 +102,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
           {/* Navigation */}
           <Menu
-            theme="dark"
+            theme={isDark ? "dark" : "light"}
             mode="inline"
             selectedKeys={[location.pathname]}
             items={siderMenuItems}
@@ -110,19 +112,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
           {/* Sidebar footer stats */}
           {!collapsed && (
-            <div className="flex-shrink-0 px-4 py-3 border-t border-[rgba(255,229,0,0.1)]">
+            <div className="flex-shrink-0 px-4 py-3 border-t border-[var(--border-subtle)]">
               <div className="font-mono-tech text-[9px] tracking-[0.15em] space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-[rgba(240,240,240,0.3)] uppercase">Node</span>
+                  <span className="text-[var(--text-muted)] uppercase">Node</span>
                   <span className="neon-text-yellow">Active</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[rgba(240,240,240,0.3)] uppercase">Sys</span>
+                  <span className="text-[var(--text-muted)] uppercase">Sys</span>
                   <span className="neon-text-cyan">Nominal</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[rgba(240,240,240,0.3)] uppercase">Enc</span>
-                  <span className="text-[rgba(240,240,240,0.5)]">AES-256</span>
+                  <span className="text-[var(--text-muted)] uppercase">Enc</span>
+                  <span className="text-[var(--text-muted)]">AES-256</span>
                 </div>
               </div>
             </div>
@@ -130,15 +132,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </Sider>
 
         {/* ── Main area ─────────────────────────────────── */}
-        <Layout className="flex flex-col overflow-hidden bg-neon-grid">
+        <Layout className="flex flex-col overflow-hidden">
 
           {/* Ticker tape */}
           <div className="h-7 bg-[var(--neon-yellow)] overflow-hidden flex items-center flex-shrink-0">
             <div className="ticker-track flex whitespace-nowrap">
-              <span className="font-bebas text-[13px] text-black tracking-[0.2em] pr-20">
+              <span className="font-bebas text-[13px] text-[var(--dark)] tracking-[0.2em] pr-20">
                 {TICKER_TEXT}{TICKER_TEXT}
               </span>
-              <span className="font-bebas text-[13px] text-black tracking-[0.2em] pr-20">
+              <span className="font-bebas text-[13px] text-[var(--dark)] tracking-[0.2em] pr-20">
                 {TICKER_TEXT}{TICKER_TEXT}
               </span>
             </div>
@@ -151,9 +153,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 type="text"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
-                className="!text-[var(--neon-yellow)] hover:!bg-[rgba(255,229,0,0.08)]"
+                className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)]"
               />
-              <span className="font-bebas text-base tracking-[0.25em] text-[rgba(240,240,240,0.35)] hidden sm:block">
+              <span className="font-bebas text-base tracking-[0.25em] text-[var(--text-muted)] hidden sm:block">
                 {routeLabel}
               </span>
             </div>
@@ -164,11 +166,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               icon={isDark ? <SunOutlined /> : <MoonOutlined />}
               onClick={toggleTheme}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="!text-[var(--neon-yellow)] hover:!bg-[rgba(255,229,0,0.08)]"
+              className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)]"
             />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <div className="flex cursor-pointer items-center gap-2 px-3 py-1 border border-[rgba(255,229,0,0.2)] hover:border-[var(--neon-yellow)] hover:bg-[rgba(255,229,0,0.05)] transition-all">
-                <span className="font-mono-tech text-xs text-[rgba(240,240,240,0.65)]">
+              <div className="flex cursor-pointer items-center gap-2 px-3 py-1 border border-[var(--border-subtle)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all">
+                <span className="font-mono-tech text-xs text-[var(--white)]">
                   {displayName}
                 </span>
                 <Avatar
@@ -182,7 +184,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </Header>
 
           {/* Page content */}
-          <Content className="flex-1 m-3 overflow-auto p-5 border border-[rgba(255,229,0,0.1)]">
+          <Content className="flex-1 m-3 overflow-auto p-5 border border-[var(--border-subtle)]">
             {children}
           </Content>
 

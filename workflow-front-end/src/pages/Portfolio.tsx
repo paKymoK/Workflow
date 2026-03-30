@@ -4,7 +4,7 @@ import avatar from "../assets/avatar.jpeg";
 import { useTheme } from "../context/useTheme";
 import { SunOutlined, MoonOutlined } from "@ant-design/icons";
 
-const PARTICLE_COLORS = ["#FF006E", "#00FF94", "#FFE600", "#00CFFF", "#FF4D00"];
+const PARTICLE_COLORS = ["#00CFFF", "#48CAE4", "#90E0EF", "#ADE8F4", "#00F5C4"];
 
 const PROJECTS = [
   {
@@ -106,37 +106,48 @@ export default function Portfolio() {
     const init = () => {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
-      dots = Array.from({ length: 90 }, () => ({
+      dots = Array.from({ length: 35 }, () => ({
         x:     Math.random() * canvas.width,
         y:     Math.random() * canvas.height,
-        r:     Math.random() * 1.5 + 0.4,
+        r:     Math.random() * 6 + 3,
         color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
-        vx:    (Math.random() - 0.5) * 0.35,
-        vy:    (Math.random() - 0.5) * 0.35,
+        vx:    (Math.random() - 0.5) * 0.2,
+        vy:    -(Math.random() * 0.4 + 0.1), // bubbles rise upward
       }));
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update positions first
+      // Update positions — bubbles float up and wrap
       dots.forEach((d) => {
         d.x += d.vx; d.y += d.vy;
-        if (d.x < 0 || d.x > canvas.width)  d.vx *= -1;
-        if (d.y < 0 || d.y > canvas.height) d.vy *= -1;
+        if (d.x < -d.r) d.x = canvas.width + d.r;
+        if (d.x > canvas.width + d.r) d.x = -d.r;
+        if (d.y < -d.r) { d.y = canvas.height + d.r; d.x = Math.random() * canvas.width; }
       });
 
-      // Batch draw by color — reduces canvas state changes from 90 to 5
-      ctx.shadowBlur = 10;
+      // Draw bubble rings — hollow circles
       const byColor: Record<string, Dot[]> = {};
       dots.forEach((d) => { (byColor[d.color] ??= []).push(d); });
       Object.entries(byColor).forEach(([color, group]) => {
-        ctx.fillStyle   = color;
+        ctx.strokeStyle = color;
         ctx.shadowColor = color;
-        ctx.beginPath();
-        group.forEach((d) => { ctx.moveTo(d.x + d.r, d.y); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); });
-        ctx.fill();
+        ctx.lineWidth   = 1.2;
+        group.forEach((d) => {
+          ctx.globalAlpha = 0.55;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.stroke();
+          // Inner highlight — tiny bright dot at top-left of bubble
+          ctx.globalAlpha = 0.8;
+          ctx.beginPath();
+          ctx.arc(d.x - d.r * 0.3, d.y - d.r * 0.3, d.r * 0.18, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        });
       });
+      ctx.globalAlpha = 1;
 
       animRef.current = requestAnimationFrame(draw);
     };
