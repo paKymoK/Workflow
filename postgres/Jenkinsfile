@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "✅ Đã pull code từ GitHub"
+                sh 'ls -la'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "🔨 Đang build..."
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "🚀 Đang deploy..."
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline thành công!'
+        }
+        failure {
+            echo '❌ Pipeline thất bại!'
+        }
+    }
+}
