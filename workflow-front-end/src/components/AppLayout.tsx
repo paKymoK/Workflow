@@ -8,7 +8,10 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from "@ant-design/icons";
+import { useTheme } from "../context/useTheme";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 
@@ -29,6 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const update = () =>
@@ -154,6 +158,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </span>
             </div>
 
+            <div className="flex items-center gap-2">
+            <Button
+              type="text"
+              icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className="!text-[var(--neon-yellow)] hover:!bg-[rgba(255,229,0,0.08)]"
+            />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <div className="flex cursor-pointer items-center gap-2 px-3 py-1 border border-[rgba(255,229,0,0.2)] hover:border-[var(--neon-yellow)] hover:bg-[rgba(255,229,0,0.05)] transition-all">
                 <span className="font-mono-tech text-xs text-[rgba(240,240,240,0.65)]">
@@ -166,6 +178,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 />
               </div>
             </Dropdown>
+            </div>
           </Header>
 
           {/* Page content */}

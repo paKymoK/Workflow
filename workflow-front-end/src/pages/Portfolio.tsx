@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.jpeg";
+import { useTheme } from "../context/useTheme";
+import { SunOutlined, MoonOutlined } from "@ant-design/icons";
 
 const PARTICLE_COLORS = ["#FF006E", "#00FF94", "#FFE600", "#00CFFF", "#FF4D00"];
 
@@ -67,6 +69,7 @@ export default function Portfolio() {
   const animRef    = useRef<number>(0);
   const navigate   = useNavigate();
   const [openProject, setOpenProject] = useState<string | null>(null);
+  const { isDark, toggleTheme } = useTheme();
 
   // Hide default cursor while on portfolio page
   useEffect(() => {
@@ -187,6 +190,13 @@ export default function Portfolio() {
             <button className="pf-nav-link" onClick={() => scrollTo("about")}>ABOUT</button>
             <button className="pf-nav-link" onClick={() => scrollTo("contact")}>CONTACT</button>
             <button className="pf-nav-link pf-nav-back" onClick={() => navigate("/login")}>← LOGIN</button>
+            <button
+              className="pf-nav-link"
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <SunOutlined /> : <MoonOutlined />}
+            </button>
           </div>
         </nav>
 

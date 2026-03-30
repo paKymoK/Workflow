@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+[data-theme="dark"] {
   --neon-yellow: #FFE500;
   --neon-pink: #FF2D6B;
   --neon-cyan: #00F5FF;
@@ -9,15 +10,31 @@
   --darker: #0D0D0D;
   --white: #F0F0F0;
   --grid-color: rgba(255, 229, 0, 0.05);
+  --text-muted: rgba(240, 240, 240, 0.35);
+  --border-subtle: rgba(255, 229, 0, 0.15);
+}
+
+[data-theme="light"] {
+  --neon-yellow: #D4B800;
+  --neon-pink: #CC1A4E;
+  --neon-cyan: #0099BB;
+  --black: #F5F5F5;
+  --dark: #FFFFFF;
+  --darker: #F0F0F0;
+  --white: #1A1A1A;
+  --grid-color: rgba(212, 184, 0, 0.08);
+  --text-muted: rgba(26, 26, 26, 0.4);
+  --border-subtle: rgba(212, 184, 0, 0.2);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
   background: var(--black) !important;
-  color: var(--white);
+  color: var(--white) !important;
   cursor: crosshair;
   font-family: 'Share Tech Mono', monospace;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 /* ── Scrollbar ───────────────────────────────────────── */
@@ -58,6 +75,12 @@ body {
   );
   pointer-events: none;
   z-index: 9997;
+}
+[data-theme="light"] .scanlines-overlay {
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px
+  );
 }
 
 /* ── Corner decorations ──────────────────────────────── */
