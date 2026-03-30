@@ -2,32 +2,23 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('SSH to postgres DB') {
             steps {
-                echo "✅ Đã pull code từ GitHub"
-                sh 'ls -la'
+                withCredentials([usernamePassword(
+                    credentialsId: 'credentials-db',  // lấy từ Jenkins store
+                    usernameVariable: 'SSH_USER',           // username → biến SSH_USER
+                    passwordVariable: 'SSH_PASS'            // password → biến SSH_PASS
+                )]) {
+                    sh """
+                        echo "Username là: ${SSH_USER}"      // in ra: ubuntu
+                        echo "Password là: ${SSH_PASS}"      // in ra: **** (bị che)
+
+                        sshpass -p '${SSH_PASS}' ssh \
+                            -o StrictHostKeyChecking=no \
+                            ${SSH_USER}@192.168.147.107 \
+                            'echo Hello from Server B'
+                    """
+                } 
             }
         }
-
-        stage('Build') {
-            steps {
-                echo "🔨 Đang build..."
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo "🚀 Đang deploy..."
-            }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Pipeline thành công!'
-        }
-        failure {
-            echo '❌ Pipeline thất bại!'
-        }
-    }
 }
