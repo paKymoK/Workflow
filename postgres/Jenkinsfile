@@ -1,15 +1,18 @@
 pipeline {
     agent any
     stages {
+        stage('Install sshpass') {
+            steps {
+                sh 'sudo apt-get install -y sshpass'
+            }
+        }
+
         stage('SSH to postgres DB') {
             steps {
                 sh '''
                     SSH_USER="thaiha"
                     SSH_PASS="thaiha"
                     HOST="192.168.147.107"
-
-                    echo "Username là: $SSH_USER"
-                    echo "Đang kết nối tới $HOST..."
 
                     sshpass -p "$SSH_PASS" ssh \
                         -o StrictHostKeyChecking=no \
