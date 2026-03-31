@@ -46,6 +46,7 @@ pipeline {
                         # 🔍 Kiểm tra containers
                         echo ">>> Kiểm tra containers..."
                         ssh -o StrictHostKeyChecking=no $SSH_USER@$POSTGRES_HOST "
+                            cd $REPO_DIR/postgres
                             docker compose ps
                         "
                     '''
