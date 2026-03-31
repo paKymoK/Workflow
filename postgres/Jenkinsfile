@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('SSH to Postgres') {
             steps {
-                sshagent(credentials: ['server-db-credentials']) {
+                sshagent(credentials: ['postgres-ssh-key']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no \
                             thaiha@192.168.147.107 \
