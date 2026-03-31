@@ -1,26 +1,23 @@
 pipeline {
     agent any
-
     stages {
         stage('SSH to postgres DB') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'credentials-db',  // lấy từ Jenkins store
-                    usernameVariable: 'SSH_USER',           // username → biến SSH_USER
-                    passwordVariable: 'SSH_PASS'            // password → biến SSH_PASS
-                )]) {
-                    sh """
-                        echo "Username là: ${SSH_USER}"      
-                        echo "Password là: ${SSH_PASS}"      
+                sh '''
+                    SSH_USER="thaiha"
+                    SSH_PASS="thaiha"
+                    HOST="192.168.147.107"
 
-                        sshpass -p '${SSH_PASS}' ssh \
-                            -o StrictHostKeyChecking=no \
-                            ${SSH_USER}@192.168.147.107 \
-                            'echo Hello from Server B'
-                   """
-                }
-            } 
+                    echo "Username là: $SSH_USER"
+                    echo "Đang kết nối tới $HOST..."
+
+                    sshpass -p "$SSH_PASS" ssh \
+                        -o StrictHostKeyChecking=no \
+                        -o ConnectTimeout=10 \
+                        "$SSH_USER"@"$HOST" \
+                        'echo Hello from Server B'
+                '''
+            }
         }
     }
 }
-
