@@ -37,16 +37,16 @@ pipeline {
                         echo ">>> Deploy bằng docker-compose..."
                         ssh -o StrictHostKeyChecking=no $SSH_USER@$POSTGRES_HOST "
                             cd $REPO_DIR/postgres
-                            sudo docker-compose down -v
-                            sudo docker-compose build --no-cache
-                            sudo docker-compose up -d
+                            docker compose down -v
+                            docker compose build --no-cache
+                            docker compose up -d
                             echo '✅ Deploy thành công!'
                         "
 
                         # 🔍 Kiểm tra containers
                         echo ">>> Kiểm tra containers..."
                         ssh -o StrictHostKeyChecking=no $SSH_USER@$POSTGRES_HOST "
-                            docker-compose ps
+                            docker compose ps
                         "
                     '''
                 }
