@@ -50,7 +50,19 @@ body {
 }
 
 [data-font="custom"] body,
-[data-font="custom"] .font-mono-tech {
+[data-font="custom"] .font-mono-tech,
+[data-font="custom"] .neon-input,
+[data-font="custom"] .ant-steps .ant-steps-item-title,
+[data-font="custom"] .ant-descriptions .ant-descriptions-item-label,
+[data-font="custom"] .pf-root,
+[data-font="custom"] .pf-nav-link,
+[data-font="custom"] .pf-btn-primary,
+[data-font="custom"] .pf-btn-outline,
+[data-font="custom"] .pf-skill-tag,
+[data-font="custom"] .pf-social-link,
+[data-font="custom"] .pf-footer,
+[data-font="custom"] .diary-img-hint,
+[data-font="custom"] .diary-text {
   font-family: 'AegirSeaborn', monospace !important;
 }
 
@@ -516,7 +528,23 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   transition: max-height 0.3s ease, margin-top 0.3s;
 }
 .pf-project-desc-open  { max-height: 120px !important; margin-top: 14px !important; }
-.pf-project-year       { font-size: 11px; color: var(--pf-muted); letter-spacing: 2px; }
+
+.pf-project-detail { margin-top: 20px; display: flex; flex-direction: column; gap: 16px; }
+.pf-project-detail-section { display: flex; flex-direction: column; gap: 8px; }
+.pf-project-detail-label { font-size: 10px; letter-spacing: 3px; color: var(--pf-muted); }
+.pf-project-tech-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-project-tech-tag {
+  font-size: 10px; letter-spacing: 2px;
+  padding: 3px 10px; border: 1px solid var(--pf-muted);
+  color: var(--pf-fg); opacity: 0.8;
+}
+.pf-project-resp-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.pf-project-resp-list li { font-size: 11px; letter-spacing: 1px; color: var(--pf-muted2); line-height: 1.7; }
+.pf-project-resp-list li::before { content: "— "; color: var(--pf-muted); }
+.pf-project-year       { font-size: 11px; color: var(--pf-muted); letter-spacing: 2px; white-space: nowrap; }
 .pf-project-toggle     { font-size: 20px; width: 28px; text-align: center; transition: transform 0.2s; }
 .pf-project-toggle-open { transform: rotate(45deg); }
 
