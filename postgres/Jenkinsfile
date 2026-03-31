@@ -1,19 +1,15 @@
 pipeline {
     agent any
     stages {
-        stage('SSH to postgres DB') {
+        stage('SSH to Postgres') {
             steps {
-                sh '''
-                    SSH_USER="thaiha"
-                    SSH_PASS="thaiha"
-                    HOST="192.168.147.107"
-
-                    sshpass -p "$SSH_PASS" ssh \
-                        -o StrictHostKeyChecking=no \
-                        -o ConnectTimeout=10 \
-                        "$SSH_USER"@"$HOST" \
-                        'echo Hello from Server B'
-                '''
+                sshagent(credentials: ['server-db-credentials']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no \
+                            thaiha@192.168.147.107 \
+                            'echo Hello from Server B'
+                    '''
+                }
             }
         }
     }
