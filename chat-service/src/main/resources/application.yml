@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: chat-service
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: qwen2.5:7b-instruct-q4_K_M
+        options:
+          temperature: 0.1        # low = more factual, less creative
+          num-ctx: 4096           # context window size
+      embedding:
+        model: bge-m3
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: crm_vi
+        initialize-schema: true   # auto-creates collection on first run
+server:
+  port: 8083
+
+logging:
+  level:
+    org.springframework.ai: DEBUG

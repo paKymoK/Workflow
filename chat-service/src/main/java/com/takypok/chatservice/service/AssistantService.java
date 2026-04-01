@@ -1,0 +1,42 @@
+package com.takypok.chatservice.service;
+
+import com.takypok.chatservice.model.AnswerResponse;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AssistantService {
+
+  private final ChatClient chatClient;
+  private final VectorStore vectorStore;
+
+  public AnswerResponse ask(String question) {
+    // Retrieve relevant chunks first so we can return sources
+    List<Document> docs = vectorStore.similaritySearch(SearchRequest.query(question).withTopK(4));
+
+    List<String> sources =
+        docs.stream()
+            .map(d -> (String) d.getMetadata().getOrDefault("source", "unknown"))
+            .distinct()
+            .toList();
+
+    // RAG call — QuestionAnswerAdvisor handles embed + retrieve + inject
+    String answer =
+        chatClient
+            .prompt()
+            .advisors(
+                new QuestionAnswerAdvisor(vectorStore, SearchRequest.query(question).withTopK(4)))
+            .user(question)
+            .call()
+            .content();
+
+    return AnswerResponse.builder().answer(answer).sources(sources).build();
+  }
+}
