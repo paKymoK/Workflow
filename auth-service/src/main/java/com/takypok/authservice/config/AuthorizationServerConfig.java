@@ -107,7 +107,7 @@ public class AuthorizationServerConfig {
             .redirectUri(workflowServiceUrl + "/index")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
             .redirectUri("http://localhost:3000/callback")
-            .redirectUri("https://thaiha.website/callback")
+            .redirectUri("https://app.thaiha.website/callback")
             .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)

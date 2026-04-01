@@ -4,6 +4,6 @@ $$);
 
 SELECT cron.schedule(
                'process-updates',
-               '5 seconds',
+               '30 seconds',
                'CALL calculate_sla()'
        );

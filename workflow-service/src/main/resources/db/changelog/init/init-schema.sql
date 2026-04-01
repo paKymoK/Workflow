@@ -111,7 +111,6 @@ ALTER TABLE sla
 CREATE INDEX IF NOT EXISTS idx_ticket_status_group ON ticket ((status->>'group'));
 CREATE INDEX IF NOT EXISTS idx_ticket_issue_type ON ticket ((issue_type->>'name'));
 
-CREATE INDEX IF NOT EXISTS idx_sla_ticket_id ON sla (ticket_id);
 CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla ((status ->> 'response'));
 CREATE INDEX IF NOT EXISTS idx_sla_status_resolution ON sla ((status ->> 'resolution'));
 

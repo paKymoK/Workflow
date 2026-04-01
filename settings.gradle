@@ -5,4 +5,5 @@ include 'core-v1',
         'workflow-service',
         'gateway-service',
         'auth-service',
-        'media-service'
+        'media-service',
+        'chat-service'

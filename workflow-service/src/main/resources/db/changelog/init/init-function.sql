@@ -202,47 +202,72 @@ CREATE OR REPLACE PROCEDURE calculate_sla()
     LANGUAGE PLPGSQL
 AS
 $$
+DECLARE
+    v_lock_key CONSTANT BIGINT := 987654321;
+    v_lock_acquired BOOLEAN;
 BEGIN
-    WITH ticket_data AS (SELECT t.id,
-                                t.created_at,
-                                s.id                                                            AS sla_id,
-                                (s.setting ->> 'workStart')::TIME                               AS work_start,
-                                (s.setting ->> 'workEnd')::TIME                                 AS work_end,
-                                (s.setting ->> 'lunchStart')::TIME                              AS lunch_start,
-                                (s.setting ->> 'lunchEnd')::TIME                                AS lunch_end,
-                                (s.priority ->> 'responseTime')::INTEGER                        AS response_time,
-                                (s.priority ->> 'resolutionTime')::INTEGER                      AS resolution_time,
-                                json_to_tstzrange_array(s.paused_time)                          AS paused_ranges,
-                                ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) AS weekend_days
-                         FROM ticket t
-                                  INNER JOIN sla s ON t.id = s.ticket_id),
-         office_time_data AS (SELECT td.*,
-                                     calculate_office_time(
-                                             td.created_at, NOW(), 'Asia/Ho_Chi_Minh',
-                                             td.work_start, td.work_end,
-                                             td.lunch_start, td.lunch_end,
-                                             td.paused_ranges, td.weekend_days
-                                     ) AS office_seconds
-                              FROM ticket_data td),
-         update_response AS (
-             UPDATE sla s
-                 SET status = status || jsonb_build_object('isResponseOverdue', true)
-                 FROM office_time_data td
-                 WHERE s.id = td.sla_id
-                     AND (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
-                     AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
-                     AND td.office_seconds > td.response_time * 60 * 60
-                 RETURNING s.id)
-    UPDATE sla s
-    SET status = status || jsonb_build_object('isResolutionOverdue', true)
-    FROM office_time_data td
-    WHERE s.id = td.sla_id
-      AND (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
-      AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
-      AND td.office_seconds > td.resolution_time * 60 * 60;
+    SELECT pg_try_advisory_lock(v_lock_key) INTO v_lock_acquired;
 
-    -- Commit the transaction
-    COMMIT;
+    IF NOT v_lock_acquired THEN
+        RAISE NOTICE 'calculate_sla already running, skipping this execution';
+        RETURN;
+    END IF;
+
+    BEGIN
+        WITH ticket_data AS (
+            SELECT t.id,
+                   t.created_at,
+                   s.id                                                            AS sla_id,
+                   (s.setting ->> 'workStart')::TIME                               AS work_start,
+                   (s.setting ->> 'workEnd')::TIME                                 AS work_end,
+                   (s.setting ->> 'lunchStart')::TIME                              AS lunch_start,
+                   (s.setting ->> 'lunchEnd')::TIME                                AS lunch_end,
+                   (s.priority ->> 'responseTime')::INTEGER                        AS response_time,
+                   (s.priority ->> 'resolutionTime')::INTEGER                      AS resolution_time,
+                   json_to_tstzrange_array(s.paused_time)                          AS paused_ranges,
+                   ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) AS weekend_days
+            FROM ticket t
+                     INNER JOIN sla s ON t.id = s.ticket_id
+            WHERE
+                (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+               OR (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
+        ),
+             office_time_data AS (
+                 SELECT td.*,
+                        calculate_office_time(
+                                td.created_at, NOW(), 'Asia/Ho_Chi_Minh',
+                                td.work_start, td.work_end,
+                                td.lunch_start, td.lunch_end,
+                                td.paused_ranges, td.weekend_days
+                        ) AS office_seconds
+                 FROM ticket_data td
+             ),
+             update_response AS (
+                 UPDATE sla s
+                     SET status = status || jsonb_build_object('isResponseOverdue', true)
+                     FROM office_time_data td
+                     WHERE s.id = td.sla_id
+                         AND (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+                         AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
+                         AND td.office_seconds > td.response_time * 60 * 60
+                     RETURNING s.id
+             )
+        UPDATE sla s
+        SET status = status || jsonb_build_object('isResolutionOverdue', true)
+        FROM office_time_data td
+        WHERE s.id = td.sla_id
+          AND (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
+          AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
+          AND td.office_seconds > td.resolution_time * 60 * 60;
+
+        COMMIT;
+
+        PERFORM pg_advisory_unlock(v_lock_key);
+
+    EXCEPTION WHEN OTHERS THEN
+        PERFORM pg_advisory_unlock(v_lock_key);
+        RAISE;
+    END;
 END;
 $$;
 

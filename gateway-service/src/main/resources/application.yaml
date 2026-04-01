@@ -27,10 +27,10 @@ spring:
             client-name: gateway-service-oidc
         provider:
           gateway-service:
-            issuer-uri: http://127.0.0.1:9000
+            issuer-uri: http://auth.thaiha.website
       resourceserver:
         jwt:
-          issuer-uri: http://127.0.0.1:9000
+          issuer-uri: http://auth.thaiha.website
   cloud:
     gateway:
       server:
@@ -38,7 +38,7 @@ spring:
           enabled: true
           httpclient:
             connect-timeout: 10000
-            response-timeout: 30s
+            response-timeout: 60s
             compression: false
           routes:
             - id: workflow-websocket
