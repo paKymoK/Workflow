@@ -1,49 +1,30 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.7'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.6'
 }
-
-group = 'com.takypok'
-version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
-
-repositories {
-    mavenCentral()
 }
 
 ext {
-    set('springAiVersion', '1.0.0-M3')
-}
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
-    implementation 'org.springframework.ai:spring-ai-qdrant-store-spring-boot-starter'
-    implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
-
-    // Lombok pinned for Java 21 compatibility
-    compileOnly 'org.projectlombok:lombok:1.18.34'
-    annotationProcessor 'org.projectlombok:lombok:1.18.34'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    set('springAiVersion', '1.0.0-M6')
 }
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
     }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
+    implementation 'org.springframework.ai:spring-ai-qdrant-store-spring-boot-starter'
+    implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
 }
 
 tasks.named('test') {

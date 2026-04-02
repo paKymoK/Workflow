@@ -19,7 +19,8 @@ public class AssistantService {
 
   public AnswerResponse ask(String question) {
     // Retrieve relevant chunks first so we can return sources
-    List<Document> docs = vectorStore.similaritySearch(SearchRequest.query(question).withTopK(4));
+    List<Document> docs =
+        vectorStore.similaritySearch(SearchRequest.builder().query(question).topK(4).build());
 
     List<String> sources =
         docs.stream()
@@ -32,7 +33,8 @@ public class AssistantService {
         chatClient
             .prompt()
             .advisors(
-                new QuestionAnswerAdvisor(vectorStore, SearchRequest.query(question).withTopK(4)))
+                new QuestionAnswerAdvisor(
+                    vectorStore, SearchRequest.builder().query(question).topK(4).build()))
             .user(question)
             .call()
             .content();

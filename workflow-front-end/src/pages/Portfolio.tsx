@@ -5,7 +5,8 @@ import { useTheme } from "../context/useTheme";
 import { SunOutlined, MoonOutlined } from "@ant-design/icons";
 import { useFont } from "../context/useFont";
 
-const PARTICLE_COLORS = ["#00CFFF", "#48CAE4", "#90E0EF", "#ADE8F4", "#00F5C4"];
+const PARTICLE_COLORS_DARK  = ["#00CFFF", "#48CAE4", "#90E0EF", "#ADE8F4", "#00F5C4"];
+const PARTICLE_COLORS_LIGHT = ["#0055AA", "#0055AA", "#0055AA", "#0055AA", "#0055AA"];
 
 const PROJECTS = [
   {
@@ -35,12 +36,12 @@ const PROJECTS = [
   {
     id: "003", title: "C-Ticket", tag: "Jira Plugin", year: "JUN 2024 — NOV 2024",
     colorClass: "pf-c-yellow",
-    desc: "Developed a custom Jira Server plugin to extend and tailor the platform's workflow capabilities for internal business needs. The plugin enables finance team members to submit and manage paperwork through a structured, custom workflow integrated directly into Jira.",
-    techStack: ["Java", "Spring Core", "Javascript", "JQuery", "Jira Server"],
+    desc: "Developed an internal web-based ticketing system designed to streamline the workflow of the company's application support team. The platform allows users to submit support requests and automatically calculates SLA in real time, helping the support team prioritize and respond to tickets efficiently",
+    techStack: ["Java", "Spring Boot", "Javascript", "Reactjs"],
     responsibilities: [
-      "Responsible for full-stack development, including backend logic in Java, frontend customization in JavaScript",
-      "REST API integration to ensure smooth communication between services",
-      "Built and maintained service follow workflow of Finance Team",
+      "Responsible for full-stack development, including building the frontend with React.js,",
+      "Implementing backend services with Spring Boot",
+      "Leveraging WebSocket for real-time SLA updates and notifications via REST API",
     ],
   },
   {
@@ -135,6 +136,11 @@ export default function Portfolio() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const COLORS     = isDark ? PARTICLE_COLORS_DARK : PARTICLE_COLORS_LIGHT;
+    const ringAlpha  = isDark ? 0.55 : 0.82;
+    const dotAlpha   = isDark ? 0.80 : 0.95;
+    const lineWidth  = isDark ? 1.2  : 2.0;
+
     type Dot = { x: number; y: number; r: number; color: string; vx: number; vy: number };
     let dots: Dot[] = [];
 
@@ -145,7 +151,7 @@ export default function Portfolio() {
         x:     Math.random() * canvas.width,
         y:     Math.random() * canvas.height,
         r:     Math.random() * 6 + 3,
-        color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
         vx:    (Math.random() - 0.5) * 0.2,
         vy:    -(Math.random() * 0.4 + 0.1), // bubbles rise upward
       }));
@@ -168,14 +174,14 @@ export default function Portfolio() {
       Object.entries(byColor).forEach(([color, group]) => {
         ctx.strokeStyle = color;
         ctx.shadowColor = color;
-        ctx.lineWidth   = 1.2;
+        ctx.lineWidth   = lineWidth;
         group.forEach((d) => {
-          ctx.globalAlpha = 0.55;
+          ctx.globalAlpha = ringAlpha;
           ctx.beginPath();
           ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
           ctx.stroke();
           // Inner highlight — tiny bright dot at top-left of bubble
-          ctx.globalAlpha = 0.8;
+          ctx.globalAlpha = dotAlpha;
           ctx.beginPath();
           ctx.arc(d.x - d.r * 0.3, d.y - d.r * 0.3, d.r * 0.18, 0, Math.PI * 2);
           ctx.fillStyle = color;
@@ -198,7 +204,7 @@ export default function Portfolio() {
       clearTimeout(resizeTimer);
       cancelAnimationFrame(animRef.current);
     };
-  }, []);
+  }, [isDark]);
 
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });

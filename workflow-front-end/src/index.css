@@ -18,9 +18,9 @@
   --neon-yellow: #0066BB;
   --neon-pink: #C8455E;
   --neon-cyan: #00897B;
-  --black: #E0F4FF;
-  --dark: #F0FAFF;
-  --darker: #D6EEFF;
+  --black: #DDE1E7;
+  --dark: #E8EAED;
+  --darker: #CDD1D8;
   --white: #0A2540;
   --grid-color: rgba(0, 102, 187, 0.01);
   --text-muted: rgba(10, 37, 64, 0.4);
@@ -209,7 +209,7 @@ input:focus-within ~ .focus-bar { width: 100%; }
 [data-theme="light"] .login-left-panel { color: rgba(240, 250, 255, 0.95); }
 [data-theme="light"] .login-left-panel .panel-muted { color: rgba(240, 250, 255, 0.6); }
 [data-theme="light"] .login-left-panel .panel-stat-border { border-color: rgba(240, 250, 255, 0.2); }
-[data-theme="light"] .pf-ticker-inner span { color: #E0F4FF; }
+[data-theme="light"] .pf-ticker-inner span { color: #DDE1E7; }
 
 /* ── Login page specific ─────────────────────────────── */
 .login-slash-accent {
@@ -339,7 +339,7 @@ input:focus-within ~ .focus-bar { width: 100%; }
   --pf-yellow: #0055AA;
   --pf-cyan:   #0088BB;
   --pf-orange: #C03050;
-  --pf-bg:     #E0F4FF;
+  --pf-bg:     #DDE1E7;
   --pf-fg:     #0A2540;
   --pf-border: rgba(0, 85, 170, 0.15);
   --pf-muted:  rgba(10, 37, 64, 0.2);
@@ -1073,4 +1073,43 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   .pf-about-grid  { grid-template-columns: 1fr; gap: 32px; }
   .pf-footer      { flex-direction: column; gap: 8px; }
   .pf-hero-stats  { gap: 28px; }
+  /* Project row: push year below title on tablet */
+  .pf-project-year { font-size: 10px; }
+  /* Expand desc max-height so content isn't cut off when text wraps */
+  .pf-project-desc-open { max-height: 400px !important; }
+}
+
+@media (max-width: 480px) {
+  /* Nav: wrap into two rows on small screens */
+  .pf-nav { flex-wrap: wrap; gap: 12px; padding: 14px 16px; }
+  .pf-nav-links { gap: 14px; flex-wrap: wrap; }
+  .pf-nav-link { font-size: 10px; letter-spacing: 1px; }
+
+  /* Hero */
+  .pf-hero, .pf-section, .pf-contact { padding-left: 16px; padding-right: 16px; }
+  .pf-hero { padding-top: 48px; padding-bottom: 40px; }
+  .pf-hero-btns { flex-direction: column; gap: 12px; }
+  .pf-btn-primary, .pf-btn-outline { width: 100%; text-align: center; }
+  .pf-hero-stats { gap: 20px; }
+  .pf-stat-num { font-size: 38px; }
+
+  /* Project row: stack year below the info block */
+  .pf-project-row { flex-wrap: wrap; gap: 12px; }
+  .pf-project-info { width: 100%; order: 2; }
+  .pf-project-num  { order: 1; }
+  .pf-project-year {
+    order: 3;
+    width: 100%;
+    white-space: normal;
+    padding-left: 44px; /* align with title (num col width + gap) */
+    margin-top: -4px;
+    font-size: 10px;
+  }
+  .pf-project-toggle { order: 4; margin-left: auto; }
+
+  /* Expand desc max-height for narrow screens */
+  .pf-project-desc-open { max-height: 600px !important; }
+
+  /* Section label: stack vertically */
+  .pf-section-label { flex-direction: column; gap: 4px; }
 }
