@@ -1,5 +1,6 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
+import ChatWidget from "./ChatWidget";
 import BubbleBackground from "./BubbleBackground";
 import {
   MenuFoldOutlined,
@@ -214,6 +215,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </Layout>
       </Layout>
+      <ChatWidget />
     </App>
   );
 }

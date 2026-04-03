@@ -27,10 +27,10 @@ spring:
             client-name: gateway-service-oidc
         provider:
           gateway-service:
-            issuer-uri: http://auth.thaiha.website
+            issuer-uri: http://127.0.0.1:9000
       resourceserver:
         jwt:
-          issuer-uri: http://auth.thaiha.website
+          issuer-uri: http://127.0.0.1:9000
   cloud:
     gateway:
       server:
@@ -65,6 +65,12 @@ spring:
                 - Path=/media-service/**
               filters:
                 - RewritePath=/media-service/(?<segment>.*), /media/${segment}
+            - id: chatbot
+              uri: lb://chat-service
+              predicates:
+                - Path=/chat-service/**
+              filters:
+                - RewritePath=/chat-service/(?<segment>.*), /chat/${segment}
 
 logging:
   level:

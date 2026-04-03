@@ -1,6 +1,13 @@
+server:
+  port: 8083
+
 spring:
   application:
     name: chat-service
+
+  mvc:
+    servlet:
+      path: /chat
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -17,8 +24,13 @@ spring:
         port: 6334
         collection-name: crm_vi
         initialize-schema: true   # auto-creates collection on first run
-server:
-  port: 8083
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://127.0.0.1:8761/eureka}
+  instance:
+    prefer-ip-address: true
 
 logging:
   level:
