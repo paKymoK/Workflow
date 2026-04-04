@@ -1,4 +1,7 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { useTheme } from "../context/useTheme";
+import { useFont } from "../context/useFont";
+import BubbleBackground from "../components/BubbleBackground";
 
 interface DiaryPage {
   id: number;
@@ -8,38 +11,59 @@ interface DiaryPage {
   description: string;
 }
 
-const initPages = (): DiaryPage[] => {
-  try {
-    const saved = localStorage.getItem("diary-pages");
-    if (saved) return JSON.parse(saved);
-  } catch { /* ignore */ }
-  return Array.from({ length: 4 }, (_, i) => ({
-    id: i + 1,
+const TAB_KEYS  = ["diary-tab-0", "diary-tab-1", "diary-tab-2"];
+const TAB_ICONS = ["📒", "🌟", "💭"];
+
+const makeDefaultPages = (n: number): DiaryPage[] =>
+  Array.from({ length: n }, (_, i) => ({
+    id: Date.now() + i,
     date: new Date(Date.now() - i * 86400000).toISOString().slice(0, 10),
-    title: `ENTRY_${String(i + 1).padStart(3, "0")}`,
+    title: `Entry ${String(i + 1).padStart(3, "0")}`,
     image: null,
     description: "",
   }));
-};
+
+const initAllTabs = (): DiaryPage[][] =>
+  TAB_KEYS.map((key, idx) => {
+    try {
+      if (idx === 0 && !localStorage.getItem(key)) {
+        const legacy = localStorage.getItem("diary-pages");
+        if (legacy) { localStorage.setItem(key, legacy); return JSON.parse(legacy); }
+      }
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved);
+    } catch { /* ignore */ }
+    return makeDefaultPages(idx === 0 ? 4 : 2);
+  });
 
 export default function Diary() {
-  const [pages, setPages] = useState<DiaryPage[]>(initPages);
-  const [spread, setSpread] = useState(0);
-  const [flipping, setFlipping] = useState(false);
-  const [flipDir, setFlipDir] = useState<"next" | "prev">("next");
-  const [editing, setEditing] = useState<"left" | "right" | null>(null);
-  const leftFileRef = useRef<HTMLInputElement>(null);
-  const rightFileRef = useRef<HTMLInputElement>(null);
+  const { isDark, toggleTheme } = useTheme();
+  const { isCustomFont, toggleFont } = useFont();
 
+  const [allPages, setAllPages] = useState<DiaryPage[][]>(initAllTabs);
+  const [activeTab, setActiveTab] = useState(0);
+  const [spreads, setSpreads]     = useState([0, 0, 0]);
+  const [flipping, setFlipping]   = useState(false);
+  const [flipDir, setFlipDir]     = useState<"next" | "prev">("next");
+
+  const pages        = allPages[activeTab];
+  const spread       = spreads[activeTab];
   const totalSpreads = Math.ceil(pages.length / 2);
-  const leftIdx = spread * 2;
-  const rightIdx = spread * 2 + 1;
-  const leftPage = pages[leftIdx] ?? null;
-  const rightPage = pages[rightIdx] ?? null;
+  const leftIdx      = spread * 2;
+  const rightIdx     = spread * 2 + 1;
+  const leftPage     = pages[leftIdx]  ?? null;
+  const rightPage    = pages[rightIdx] ?? null;
 
-  const savePages = (updated: DiaryPage[]) => {
-    setPages(updated);
-    localStorage.setItem("diary-pages", JSON.stringify(updated));
+  const setSpread = (s: number) => {
+    const next = [...spreads];
+    next[activeTab] = s;
+    setSpreads(next);
+  };
+
+  const switchTab = (tab: number) => {
+    if (tab === activeTab) return;
+    setFlipping(false);
+    setActiveTab(tab);
   };
 
   const flip = (dir: "next" | "prev") => {
@@ -48,120 +72,151 @@ export default function Diary() {
     if (dir === "prev" && spread <= 0) return;
     setFlipDir(dir);
     setFlipping(true);
-    setEditing(null);
-    setTimeout(() => setSpread((s) => s + (dir === "next" ? 1 : -1)), 320);
+    setTimeout(() => setSpread(spread + (dir === "next" ? 1 : -1)), 320);
     setTimeout(() => setFlipping(false), 700);
-  };
-
-  const handleImage = (side: "left" | "right") => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const idx = side === "left" ? leftIdx : rightIdx;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const updated = [...pages];
-      updated[idx] = { ...updated[idx], image: ev.target?.result as string };
-      savePages(updated);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  };
-
-  const handleDesc = (side: "left" | "right", val: string) => {
-    const idx = side === "left" ? leftIdx : rightIdx;
-    const updated = [...pages];
-    updated[idx] = { ...updated[idx], description: val };
-    savePages(updated);
   };
 
   const addPage = () => {
     const newPage: DiaryPage = {
       id: Date.now(),
       date: new Date().toISOString().slice(0, 10),
-      title: `ENTRY_${String(pages.length + 1).padStart(3, "0")}`,
+      title: `Entry ${String(pages.length + 1).padStart(3, "0")}`,
       image: null,
       description: "",
     };
     const updated = [...pages, newPage];
-    savePages(updated);
+    const next = [...allPages];
+    next[activeTab] = updated;
+    setAllPages(next);
+    localStorage.setItem(TAB_KEYS[activeTab], JSON.stringify(updated));
     const newTotalSpreads = Math.ceil(updated.length / 2);
     if (newTotalSpreads > totalSpreads) {
       setFlipDir("next");
       setFlipping(true);
-      setEditing(null);
       setTimeout(() => setSpread(newTotalSpreads - 1), 320);
       setTimeout(() => setFlipping(false), 700);
     }
   };
 
-  const renderPage = (page: DiaryPage | null, side: "left" | "right", pageNum: number) => {
-    const fileRef = side === "left" ? leftFileRef : rightFileRef;
-    const isEditing = editing === side;
-
+  const renderLeftPage = (page: DiaryPage | null, pageNum: number) => {
     if (!page) {
       return (
-        <div className={`diary-page diary-page-${side}`}>
-          <div className="diary-rules" />
-          <div className="diary-page-blank">
-            <span className="font-bebas text-[28px] tracking-[0.3em] text-[rgba(255,229,0,0.05)]">BLANK</span>
-          </div>
+        <div className="diary-page diary-page-left">
+          <div className="diary-corner diary-corner-tl" />
+          <div className="diary-corner diary-corner-tr" />
+          <div className="diary-corner diary-corner-bl" />
+          <div className="diary-corner diary-corner-br" />
+          <div className="diary-page-blank"><span className="diary-blank-text">BLANK</span></div>
+          <div className="diary-page-foot"><span className="diary-page-num">— {pageNum} —</span></div>
         </div>
       );
     }
 
     return (
-      <div className={`diary-page diary-page-${side}`}>
-        <div className="diary-rules" />
+      <div className="diary-page diary-page-left">
+        <div className="diary-corner diary-corner-tl" />
+        <div className="diary-corner diary-corner-tr" />
+        <div className="diary-corner diary-corner-bl" />
+        <div className="diary-corner diary-corner-br" />
 
-        <div className="diary-page-head">
-          <span className="font-mono-tech text-[10px] text-[var(--neon-cyan)] tracking-[0.12em]">{page.date}</span>
-          <span className="font-bebas text-[18px] neon-text-yellow tracking-[0.12em] leading-none">{page.title}</span>
-          <span className="font-mono-tech text-[9px] text-[rgba(240,240,240,0.22)] tracking-[0.08em]">#{String(pageNum).padStart(3, "0")}</span>
+        <div className="diary-scroll-banner">
+          <span className="diary-scroll-title-text">{page.title}</span>
+        </div>
+
+        <div className="diary-img-book">
+          <div className="diary-img-bracket diary-img-bracket-tl" />
+          <div className="diary-img-bracket diary-img-bracket-tr" />
+          <div className="diary-img-bracket diary-img-bracket-bl" />
+          <div className="diary-img-bracket diary-img-bracket-br" />
+          {page.image ? (
+            <img src={page.image} alt="entry" className="diary-photo" />
+          ) : (
+            <div className="diary-img-placeholder">
+              <span className="diary-img-ph-icon">✦</span>
+              <span className="diary-img-ph-hint">No image</span>
+            </div>
+          )}
+        </div>
+
+        <div className="diary-left-desc">
+          <p className={`diary-text${!page.description ? " diary-text--empty" : ""}`}>
+            {page.description || "No entry written yet..."}
+          </p>
+        </div>
+
+        <div className="diary-page-foot">
+          <span className="diary-page-num">— {pageNum} —</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRightPage = (page: DiaryPage | null, pageNum: number) => {
+    if (!page) {
+      return (
+        <div className="diary-page diary-page-right">
+          <div className="diary-corner diary-corner-tl" />
+          <div className="diary-corner diary-corner-tr" />
+          <div className="diary-corner diary-corner-bl" />
+          <div className="diary-corner diary-corner-br" />
+          <div className="diary-page-blank"><span className="diary-blank-text">BLANK</span></div>
+          <div className="diary-page-foot"><span className="diary-page-num">— {pageNum} —</span></div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="diary-page diary-page-right">
+        <div className="diary-corner diary-corner-tl" />
+        <div className="diary-corner diary-corner-tr" />
+        <div className="diary-corner diary-corner-bl" />
+        <div className="diary-corner diary-corner-br" />
+
+        <div className="diary-badges">
+          <div className="diary-badge">
+            <div className="diary-badge-circle">📅</div>
+            <span className="diary-badge-label">{page.date}</span>
+          </div>
+          <div className="diary-badge">
+            <div className="diary-badge-circle">✦</div>
+            <span className="diary-badge-label">Entry {pageNum}</span>
+          </div>
+          <div className="diary-badge">
+            <div className="diary-badge-circle">📖</div>
+            <span className="diary-badge-label">Personal</span>
+          </div>
         </div>
 
         <div className="diary-sep" />
 
-        <div className="diary-body">
-          <div
-            className={`diary-img-frame${isEditing ? " diary-img-frame--edit" : ""}`}
-            onClick={() => isEditing && fileRef.current?.click()}
-          >
-            {page.image ? (
-              <>
+        <div className="diary-right-body">
+          <div className="diary-right-img-col">
+            <div className="diary-img-small">
+              {page.image ? (
                 <img src={page.image} alt="entry" className="diary-photo" />
-                {isEditing && <div className="diary-img-overlay">CHANGE ◈</div>}
-              </>
-            ) : (
-              <div className={`diary-img-empty${isEditing ? " diary-img-empty--edit" : ""}`}>
-                <span className="diary-img-icon">◈</span>
-                <span className="diary-img-hint">{isEditing ? "CLICK TO ADD" : "NO IMAGE"}</span>
-              </div>
-            )}
+              ) : (
+                <div className="diary-img-placeholder">
+                  <span className="diary-img-ph-icon diary-img-ph-icon--sm">✦</span>
+                </div>
+              )}
+            </div>
+            <span className="diary-img-label">{page.title}</span>
           </div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage(side)} />
 
-          <div className="diary-desc">
-            {isEditing ? (
-              <textarea
-                autoFocus
-                className="diary-textarea"
-                value={page.description}
-                onChange={(e) => handleDesc(side, e.target.value)}
-                placeholder="// WRITE YOUR ENTRY HERE..."
-              />
-            ) : (
-              <p className={`diary-text${!page.description ? " diary-text--empty" : ""}`}>
-                {page.description || "// EMPTY ENTRY"}
-              </p>
-            )}
+          <div className="diary-right-text-col">
+            <div className="diary-steps">
+              {page.description
+                ? page.description.split("\n").filter(Boolean).map((line, i) => (
+                    <p key={i} className="diary-step">{i + 1}. {line}</p>
+                  ))
+                : <p className="diary-step diary-text--empty">No entry written yet...</p>
+              }
+            </div>
           </div>
         </div>
 
         <div className="diary-page-foot">
-          <button className="diary-edit-btn" onClick={() => setEditing(isEditing ? null : side)}>
-            {isEditing ? "◀ DONE" : "✎ EDIT"}
-          </button>
-          {side === "right" && <div className="diary-fold" />}
+          <span className="diary-page-num">— {pageNum} —</span>
         </div>
       </div>
     );
@@ -169,42 +224,57 @@ export default function Diary() {
 
   return (
     <div className="diary-root">
+      <BubbleBackground />
       <div className="fixed inset-0 bg-neon-grid z-0 pointer-events-none" />
       <div className="scanlines-overlay" />
 
-      <header className="diary-header">
-        <span className="font-mono-tech text-[10px] text-[var(--neon-cyan)] tracking-[0.3em]">◈ PERSONAL LOG</span>
-        <h1 className="font-bebas text-[clamp(28px,5vw,52px)] neon-text-yellow tracking-[0.25em] m-0 leading-none">
-          DIARY
-        </h1>
-        <span className="font-mono-tech text-[10px] text-[rgba(240,240,240,0.3)] tracking-[0.2em]">
-          // {pages.length} ENTRIES
-        </span>
-      </header>
+      <div className="diary-controls">
+        <button className="diary-ctrl-btn" onClick={toggleFont} title={isCustomFont ? "Default Font" : "Custom Font"}>
+          Aa
+        </button>
+        <button className="diary-ctrl-btn" onClick={toggleTheme} title={isDark ? "Light Mode" : "Dark Mode"}>
+          {isDark ? "☀" : "☾"}
+        </button>
+      </div>
 
-      <div className="diary-perspective">
+      <div className="diary-book-outer">
+        <div className="diary-strap diary-strap-left"><div className="diary-strap-clasp" /></div>
+        <div className="diary-strap diary-strap-right"><div className="diary-strap-clasp" /></div>
+
+        <div className="diary-tabs">
+          {TAB_ICONS.map((icon, i) => (
+            <button
+              key={i}
+              className={`diary-tab diary-tab--${i}${activeTab === i ? " diary-tab--active" : ""}`}
+              onClick={() => switchTab(i)}
+              title={`Tab ${i + 1}`}
+            >
+              <span className="diary-tab-icon">{icon}</span>
+            </button>
+          ))}
+        </div>
+
         <div className={`diary-book${flipping ? ` diary-flip-${flipDir}` : ""}`}>
-          {renderPage(leftPage, "left", leftIdx + 1)}
+          {renderLeftPage(leftPage, leftIdx + 1)}
 
           <div className="diary-spine">
+            <div className="diary-spine-medallion">✦</div>
             <span className="diary-spine-label">DIARY</span>
           </div>
 
-          {renderPage(rightPage, "right", rightIdx + 1)}
+          {renderRightPage(rightPage, rightIdx + 1)}
         </div>
       </div>
 
       <nav className="diary-nav">
         <button className="diary-nav-btn" onClick={() => flip("prev")} disabled={spread === 0 || flipping}>
-          ◀ PREV
+          ◀ Prev Page
         </button>
-        <span className="font-mono-tech text-[11px] text-[rgba(240,240,240,0.35)] tracking-[0.2em]">
-          {spread + 1} / {totalSpreads}
-        </span>
+        <span className="diary-nav-counter">{spread + 1} / {totalSpreads}</span>
         <button className="diary-nav-btn" onClick={() => flip("next")} disabled={spread >= totalSpreads - 1 || flipping}>
-          NEXT ▶
+          Next Page ▶
         </button>
-        <button className="diary-add-btn" onClick={addPage}>＋ NEW PAGE</button>
+        <button className="diary-add-btn" onClick={addPage}>＋ New Entry</button>
       </nav>
     </div>
   );

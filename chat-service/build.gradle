@@ -21,7 +21,7 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
     implementation 'org.springframework.ai:spring-ai-qdrant-store-spring-boot-starter'
     implementation 'org.springframework.ai:spring-ai-pdf-document-reader'

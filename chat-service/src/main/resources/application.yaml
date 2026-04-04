@@ -5,9 +5,8 @@ spring:
   application:
     name: chat-service
 
-  mvc:
-    servlet:
-      path: /chat
+  webflux:
+    base-path: /chat
   ai:
     ollama:
       base-url: http://localhost:11434
