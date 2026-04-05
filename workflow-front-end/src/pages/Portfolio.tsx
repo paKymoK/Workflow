@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.jpeg";
 import { useTheme } from "../context/useTheme";
-import { SunOutlined, MoonOutlined } from "@ant-design/icons";
+import { SunOutlined, MoonOutlined, GithubOutlined, FacebookOutlined } from "@ant-design/icons";
 import { useFont } from "../context/useFont";
 
 const PARTICLE_COLORS_DARK  = ["#00CFFF", "#48CAE4", "#90E0EF", "#ADE8F4", "#00F5C4"];
@@ -66,6 +66,18 @@ const PROJECTS = [
       "Third-party API integration with the Autostore system to ensure accurate and reliable warehouse operations",
     ],
   },
+  {
+    id: "006", title: "AION", tag: "WEB APP", year: "DEC 2025 — MAR 2026",
+    colorClass: "pf-c-pink",
+    desc: "Developed the frontend of HDBank internal back-office system designed to calculate and track employee KPIs. The system enables managers to monitor individual performance by displaying KPI completion percentages over a defined period. Responsible for building and maintaining the user interface using React.js, ensuring an intuitive and responsive experience for end users.",
+    techStack: ["React.js", "TypeScript", "Ant Design", "REST API"],
+    responsibilities: [
+      "Built and maintained the KPI tracking dashboard UI",
+      "Integrated REST APIs for real-time performance data",
+      "Collaborated with backend team to define API contracts",
+      "Ensured responsive design across screen sizes",
+    ],
+  },
 ];
 
 const SKILLS = [
@@ -84,10 +96,8 @@ const SKILLS = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "GH", colorClass: "pf-social-green",  href: "#" },
-  { label: "TW", colorClass: "pf-social-cyan",   href: "#" },
-  { label: "LI", colorClass: "pf-social-pink",   href: "#" },
-  { label: "DR", colorClass: "pf-social-yellow", href: "#" },
+  { label: "GH", icon: <GithubOutlined />,   colorClass: "pf-social-green",  href: "https://github.com/paKymoK" },
+  { label: "FB", icon: <FacebookOutlined />, colorClass: "pf-social-cyan",   href: "https://web.facebook.com/PsionicPlasma" },
 ];
 
 const STATS = [
@@ -372,11 +382,6 @@ export default function Portfolio() {
                 SIX YEARS IN THE INDUSTRY, I'VE WORKED WITH AGENCIES ACROSS VIETNAM AND KOREA.<br /><br />
                 IF YOUR PROJECT NEEDS TO STAND OUT — NOT JUST SHOW UP — LET'S TALK.
               </p>
-              <div className="pf-social-links">
-                {SOCIAL_LINKS.map(({ label, colorClass, href }) => (
-                  <a key={label} href={href} className={`pf-social-link ${colorClass}`}>{label}</a>
-                ))}
-              </div>
             </div>
           </div>
         </section>
@@ -389,6 +394,12 @@ export default function Portfolio() {
             <span className="pf-blink-accent">SOMETHING<span className="pf-blink-cursor">_</span></span>
           </h2>
           <a href="mailto:thaimeo0210@gmail.com" className="pf-contact-email">THAIMEO0210@GMAIL.COM</a>
+          <div className="pf-social-links">
+            {SOCIAL_LINKS.map(({ label, icon, colorClass, href }) => (
+              <a key={label} href={href} className={`pf-social-link ${colorClass}`}>{icon}</a>
+            ))}
+          </div>
+          <div className="pf-contact-phone">+84 916320407</div>
         </section>
 
         {/* ── Footer ──────────────────────────────────── */}

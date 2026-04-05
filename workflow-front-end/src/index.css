@@ -666,6 +666,12 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   padding-bottom: 4px; cursor: none;
 }
 .pf-contact-email:hover { text-shadow: 0 0 20px var(--pf-cyan); }
+.pf-contact-phone {
+  margin-top: 16px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(16px, 2.5vw, 28px); letter-spacing: 3px;
+  color: var(--pf-text);
+}
 
 /* ── Footer ──────────────────────────────────────────── */
 .pf-footer {
