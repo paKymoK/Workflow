@@ -10,7 +10,7 @@ const PARTICLE_COLORS_LIGHT = ["#0055AA", "#0055AA", "#0055AA", "#0055AA", "#005
 
 const PROJECTS = [
   {
-    id: "001", title: "AION", tag: "WEB APP", year: "JAN 2025 — MAR 2025",
+    id: "001", title: "AION", tag: "WEB APP", year: "DEC 2025 — MAR 2026",
     colorClass: "pf-c-pink",
     desc: "Developed the frontend of HDBank internal back-office system designed to calculate and track employee KPIs. The system enables managers to monitor individual performance by displaying KPI completion percentages over a defined period. Responsible for building and maintaining the user interface using React.js, ensuring an intuitive and responsive experience for end users.",
     techStack: ["React.js", "TypeScript", "Ant Design", "REST API"],
@@ -22,7 +22,7 @@ const PROJECTS = [
     ],
   },
   {
-    id: "002", title: "HDBANK", tag: "MOBILE APP", year: "APR 2025 — PRESENT",
+    id: "002", title: "HDBANK", tag: "MOBILE APP", year: "DEC 2024 - NOV 2025",
     colorClass: "pf-c-green",
     desc: "Contributed to the development of a mobile banking application built with React Native and a Spring Boot backend using WebFlux for reactive, high-performance processing.",
     techStack: ["Java Spring Boot", "Webflux", "React Native", "TypeScript", "REST API"],
@@ -34,7 +34,7 @@ const PROJECTS = [
     ],
   },
   {
-    id: "003", title: "C-Ticket", tag: "Jira Plugin", year: "JUN 2024 — NOV 2024",
+    id: "003", title: "C-Ticket", tag: "WEB APP", year: "JUN 2024 — NOV 2024",
     colorClass: "pf-c-yellow",
     desc: "Developed an internal web-based ticketing system designed to streamline the workflow of the company's application support team. The platform allows users to submit support requests and automatically calculates SLA in real time, helping the support team prioritize and respond to tickets efficiently",
     techStack: ["Java", "Spring Boot", "Javascript", "Reactjs"],
@@ -45,7 +45,7 @@ const PROJECTS = [
     ],
   },
   {
-    id: "004", title: "C-Now", tag: "Jira Plugin", year: "JUN 2024 — NOV 2024",
+    id: "004", title: "C-Now", tag: "JIRA PLUGIN", year: "SEP 2023 — NOV 2024",
     colorClass: "pf-c-cyan",
     desc: "Developed a custom Jira Server plugin to extend and tailor the platform's workflow capabilities for internal business needs. The plugin enables finance team members to submit and manage paperwork through a structured, custom workflow integrated directly into Jira.",
     techStack: ["Java", "Spring Core", "Javascript", "JQuery", "Jira Server"],
@@ -56,15 +56,14 @@ const PROJECTS = [
     ],
   },
   {
-    id: "005", title: "VOID.DASH", tag: "DASHBOARD", year: "AUG 2023 — DEC 2023",
+    id: "005", title: "Warehouse Control System", tag: "WCS", year: "MAY 2022 - AUG 2023",
     colorClass: "pf-c-orange",
-    desc: "Analytics dashboard for indie devs. Real-time WebSocket data, dark-mode-first design, and a brutalist data-viz library built from scratch.",
+    desc: "Developed the backend of a Warehouse Control System built on the Windows platform using the Eclipse RCP framework. The system manages the inbound and outbound flow of warehouse items and provides real-time visibility into current inventory levels through integration with Autostore, a third-party automated warehouse solution.",
     techStack: ["React.js", "Node.js", "WebSocket", "D3.js", "PostgreSQL"],
     responsibilities: [
-      "Built real-time data pipeline with WebSocket integration",
-      "Developed custom data-viz components using D3.js",
-      "Designed dark-mode-first UI system and design tokens",
-      "Set up the Node.js backend and PostgreSQL schema",
+      "Backend development including business logic implementation",
+      "Database tunning and management",
+      "Third-party API integration with the Autostore system to ensure accurate and reliable warehouse operations",
     ],
   },
 ];
