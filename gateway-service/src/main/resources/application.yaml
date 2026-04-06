@@ -71,6 +71,26 @@ spring:
                 - Path=/chat-service/**
               filters:
                 - RewritePath=/chat-service/(?<segment>.*), /chat/${segment}
+            - id: shop
+              uri: lb://shop-service
+              predicates:
+                - Path=/shop-service/**
+              filters:
+                - RewritePath=/shop-service/(?<segment>.*), /shop/${segment}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    urls:
+      - name: workflow-service
+        url: /workflow-service/docs/api-docs
+      - name: media-service
+        url: /media-service/docs/api-docs
+      - name: shop-service
+        url: /shop-service/docs/api-docs
+  api-docs:
+    path: /v3/api-docs
 
 logging:
   level:

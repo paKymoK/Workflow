@@ -6,4 +6,5 @@ include 'core-v1',
         'gateway-service',
         'auth-service',
         'media-service',
-        'chat-service'
+        'chat-service',
+        'shop-service'

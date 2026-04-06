@@ -1,0 +1,7 @@
+debezium:
+  hostname: ${DB_HOST:127.0.0.1}
+  port: ${DB_PORT:5432}
+  dbname: ${DB_SCHEMA:workflow}
+  user: ${DB_USER:postgres}
+  password: ${DB_PASSWORD:postgres}
+  prefix: ${PREFIX:topix}
