@@ -33,8 +33,8 @@ public abstract class SlaMapper {
   protected SlaSetting defaultSlaSetting() {
     return new SlaSetting(
         "Asia/Ho_Chi_Minh",
-        LocalTime.of(1, 0, 0),
-        LocalTime.of(23, 59, 0),
+        LocalTime.of(9, 0, 0),
+        LocalTime.of(18, 0, 0),
         LocalTime.of(12, 0, 0),
         LocalTime.of(13, 0, 0),
         new ArrayList<>());
