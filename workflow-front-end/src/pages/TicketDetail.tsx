@@ -1,149 +1,102 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert, Dropdown, App, Avatar, List, Row, Col, Divider } from "antd";
-import { ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined, MoreOutlined, SendOutlined } from "@ant-design/icons";
+import {
+  Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert,
+  Dropdown, App, Avatar, List, Row, Col, Divider,
+} from "antd";
+import {
+  ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
+  MoreOutlined, SendOutlined,
+} from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import type { TicketSla } from "../api/types.ts";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { fetchTicketById, pauseTicket, resumeTicket, transitionTicket, createComment, fetchComments } from "../api/ticketApi";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { wsBaseUrl } from "../api/axios.ts";
-import type { Comment } from "../api/types.ts";
 import DeadlineTag from "../components/DeadlineTag.tsx";
 import RichTextEditor from "../components/RichTextEditor.tsx";
 import dayjs from "dayjs";
+import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket } from "../hooks/useTickets";
+import { useComments, useCreateComment } from "../hooks/useComments";
+import { useState } from "react";
 
 const { Title, Text } = Typography;
 
 export default function TicketDetail() {
   const { message } = App.useApp();
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [ticket, setTicket] = useState<TicketSla | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const token = sessionStorage.getItem("access_token");
+  const { id }      = useParams<{ id: string }>();
+  const navigate    = useNavigate();
+  const token       = sessionStorage.getItem("access_token");
+
   const commentHtmlRef = useRef("");
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [commentsLoading, setCommentsLoading] = useState(false);
 
-  const loadComments = useCallback(async () => {
-    if (!id) return;
-    setCommentsLoading(true);
-    try {
-      const data = await fetchComments(id);
-      setComments(data);
-    } finally {
-      setCommentsLoading(false);
-    }
-  }, [id]);
+  // ── Queries ───────────────────────────────────────────────────────────────
+  const { data: ticket, isLoading, isFetching: refreshing, refetch } = useTicket(id);
+  const { data: comments = [], isLoading: commentsLoading }          = useComments(id);
 
-  useEffect(() => {
-    loadComments();
-  }, [loadComments]);
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const pauseMutation      = usePauseTicket();
+  const resumeMutation     = useResumeTicket();
+  const transitionMutation = useTransitionTicket();
+  const commentMutation    = useCreateComment();
 
-  const handleSubmitComment = useCallback(async () => {
-    const html = commentHtmlRef.current;
-    const isEmpty = html.replace(/<[^>]*>/g, "").trim() === "";
-    if (isEmpty) return;
-    setCommentSubmitting(true);
-    try {
-      await createComment(id!, html);
-      message.success("Comment submitted");
-      commentHtmlRef.current = "";
-      setEditorKey((k) => k + 1);
-      loadComments();
-    } catch {
-      message.error("Failed to submit comment");
-    } finally {
-      setCommentSubmitting(false);
-    }
-  }, [id, loadComments, message]);
+  const actionLoading     = pauseMutation.isPending || resumeMutation.isPending || transitionMutation.isPending;
+  const commentSubmitting = commentMutation.isPending;
 
   const handlePause = useCallback(async () => {
     if (!id) return;
-    setActionLoading(true);
     try {
-      await pauseTicket(id);
-      const data = await fetchTicketById(id);
-      setTicket(data);
+      await pauseMutation.mutateAsync(id);
     } catch {
       message.error("Failed to pause ticket");
-    } finally {
-      setActionLoading(false);
     }
-  }, [id, message]);
+  }, [id, pauseMutation, message]);
 
   const handleResume = useCallback(async () => {
     if (!id) return;
-    setActionLoading(true);
     try {
-      await resumeTicket(id);
-      const data = await fetchTicketById(id);
-      setTicket(data);
+      await resumeMutation.mutateAsync(id);
     } catch {
       message.error("Failed to resume ticket");
-    } finally {
-      setActionLoading(false);
     }
-  }, [id, message]);
+  }, [id, resumeMutation, message]);
 
   const handleTransition = useCallback(async (transitionName: string) => {
     if (!id || !ticket) return;
-    setActionLoading(true);
     try {
-      await transitionTicket(id, ticket.status.id, transitionName);
-      const data = await fetchTicketById(id);
-      setTicket(data);
+      await transitionMutation.mutateAsync({
+        ticketId: id,
+        currentStatusId: ticket.status.id,
+        transitionName,
+      });
     } catch {
       message.error("Failed to transition ticket");
-    } finally {
-      setActionLoading(false);
     }
-  }, [id, ticket, message]);
+  }, [id, ticket, transitionMutation, message]);
 
-  const loadTicket = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
+  const handleSubmitComment = useCallback(async () => {
+    const html = commentHtmlRef.current;
+    if (html.replace(/<[^>]*>/g, "").trim() === "") return;
     try {
-      const data = await fetchTicketById(id);
-      setTicket(data);
-    } catch (error) {
-      console.error("Failed to fetch ticket:", error);
-      setTicket(null);
-    } finally {
-      setLoading(false);
+      await commentMutation.mutateAsync({ ticketId: id!, content: html });
+      message.success("Comment submitted");
+      commentHtmlRef.current = "";
+      setEditorKey((k) => k + 1);
+    } catch {
+      message.error("Failed to submit comment");
     }
-  }, [id]);
+  }, [id, commentMutation, message]);
 
-  const refreshTicket = useCallback(async () => {
-    if (!id) return;
-    setRefreshing(true);
-    try {
-      const data = await fetchTicketById(id);
-      setTicket(data);
-    } catch (error) {
-      console.error("Failed to refresh ticket:", error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadTicket();
-  }, [loadTicket]);
-
+  // ── WebSocket — untouched; just call refetch() on matching push ───────────
   useEffect(() => {
     if (!id) return;
     const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
-    ws.onopen = () => { ws.send(token ?? ""); };
+    ws.onopen    = () => { ws.send(token ?? ""); };
     ws.onmessage = (event) => {
-      if (Number(event.data) === Number(id)) refreshTicket();
+      if (Number(event.data) === Number(id)) refetch();
     };
     return () => ws.close();
-  }, [id, token, refreshTicket]);
+  }, [id, token, refetch]);
 
+  // ── Derived values ────────────────────────────────────────────────────────
   const availableTransitions = useMemo(() => {
     if (!ticket?.workflow) return [];
     return ticket.workflow.transitions.filter((t) => t.from.id === ticket.status.id);
@@ -154,12 +107,9 @@ export default function TicketDetail() {
     return ticket.workflow.statuses.findIndex((s) => s.id === ticket.status.id);
   }, [ticket]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <Spin size="large" />
-      </div>
-    );
+  // ── Render guards ─────────────────────────────────────────────────────────
+  if (isLoading) {
+    return <div className="flex justify-center py-20"><Spin size="large" /></div>;
   }
 
   if (!ticket) {
@@ -173,26 +123,18 @@ export default function TicketDetail() {
     );
   }
 
-  const isPaused = ticket.sla?.isPaused;
+  const isPaused  = ticket.sla?.isPaused;
   const menuItems: MenuProps["items"] = [
     ...(!isPaused && ticket.sla ? [{
-      key: "pause",
-      label: "Pause SLA",
-      disabled: actionLoading,
-      onClick: handlePause,
+      key: "pause", label: "Pause SLA", disabled: actionLoading, onClick: handlePause,
     }] : []),
     ...(isPaused && ticket.sla ? [{
-      key: "resume",
-      label: "Resume SLA",
-      disabled: actionLoading,
-      onClick: handleResume,
+      key: "resume", label: "Resume SLA", disabled: actionLoading, onClick: handleResume,
     }] : []),
     ...(availableTransitions.length > 0 ? [
       { type: "divider" as const },
       ...availableTransitions.map((t) => ({
-        key: t.name,
-        label: t.name,
-        disabled: actionLoading,
+        key: t.name, label: t.name, disabled: actionLoading,
         onClick: () => handleTransition(t.name),
       })),
     ] : []),
@@ -202,9 +144,7 @@ export default function TicketDetail() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard")}>
-          Back
-        </Button>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard")}>Back</Button>
         <div className="flex items-center gap-2">
           {(refreshing || actionLoading) && <Spin size="small" />}
           {menuItems.length > 0 && (
@@ -218,24 +158,22 @@ export default function TicketDetail() {
       {/* Title row */}
       <div className="flex items-center gap-3 mb-4">
         <h2 className="font-bebas text-3xl tracking-[0.1em] neon-text-yellow m-0">▸ TICKET #{ticket.id}</h2>
-        <Tag color={ticket.status.color} className="!text-[13px] !py-[2px] !px-[10px]">
-          {ticket.status.name}
-        </Tag>
+        <Tag color={ticket.status.color} className="!text-[13px] !py-[2px] !px-[10px]">{ticket.status.name}</Tag>
         {ticket.sla && (
           isPaused
             ? <Tag icon={<PauseCircleOutlined />} color="orange">SLA Paused</Tag>
-            : <Tag icon={<PlayCircleOutlined />} color="green">SLA Active</Tag>
+            : <Tag icon={<PlayCircleOutlined />}  color="green">SLA Active</Tag>
         )}
       </div>
 
-      {/* Workflow — always visible, full width */}
+      {/* Workflow steps */}
       {ticket.workflow && (
         <Card className="!mb-4">
           <Steps
             size="small"
             current={currentStepIndex}
             items={ticket.workflow.statuses.map((s) => ({
-              title: <Tag color={s.color} className="!m-0">{s.name}</Tag>,
+              title:       <Tag color={s.color} className="!m-0">{s.name}</Tag>,
               description: <Text type="secondary" className="!text-[11px]">{s.group}</Text>,
             }))}
           />
@@ -246,22 +184,19 @@ export default function TicketDetail() {
       )}
 
       <Row gutter={24} align="top">
-        {/* Left column — main content */}
+        {/* Left — main content */}
         <Col xs={24} lg={16}>
-          {/* Summary */}
           <Card className="!mb-4">
             <Text strong>Summary: </Text>
             <Text className="text-[15px]">{ticket.summary}</Text>
           </Card>
 
-          {/* Description */}
           {ticket.detail?.data && (
             <Card title="Description" className="!mb-4">
               <Text>{ticket.detail.data}</Text>
             </Card>
           )}
 
-          {/* Comments */}
           <Card title={`Comments (${comments.length})`} className="!mb-4" loading={commentsLoading}>
             {comments.length === 0 && !commentsLoading ? (
               <Text type="secondary">No comments yet.</Text>
@@ -272,11 +207,7 @@ export default function TicketDetail() {
                 renderItem={(comment) => (
                   <List.Item className="!items-start !py-3 !px-0">
                     <List.Item.Meta
-                      avatar={
-                        <Avatar className="!bg-[#1677ff]">
-                          {comment.commenter.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                      }
+                      avatar={<Avatar className="!bg-[#1677ff]">{comment.commenter.name.charAt(0).toUpperCase()}</Avatar>}
                       title={<Text strong>{comment.commenter.name}</Text>}
                       description={
                         <div
@@ -291,7 +222,6 @@ export default function TicketDetail() {
             )}
           </Card>
 
-          {/* Add Comment */}
           <Card title="Add Comment">
             <RichTextEditor
               key={editorKey}
@@ -312,7 +242,7 @@ export default function TicketDetail() {
           </Card>
         </Col>
 
-        {/* Right column — metadata */}
+        {/* Right — metadata */}
         <Col xs={24} lg={8}>
           <Card>
             <Descriptions column={1} size="small" colon={false}>

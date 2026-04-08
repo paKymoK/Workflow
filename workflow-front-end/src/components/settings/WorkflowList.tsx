@@ -1,41 +1,22 @@
-import { useEffect, useState } from "react";
 import { Table, Tag, Spin } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "react-router-dom";
-import { fetchWorkflows } from "../../api/ticketApi";
 import type { Workflow, WorkflowStatus } from "../../api/types";
+import { useWorkflows } from "../../hooks/useWorkflows";
 
 export default function WorkflowList() {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchWorkflows()
-      .then(setWorkflows)
-      .finally(() => setLoading(false));
-  }, []);
+  const navigate                            = useNavigate();
+  const { data: workflows = [], isLoading } = useWorkflows();
 
   const columns: ColumnsType<Workflow> = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      width: 60,
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-    },
+    { title: "ID", dataIndex: "id", width: 60 },
+    { title: "Name", dataIndex: "name" },
     {
       title: "Statuses",
       dataIndex: "statuses",
       render: (statuses: WorkflowStatus[]) => (
         <div className="flex gap-1.5 flex-wrap">
-          {statuses.map((s) => (
-            <Tag key={s.id} color={s.color}>
-              {s.name}
-            </Tag>
-          ))}
+          {statuses.map((s) => <Tag key={s.id} color={s.color}>{s.name}</Tag>)}
         </div>
       ),
     },
@@ -57,13 +38,7 @@ export default function WorkflowList() {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="text-center py-12">
-        <Spin />
-      </div>
-    );
-  }
+  if (isLoading) return <div className="text-center py-12"><Spin /></div>;
 
   return (
     <Table

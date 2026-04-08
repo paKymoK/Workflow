@@ -2,37 +2,25 @@ import { useEffect, useState } from "react";
 import { Card, DatePicker, Spin, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from "recharts";
-import { fetchOverviewStatistic, fetchTicketByIssueType, fetchSlaByStatus, fetchSlaByPriority } from "../api/ticketApi.ts";
 import { wsBaseUrl } from "../api/axios.ts";
-import type { StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution } from "../api/types.ts";
+import type { SlaPriorityDistribution } from "../api/types.ts";
+import {
+  useOverviewStatistic,
+  useTicketByIssueType,
+  useSlaByStatus,
+  useSlaByPriority,
+} from "../hooks/useStatistics";
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 type DateRange = [Dayjs, Dayjs];
-
 const defaultRange = (): DateRange => [dayjs().subtract(6, "day"), dayjs()];
 
-const DEFAULT_COLORS = [
-  "#FFE500",
-  "#FF2D6B",
-  "#00F5FF",
-  "#FF6B35",
-  "#A855F7",
-  "#22D3EE",
-];
+const DEFAULT_COLORS = ["#FFE500", "#FF2D6B", "#00F5FF", "#FF6B35", "#A855F7", "#22D3EE"];
 
 const EmptyPlaceholder = () => (
   <div className="text-center py-12">
@@ -42,74 +30,40 @@ const EmptyPlaceholder = () => (
 );
 
 export default function Home() {
-  const [stat, setStat] = useState<StatisticItem[] | null>(null);
-  const [issueTypeStat, setIssueTypeStat] = useState<TicketByIssueType[] | null>(null);
-  const [slaStatusStat, setSlaStatusStat] = useState<SlaStatusDistribution[] | null>(null);
-  const [slaPriorityStat, setSlaPriorityStat] = useState<SlaPriorityDistribution[] | null>(null);
-  const [loadingStat, setLoadingStat] = useState(true);
-  const [loadingIssue, setLoadingIssue] = useState(true);
-  const [loadingSlaStatus, setLoadingSlaStatus] = useState(true);
-  const [loadingSlaPriority, setLoadingSlaPriority] = useState(true);
-  const [statRange, setStatRange] = useState<DateRange>(defaultRange);
-  const [issueRange, setIssueRange] = useState<DateRange>(defaultRange);
-  const [slaStatusRange, setSlaStatusRange] = useState<DateRange>(defaultRange);
+  // ── Date range state (one per chart) ─────────────────────────────────────
+  const [statRange,        setStatRange]        = useState<DateRange>(defaultRange);
+  const [issueRange,       setIssueRange]       = useState<DateRange>(defaultRange);
+  const [slaStatusRange,   setSlaStatusRange]   = useState<DateRange>(defaultRange);
   const [slaPriorityRange, setSlaPriorityRange] = useState<DateRange>(defaultRange);
+
+  // Incrementing this triggers a refetch for all charts (used by WebSocket handler below).
+  // It is included in the query keys so React Query detects the change automatically.
   const [refetchKey, setRefetchKey] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-    fetchOverviewStatistic(
-      statRange[0].startOf("day").toISOString(),
-      statRange[1].endOf("day").toISOString(),
-    ).then((data) => { if (active) { setStat(data); setLoadingStat(false); } });
-    return () => { active = false; };
-  }, [statRange, refetchKey]);
+  // ── Helpers to build ISO date strings ────────────────────────────────────
+  const iso = (d: Dayjs, end = false) =>
+    end ? d.endOf("day").toISOString() : d.startOf("day").toISOString();
 
-  useEffect(() => {
-    let active = true;
-    fetchTicketByIssueType(
-      issueRange[0].startOf("day").toISOString(),
-      issueRange[1].endOf("day").toISOString(),
-    ).then((data) => { if (active) { setIssueTypeStat(data); setLoadingIssue(false); } });
-    return () => { active = false; };
-  }, [issueRange, refetchKey]);
+  // ── React Query hooks ─────────────────────────────────────────────────────
+  const { data: stat,            isLoading: loadingStat }         = useOverviewStatistic(   iso(statRange[0]),        iso(statRange[1], true),        refetchKey);
+  const { data: issueTypeStat,   isLoading: loadingIssue }        = useTicketByIssueType(   iso(issueRange[0]),       iso(issueRange[1], true),       refetchKey);
+  const { data: slaStatusStat,   isLoading: loadingSlaStatus }    = useSlaByStatus(         iso(slaStatusRange[0]),   iso(slaStatusRange[1], true),   refetchKey);
+  const { data: slaPriorityStat, isLoading: loadingSlaPriority }  = useSlaByPriority(       iso(slaPriorityRange[0]), iso(slaPriorityRange[1], true), refetchKey);
 
-  useEffect(() => {
-    let active = true;
-    fetchSlaByStatus(
-      slaStatusRange[0].startOf("day").toISOString(),
-      slaStatusRange[1].endOf("day").toISOString(),
-    ).then((data) => { if (active) { setSlaStatusStat(data); setLoadingSlaStatus(false); } });
-    return () => { active = false; };
-  }, [slaStatusRange, refetchKey]);
-
-  useEffect(() => {
-    let active = true;
-    fetchSlaByPriority(
-      slaPriorityRange[0].startOf("day").toISOString(),
-      slaPriorityRange[1].endOf("day").toISOString(),
-    ).then((data) => { if (active) { setSlaPriorityStat(data); setLoadingSlaPriority(false); } });
-    return () => { active = false; };
-  }, [slaPriorityRange, refetchKey]);
-
+  // ── WebSocket — untouched; incrementing refetchKey triggers all queries ───
   useEffect(() => {
     const token = sessionStorage.getItem("access_token");
     const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
-    ws.onopen = () => { ws.send(token ?? ""); };
+    ws.onopen    = () => { ws.send(token ?? ""); };
     ws.onmessage = () => { setRefetchKey((k) => k + 1); };
     return () => ws.close();
   }, []);
 
-  const total = stat?.reduce((sum, s) => sum + s.value, 0) ?? 0;
+  // ── Derived chart data ────────────────────────────────────────────────────
+  const total   = stat?.reduce((s, i) => s + i.value, 0) ?? 0;
+  const pieData = (stat ?? []).map((s, i) => ({ name: s.name, value: s.value, fill: DEFAULT_COLORS[i % DEFAULT_COLORS.length] }));
 
-  const pieData = (stat ?? []).map((s, i) => ({
-    name: s.name,
-    value: s.value,
-    fill: DEFAULT_COLORS[i % DEFAULT_COLORS.length],
-  }));
-
-  // Extract dynamic status keys (all keys except "name")
-  const statusKeys = issueTypeStat && issueTypeStat.length > 0
+  const statusKeys = issueTypeStat?.length
     ? Object.keys(issueTypeStat[0]).filter((k) => k !== "name")
     : [];
 
@@ -120,9 +74,9 @@ export default function Home() {
   }));
 
   const SLA_PRIORITY_KEYS: { key: keyof SlaPriorityDistribution; color: string }[] = [
-    { key: "Success", color: "#00F5FF" },
-    { key: "Response Overdue", color: "#FFE500" },
-    { key: "Resolution Overdue", color: "#FF2D6B" },
+    { key: "Success",             color: "#00F5FF" },
+    { key: "Response Overdue",    color: "#FFE500" },
+    { key: "Resolution Overdue",  color: "#FF2D6B" },
   ];
 
   return (
@@ -133,6 +87,7 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
+
         {/* Pie chart — Tickets by Status */}
         <Card
           title="Tickets by Status"
@@ -140,7 +95,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <RangePicker
                 value={statRange}
-                onChange={(v) => { if (v) { setStatRange(v as DateRange); setLoadingStat(true); } }}
+                onChange={(v) => { if (v) setStatRange(v as DateRange); }}
                 allowClear={false}
               />
               {stat && <Text type="secondary">Total: {total} tickets</Text>}
@@ -156,23 +111,12 @@ export default function Home() {
             <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="45%"
-                  outerRadius={110}
-                  dataKey="value"
+                  data={pieData} cx="50%" cy="45%" outerRadius={110} dataKey="value"
                   isAnimationActive={false}
-                  label={({ name, percent }) =>
-                    `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
-                  }
+                  label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   labelLine={false}
                 />
-                <Tooltip
-                  formatter={(value: number | undefined) => [
-                    `${value ?? 0} tickets`,
-                    "Count",
-                  ]}
-                />
+                <Tooltip formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -185,7 +129,7 @@ export default function Home() {
           extra={
             <RangePicker
               value={issueRange}
-              onChange={(v) => { if (v) { setIssueRange(v as DateRange); setLoadingIssue(true); } }}
+              onChange={(v) => { if (v) setIssueRange(v as DateRange); }}
               allowClear={false}
             />
           }
@@ -193,7 +137,7 @@ export default function Home() {
         >
           {loadingIssue ? (
             <div className="text-center py-12"><Spin /></div>
-          ) : !issueTypeStat || issueTypeStat.length === 0 ? (
+          ) : !issueTypeStat?.length ? (
             <EmptyPlaceholder />
           ) : (
             <ResponsiveContainer width="100%" height={400}>
@@ -204,12 +148,7 @@ export default function Home() {
                 <Tooltip />
                 <Legend />
                 {statusKeys.map((key, i) => (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    stackId="a"
-                    fill={DEFAULT_COLORS[i % DEFAULT_COLORS.length]}
-                  />
+                  <Bar key={key} dataKey={key} stackId="a" fill={DEFAULT_COLORS[i % DEFAULT_COLORS.length]} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
@@ -222,7 +161,7 @@ export default function Home() {
           extra={
             <RangePicker
               value={slaStatusRange}
-              onChange={(v) => { if (v) { setSlaStatusRange(v as DateRange); setLoadingSlaStatus(true); } }}
+              onChange={(v) => { if (v) setSlaStatusRange(v as DateRange); }}
               allowClear={false}
             />
           }
@@ -230,29 +169,21 @@ export default function Home() {
         >
           {loadingSlaStatus ? (
             <div className="text-center py-12"><Spin /></div>
-          ) : slaStatusDonutData.length === 0 ? (
+          ) : !slaStatusDonutData.length ? (
             <EmptyPlaceholder />
           ) : (
             <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
-                  data={slaStatusDonutData}
-                  cx="50%"
-                  cy="45%"
-                  innerRadius={70}
-                  outerRadius={110}
-                  dataKey="value"
+                  data={slaStatusDonutData} cx="50%" cy="45%"
+                  innerRadius={70} outerRadius={110} dataKey="value"
                   isAnimationActive={false}
-                  label={({ name, percent }) =>
-                    `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
-                  }
+                  label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   labelLine={false}
                 >
-                  {slaStatusDonutData.map((entry, i) => (
-                    <Cell key={i} fill={entry.fill} />
-                  ))}
+                  {slaStatusDonutData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Pie>
-                <Tooltip formatter={(value: number | undefined) => [`${value ?? 0} tickets`, "Count"]} />
+                <Tooltip formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -265,7 +196,7 @@ export default function Home() {
           extra={
             <RangePicker
               value={slaPriorityRange}
-              onChange={(v) => { if (v) { setSlaPriorityRange(v as DateRange); setLoadingSlaPriority(true); } }}
+              onChange={(v) => { if (v) setSlaPriorityRange(v as DateRange); }}
               allowClear={false}
             />
           }
@@ -273,7 +204,7 @@ export default function Home() {
         >
           {loadingSlaPriority ? (
             <div className="text-center py-12"><Spin /></div>
-          ) : !slaPriorityStat || slaPriorityStat.length === 0 ? (
+          ) : !slaPriorityStat?.length ? (
             <EmptyPlaceholder />
           ) : (
             <ResponsiveContainer width="100%" height={400}>
@@ -290,6 +221,7 @@ export default function Home() {
             </ResponsiveContainer>
           )}
         </Card>
+
       </div>
     </div>
   );
