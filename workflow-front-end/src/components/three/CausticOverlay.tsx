@@ -9,8 +9,7 @@
 
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { ShaderMaterial, PlaneGeometry } from "three";
-import type * as THREE from "three";
+import { ShaderMaterial } from "three";
 
 interface Props {
   isDark: boolean;
