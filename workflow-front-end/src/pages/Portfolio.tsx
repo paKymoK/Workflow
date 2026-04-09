@@ -66,18 +66,6 @@ const PROJECTS = [
       "Third-party API integration with the Autostore system to ensure accurate and reliable warehouse operations",
     ],
   },
-  {
-    id: "006", title: "AION", tag: "WEB APP", year: "DEC 2025 — MAR 2026",
-    colorClass: "pf-c-pink",
-    desc: "Developed the frontend of HDBank internal back-office system designed to calculate and track employee KPIs. The system enables managers to monitor individual performance by displaying KPI completion percentages over a defined period. Responsible for building and maintaining the user interface using React.js, ensuring an intuitive and responsive experience for end users.",
-    techStack: ["React.js", "TypeScript", "Ant Design", "REST API"],
-    responsibilities: [
-      "Built and maintained the KPI tracking dashboard UI",
-      "Integrated REST APIs for real-time performance data",
-      "Collaborated with backend team to define API contracts",
-      "Ensured responsive design across screen sizes",
-    ],
-  },
 ];
 
 const SKILLS = [
