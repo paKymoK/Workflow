@@ -11,7 +11,7 @@ import Callback from "./pages/Callback";
 import Settings from "./pages/Settings";
 import WorkflowDetail from "./pages/WorkflowDetail";
 import Diary from "./pages/Diary";
-import Portfolio3D from "./pages/Portfolio3D";
+import AMS from "./pages/AMS";
 import { ThemeProvider } from "./context/ThemeContext";
 import { useTheme } from "./context/useTheme";
 import { FontProvider } from "./context/FontContext";
@@ -232,7 +232,7 @@ function ThemedApp() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/portfolio-3d" element={<Portfolio3D />} />
+            <Route path="/ams" element={<AMS />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/callback" element={<Callback />} />
             <Route element={<ProtectedRoute />}>
