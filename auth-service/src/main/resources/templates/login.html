@@ -353,7 +353,7 @@
             You have been logged out.
         </div>
 
-        <form method="post" th:action="@{/login}">
+        <form method="post" th:action="@{/login}" id="login-form">
             <div class="field">
                 <label class="field-label">// Domain</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
@@ -372,19 +372,19 @@
                         👤 GUEST
                     </label>
 
-                    <label style="display:flex; align-items:center; gap:6px; cursor:crosshair;
-                       color: var(--white); font-size:12px; letter-spacing:0.1em;">
-                        <input type="radio" name="domain" value="COMPANY_A"
-                               style="accent-color: var(--neon-yellow);"/>
-                        🤝 COMPANY A
-                    </label>
+<!--                    <label style="display:flex; align-items:center; gap:6px; cursor:crosshair;-->
+<!--                       color: var(&#45;&#45;white); font-size:12px; letter-spacing:0.1em;">-->
+<!--                        <input type="radio" name="domain" value="COMPANY_A"-->
+<!--                               style="accent-color: var(&#45;&#45;neon-yellow);"/>-->
+<!--                        🤝 COMPANY A-->
+<!--                    </label>-->
 
-                    <label style="display:flex; align-items:center; gap:6px; cursor:crosshair;
-                       color: var(--white); font-size:12px; letter-spacing:0.1em;">
-                        <input type="radio" name="domain" value="COMPANY_B"
-                               style="accent-color: var(--neon-yellow);"/>
-                        🤝 COMPANY B
-                    </label>
+<!--                    <label style="display:flex; align-items:center; gap:6px; cursor:crosshair;-->
+<!--                       color: var(&#45;&#45;white); font-size:12px; letter-spacing:0.1em;">-->
+<!--                        <input type="radio" name="domain" value="COMPANY_B"-->
+<!--                               style="accent-color: var(&#45;&#45;neon-yellow);"/>-->
+<!--                        🤝 COMPANY B-->
+<!--                    </label>-->
 
                 </div>
             </div>
@@ -431,6 +431,26 @@
     }
     updateClock();
     setInterval(updateClock, 1000);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const savedDomain = localStorage.getItem('selectedDomain');
+        if (savedDomain) {
+            const radio = document.querySelector(
+                'input[name="domain"][value="' + savedDomain + '"]'
+            );
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', function () {
+        const selected = document.querySelector('input[name="domain"]:checked');
+        if (selected) {
+            localStorage.setItem('selectedDomain', selected.value);
+        }
+    });
+
 </script>
 
 </body>

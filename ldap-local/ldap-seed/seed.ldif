@@ -1,0 +1,58 @@
+# ── Organizational Units ──────────────────────────
+
+dn: ou=users,dc=mycompany,dc=local
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=guests,dc=mycompany,dc=local
+objectClass: organizationalUnit
+ou: guests
+
+dn: ou=groups,dc=mycompany,dc=local
+objectClass: organizationalUnit
+ou: groups
+
+# ── Groups ───────────────────────────────────────
+
+dn: cn=developers,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: developers
+member: cn=john.doe,ou=users,dc=mycompany,dc=local
+
+dn: cn=admins,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: admins
+member: cn=jane.smith,ou=users,dc=mycompany,dc=local
+
+# ── Internal Users ────────────────────────────────
+
+dn: cn=john.doe,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: john.doe
+sn: Doe
+givenName: John
+uid: john.doe
+mail: john.doe@mycompany.local
+userPassword: password123
+departmentNumber: engineering
+
+dn: cn=jane.smith,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: jane.smith
+sn: Smith
+givenName: Jane
+uid: jane.smith
+mail: jane.smith@mycompany.local
+userPassword: password456
+departmentNumber: it
+
+# ── Guest Users ───────────────────────────────────
+
+dn: cn=guest.user,ou=guests,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: guest.user
+sn: User
+givenName: Guest
+uid: guest.user
+mail: guest@external.com
+userPassword: guestpass

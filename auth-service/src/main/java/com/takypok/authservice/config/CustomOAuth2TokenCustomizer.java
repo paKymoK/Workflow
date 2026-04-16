@@ -2,6 +2,7 @@ package com.takypok.authservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.authservice.config.auth.DomainAuthenticationToken;
+import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.repository.UserInfoRepository;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +24,10 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
     Authentication principal = context.getPrincipal();
     String subject = principal.getName();
     if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
-      context
-          .getClaims()
-          .claim(
-              "detail", mapper.convertValue(userInfoRepository.getBySub(subject), HashMap.class));
+      Userinfo userinfo = userInfoRepository.getBySub(subject);
+      if (userinfo != null) {
+        context.getClaims().claim("detail", mapper.convertValue(userinfo, HashMap.class));
+      }
 
       if (principal instanceof DomainAuthenticationToken domainToken) {
         context.getClaims().claim("domain", domainToken.getDomain());
