@@ -1,4 +1,4 @@
-rootProject.name = 'base'
+rootProject.name = 'archive'
 include 'core-v1',
         'infrastructure',
         'discovery-service',

@@ -39,6 +39,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -53,7 +54,10 @@ public class AuthorizationServerConfig {
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
   public SecurityFilterChain authorizationServerSecurityFilterChain(
-      HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+      HttpSecurity http,
+      CorsConfigurationSource corsConfigurationSource,
+      SecurityContextRepository securityContextRepository)
+      throws Exception {
     Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper =
         (context) -> {
           OidcUserInfoAuthenticationToken authentication = context.getAuthentication();
@@ -67,6 +71,11 @@ public class AuthorizationServerConfig {
     http.csrf(AbstractHttpConfigurer::disable)
         .cors(cors -> cors.configurationSource(corsConfigurationSource))
         .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+        .securityContext(
+            context ->
+                context
+                    .securityContextRepository(securityContextRepository)
+                    .requireExplicitSave(true))
         .with(
             authorizationServerConfigurer,
             (authorizationServer) ->

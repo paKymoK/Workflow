@@ -26,9 +26,21 @@ client:
   workflow-service:
     url: ${WORKFLOW_SERVICE:http://127.0.0.1:8080}
 
+ldap:
+  url: ldap://localhost:389
+  base: dc=cmcglobal,dc=local
+  username: cn=admin,dc=cmcglobal,dc=local
+  password: admin_secret
+  user-search-base: ou=users
+  user-search-filter: "(cn={0})"          # change to (sAMAccountName={0}) for real AD
+  group-search-base: ou=groups
+
+
 logging:
   level:
     root: ${LOGGING_LEVEL_ROOT:INFO}
     org.springframework.web: ${LOGGING_LEVEL_SPRING_WEB:INFO}
     org.springframework.security: ${LOGGING_LEVEL_SPRING_SECURITY:DEBUG}
     org.springframework.security.oauth2: ${LOGGING_LEVEL_SPRING_OAUTH2:DEBUG}
+    org.springframework.security.web.FilterChainProxy: TRACE
+
