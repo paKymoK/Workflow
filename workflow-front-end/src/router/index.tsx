@@ -11,6 +11,8 @@ import Settings from "../pages/Settings";
 import WorkflowDetail from "../pages/WorkflowDetail";
 import Diary from "../pages/Diary";
 import AMS from "../pages/AMS";
+import Shop from "../pages/Shop";
+import ShopDetail from "../pages/ShopDetail";
 
 export default function AppRouter() {
   return (
@@ -26,6 +28,8 @@ export default function AppRouter() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/:id" element={<TicketDetail />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/shop/:id" element={<ShopDetail />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/workflow/:id" element={<WorkflowDetail />} />
           </Route>

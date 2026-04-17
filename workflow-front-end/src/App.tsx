@@ -4,6 +4,7 @@ import { useTheme } from "./context/useTheme";
 import { FontProvider } from "./context/FontContext";
 import { useFont } from "./context/useFont";
 import { darkTokens, lightTokens, darkComponents, lightComponents } from "./config/theme";
+import { CartProvider } from "./context/CartContext";
 import AppRouter from "./router";
 
 function ThemedApp() {
@@ -19,7 +20,9 @@ function ThemedApp() {
         components: isDark ? darkComponents : lightComponents,
       }}
     >
-      <AppRouter />
+      <CartProvider>
+        <AppRouter />
+      </CartProvider>
     </ConfigProvider>
   );
 }
