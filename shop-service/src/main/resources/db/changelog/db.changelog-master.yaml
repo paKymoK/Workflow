@@ -1,5 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/init/init-schema.sql
-  - include:
-      file: db/changelog/init/init-data.
+#  - include:
+#      file: db/changelog/init/init-data.sql

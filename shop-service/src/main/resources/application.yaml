@@ -8,8 +8,6 @@ spring:
     web-application-type: reactive
   application:
     name: shop-service
-  webflux:
-    base-path: /shop
   data:
     redis:
       port: 6379

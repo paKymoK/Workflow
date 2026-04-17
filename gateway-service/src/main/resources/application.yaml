@@ -76,7 +76,7 @@ spring:
               predicates:
                 - Path=/shop-service/**
               filters:
-                - RewritePath=/shop-service/(?<segment>.*), /shop/${segment}
+                - RewritePath=/shop-service/(?<segment>.*), /${segment}
 
 springdoc:
   swagger-ui:
