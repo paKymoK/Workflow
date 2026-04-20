@@ -4,7 +4,9 @@ import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.ResultMessage;
 import com.takypok.shopservice.model.entity.Product;
 import com.takypok.shopservice.model.entity.ProductInformation;
+import com.takypok.shopservice.model.request.CreateProductRequest;
 import com.takypok.shopservice.model.request.FilterProductRequest;
+import com.takypok.shopservice.model.request.UpdateProductRequest;
 import com.takypok.shopservice.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +23,27 @@ public class ProductController {
   public Mono<ResultMessage<PageResponse<Product<ProductInformation>>>> get(
       @Valid FilterProductRequest request) {
     return productService.get(request).map(ResultMessage::success);
+  }
+
+  @GetMapping("/{id}")
+  public Mono<ResultMessage<Product<ProductInformation>>> getById(@PathVariable Long id) {
+    return productService.getById(id).map(ResultMessage::success);
+  }
+
+  @PostMapping("")
+  public Mono<ResultMessage<Product<ProductInformation>>> create(
+      @Valid @RequestBody CreateProductRequest request) {
+    return productService.create(request).map(ResultMessage::success);
+  }
+
+  @PutMapping("")
+  public Mono<ResultMessage<Product<ProductInformation>>> update(
+      @Valid @RequestBody UpdateProductRequest request) {
+    return productService.update(request).map(ResultMessage::success);
+  }
+
+  @DeleteMapping("/{id}")
+  public Mono<ResultMessage<Void>> delete(@PathVariable Long id) {
+    return productService.delete(id).then(Mono.just(ResultMessage.success(null)));
   }
 }

@@ -2,8 +2,10 @@ package com.takypok.shopservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.takypok.*"})
+@EnableR2dbcAuditing(dateTimeProviderRef = "auditingDateTimeProvider")
 public class ShopServiceApplication {
 
   public static void main(String[] args) {
