@@ -26,8 +26,8 @@ public class ProductController {
   }
 
   @GetMapping("/{id}")
-  public Mono<ResultMessage<Product<ProductInformation>>> getById(@PathVariable Long id) {
-    return productService.getById(id).map(ResultMessage::success);
+  public Mono<ResultMessage<Product<ProductInformation>>> get(@PathVariable Long id) {
+    return productService.get(id).map(ResultMessage::success);
   }
 
   @PostMapping("")

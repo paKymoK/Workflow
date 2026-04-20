@@ -17,7 +17,10 @@ import com.takypok.shopservice.service.ProductService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -31,9 +34,13 @@ public class ProductServiceImpl implements ProductService {
   public Mono<PageResponse<Product<ProductInformation>>> get(FilterProductRequest request) {
     int page = request.getPage().intValue();
     int size = request.getSize().intValue();
-    int offset = page * size;
-    return Mono.zip(
-            productRepository.findAllPaged(size, offset).collectList(), productRepository.count())
+    Sort.Direction direction =
+        "asc".equals(request.getSortDir()) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, request.getSortBy()));
+
+    Flux<Product<ProductInformation>> contentQuery = productRepository.findAllBy(pageable);
+
+    return Mono.zip(contentQuery.collectList(), productRepository.count())
         .map(
             tuple -> {
               List<Product<ProductInformation>> content = tuple.getT1();
@@ -49,11 +56,12 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Mono<Product<ProductInformation>> getById(Long id) {
+  public Mono<Product<ProductInformation>> get(Long id) {
     return productRepository
         .findById(id)
         .switchIfEmpty(
-            Mono.error(new ApplicationException(Message.Application.ERROR, "Product does not exist")));
+            Mono.error(
+                new ApplicationException(Message.Application.ERROR, "Product does not exist")));
   }
 
   @Override
@@ -74,7 +82,8 @@ public class ProductServiceImpl implements ProductService {
     return productRepository
         .findById(request.getId())
         .switchIfEmpty(
-            Mono.error(new ApplicationException(Message.Application.ERROR, "Product does not exist")))
+            Mono.error(
+                new ApplicationException(Message.Application.ERROR, "Product does not exist")))
         .flatMap(
             product -> {
               product.setName(request.getName());
@@ -93,7 +102,8 @@ public class ProductServiceImpl implements ProductService {
     return productRepository
         .findById(id)
         .switchIfEmpty(
-            Mono.error(new ApplicationException(Message.Application.ERROR, "Product does not exist")))
+            Mono.error(
+                new ApplicationException(Message.Application.ERROR, "Product does not exist")))
         .flatMap(productRepository::delete);
   }
 

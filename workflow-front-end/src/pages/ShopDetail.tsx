@@ -2,8 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button, InputNumber, Tag } from "antd";
 import { ArrowLeftOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import { products } from "../data/products";
 import { useCart } from "../context/CartContext";
+import { useProduct } from "../hooks/useProducts";
 
 function StockInfo({ stock }: { stock: number }) {
   if (stock === 0)
@@ -19,9 +19,17 @@ export default function ShopDetail() {
   const { addItem } = useCart();
   const [qty, setQty] = useState(1);
 
-  const product = products.find((p) => p.id === id);
+  const { data: product, isLoading, isError } = useProduct(id);
 
-  if (!product) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4">
+        <p className="text-lg opacity-60">Loading product...</p>
+      </div>
+    );
+  }
+
+  if (isError || !product) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
         <p className="text-lg opacity-60">Product not found.</p>
@@ -35,10 +43,10 @@ export default function ShopDetail() {
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
       addItem({
-        id: product.id,
+        id: String(product.id),
         name: product.name,
-        price: product.price,
-        image: product.image,
+        price: Number(product.price),
+        image: product.imageUrl,
       });
     }
   };
@@ -55,10 +63,9 @@ export default function ShopDetail() {
       </Button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Image */}
         <div className="relative">
           <img
-            src={product.image}
+            src={product.imageUrl}
             alt={product.name}
             className={`w-full object-cover border border-[var(--border-subtle)] transition-all ${outOfStock ? "opacity-40 grayscale" : ""}`}
             style={{ maxHeight: 400 }}
@@ -72,13 +79,12 @@ export default function ShopDetail() {
           )}
         </div>
 
-        {/* Info */}
         <div className="space-y-4 flex flex-col justify-center">
-          <Tag className="w-fit">{product.category}</Tag>
+          <Tag className="w-fit">{product.type}</Tag>
           <h1 className="text-2xl font-semibold">{product.name}</h1>
-          <p className="text-3xl font-bold">${product.price}</p>
+          <p className="text-3xl font-bold">{product.currency} {product.price}</p>
           <StockInfo stock={product.stock} />
-          <p className="opacity-70 leading-relaxed">{product.description}</p>
+          <p className="opacity-70 leading-relaxed">{product.detail?.data ?? "No description."}</p>
 
           <div className="flex items-center gap-3 pt-2">
             <InputNumber

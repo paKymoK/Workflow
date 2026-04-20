@@ -20,6 +20,7 @@ import com.takypok.workflowservice.repository.*;
 import com.takypok.workflowservice.service.TicketService;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +50,18 @@ public class TicketServiceImpl implements TicketService {
     int page = request.getPage().intValue();
     int size = request.getSize().intValue();
     int offset = page * size;
+    String summary = normalize(request.getSummary());
+    String assigneeEmail = normalize(request.getAssigneeEmail());
+    if (assigneeEmail != null) {
+      assigneeEmail = assigneeEmail.toLowerCase(Locale.ROOT);
+    }
+    Long statusId = request.getStatusId();
+    Long priorityId = request.getPriorityId();
     return Mono.zip(
-            ticketRepository.findAllWithSla(size, offset).collectList(), ticketRepository.count())
+            ticketRepository
+                .findAllWithSla(size, offset, summary, statusId, priorityId, assigneeEmail)
+                .collectList(),
+            ticketRepository.count(summary, statusId, priorityId, assigneeEmail))
         .map(
             tuple -> {
               List<TicketSla> content = tuple.getT1();
@@ -281,5 +292,13 @@ public class TicketServiceImpl implements TicketService {
             (accMono, s) ->
                 accMono.flatMap(latestTicket -> postFunction.apply(s, latestTicket, currentUser)))
         .flatMap(mono -> mono);
+  }
+
+  private String normalize(String value) {
+    if (value == null) {
+      return null;
+    }
+    String trimmed = value.trim();
+    return trimmed.isEmpty() ? null : trimmed;
   }
 }

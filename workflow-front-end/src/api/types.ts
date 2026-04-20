@@ -112,6 +112,28 @@ export interface SlaPriorityDistribution {
   total: number;
 }
 
+export interface ProductDetail {
+  data: string;
+}
+
+export interface ShopProduct {
+  id: number;
+  name: string;
+  type: string;
+  imageUrl: string;
+  detail: ProductDetail | null;
+  stock: number;
+  price: number;
+  currency: string;
+}
+
+export interface FilterProductRequest {
+  page: number;
+  size: number;
+  sortBy?: "id" | "price" | "name";
+  sortDir?: "asc" | "desc";
+}
+
 export interface TicketSla {
   id: number;
   createdAt: string;

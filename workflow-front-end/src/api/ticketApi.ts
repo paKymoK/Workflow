@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, FilterProductRequest, ShopProduct} from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
@@ -22,6 +22,21 @@ export async function fetchTickets(params: FilterTicketRequest) {
 export async function fetchTicketById(id: string|number) {
     const { data } = await api.get<ResultMessage<TicketSla>>(
         `/workflow-service/v1/ticket/${id}`,
+    );
+    return data.data;
+}
+
+export async function fetchProducts(params: FilterProductRequest) {
+    const { data } = await api.get<ResultMessage<PageResponse<ShopProduct>>>(
+        "/shop-service/v1/product",
+        { params },
+    );
+    return data.data;
+}
+
+export async function fetchProductById(id: string | number) {
+    const { data } = await api.get<ResultMessage<ShopProduct>>(
+        `/shop-service/v1/product/${id}`,
     );
     return data.data;
 }

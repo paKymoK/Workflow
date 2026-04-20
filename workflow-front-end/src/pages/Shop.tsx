@@ -1,105 +1,99 @@
-import { useState } from "react";
-import { Button, Select, Pagination } from "antd";
-import { products, CATEGORIES } from "../data/products";
+import { useMemo, useState } from "react";
+import { Select, Pagination } from "antd";
 import ProductCard from "../components/shop/ProductCard";
+import { useProductList } from "../hooks/useProducts";
+import type { FilterProductRequest } from "../api/types";
 
-type SortOption = "default" | "price-asc" | "price-desc";
-type StockFilter = "all" | "in-stock" | "out-of-stock";
+type SortOption = "id-desc" | "id-asc" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
 const PAGE_SIZE = 6;
 
+function mapSort(sort: SortOption): Pick<FilterProductRequest, "sortBy" | "sortDir"> {
+  switch (sort) {
+    case "id-asc":
+      return { sortBy: "id", sortDir: "asc" };
+    case "price-asc":
+      return { sortBy: "price", sortDir: "asc" };
+    case "price-desc":
+      return { sortBy: "price", sortDir: "desc" };
+    case "name-asc":
+      return { sortBy: "name", sortDir: "asc" };
+    case "name-desc":
+      return { sortBy: "name", sortDir: "desc" };
+    default:
+      return { sortBy: "id", sortDir: "desc" };
+  }
+}
+
 export default function Shop() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [sort, setSort] = useState<SortOption>("default");
-  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [sort, setSort] = useState<SortOption>("id-desc");
   const [page, setPage] = useState(1);
 
-  const resetPage = () => setPage(1);
+  const params = useMemo<FilterProductRequest>(() => {
+    const sortParams = mapSort(sort);
+    return {
+      page: page - 1,
+      size: PAGE_SIZE,
+      sortBy: sortParams.sortBy,
+      sortDir: sortParams.sortDir,
+    };
+  }, [page, sort]);
 
-  const filtered = products
-    .filter((p) => activeCategory === "All" || p.category === activeCategory)
-    .filter((p) => {
-      if (stockFilter === "in-stock") return p.stock > 0;
-      if (stockFilter === "out-of-stock") return p.stock === 0;
-      return true;
-    })
-    .sort((a, b) => {
-      if (sort === "price-asc") return a.price - b.price;
-      if (sort === "price-desc") return b.price - a.price;
-      return 0;
-    });
-
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { data, isLoading, isError } = useProductList(params);
+  const products = data?.content ?? [];
+  const total = data?.totalElements ?? 0;
 
   return (
     <div className="space-y-5">
-      {/* Filters row */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Category */}
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <Button
-              key={cat}
-              type={activeCategory === cat ? "primary" : "default"}
-              onClick={() => { setActiveCategory(cat); resetPage(); }}
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          {/* Stock filter */}
-          <Select
-            value={stockFilter}
-            onChange={(val) => { setStockFilter(val); resetPage(); }}
-            style={{ width: 150 }}
-            options={[
-              { value: "all",          label: "All Stock" },
-              { value: "in-stock",     label: "In Stock" },
-              { value: "out-of-stock", label: "Out of Stock" },
-            ]}
-          />
-
-          {/* Sort */}
-          <Select
-            value={sort}
-            onChange={(val) => { setSort(val); resetPage(); }}
-            style={{ width: 160 }}
-            options={[
-              { value: "default",    label: "Default Order" },
-              { value: "price-asc",  label: "Price: Low → High" },
-              { value: "price-desc", label: "Price: High → Low" },
-            ]}
-          />
-        </div>
+      <div className="flex justify-end">
+        <Select
+          value={sort}
+          onChange={(val) => {
+            setSort(val);
+            setPage(1);
+          }}
+          style={{ width: 190 }}
+          options={[
+            { value: "id-desc", label: "Newest" },
+            { value: "id-asc", label: "Oldest" },
+            { value: "price-asc", label: "Price: Low → High" },
+            { value: "price-desc", label: "Price: High → Low" },
+            { value: "name-asc", label: "Name: A → Z" },
+            { value: "name-desc", label: "Name: Z → A" },
+          ]}
+        />
       </div>
 
-      {/* Result count */}
       <p className="text-xs opacity-50 tracking-widest uppercase">
-        {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
+        {total} product{total !== 1 ? "s" : ""} found
       </p>
 
-      {/* Product grid */}
-      {paginated.length > 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48 opacity-40 text-sm tracking-widest uppercase">
+          Loading products...
+        </div>
+      ) : isError ? (
+        <div className="flex items-center justify-center h-48 opacity-40 text-sm tracking-widest uppercase">
+          Failed to load products.
+        </div>
+      ) : products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {paginated.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
         <div className="flex items-center justify-center h-48 opacity-40 text-sm tracking-widest uppercase">
-          No products match your filters.
+          No products available.
         </div>
       )}
 
-      {/* Pagination */}
-      {filtered.length > PAGE_SIZE && (
+      {total > PAGE_SIZE && (
         <div className="flex justify-center pt-2">
           <Pagination
-            current={page}
+            current={(data?.page ?? 0) + 1}
             pageSize={PAGE_SIZE}
-            total={filtered.length}
+            total={total}
             onChange={setPage}
             showSizeChanger={false}
           />

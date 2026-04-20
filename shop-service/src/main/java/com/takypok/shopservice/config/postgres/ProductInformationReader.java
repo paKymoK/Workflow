@@ -36,7 +36,8 @@ public class ProductInformationReader implements Converter<Json, ProductInformat
   @SuppressWarnings("unchecked")
   private Class<? extends ProductInformation> resolveClass(JsonNode jsonNode) {
     try {
-      return (Class<? extends ProductInformation>) Class.forName(jsonNode.path(CLAZZ_NAME).asText());
+      return (Class<? extends ProductInformation>)
+          Class.forName(jsonNode.path(CLAZZ_NAME).asText());
     } catch (ClassNotFoundException e) {
       log.error("Unable to resolve ProductInformation class: {}", e.getMessage(), e);
       throw new IllegalArgumentException(e);

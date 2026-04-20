@@ -11,26 +11,19 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class UpdateProductRequest {
-  @NotNull
-  private Long id;
+  @NotNull private Long id;
 
-  @NotBlank
-  private String name;
+  @NotBlank private String name;
 
-  @NotBlank
-  private String type;
+  @NotBlank private String type;
 
   private String imageUrl;
 
-  @NotNull
-  private Object detail;
+  @NotNull private Object detail;
 
-  @NotNull
-  private Long stock;
+  @NotNull private Long stock;
 
-  @NotNull
-  private BigDecimal price;
+  @NotNull private BigDecimal price;
 
-  @NotBlank
-  private String currency;
+  @NotBlank private String currency;
 }

@@ -1,7 +1,7 @@
 import { Card, Button, Tag } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import type { Product } from "../../data/products";
+import type { ShopProduct } from "../../api/types";
 import { useCart } from "../../context/CartContext";
 
 function StockBadge({ stock }: { stock: number }) {
@@ -10,7 +10,7 @@ function StockBadge({ stock }: { stock: number }) {
   return <Tag color="success">In Stock</Tag>;
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product }: { product: ShopProduct }) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const outOfStock = product.stock === 0;
@@ -21,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
       cover={
         <div className="relative">
           <img
-            src={product.image}
+            src={product.imageUrl}
             alt={product.name}
             className={`h-48 w-full object-cover cursor-pointer transition-all ${outOfStock ? "opacity-40 grayscale cursor-default" : ""}`}
             onClick={() => !outOfStock && navigate(`/shop/${product.id}`)}
@@ -42,10 +42,10 @@ export default function ProductCard({ product }: { product: Product }) {
           disabled={outOfStock}
           onClick={() =>
             addItem({
-              id: product.id,
+              id: String(product.id),
               name: product.name,
-              price: product.price,
-              image: product.image,
+              price: Number(product.price),
+              image: product.imageUrl,
             })
           }
         >
@@ -66,9 +66,9 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="space-y-2 mt-1">
             <div className="flex items-center justify-between">
               <span className={`font-semibold text-base ${outOfStock ? "opacity-40" : ""}`}>
-                ${product.price}
+                {product.currency} {product.price}
               </span>
-              <span className="text-xs opacity-50 uppercase tracking-wider">{product.category}</span>
+              <span className="text-xs opacity-50 uppercase tracking-wider">{product.type}</span>
             </div>
             <StockBadge stock={product.stock} />
           </div>

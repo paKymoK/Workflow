@@ -27,10 +27,26 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                           END AS sla
                     FROM ticket t
                     LEFT JOIN sla s ON t.id = s.ticket_id
+                    WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
+                      AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
+                      AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
+                      AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
                     ORDER BY t.id DESC
                     LIMIT :limit OFFSET :offset
                     """)
-  Flux<TicketSla> findAllWithSla(int limit, int offset);
+  Flux<TicketSla> findAllWithSla(
+      int limit, int offset, String summary, Long statusId, Long priorityId, String assigneeEmail);
+
+  @Query(
+      """
+                    SELECT COUNT(*)
+                    FROM ticket t
+                    WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
+                      AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
+                      AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
+                      AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                    """)
+  Mono<Long> count(String summary, Long statusId, Long priorityId, String assigneeEmail);
 
   @Query(
       """

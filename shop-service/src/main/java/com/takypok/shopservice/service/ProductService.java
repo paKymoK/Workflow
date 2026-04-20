@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 public interface ProductService {
   Mono<PageResponse<Product<ProductInformation>>> get(FilterProductRequest request);
 
-  Mono<Product<ProductInformation>> getById(Long id);
+  Mono<Product<ProductInformation>> get(Long id);
 
   Mono<Product<ProductInformation>> create(CreateProductRequest request);
 
