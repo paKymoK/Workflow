@@ -7,10 +7,11 @@ import type { ColumnsType } from "antd/es/table";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchTicketById } from "../api/ticketApi";
 import { wsBaseUrl } from "../api/axios.ts";
-import type { TicketSla, Priority } from "../api/types.ts";
+import type { TicketSla, Priority, WorkflowStatus } from "../api/types.ts";
 import {
   useTicketList,
   usePriorities,
+  useStatuses,
   usePauseTicket,
   useResumeTicket,
   ticketKeys,
@@ -34,9 +35,6 @@ export default function Dashboard() {
   const [priorityId,    setPriorityId]    = useState<number | undefined>();
   const [assigneeEmail, setAssigneeEmail] = useState("");
 
-  // Accumulate unique statuses from loaded pages for the status filter dropdown
-  const [knownStatuses, setKnownStatuses] = useState<{ id: number; name: string; color: string }[]>([]);
-
   // ── Modal ────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -54,19 +52,10 @@ export default function Dashboard() {
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: pageData, isFetching } = useTicketList(params);
   const { data: priorities = [] }      = usePriorities();
+  const { data: statuses = [], isLoading: isStatusesLoading } = useStatuses();
 
   const tickets = pageData?.content       ?? [];
   const total   = pageData?.totalElements ?? 0;
-
-  // Collect statuses from each loaded page for the filter dropdown
-  useEffect(() => {
-    if (!pageData?.content) return;
-    setKnownStatuses((prev) => {
-      const map = new Map(prev.map((s) => [s.id, s]));
-      pageData.content.forEach((t) => { if (t.status) map.set(t.status.id, t.status); });
-      return Array.from(map.values());
-    });
-  }, [pageData]);
 
   // ── Mutations ────────────────────────────────────────────────────────────
   const pauseMutation  = usePauseTicket();
@@ -244,8 +233,9 @@ export default function Dashboard() {
           value={statusId}
           onChange={setStatusId}
           allowClear
+          loading={isStatusesLoading}
           className="!w-[160px]"
-          options={knownStatuses.map((s) => ({ value: s.id, label: s.name }))}
+          options={(statuses as WorkflowStatus[]).map((status) => ({ value: status.id, label: status.name }))}
         />
         <Select
           placeholder="Priority"

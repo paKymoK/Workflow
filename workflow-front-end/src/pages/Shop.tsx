@@ -1,12 +1,17 @@
-import { useMemo, useState } from "react";
-import { Select, Pagination } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { Select, Pagination, Grid } from "antd";
 import ProductCard from "../components/shop/ProductCard";
 import { useProductList } from "../hooks/useProducts";
 import type { FilterProductRequest } from "../api/types";
 
 type SortOption = "id-desc" | "id-asc" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
-const PAGE_SIZE = 6;
+function resolvePageSize(screens: Partial<Record<string, boolean | undefined>>) {
+  if (screens.xl) return 12;
+  if (screens.lg) return 9;
+  if (screens.sm) return 6;
+  return 4;
+}
 
 function mapSort(sort: SortOption): Pick<FilterProductRequest, "sortBy" | "sortDir"> {
   switch (sort) {
@@ -26,18 +31,29 @@ function mapSort(sort: SortOption): Pick<FilterProductRequest, "sortBy" | "sortD
 }
 
 export default function Shop() {
+  const screens = Grid.useBreakpoint();
   const [sort, setSort] = useState<SortOption>("id-desc");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => resolvePageSize({}));
+
+  useEffect(() => {
+    const nextPageSize = resolvePageSize(screens);
+    setPageSize((prev) => {
+      if (prev === nextPageSize) return prev;
+      setPage(1);
+      return nextPageSize;
+    });
+  }, [screens]);
 
   const params = useMemo<FilterProductRequest>(() => {
     const sortParams = mapSort(sort);
     return {
       page: page - 1,
-      size: PAGE_SIZE,
+      size: pageSize,
       sortBy: sortParams.sortBy,
       sortDir: sortParams.sortDir,
     };
-  }, [page, sort]);
+  }, [page, pageSize, sort]);
 
   const { data, isLoading, isError } = useProductList(params);
   const products = data?.content ?? [];
@@ -88,11 +104,11 @@ export default function Shop() {
         </div>
       )}
 
-      {total > PAGE_SIZE && (
+      {total > pageSize && (
         <div className="flex justify-center pt-2">
           <Pagination
             current={(data?.page ?? 0) + 1}
-            pageSize={PAGE_SIZE}
+            pageSize={pageSize}
             total={total}
             onChange={setPage}
             showSizeChanger={false}

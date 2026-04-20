@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.function.Function;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,25 +99,27 @@ public class AuthorizationServerConfig {
 
   @Bean
   public JdbcRegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
+    JdbcRegisteredClientRepository registeredClientRepository =
+        new JdbcRegisteredClientRepository(jdbcTemplate);
+
+    TokenSettings tokenSettings =
+        TokenSettings.builder()
+            .accessTokenTimeToLive(Duration.ofMinutes(10))
+            .refreshTokenTimeToLive(Duration.ofDays(1))
+            .reuseRefreshTokens(false)
+            .build();
+
     RegisteredClient gatewayClient =
-        RegisteredClient.withId("54a5b859-5dba-4c94-9b3c-0b340a99ca5f")
+        RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("gateway")
             .clientSecret("{noop}gateway-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-            .tokenSettings(
-                TokenSettings.builder()
-                    .accessTokenTimeToLive(Duration.ofMinutes(10))
-                    .refreshTokenTimeToLive(Duration.ofDays(1))
-                    .reuseRefreshTokens(false)
-                    .build())
+            .tokenSettings(tokenSettings)
             .redirectUri(workflowServiceUrl + "/login/oauth2/code/gateway-service-oidc")
             .redirectUri(workflowServiceUrl + "/index")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
-            .redirectUri("http://localhost:3000/callback")
-            .redirectUri("https://app.thaiha.website/callback")
             .postLogoutRedirectUri(workflowServiceUrl + "/logged-out")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
@@ -124,10 +127,41 @@ public class AuthorizationServerConfig {
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
             .build();
 
-    JdbcRegisteredClientRepository registeredClientRepository =
-        new JdbcRegisteredClientRepository(jdbcTemplate);
-    registeredClientRepository.save(gatewayClient);
+    RegisteredClient spaClient =
+        RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("workflow-frontend")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+            .tokenSettings(tokenSettings)
+            .redirectUri("http://localhost:3000/callback")
+            .redirectUri("https://app.thaiha.website/callback")
+            .scope(OidcScopes.OPENID)
+            .scope(OidcScopes.PROFILE)
+            .scope("offline_access")
+            .clientSettings(
+                ClientSettings.builder()
+                    .requireAuthorizationConsent(true)
+                    .requireProofKey(true)
+                    .build())
+            .build();
+
+    upsertClient(registeredClientRepository, jdbcTemplate, gatewayClient);
+    upsertClient(registeredClientRepository, jdbcTemplate, spaClient);
     return registeredClientRepository;
+  }
+
+  private void upsertClient(
+      JdbcRegisteredClientRepository repository,
+      JdbcTemplate jdbcTemplate,
+      RegisteredClient desiredClient) {
+    RegisteredClient existing = repository.findByClientId(desiredClient.getClientId());
+    if (existing != null) {
+      jdbcTemplate.update("DELETE FROM oauth2_registered_client WHERE id = ?", existing.getId());
+      repository.save(RegisteredClient.from(desiredClient).id(existing.getId()).build());
+      return;
+    }
+    repository.save(desiredClient);
   }
 
   @Bean

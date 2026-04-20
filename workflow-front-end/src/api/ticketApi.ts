@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, FilterProductRequest, ShopProduct} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, FilterProductRequest, ShopProduct, WorkflowStatus} from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
@@ -51,6 +51,13 @@ export async function fetchProjects() {
 export async function fetchPriorities() {
     const { data } = await api.get<ResultMessage<Priority[]>>(
         "/workflow-service/v1/priority",
+    );
+    return data.data;
+}
+
+export async function fetchStatuses() {
+    const { data } = await api.get<ResultMessage<WorkflowStatus[]>>(
+        "/workflow-service/v1/status",
     );
     return data.data;
 }

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchTickets, fetchTicketById,
-  fetchPriorities, fetchProjects, fetchIssueTypes,
+  fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes,
   createTicket, pauseTicket, resumeTicket, transitionTicket,
 } from "../api/ticketApi";
 import type { FilterTicketRequest } from "../api/ticketApi";
@@ -15,6 +15,7 @@ export const ticketKeys = {
   details:    ()                         => ["tickets", "detail"]                 as const,
   detail:     (id: string | number)      => ["tickets", "detail", id]             as const,
   priorities: ()                         => ["priorities"]                        as const,
+  statuses:   ()                         => ["statuses"]                          as const,
   projects:   ()                         => ["projects"]                          as const,
   issueTypes: (projectId: number)        => ["issueTypes", projectId]             as const,
 };
@@ -44,6 +45,15 @@ export function usePriorities() {
   return useQuery({
     queryKey: ticketKeys.priorities(),
     queryFn:  fetchPriorities,
+    staleTime: Infinity,
+  });
+}
+
+/** Status list — treated as static reference data. */
+export function useStatuses() {
+  return useQuery({
+    queryKey: ticketKeys.statuses(),
+    queryFn:  fetchStatuses,
     staleTime: Infinity,
   });
 }
