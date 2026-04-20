@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Spin, Drawer, Descriptions, Badge, Input } from "antd";
 import {
-  ReactFlow, Background, Controls, useReactFlow, ReactFlowProvider,
+  ReactFlow, Controls, useReactFlow, ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { UserDetail } from "../../api/types";
@@ -124,7 +124,6 @@ function OrgChartInner() {
           onNodeClick={handleNodeClick} fitView fitViewOptions={{ padding: 0.2 }}
           minZoom={0.05} maxZoom={1.5} proOptions={{ hideAttribution: true }}
         >
-          <Background color="rgba(255,229,0,0.08)" gap={24} />
           <Controls />
         </ReactFlow>
       </div>

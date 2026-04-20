@@ -40,14 +40,9 @@ export default function ShopDetail() {
 
   const outOfStock = product.stock === 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     for (let i = 0; i < qty; i++) {
-      addItem({
-        id: String(product.id),
-        name: product.name,
-        price: Number(product.price),
-        image: product.imageUrl,
-      });
+      await addItem({ productId: product.id });
     }
   };
 

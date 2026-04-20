@@ -85,7 +85,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <App>
       <BubbleBackground />
       {/* Global overlay effects */}
-      <div className="scanlines-overlay" />
       {/* <div className="corner-tl" /> */}
       <div className="corner-tr" />
       {/* <div className="corner-bl" /> */}

@@ -1,47 +1,108 @@
-DO $$
-    DECLARE
-        i INTEGER;
-    BEGIN
-        FOR i IN 1..100000 LOOP
-                INSERT INTO public.ticket VALUES (i, '{"id": 1, "code": "IA", "name": "Internal Application", "workflowId": 1}', '{"id": 1, "name": "Dashboard", "projectId": 1}', '{"id": 1, "name": "Todo", "color": "#808080", "group": "TODO"}', 'Ticket ' || i, '{"name": "admin", "email": "tqthai@gmail.com"}', NULL, '{"data": "123", "_clazz": "com.takypok.workflowservice.model.ticket.Dashboard"}', '{"id": 3, "name": "High", "responseTime": 1, "resolutionTime": 4}', '{"id": 1, "name": "Test", "statuses": [{"id": 1, "name": "Todo", "color": "#808080", "group": "TODO"}, {"id": 2, "name": "In-Progress", "color": "#0000FF", "group": "PROCESSING"}, {"id": 3, "name": "Done", "color": "#008000", "group": "DONE"}], "transitions": [{"to": {"id": 2, "name": "In-Progress", "color": "#0000FF", "group": "PROCESSING"}, "from": {"id": 1, "name": "Todo", "color": "#808080", "group": "TODO"}, "name": "Approve", "validator": ["com.takypok.workflowservice.function.validator.Example1Validator"], "postFunctions": ["com.takypok.workflowservice.function.postfunction.Example1Function"]}, {"to": {"id": 3, "name": "Done", "color": "#008000", "group": "DONE"}, "from": {"id": 2, "name": "In-Progress", "color": "#0000FF", "group": "PROCESSING"}, "name": "Approve", "validator": [], "postFunctions": []}]}', NOW() - (RANDOM() * INTERVAL '1 days'), 'admin', NOW(), 'admin');
-                INSERT INTO public.sla VALUES (i, i, '{"response": "TODO", "resolution": "TODO", "responseTime": null, "resolutionTime": null, "isResponseOverdue": false, "isResolutionOverdue": false}', false, '[]', '{"id": 3, "name": "High", "responseTime": 1, "resolutionTime": 4}', '{"weekend": [], "workEnd": "23:59:00", "lunchEnd": "13:00:00", "timezone": "Asia/Ho_Chi_Minh", "workStart": "01:00:00", "lunchStart": "12:00:00"}', NOW(), 'Anonymous', NOW(), 'Anonymous');
-            END LOOP;
-    END $$;
+WITH seed AS (SELECT gs                                      AS n,
+                     now() - (random() * interval '30 days') AS created_at,
+                     random()                                AS r_status,
+                     random()                                AS r_priority,
+                     random()                                AS r_issue
+              FROM generate_series(1, 100000) gs),
+     ticket_data AS (SELECT n,
+                            created_at,
 
-SELECT setval('ticket_id_seq', 100000, true);
-SELECT setval('sla_id_seq', 100000, true);
+                            -- Random status (45% TODO, 35% PROCESSING, 20% DONE)
+                            CASE
+                                WHEN r_status < 0.45 THEN
+                                    jsonb_build_object('id', 1, 'name', 'Todo', 'color', '#808080', 'group', 'TODO')
+                                WHEN r_status < 0.80 THEN jsonb_build_object('id', 2, 'name', 'In-Progress', 'color',
+                                                                             '#0000FF', 'group', 'PROCESSING')
+                                ELSE
+                                    jsonb_build_object('id', 3, 'name', 'Done', 'color', '#008000', 'group', 'DONE')
+                                END AS status_json,
 
-UPDATE ticket
-SET issue_type = '{
-  "id": 2,
-  "name": "GAMS System",
-  "projectId": 1
-}'
-WHERE id IN (
-    SELECT DISTINCT FLOOR(RANDOM() * 100000 + 1)::INT
-    FROM generate_series(1, 40000)
-);
+                            -- Random priority (50% Low, 35% Medium, 15% High)
+                            CASE
+                                WHEN r_priority < 0.50 THEN
+                                    jsonb_build_object('id', 1, 'name', 'Low', 'responseTime', 1, 'resolutionTime', 30)
+                                WHEN r_priority < 0.85 THEN
+                                    jsonb_build_object('id', 2, 'name', 'Medium', 'responseTime', 1, 'resolutionTime',
+                                                       12)
+                                ELSE
+                                    jsonb_build_object('id', 3, 'name', 'High', 'responseTime', 1, 'resolutionTime', 4)
+                                END AS priority_json,
 
-UPDATE ticket
-SET status = '{
-  "id": 2,
-  "name": "In-Progress",
-  "color": "#0000FF",
-  "group": "PROCESSING"
-}'
-WHERE id IN (
-    SELECT DISTINCT FLOOR(RANDOM() * 100000 + 1)::INT
-    FROM generate_series(1, 30000)
-);
-
-UPDATE ticket
-SET status = '{
-  "id": 3,
-  "name": "Done",
-  "color": "#008000",
-  "group": "DONE"
-}'
-WHERE id IN (
-    SELECT DISTINCT FLOOR(RANDOM() * 100000 + 1)::INT
-    FROM generate_series(1, 30000)
-) AND status ->> 'group' = 'PROCESSING' ;
+                            -- Random issue type (40% GAMS, 60% Dashboard)
+                            CASE
+                                WHEN r_issue < 0.40
+                                    THEN jsonb_build_object('id', 2, 'name', 'GAMS System', 'projectId', 1)
+                                ELSE
+                                    jsonb_build_object('id', 1, 'name', 'Dashboard', 'projectId', 1)
+                                END AS issue_type_json
+                     FROM seed),
+     ins_ticket AS (
+INSERT
+INTO ticket (project, issue_type, status, summary, reporter, assignee, detail,
+             priority, workflow,
+             created_at, created_by, modified_at, modified_by)
+SELECT jsonb_build_object('id', 1, 'code', 'IA', 'name', 'Internal Application', 'workflowId', 1),
+       issue_type_json,
+       status_json,
+       'Load Test ' || n,
+       jsonb_build_object('name', 'admin', 'email', 'tqthai@gmail.com'),
+       NULL,
+       jsonb_build_object('data', '123', '_clazz', 'com.takypok.workflowservice.model.ticket.Dashboard'),
+       priority_json,
+       jsonb_build_object('id', 1, 'name', 'Test'),
+       created_at,
+       'admin',
+       now(),
+       'admin'
+FROM ticket_data RETURNING id, status, priority, created_at
+  )
+INSERT
+INTO sla (ticket_id, status, is_paused, paused_time, priority, setting,
+          created_at, created_by, modified_at, modified_by)
+SELECT t.id,
+       CASE t.status ->>'group' WHEN 'TODO' THEN
+              jsonb_build_object(
+                  'response','TODO',
+                  'resolution','TODO',
+                  'responseTime',NULL,
+                  'resolutionTime',NULL,
+                  'isResponseOverdue',false,
+                  'isResolutionOverdue',false
+              )
+          WHEN 'PROCESSING' THEN
+              jsonb_build_object(
+                  'response','DONE',
+                  'resolution','TODO',
+                  'responseTime', t.created_at + (random() * interval '8 hours'),
+                  'resolutionTime',NULL,
+                  'isResponseOverdue',false,
+                  'isResolutionOverdue',false
+              )
+          ELSE -- DONE
+              jsonb_build_object(
+                  'response','DONE',
+                  'resolution','DONE',
+                  'responseTime', t.created_at + (random() * interval '8 hours'),
+                  'resolutionTime', t.created_at + interval '8 hours' + (random() *
+  interval '24 hours'),
+                  'isResponseOverdue',false,
+                  'isResolutionOverdue',false
+              )
+END
+,
+      false,
+      '[]'::jsonb,
+      t.priority,
+      jsonb_build_object(
+          'weekend', jsonb_build_array(6,7),
+          'workStart','09:00:00',
+          'lunchStart','12:00:00',
+          'lunchEnd','13:00:00',
+          'workEnd','18:00:00',
+          'timezone','Asia/Ho_Chi_Minh'
+      ),
+      now(),
+      'Anonymous',
+      now(),
+      'Anonymous'
+  FROM ins_ticket t;

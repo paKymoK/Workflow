@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button, Spin, Typography, message } from "antd";
 import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
 import {
-  ReactFlow, Background, Controls, MiniMap, addEdge,
+  ReactFlow, Controls, MiniMap, addEdge,
   useNodesState, useEdgesState, Handle, Position, Panel,
   ConnectionLineType,
   type Node, type Edge, type Connection, type NodeProps,
@@ -252,7 +252,6 @@ export default function WorkflowDetail() {
             fitView fitViewOptions={{ padding: 0.3 }}
             proOptions={{ hideAttribution: true }} className="bg-slate-50"
           >
-            <Background color="#e2e8f0" gap={20} />
             <Controls className="bg-white border border-gray-200 shadow-sm" />
             <MiniMap nodeColor={(n) => DOT_COLORS[n.data?.group as string] ?? "#9ca3af"} className="bg-white border border-gray-200" />
             {isDirty && (

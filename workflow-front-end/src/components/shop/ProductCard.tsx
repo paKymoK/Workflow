@@ -40,14 +40,7 @@ export default function ProductCard({ product }: { product: ShopProduct }) {
           type="primary"
           icon={<ShoppingCartOutlined />}
           disabled={outOfStock}
-          onClick={() =>
-            addItem({
-              id: String(product.id),
-              name: product.name,
-              price: Number(product.price),
-              image: product.imageUrl,
-            })
-          }
+          onClick={() => addItem({ productId: product.id })}
         >
           {outOfStock ? "Unavailable" : "Add to Cart"}
         </Button>,

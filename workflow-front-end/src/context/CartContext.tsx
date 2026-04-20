@@ -1,73 +1,76 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-
-export type CartItem = {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-};
+import { createContext, useContext, type ReactNode } from "react";
+import { message } from "antd";
+import type { CartItem } from "../api/types";
+import { useCartQuery, useCheckoutCart, useRemoveCartItem, useUpsertCartItem } from "../hooks/useCart";
 
 type CartContextType = {
   items: CartItem[];
-  addItem: (product: Omit<CartItem, "quantity">) => void;
-  removeItem: (id: string) => void;
-  updateQty: (id: string, qty: number) => void;
-  clearCart: () => void;
+  addItem: (product: { productId: number }) => Promise<void>;
+  removeItem: (productId: number) => Promise<void>;
+  updateQty: (productId: number, qty: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  checkout: () => Promise<void>;
   totalPrice: number;
   totalItems: number;
+  isLoading: boolean;
+  isCheckoutLoading: boolean;
 };
 
 const CartContext = createContext<CartContextType>({} as CartContextType);
 
-const STORAGE_KEY = "shop_cart";
-
-function loadCart(): CartItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(loadCart);
+  const { data, isLoading } = useCartQuery();
+  const upsertMutation = useUpsertCartItem();
+  const removeMutation = useRemoveCartItem();
+  const checkoutMutation = useCheckoutCart();
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+  const items = data?.items ?? [];
+  const totalPrice = data?.totalPrice ?? 0;
+  const totalItems = data?.totalItems ?? 0;
 
-  const addItem = (product: Omit<CartItem, "quantity">) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
+  const addItem = async (product: { productId: number }) => {
+    const existing = items.find((item) => item.productId === product.productId);
+    const quantity = existing ? existing.quantity + 1 : 1;
+    await upsertMutation.mutateAsync({ productId: product.productId, quantity });
+    message.success("Added to cart");
   };
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = async (productId: number) => {
+    await removeMutation.mutateAsync(productId);
   };
 
-  const updateQty = (id: string, qty: number) => {
-    if (qty <= 0) { removeItem(id); return; }
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i))
-    );
+  const updateQty = async (productId: number, qty: number) => {
+    if (qty <= 0) {
+      await removeItem(productId);
+      return;
+    }
+    await upsertMutation.mutateAsync({ productId, quantity: qty });
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = async () => {
+    await Promise.all(items.map((item) => removeMutation.mutateAsync(item.productId)));
+  };
 
-  const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+  const checkout = async () => {
+    await checkoutMutation.mutateAsync();
+    message.success("Checkout completed");
+  };
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, totalPrice, totalItems }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQty,
+        clearCart,
+        checkout,
+        totalPrice,
+        totalItems,
+        isLoading,
+        isCheckoutLoading: checkoutMutation.isPending,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

@@ -3,10 +3,11 @@ import { Card, DatePicker, Spin, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis,
 } from "recharts";
 import { wsBaseUrl } from "../api/axios.ts";
 import type { SlaPriorityDistribution } from "../api/types.ts";
+import { useTheme } from "../context/useTheme";
 import {
   useOverviewStatistic,
   useTicketByIssueType,
@@ -30,6 +31,16 @@ const EmptyPlaceholder = () => (
 );
 
 export default function Home() {
+  const { isDark } = useTheme();
+
+  const tooltipContentStyle = {
+    backgroundColor: isDark ? "#041428" : "#E8EAED",
+    border: `1px solid ${isDark ? "rgba(0,207,255,0.35)" : "rgba(0,102,187,0.35)"}`,
+    color: isDark ? "#C8F0FF" : "#0A2540",
+  };
+  const tooltipLabelStyle = { color: isDark ? "#C8F0FF" : "#0A2540" };
+  const tooltipItemStyle = { color: isDark ? "#C8F0FF" : "#0A2540" };
+
   // ── Date range state (one per chart) ─────────────────────────────────────
   const [statRange,        setStatRange]        = useState<DateRange>(defaultRange);
   const [issueRange,       setIssueRange]       = useState<DateRange>(defaultRange);
@@ -116,7 +127,12 @@ export default function Home() {
                   label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   labelLine={false}
                 />
-                <Tooltip formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]} />
+                <Tooltip
+                  formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]}
+                  contentStyle={tooltipContentStyle}
+                  labelStyle={tooltipLabelStyle}
+                  itemStyle={tooltipItemStyle}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -142,10 +158,13 @@ export default function Home() {
           ) : (
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={issueTypeStat} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,229,0,0.1)" />
                 <XAxis dataKey="name" tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip
+                  contentStyle={tooltipContentStyle}
+                  labelStyle={tooltipLabelStyle}
+                  itemStyle={tooltipItemStyle}
+                />
                 <Legend />
                 {statusKeys.map((key, i) => (
                   <Bar key={key} dataKey={key} stackId="a" fill={DEFAULT_COLORS[i % DEFAULT_COLORS.length]} />
@@ -183,7 +202,12 @@ export default function Home() {
                 >
                   {slaStatusDonutData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Pie>
-                <Tooltip formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]} />
+                <Tooltip
+                  formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]}
+                  contentStyle={tooltipContentStyle}
+                  labelStyle={tooltipLabelStyle}
+                  itemStyle={tooltipItemStyle}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -209,10 +233,13 @@ export default function Home() {
           ) : (
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={slaPriorityStat} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,229,0,0.1)" />
                 <XAxis dataKey="priorityName" tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fill: "rgba(240,240,240,0.5)", fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip
+                  contentStyle={tooltipContentStyle}
+                  labelStyle={tooltipLabelStyle}
+                  itemStyle={tooltipItemStyle}
+                />
                 <Legend />
                 {SLA_PRIORITY_KEYS.map(({ key, color }) => (
                   <Bar key={key} dataKey={key} fill={color} />
