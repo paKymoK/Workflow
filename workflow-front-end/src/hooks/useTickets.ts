@@ -3,6 +3,9 @@ import {
   fetchTickets, fetchTicketById,
   fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes,
   createTicket, pauseTicket, resumeTicket, transitionTicket,
+  createStatus, updateStatus, deleteStatus,
+  createPriority, updatePriority, deletePriority,
+  createProject, updateProject, deleteProject,
 } from "../api/ticketApi";
 import type { FilterTicketRequest } from "../api/ticketApi";
 
@@ -125,6 +128,96 @@ export function useTransitionTicket() {
     }) => transitionTicket(ticketId, currentStatusId, transitionName),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
+    },
+  });
+}
+
+export function useCreateStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createStatus,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.statuses() });
+    },
+  });
+}
+
+export function useUpdateStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateStatus,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.statuses() });
+    },
+  });
+}
+
+export function useDeleteStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteStatus,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.statuses() });
+    },
+  });
+}
+
+export function useCreatePriority() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createPriority,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.priorities() });
+    },
+  });
+}
+
+export function useUpdatePriority() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updatePriority,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.priorities() });
+    },
+  });
+}
+
+export function useDeletePriority() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deletePriority,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.priorities() });
+    },
+  });
+}
+
+export function useCreateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createProject,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.projects() });
+    },
+  });
+}
+
+export function useUpdateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateProject,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.projects() });
+    },
+  });
+}
+
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.projects() });
     },
   });
 }

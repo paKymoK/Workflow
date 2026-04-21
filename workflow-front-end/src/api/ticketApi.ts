@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, FilterProductRequest, ShopProduct, WorkflowStatus, Cart, UpsertCartItemRequest, CheckoutResponse} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, FilterProductRequest, ShopProduct, WorkflowStatus, Cart, UpsertCartItemRequest, CheckoutResponse, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest} from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
@@ -96,6 +96,75 @@ export async function fetchIssueTypes(projectId: number) {
         `/workflow-service/v1/project/${projectId}/issue`,
     );
     return data.data;
+}
+
+export async function createStatus(payload: StatusCreateRequest) {
+    const { data } = await api.post<ResultMessage<WorkflowStatus>>(
+        "/workflow-service/v1/status",
+        payload,
+    );
+    return data.data;
+}
+
+export async function updateStatus(payload: StatusUpdateRequest) {
+    const { data } = await api.put<ResultMessage<WorkflowStatus>>(
+        "/workflow-service/v1/status",
+        payload,
+    );
+    return data.data;
+}
+
+export async function deleteStatus(id: number) {
+    const { data } = await api.delete<ResultMessage<void>>(
+        `/workflow-service/v1/status/${id}`,
+    );
+    return data;
+}
+
+export async function createPriority(payload: PriorityCreateRequest) {
+    const { data } = await api.post<ResultMessage<Priority>>(
+        "/workflow-service/v1/priority",
+        payload,
+    );
+    return data.data;
+}
+
+export async function updatePriority(payload: PriorityUpdateRequest) {
+    const { data } = await api.put<ResultMessage<Priority>>(
+        "/workflow-service/v1/priority",
+        payload,
+    );
+    return data.data;
+}
+
+export async function deletePriority(id: number) {
+    const { data } = await api.delete<ResultMessage<void>>(
+        `/workflow-service/v1/priority/${id}`,
+    );
+    return data;
+}
+
+export async function createProject(payload: ProjectCreateRequest) {
+    const { data } = await api.post<ResultMessage<Project>>(
+        "/workflow-service/v1/project",
+        payload,
+    );
+    return data.data;
+}
+
+export async function updateProject(payload: ProjectUpdateRequest) {
+    const { data } = await api.put<ResultMessage<Project>>(
+        "/workflow-service/v1/project",
+        payload,
+    );
+    return data.data;
+}
+
+export async function deleteProject(id: number) {
+    const { data } = await api.delete<ResultMessage<void>>(
+        `/workflow-service/v1/project/${id}`,
+    );
+    return data;
 }
 
 export async function createTicket(payload: CreateTicketRequest) {

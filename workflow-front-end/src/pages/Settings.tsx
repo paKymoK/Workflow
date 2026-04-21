@@ -2,10 +2,16 @@ import { Tabs } from "antd";
 import WorkflowList from "../components/settings/WorkflowList";
 import UserList from "../components/settings/UserList";
 import OrgChartView from "../components/settings/OrgChartView";
+import StatusList from "../components/settings/StatusList";
+import PriorityList from "../components/settings/PriorityList";
+import ProjectList from "../components/settings/ProjectList";
 
 const tabs = [
   { key: "workflow", label: "Workflow", children: <WorkflowList /> },
-  { key: "user",     label: "User",     children: <UserList /> },
+  { key: "status", label: "Status", children: <StatusList /> },
+  { key: "priority", label: "Priority", children: <PriorityList /> },
+  { key: "project", label: "Project", children: <ProjectList /> },
+  { key: "user", label: "User", children: <UserList /> },
   { key: "orgChart", label: "Org Chart", children: <OrgChartView /> },
 ];
 

@@ -22,7 +22,6 @@ import java.security.Principal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;

@@ -2,13 +2,13 @@ package com.takypok.workflowservice.controller;
 
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.entity.Status;
+import com.takypok.workflowservice.model.request.StatusCreateRequest;
+import com.takypok.workflowservice.model.request.StatusUpdateRequest;
 import com.takypok.workflowservice.service.StatusService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -25,5 +25,20 @@ public class StatusController {
   @GetMapping("/{id}")
   public Mono<ResultMessage<Status>> getById(@PathVariable Long id) {
     return statusService.getById(id).map(ResultMessage::success);
+  }
+
+  @PostMapping("")
+  public Mono<ResultMessage<Status>> create(@Valid @RequestBody StatusCreateRequest request) {
+    return statusService.create(request).map(ResultMessage::success);
+  }
+
+  @PutMapping("")
+  public Mono<ResultMessage<Status>> update(@Valid @RequestBody StatusUpdateRequest request) {
+    return statusService.update(request).map(ResultMessage::success);
+  }
+
+  @DeleteMapping("/{id}")
+  public Mono<ResultMessage<Void>> delete(@PathVariable Long id) {
+    return statusService.delete(id).then(Mono.just(ResultMessage.success(null)));
   }
 }

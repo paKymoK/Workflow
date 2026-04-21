@@ -32,10 +32,16 @@ spring:
         jwt:
           issuer-uri: http://127.0.0.1:9000
   cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
     gateway:
       server:
         webflux:
           enabled: true
+          discovery:
+            locator:
+              enabled: true
           httpclient:
             connect-timeout: 10000
             response-timeout: 60s

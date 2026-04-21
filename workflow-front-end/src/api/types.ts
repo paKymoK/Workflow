@@ -18,11 +18,31 @@ export interface Project {
   workflowId: number;
 }
 
+export interface ProjectCreateRequest {
+  name: string;
+  code: string;
+  workflowId: number;
+}
+
+export interface ProjectUpdateRequest extends ProjectCreateRequest {
+  id: number;
+}
+
 export interface Priority {
   id: number;
   name: string;
   responseTime: number;
   resolutionTime: number;
+}
+
+export interface PriorityCreateRequest {
+  name: string;
+  responseTime: number;
+  resolutionTime: number;
+}
+
+export interface PriorityUpdateRequest extends PriorityCreateRequest {
+  id: number;
 }
 
 export interface IssueType {
@@ -61,6 +81,16 @@ export interface WorkflowStatus {
   group: string;
   x: number;
   y: number;
+}
+
+export interface StatusCreateRequest {
+  name: string;
+  color: string;
+  group: string;
+}
+
+export interface StatusUpdateRequest extends StatusCreateRequest {
+  id: number;
 }
 
 export interface WorkflowTransition {
