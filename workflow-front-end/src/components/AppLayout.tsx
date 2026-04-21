@@ -21,6 +21,7 @@ import { useTheme } from "../context/useTheme";
 import { useFont } from "../context/useFont";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import api from "../api/axios";
 
 const { Header, Sider, Content } = Layout;
 
@@ -34,10 +35,18 @@ const ROUTE_LABELS: Record<string, string> = {
 const TICKER_TEXT =
   "WORKFLOW ENGINE ///  TICKET MANAGEMENT ///  SLA TRACKING ///  OAUTH2 SECURED ///  SYSTEM NOMINAL ///  ";
 
+type ServiceHealth = {
+  service: string;
+  status: string;
+};
+
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [clock, setClock] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+  const [systemStatus, setSystemStatus] = useState("CHECKING");
+  const [nodeStatus, setNodeStatus] = useState("Checking");
+  const [services, setServices] = useState<ServiceHealth[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -53,6 +62,87 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchHealth = async () => {
+      try {
+        const { data } = await api.get("/api/health");
+        const overall = String(data?.overall ?? "UNKNOWN").toUpperCase();
+        const serviceList = Array.isArray(data?.services)
+          ? (data.services as ServiceHealth[]).map((s) => ({
+              service: String(s.service ?? "unknown"),
+              status: String(s.status ?? "UNKNOWN").toUpperCase(),
+            }))
+          : [];
+        if (!active) return;
+        setSystemStatus(overall);
+        setNodeStatus(overall === "UP" ? "Active" : "Degraded");
+        setServices(serviceList);
+      } catch {
+        if (!active) return;
+        setSystemStatus("DOWN");
+        setNodeStatus("Down");
+        setServices([]);
+      }
+    };
+
+    fetchHealth();
+    const timer = setInterval(fetchHealth, 30000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  const sysStatusColorClass =
+    systemStatus === "UP"
+      ? "neon-text-cyan"
+      : systemStatus === "CHECKING"
+      ? "text-[var(--text-muted)]"
+      : "text-red-400";
+
+  const nodeStatusColorClass =
+    nodeStatus === "Active"
+      ? "neon-text-yellow"
+      : nodeStatus === "Checking"
+      ? "text-[var(--text-muted)]"
+      : "text-red-400";
+
+  const systemStatusLabel =
+    systemStatus === "UP" ? "Nominal" : systemStatus === "CHECKING" ? "Checking" : systemStatus;
+
+  const getServiceColorClass = (status: string) => {
+    if (status === "UP") return "neon-text-cyan";
+    if (status === "DOWN") return "text-red-400";
+    return "text-[var(--text-muted)]";
+  };
+
+  const formatServiceName = (name: string) => {
+    if (name.endsWith("-service")) return name.replace("-service", "");
+    return name;
+  };
+
+  const visibleServices = services.slice(0, 4);
+
+  const serviceStatusText =
+    services.length === 0
+      ? "No Data"
+      : services.every((s) => s.status === "UP")
+      ? "All Up"
+      : `${services.filter((s) => s.status !== "UP").length} Down`;
+
+  const serviceStatusColorClass =
+    services.length === 0
+      ? "text-[var(--text-muted)]"
+      : services.every((s) => s.status === "UP")
+      ? "neon-text-cyan"
+      : "text-red-400";
+
+  const isServiceListCollapsed = services.length > 4;
+
+  const serviceListHint = isServiceListCollapsed ? `+${services.length - 4} more` : "";
 
   const displayName =
     (user?.preferred_username as string) ??
@@ -127,12 +217,25 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <div className="font-mono-tech text-[9px] tracking-[0.15em] space-y-1">
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)] uppercase">Node</span>
-                  <span className="neon-text-yellow">Active</span>
+                  <span className={nodeStatusColorClass}>{nodeStatus}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)] uppercase">Sys</span>
-                  <span className="neon-text-cyan">Nominal</span>
+                  <span className={sysStatusColorClass}>{systemStatusLabel}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-muted)] uppercase">Svc</span>
+                  <span className={serviceStatusColorClass}>{serviceStatusText}</span>
+                </div>
+                {visibleServices.map((service) => (
+                  <div key={service.service} className="flex justify-between pl-2">
+                    <span className="text-[var(--text-muted)] uppercase">{formatServiceName(service.service)}</span>
+                    <span className={getServiceColorClass(service.status)}>{service.status}</span>
+                  </div>
+                ))}
+                {serviceListHint && (
+                  <div className="text-[var(--text-muted)] text-right">{serviceListHint}</div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)] uppercase">Enc</span>
                   <span className="text-[var(--text-muted)]">AES-256</span>

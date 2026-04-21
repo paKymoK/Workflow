@@ -1,8 +1,5 @@
 server:
   port: 8084
-management:
-  server:
-    port: 9084
 spring:
   main:
     web-application-type: reactive

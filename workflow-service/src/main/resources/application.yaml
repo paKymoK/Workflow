@@ -1,15 +1,10 @@
 server:
   port: 8081
-management:
-  server:
-    port: 9081
 spring:
   main:
     web-application-type: reactive
   application:
     name: workflow-service
-  webflux:
-    base-path: /workflow
   data:
     redis:
       port: 6379

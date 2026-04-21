@@ -4,9 +4,6 @@ server:
 spring:
   application:
     name: chat-service
-
-  webflux:
-    base-path: /chat
   ai:
     ollama:
       base-url: http://localhost:11434

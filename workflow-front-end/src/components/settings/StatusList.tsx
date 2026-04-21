@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { Button, ColorPicker, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { WorkflowStatus } from "../../api/types";
 import {
@@ -24,6 +24,7 @@ export default function StatusList() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<WorkflowStatus | null>(null);
   const [form] = Form.useForm();
+  const watchedColor = Form.useWatch("color", form);
 
   const onCreate = () => {
     setEditing(null);
@@ -91,8 +92,26 @@ export default function StatusList() {
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="color" label="Color" rules={[{ required: true }]}>
-            <Input placeholder="#1677ff" />
+          <Form.Item
+            name="color"
+            label="Color"
+            rules={[
+              { required: true },
+              { pattern: /^#[0-9A-Fa-f]{6}$/, message: "Use hex format like #1677ff" },
+            ]}
+            extra="Pick a color or type hex value (#RRGGBB)."
+          >
+            <Input
+              placeholder="#1677ff"
+              addonAfter={
+                <ColorPicker
+                  format="hex"
+                  value={watchedColor || "#1677ff"}
+                  onChange={(_, hex) => form.setFieldValue("color", hex)}
+                  showText
+                />
+              }
+            />
           </Form.Item>
           <Form.Item name="group" label="Group" rules={[{ required: true }]}>
             <Select options={groupOptions} />
