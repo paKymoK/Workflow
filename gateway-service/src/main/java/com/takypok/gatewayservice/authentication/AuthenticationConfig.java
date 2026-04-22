@@ -35,7 +35,12 @@ public class AuthenticationConfig {
                         "/login/**",
                         "/logout/**",
                         "/workflow-service/web-socket/**",
-                        "/media-service/images/**")
+                        "/media-service/images/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/webjars/**",
+                        "/v3/api-docs/**",
+                        "/*/docs/api-docs")
                     .permitAll()
                     .anyExchange()
                     .authenticated())
