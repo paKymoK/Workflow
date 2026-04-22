@@ -27,7 +27,15 @@ public class SecurityConfig {
             exchange ->
                 exchange
                     .pathMatchers(
-                        "/web-socket/**", "/actuator/**", "/swagger-ui.html", "/images/**")
+                        "/web-socket/**",
+                        "/actuator/**",
+                        "/swagger-ui.html",
+                        "/images/**",
+                        "/v1/doc/swagger-ui.html",
+                        "/v1/doc/swagger-ui/**",
+                        "/docs/api-docs",
+                        "/docs/api-docs/**",
+                        "/webjars/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())

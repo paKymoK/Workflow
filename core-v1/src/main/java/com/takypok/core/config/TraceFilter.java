@@ -43,31 +43,30 @@ public class TraceFilter implements WebFilter {
       return chain.filter(exchange);
     }
 
+    String requestId =
+        Optional.ofNullable(request.getHeaders().getFirst(Constants.X_REQUEST_ID))
+            .orElse(UUID.randomUUID().toString());
+
     return ReactiveSecurityContextHolder.getContext()
         .map(
             securityContext -> {
-              ServerWebExchange serverWebExchange =
-                  exchange.mutate().response(decorateResponse(request, response)).build();
-              String requestId =
-                  Optional.ofNullable(request.getHeaders().getFirst(Constants.X_REQUEST_ID))
-                      .orElse(UUID.randomUUID().toString());
-
               String userId = securityContext.getAuthentication().getName();
-
-              serverWebExchange.getResponse().getHeaders().add(Constants.USER_ID, userId);
-              serverWebExchange.getResponse().getHeaders().add(Constants.X_REQUEST_ID, requestId);
-
-              return Tuples.of(serverWebExchange, requestId, userId);
+              ServerWebExchange decorated =
+                  exchange.mutate().response(decorateResponse(request, response)).build();
+              decorated.getResponse().getHeaders().add(Constants.USER_ID, userId);
+              decorated.getResponse().getHeaders().add(Constants.X_REQUEST_ID, requestId);
+              return Tuples.of(decorated, userId);
             })
+        .defaultIfEmpty(Tuples.of(exchange, ""))
         .flatMap(
-            tuples ->
+            tuple ->
                 chain
-                    .filter(tuples.getT1())
+                    .filter(tuple.getT1())
                     .contextWrite(
                         context ->
                             context
-                                .put(Constants.X_REQUEST_ID, tuples.getT2())
-                                .put(Constants.USER_ID, tuples.getT3())));
+                                .put(Constants.X_REQUEST_ID, requestId)
+                                .put(Constants.USER_ID, tuple.getT2())));
   }
 
   private ServerHttpResponse decorateResponse(
