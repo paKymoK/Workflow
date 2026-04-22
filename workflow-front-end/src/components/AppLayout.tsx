@@ -45,7 +45,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [clock, setClock] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [systemStatus, setSystemStatus] = useState("CHECKING");
-  const [nodeStatus, setNodeStatus] = useState("Checking");
   const [services, setServices] = useState<ServiceHealth[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,12 +77,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           : [];
         if (!active) return;
         setSystemStatus(overall);
-        setNodeStatus(overall === "UP" ? "Active" : "Degraded");
         setServices(serviceList);
       } catch {
         if (!active) return;
         setSystemStatus("DOWN");
-        setNodeStatus("Down");
         setServices([]);
       }
     };
@@ -100,13 +97,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     systemStatus === "UP"
       ? "neon-text-cyan"
       : systemStatus === "CHECKING"
-      ? "text-[var(--text-muted)]"
-      : "text-red-400";
-
-  const nodeStatusColorClass =
-    nodeStatus === "Active"
-      ? "neon-text-yellow"
-      : nodeStatus === "Checking"
       ? "text-[var(--text-muted)]"
       : "text-red-400";
 
@@ -215,10 +205,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           {!collapsed && (
             <div className="flex-shrink-0 px-4 py-3 border-t border-[var(--border-subtle)]">
               <div className="font-mono-tech text-[9px] tracking-[0.15em] space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-muted)] uppercase">Node</span>
-                  <span className={nodeStatusColorClass}>{nodeStatus}</span>
-                </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)] uppercase">Sys</span>
                   <span className={sysStatusColorClass}>{systemStatusLabel}</span>

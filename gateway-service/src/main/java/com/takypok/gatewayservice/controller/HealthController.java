@@ -30,8 +30,6 @@ public class HealthController {
     return WebClient.builder().filter(loadBalancerFilter).baseUrl("http://" + serviceId).build();
   }
 
-  // Check a single service by name
-  // GET /api/health/{serviceName}
   @GetMapping("/health/{serviceName}")
   public Mono<ResponseEntity<Map<String, Object>>> checkService(@PathVariable String serviceName) {
     return doHealthCheck(serviceName)
@@ -44,8 +42,6 @@ public class HealthController {
             });
   }
 
-  // Check all registered services at once
-  // GET /api/health
   @GetMapping("/health")
   public Mono<ResponseEntity<Map<String, Object>>> checkAllServices() {
     List<String> services = discoveryClient.getServices();
@@ -58,7 +54,7 @@ public class HealthController {
               boolean allUp = results.stream().allMatch(r -> "UP".equals(r.get("status")));
 
               Map<String, Object> response = new LinkedHashMap<>();
-              response.put("overall", allUp ? "UP" : "DEGRADED");
+              response.put("overall", allUp ? "Up" : "Degraded");
               response.put("services", results);
 
               return allUp
@@ -73,7 +69,11 @@ public class HealthController {
         .get()
         .uri("/actuator/health")
         .retrieve()
+        .onStatus(
+            status -> !status.is2xxSuccessful(),
+            response -> Mono.error(new RuntimeException("HTTP " + response.statusCode().value())))
         .bodyToMono(Map.class)
+        .switchIfEmpty(Mono.error(new RuntimeException("Empty response")))
         .map(
             body -> {
               Map<String, Object> result = new LinkedHashMap<>();
