@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import AddUserModal from "../components/settings/AddUserModal";
 import { useTheme } from "../context/useTheme";
@@ -7,13 +6,34 @@ import { SunOutlined, MoonOutlined } from "@ant-design/icons";
 import { useFont } from "../context/useFont";
 import BubbleBackground from "../components/BubbleBackground";
 
+type AuthHealth = "checking" | "up" | "down";
+
+async function fetchAuthHealth(): Promise<AuthHealth> {
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/health/auth-service`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    const data = await res.json();
+    return data?.status === "UP" ? "up" : "down";
+  } catch {
+    return "down";
+  }
+}
+
 export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [clock, setClock] = useState("");
   const [registerOpen, setRegisterOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const { isCustomFont, toggleFont } = useFont();
+  const [authHealth, setAuthHealth] = useState<AuthHealth>("checking");
+
+  useEffect(() => {
+    fetchAuthHealth().then(setAuthHealth);
+    const id = setInterval(() => fetchAuthHealth().then(setAuthHealth), 15000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const update = () =>
@@ -121,35 +141,66 @@ export default function Login() {
           </div>
 
           {/* Info block */}
-          <div className="mb-8 border-l-2 border-[var(--neon-cyan)] pl-4 bg-[rgba(0,245,255,0.04)] py-3 pr-3">
+          <div className="mb-6 border-l-2 border-[var(--neon-cyan)] pl-4 bg-[rgba(0,245,255,0.04)] py-3 pr-3">
             <p className="font-mono-tech text-[11px] text-[var(--neon-cyan)] tracking-[0.08em] leading-relaxed">
               ✓ STATUS // Authentication is managed via OAuth2.<br />
               You will be redirected to the identity provider.
             </p>
           </div>
 
+          {/* Auth service down warning */}
+          {authHealth === "down" && (
+            <div className="mb-6 border border-[var(--neon-pink)] bg-[rgba(255,45,107,0.07)] px-4 py-3 auth-down-pulse">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="inline-flex items-center justify-center w-4 h-4 border border-[var(--neon-pink)] rounded-full text-[9px] text-[var(--neon-pink)] auth-icon-spin shrink-0">
+                  !
+                </span>
+                <span className="font-bebas text-[14px] text-[var(--neon-pink)] tracking-[0.25em]">
+                  AUTH SERVICE DEGRADED
+                </span>
+              </div>
+              <p className="font-mono-tech text-[10px] text-[rgba(255,45,107,0.7)] tracking-[0.08em] leading-relaxed">
+                Authentication system is currently unavailable.<br />
+                Access has been disabled until the service recovers.
+              </p>
+              <span className="inline-block mt-2 bg-[rgba(255,45,107,0.15)] text-[var(--neon-pink)] font-mono-tech text-[9px] px-2 py-0.5 tracking-[0.05em]">
+                ERR // AUTH_SERVICE_UNAVAILABLE
+              </span>
+            </div>
+          )}
+
           {/* OAuth2 button */}
           <button
             onClick={login}
-            className="neon-btn w-full bg-[var(--neon-yellow)] text-[var(--dark)] border-none py-4 font-bebas text-[22px] tracking-[0.25em]"
+            disabled={authHealth !== "up"}
+            className={`neon-btn w-full py-4 font-bebas text-[22px] tracking-[0.25em] border-none transition-all ${
+              authHealth === "up"
+                ? "bg-[var(--neon-yellow)] text-[var(--dark)] cursor-crosshair"
+                : authHealth === "checking"
+                ? "bg-[rgba(255,229,0,0.15)] text-[rgba(255,229,0,0.4)] cursor-not-allowed"
+                : "bg-[rgba(255,45,107,0.12)] text-[var(--neon-pink)] border border-[var(--neon-pink)] cursor-not-allowed opacity-70"
+            }`}
           >
-            <span className="neon-btn-content">INITIATE ACCESS ⚡</span>
+            <span className="neon-btn-content">
+              {authHealth === "checking"
+                ? "CHECKING SERVICE..."
+                : authHealth === "down"
+                ? "// SERVICE OFFLINE //"
+                : "INITIATE ACCESS ⚡"}
+            </span>
           </button>
 
           {/* Register button */}
           <button
             onClick={() => setRegisterOpen(true)}
-            className="w-full mt-3 py-4 font-bebas text-[22px] tracking-[0.25em] bg-transparent border-2 border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--neon-cyan)] hover:text-[var(--neon-cyan)] hover:shadow-[0_0_16px_rgba(0,245,255,0.2)] transition-all cursor-crosshair"
+            disabled={authHealth !== "up"}
+            className={`w-full mt-3 py-4 font-bebas text-[22px] tracking-[0.25em] bg-transparent border-2 transition-all ${
+              authHealth === "up"
+                ? "border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--neon-cyan)] hover:text-[var(--neon-cyan)] hover:shadow-[0_0_16px_rgba(0,245,255,0.2)] cursor-crosshair"
+                : "border-[rgba(123,47,190,0.2)] text-[rgba(123,47,190,0.35)] cursor-not-allowed"
+            }`}
           >
             REGISTER ◈
-          </button>
-
-          {/* Portfolio button */}
-          <button
-            onClick={() => navigate("/portfolio")}
-            className="w-full mt-3 py-4 font-bebas text-[22px] tracking-[0.25em] bg-transparent border-2 border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--neon-cyan)] hover:text-[var(--neon-cyan)] hover:shadow-[0_0_16px_rgba(0,245,255,0.2)] transition-all cursor-crosshair"
-          >
-            PORTFOLIO ◈
           </button>
 
           {/* Footer note */}

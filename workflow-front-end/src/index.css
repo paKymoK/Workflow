@@ -183,6 +183,19 @@ body {
 .neon-btn:hover { box-shadow: 0 0 30px rgba(123, 47, 190, 0.5) !important; color: #fff !important; }
 .neon-btn:active { transform: scale(0.98); }
 .neon-btn-content { position: relative; z-index: 1; }
+.neon-btn:disabled { pointer-events: none; }
+
+/* ── Auth service down warning ───────────────────────── */
+@keyframes authDownPulse {
+    0%,100% { box-shadow: 0 0 16px rgba(255,45,107,0.15); }
+    50%      { box-shadow: 0 0 32px rgba(255,45,107,0.4); }
+}
+@keyframes authIconSpin {
+    0%,88%,100% { transform: rotate(0deg); }
+    93%          { transform: rotate(180deg); }
+}
+.auth-down-pulse { animation: authDownPulse 2.5s ease-in-out infinite; }
+.auth-icon-spin  { animation: authIconSpin 3s ease-in-out infinite; }
 
 /* ── Field focus bar ─────────────────────────────────── */
 .focus-bar {

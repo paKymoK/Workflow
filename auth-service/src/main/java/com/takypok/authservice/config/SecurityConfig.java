@@ -128,7 +128,7 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
-                    .requestMatchers("/assets/**", "/login/**", "/logout", "/v1/**")
+                    .requestMatchers("/assets/**", "/login/**", "/logout", "/v1/**", "/actuator/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

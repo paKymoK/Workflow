@@ -2,6 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { Spin } from "antd";
 import { useAuth } from "../auth/useAuth";
 import AppLayout from "./AppLayout";
+import { CartProvider } from "../context/CartContext";
 
 export default function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -19,8 +20,10 @@ export default function ProtectedRoute() {
   }
 
   return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
+    <CartProvider>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    </CartProvider>
   );
 }

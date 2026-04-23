@@ -10,3 +10,11 @@ management:
   health:
     redis:
       enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      access: unrestricted

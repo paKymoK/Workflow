@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +22,10 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class HealthController {
 
+  private static final List<String> MONITORED_SERVICES =
+      List.of("auth-service", "workflow-service", "media-service", "shop-service");
+
   private final ReactorLoadBalancerExchangeFilterFunction loadBalancerFilter;
-  private final DiscoveryClient discoveryClient;
 
   private WebClient buildClient(String serviceId) {
     return WebClient.builder().filter(loadBalancerFilter).baseUrl("http://" + serviceId).build();
@@ -44,9 +45,8 @@ public class HealthController {
 
   @GetMapping("/health")
   public Mono<ResponseEntity<Map<String, Object>>> checkAllServices() {
-    List<String> services = discoveryClient.getServices();
-    log.info("Discovered services: {}", services);
-    return Flux.fromIterable(services)
+    log.info("Checking services: {}", MONITORED_SERVICES);
+    return Flux.fromIterable(MONITORED_SERVICES)
         .flatMap(this::doHealthCheck)
         .collectList()
         .map(

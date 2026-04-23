@@ -40,7 +40,9 @@ public class AuthenticationConfig {
                         "/swagger-ui/**",
                         "/webjars/**",
                         "/v3/api-docs/**",
-                        "/*/docs/api-docs")
+                        "/*/docs/api-docs",
+                        "/api/health",
+                        "/api/health/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())
