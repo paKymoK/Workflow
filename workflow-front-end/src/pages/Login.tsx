@@ -54,12 +54,6 @@ export default function Login() {
       {/* Scanlines */}
       <div className="scanlines-overlay" />
 
-      {/* Corner decorations */}
-      <div className="corner-tl" />
-      <div className="corner-tr" />
-      <div className="corner-bl" />
-      <div className="corner-br" />
-
       {/* Ticker tape */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-[var(--neon-yellow)] overflow-hidden flex items-center z-10">
         <div className="ticker-track flex whitespace-nowrap">

@@ -10,7 +10,6 @@ import Callback from "../pages/Callback";
 import Settings from "../pages/Settings";
 import WorkflowDetail from "../pages/WorkflowDetail";
 import Diary from "../pages/Diary";
-import AMS from "../pages/AMS";
 import Shop from "../pages/Shop";
 import ShopDetail from "../pages/ShopDetail";
 
@@ -21,7 +20,6 @@ export default function AppRouter() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/ams" element={<AMS />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/callback" element={<Callback />} />
           <Route element={<ProtectedRoute />}>
