@@ -2,6 +2,7 @@ import axios from "axios";
 import { message } from "antd";
 import { navigate } from "../lib/navigate";
 import { refreshAccessToken } from "../auth/pkce";
+import { notifyTokenRefreshed } from "../lib/tokenSync";
 
 let refreshPromise: Promise<string | null> | null = null;
 
@@ -16,6 +17,8 @@ async function refreshTokenIfPossible() {
         if (tokenResponse.refresh_token) {
           sessionStorage.setItem("refresh_token", tokenResponse.refresh_token);
         }
+        // Sync new token back into AuthProvider so React state + timer stay current
+        notifyTokenRefreshed(tokenResponse);
         return tokenResponse.access_token;
       })
       .catch(() => {
