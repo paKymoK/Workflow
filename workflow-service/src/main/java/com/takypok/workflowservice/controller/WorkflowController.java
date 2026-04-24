@@ -1,9 +1,8 @@
 package com.takypok.workflowservice.controller;
 
-import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
+import static com.takypok.core.util.AuthenticationUtil.*;
 
 import com.takypok.core.model.ResultMessage;
-import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Workflow;
 import com.takypok.workflowservice.model.request.WorkflowCreateRequest;
 import com.takypok.workflowservice.model.request.WorkflowUpdateRequest;
@@ -29,8 +28,9 @@ public class WorkflowController {
   @GetMapping("/{id}")
   public Mono<ResultMessage<Workflow>> getById(
       @PathVariable Long id, Authentication authentication) {
-    User user = getUserInfo(authentication);
-    System.out.println(user);
+    System.out.println(getUserInfo(authentication));
+    System.out.println(getDomain(authentication));
+    System.out.println(getRoles(authentication));
     return workflowService.getById(id).map(ResultMessage::success);
   }
 

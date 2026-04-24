@@ -15,19 +15,6 @@ spring:
       host: 127.0.0.1
   security:
     oauth2:
-      client:
-        registration:
-          gateway-service-oidc:
-            provider: gateway-service
-            client-id: gateway
-            client-secret: gateway-secret
-            authorization-grant-type: authorization_code
-            redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
-            scope: openid,profile,offline_access
-            client-name: gateway-service-oidc
-        provider:
-          gateway-service:
-            issuer-uri: http://127.0.0.1:9000
       resourceserver:
         jwt:
           issuer-uri: http://127.0.0.1:9000

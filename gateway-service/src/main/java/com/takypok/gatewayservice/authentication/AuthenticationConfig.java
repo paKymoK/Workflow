@@ -1,27 +1,20 @@
 package com.takypok.gatewayservice.authentication;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import java.util.Arrays;
 import java.util.Collections;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebFluxSecurity
-@RequiredArgsConstructor
 @Slf4j
 public class AuthenticationConfig {
-  private final ServerOAuth2AuthorizedClientRepository authorizedClientRepository;
 
   @Bean
   public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -31,9 +24,6 @@ public class AuthenticationConfig {
             exchanges ->
                 exchanges
                     .pathMatchers(
-                        "/",
-                        "/login/**",
-                        "/logout/**",
                         "/workflow-service/web-socket/**",
                         "/media-service/images/**",
                         "/swagger-ui.html",
@@ -46,16 +36,13 @@ public class AuthenticationConfig {
                     .permitAll()
                     .anyExchange()
                     .authenticated())
-        .oauth2Login(withDefaults())
-        .oauth2Client(withDefaults())
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
-        .logout(withDefaults())
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults -> {}))
         .build();
   }
 
   @Bean
-  public GlobalFilter customFilter() {
-    return new CustomGlobalFilter(authorizedClientRepository);
+  public CustomGlobalFilter customGlobalFilter() {
+    return new CustomGlobalFilter();
   }
 
   public UrlBasedCorsConfigurationSource corsFilter() {

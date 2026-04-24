@@ -79,7 +79,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     };
 
     fetchHealth();
-    const timer = setInterval(fetchHealth, 30000);
+    const timer = setInterval(fetchHealth, 15000);
     return () => {
       active = false;
       clearInterval(timer);
