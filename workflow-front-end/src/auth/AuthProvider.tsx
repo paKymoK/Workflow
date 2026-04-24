@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Always points to the latest closure — safe to call from a timer or message handler
@@ -121,7 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const clearAuthError = () => setAuthError(null);
+
   const login = async (usePopup = false) => {
+    setAuthError(null);
     let popup: Window | null = null;
 
     if (usePopup) {
@@ -168,9 +172,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handler = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      if ((event.data as { type?: string })?.type !== "auth-callback") return;
+      const msg = event.data as { type?: string; code?: string; state?: string; message?: string };
 
-      const { code, state } = event.data as { code: string; state: string };
+      if (msg?.type === "auth-error") {
+        setAuthError(msg.message ?? "Authentication failed");
+        return;
+      }
+
+      if (msg?.type !== "auth-callback") return;
+
+      const { code, state } = msg as { code: string; state: string };
       const savedState   = sessionStorage.getItem("pkce_state");
       const codeVerifier = sessionStorage.getItem("pkce_code_verifier");
       if (state !== savedState || !codeVerifier) return;
@@ -180,7 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem("pkce_code_verifier");
         sessionStorage.removeItem("pkce_state");
         navigate("/");
-      } catch {
+      } catch (err) {
+        setAuthError(err instanceof Error ? err.message : "Token exchange failed");
         navigate("/login");
       }
     };
@@ -206,10 +218,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         accessToken,
         user,
+        authError,
         login,
         logout,
         handleCallback,
         setTokenResponse,
+        clearAuthError,
       }}
     >
       {children}

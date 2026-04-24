@@ -21,8 +21,23 @@ export default function Callback() {
   const [exchangeError, setExchangeError] = useState<string | null>(null);
 
   const validationError = useMemo(() => {
-    const code = searchParams.get("code");
+    // OAuth2 error response (e.g. access_denied, invalid_request)
+    const oauthError = searchParams.get("error");
+    if (oauthError) {
+      const desc = searchParams.get("error_description");
+      const msg  = desc
+        ? decodeURIComponent(desc.replace(/\+/g, " "))
+        : `Authorization failed: ${oauthError}`;
+      if (isPopup()) {
+        window.opener?.postMessage(
+          { type: "auth-error", message: msg },
+          window.location.origin,
+        );
+      }
+      return msg;
+    }
 
+    const code = searchParams.get("code");
     if (!code) return "No authorization code received";
 
     // In popup mode the state and codeVerifier live in the parent's

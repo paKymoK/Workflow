@@ -6,10 +6,12 @@ export interface AuthContextType {
   isLoading: boolean;
   accessToken: string | null;
   user: Record<string, unknown> | null;
+  authError: string | null;
   login: (usePopup?: boolean) => Promise<void>;
   logout: () => void;
   handleCallback: (code: string, codeVerifier: string) => Promise<void>;
   setTokenResponse: (tokenResponse: TokenResponse) => void;
+  clearAuthError: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

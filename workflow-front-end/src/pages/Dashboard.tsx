@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from "react";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
 import { Spin, Table, Tag, Button, Dropdown, message, Input, Select } from "antd";
 import { PlusOutlined, MoreOutlined, SearchOutlined } from "@ant-design/icons";
@@ -29,7 +30,8 @@ export default function Dashboard() {
 
   // ── Pagination ───────────────────────────────────────────────────────────
   const [page,     setPage]     = useUrlState("page",     0);
-  const [pageSize, setPageSize] = useUrlState("size",     10);
+  const [pageSize]              = useUrlState("size",     10);
+  const [, setSearchParams]     = useSearchParams();
 
   // ── Filter state ─────────────────────────────────────────────────────────
   const [summary,       setSummary]       = useUrlState("q",        "");
@@ -276,7 +278,14 @@ export default function Dashboard() {
           total,
           showSizeChanger: true,
           showTotal: (t) => `Total ${t} tickets`,
-          onChange: (p, size) => { setPage(p - 1); setPageSize(size); },
+          onChange: (p, size) => {
+            setSearchParams((prev) => {
+              const params = new URLSearchParams(prev);
+              p - 1 === 0    ? params.delete("page") : params.set("page", JSON.stringify(p - 1));
+              size   === 10  ? params.delete("size") : params.set("size", JSON.stringify(size));
+              return params;
+            }, { replace: true });
+          },
         }}
       />
 

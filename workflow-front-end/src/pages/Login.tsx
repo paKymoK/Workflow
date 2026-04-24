@@ -23,7 +23,7 @@ async function fetchAuthHealth(): Promise<AuthHealth> {
 }
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, authError, clearAuthError } = useAuth();
   const [clock, setClock] = useState("");
   const [registerOpen, setRegisterOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
@@ -158,6 +158,32 @@ export default function Login() {
               <span className="inline-block mt-2 bg-[rgba(255,45,107,0.15)] text-[var(--neon-pink)] font-mono-tech text-[9px] px-2 py-0.5 tracking-[0.05em]">
                 ERR // AUTH_SERVICE_UNAVAILABLE
               </span>
+            </div>
+          )}
+
+          {/* Server / token exchange error */}
+          {authError && (
+            <div className="mb-6 border border-[var(--neon-pink)] bg-[rgba(255,45,107,0.07)] px-4 py-3">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-4 h-4 border border-[var(--neon-pink)] rounded-full text-[9px] text-[var(--neon-pink)] shrink-0">
+                    !
+                  </span>
+                  <span className="font-bebas text-[14px] text-[var(--neon-pink)] tracking-[0.25em]">
+                    AUTHENTICATION ERROR
+                  </span>
+                </div>
+                <button
+                  onClick={clearAuthError}
+                  className="text-[var(--neon-pink)] opacity-60 hover:opacity-100 font-mono-tech text-[11px] leading-none"
+                  aria-label="Dismiss error"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="font-mono-tech text-[10px] text-[rgba(255,45,107,0.8)] tracking-[0.08em] leading-relaxed break-words">
+                {authError}
+              </p>
             </div>
           )}
 
