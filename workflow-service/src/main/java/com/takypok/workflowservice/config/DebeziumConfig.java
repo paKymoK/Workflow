@@ -123,7 +123,6 @@ public class DebeziumConfig {
                     .map(SlaTracker::getStatus)
                     .orElse(null));
         if (!Objects.equals(before, after)) {
-          System.out.println("before " + before + " after " + after);
           sink.tryEmitNext(String.valueOf(change.getPayload().getAfter().getId())).orThrow();
         }
       } catch (Exception e) {

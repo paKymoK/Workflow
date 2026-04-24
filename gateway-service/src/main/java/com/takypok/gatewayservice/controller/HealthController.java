@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
 public class HealthController {
 
   private static final List<String> MONITORED_SERVICES =
-      List.of("auth-service", "workflow-service", "media-service", "shop-service");
+      List.of("auth-service", "workflow-service", "media-service");
 
   private final ReactorLoadBalancerExchangeFilterFunction loadBalancerFilter;
 

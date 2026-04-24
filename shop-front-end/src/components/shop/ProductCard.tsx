@@ -24,7 +24,7 @@ export default function ProductCard({ product }: { product: ShopProduct }) {
             src={product.imageUrl}
             alt={product.name}
             className={`h-48 w-full object-cover cursor-pointer transition-all ${outOfStock ? "opacity-40 grayscale cursor-default" : ""}`}
-            onClick={() => !outOfStock && navigate(`/shop/${product.id}`)}
+            onClick={() => !outOfStock && navigate(`/${product.id}`)}
           />
           {outOfStock && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -50,7 +50,7 @@ export default function ProductCard({ product }: { product: ShopProduct }) {
         title={
           <span
             className={`transition-opacity ${outOfStock ? "opacity-40 cursor-default" : "cursor-pointer hover:opacity-75"}`}
-            onClick={() => !outOfStock && navigate(`/shop/${product.id}`)}
+            onClick={() => !outOfStock && navigate(`/${product.id}`)}
           >
             {product.name}
           </span>

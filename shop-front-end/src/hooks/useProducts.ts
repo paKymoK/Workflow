@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchProductById, fetchProducts } from "../api/ticketApi";
+import { fetchProductById, fetchProducts } from "../api/shopApi";
 import type { FilterProductRequest } from "../api/types";
 
 export const productKeys = {

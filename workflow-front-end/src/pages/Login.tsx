@@ -51,9 +51,6 @@ export default function Login() {
       {/* Diagonal slash accent */}
       <div className="login-slash-accent" />
 
-      {/* Scanlines */}
-      <div className="scanlines-overlay" />
-
       {/* Ticker tape */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-[var(--neon-yellow)] overflow-hidden flex items-center z-10">
         <div className="ticker-track flex whitespace-nowrap">

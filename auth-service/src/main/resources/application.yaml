@@ -42,5 +42,5 @@ logging:
     org.springframework.web: ${LOGGING_LEVEL_SPRING_WEB:INFO}
     org.springframework.security: ${LOGGING_LEVEL_SPRING_SECURITY:DEBUG}
     org.springframework.security.oauth2: ${LOGGING_LEVEL_SPRING_OAUTH2:DEBUG}
-    org.springframework.security.web.FilterChainProxy: TRACE
+    org.springframework.security.web.FilterChainProxy: INFO
 

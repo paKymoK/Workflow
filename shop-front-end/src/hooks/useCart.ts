@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { checkoutCart, fetchCart, removeCartItem, upsertCartItem } from "../api/ticketApi";
+import { checkoutCart, fetchCart, removeCartItem, upsertCartItem } from "../api/shopApi";
 import type { UpsertCartItemRequest } from "../api/types";
 import { productKeys } from "./useProducts";
 

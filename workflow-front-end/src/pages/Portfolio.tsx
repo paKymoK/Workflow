@@ -217,9 +217,6 @@ export default function Portfolio() {
       {/* Particle background */}
       <canvas ref={canvasRef} className="pf-canvas" />
 
-      {/*/!* CRT scanlines *!/*/}
-      {/*<div className="pf-scanlines" />*/}
-
       <div className="pf-page">
 
         {/* ── Ticker ──────────────────────────────────── */}

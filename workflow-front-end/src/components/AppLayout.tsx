@@ -1,5 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown, App, Badge } from "antd";
+import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
 import ChatWidget from "./ChatWidget";
 import BubbleBackground from "./BubbleBackground";
 import {
@@ -12,11 +12,7 @@ import {
   SettingOutlined,
   SunOutlined,
   MoonOutlined,
-  ShoppingOutlined,
-  ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { useCart } from "../context/CartContext";
-import CartDrawer from "./shop/CartDrawer";
 import { useTheme } from "../context/useTheme";
 import { useFont } from "../context/useFont";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -29,7 +25,6 @@ const ROUTE_LABELS: Record<string, string> = {
   "/": "// OVERVIEW",
   "/dashboard": "// DASHBOARD",
   "/settings": "// SETTINGS",
-  "/shop": "// SHOP",
 };
 
 const TICKER_TEXT =
@@ -43,7 +38,6 @@ type ServiceHealth = {
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [clock, setClock] = useState("");
-  const [cartOpen, setCartOpen] = useState(false);
   const [systemStatus, setSystemStatus] = useState("CHECKING");
   const [services, setServices] = useState<ServiceHealth[]>([]);
   const navigate = useNavigate();
@@ -51,8 +45,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { isCustomFont, toggleFont } = useFont();
-  const { totalItems } = useCart();
-  const isShopRoute = location.pathname.startsWith("/shop");
 
   useEffect(() => {
     const update = () =>
@@ -121,7 +113,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       ? "No Data"
       : services.every((s) => s.status === "UP")
       ? "All Up"
-      : `${services.filter((s) => s.status !== "UP").length} Down`;
+      : `${services.filter((s) => s.status !== "UP").length} DOWN`;
 
   const serviceStatusColorClass =
     services.length === 0
@@ -147,7 +139,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const siderMenuItems = [
     { key: "/",          icon: <HomeOutlined />,      label: "Home" },
     { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
-    { key: "/shop",      icon: <ShoppingOutlined />,  label: "Shop" },
     { key: "/settings",  icon: <SettingOutlined />,   label: "Settings" },
   ];
 
@@ -164,11 +155,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <App>
       <BubbleBackground />
-      {/* Global overlay effects */}
-      {/* <div className="corner-tl" /> */}
-      <div className="corner-tr" />
-      {/* <div className="corner-bl" /> */}
-      <div className="corner-br" />
 
       <Layout className="h-screen">
         {/* ── Sidebar ───────────────────────────────────── */}
@@ -261,16 +247,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex items-center gap-2">
-            {isShopRoute && (
-              <Badge count={totalItems} size="small">
-                <Button
-                  type="text"
-                  icon={<ShoppingCartOutlined />}
-                  onClick={() => setCartOpen(true)}
-                  className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)]"
-                />
-              </Badge>
-            )}
             <Button
               type="text"
               onClick={toggleFont}
@@ -323,7 +299,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </Layout>
       </Layout>
       <ChatWidget />
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </App>
   );
 }

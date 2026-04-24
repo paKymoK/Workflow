@@ -33,7 +33,7 @@ export default function ShopDetail() {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
         <p className="text-lg opacity-60">Product not found.</p>
-        <Button onClick={() => navigate("/shop")}>Back to Shop</Button>
+        <Button onClick={() => navigate("/")}>Back to Shop</Button>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function ShopDetail() {
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
-        onClick={() => navigate("/shop")}
+        onClick={() => navigate("/")}
         className="!px-0"
       >
         Back to Shop

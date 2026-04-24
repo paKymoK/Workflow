@@ -98,12 +98,12 @@ export default function TicketDetail() {
 
   // ── Derived values ────────────────────────────────────────────────────────
   const availableTransitions = useMemo(() => {
-    if (!ticket?.workflow) return [];
-    return ticket.workflow.transitions.filter((t) => t.from.id === ticket.status.id);
+    if (!ticket?.workflow || !ticket.status) return [];
+    return ticket.workflow.transitions.filter((t) => t.from?.id === ticket.status.id);
   }, [ticket]);
 
   const currentStepIndex = useMemo(() => {
-    if (!ticket?.workflow) return 0;
+    if (!ticket?.workflow || !ticket.status) return 0;
     return ticket.workflow.statuses.findIndex((s) => s.id === ticket.status.id);
   }, [ticket]);
 
