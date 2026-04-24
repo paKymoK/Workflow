@@ -6,7 +6,7 @@ export interface AuthContextType {
   isLoading: boolean;
   accessToken: string | null;
   user: Record<string, unknown> | null;
-  login: () => Promise<void>;
+  login: (usePopup?: boolean) => Promise<void>;
   logout: () => void;
   handleCallback: (code: string, codeVerifier: string) => Promise<void>;
   setTokenResponse: (tokenResponse: TokenResponse) => void;

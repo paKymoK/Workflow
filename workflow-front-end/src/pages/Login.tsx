@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../auth/useAuth";
 import AddUserModal from "../components/settings/AddUserModal";
 import { useTheme } from "../context/useTheme";
@@ -135,7 +136,7 @@ export default function Login() {
           <div className="mb-6 border-l-2 border-[var(--neon-cyan)] pl-4 bg-[rgba(0,245,255,0.04)] py-3 pr-3">
             <p className="font-mono-tech text-[11px] text-[var(--neon-cyan)] tracking-[0.08em] leading-relaxed">
               ✓ STATUS // Authentication is managed via OAuth2.<br />
-              You will be redirected to the identity provider.
+              A secure popup will open for the identity provider.
             </p>
           </div>
 
@@ -162,7 +163,7 @@ export default function Login() {
 
           {/* OAuth2 button */}
           <button
-            onClick={login}
+            onClick={() => login(true)}
             disabled={authHealth !== "up"}
             className={`neon-btn w-full py-4 font-bebas text-[22px] tracking-[0.25em] border-none transition-all ${
               authHealth === "up"

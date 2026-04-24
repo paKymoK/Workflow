@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUrlState } from "@state";
 import { useTheme } from "../context/useTheme";
 import { useFont } from "../context/useFont";
 import BubbleBackground from "../components/BubbleBackground";
@@ -41,7 +42,7 @@ export default function Diary() {
   const { isCustomFont, toggleFont } = useFont();
 
   const [allPages, setAllPages] = useState<DiaryPage[][]>(initAllTabs);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useUrlState("tab", 0);
   const [spreads, setSpreads]     = useState([0, 0, 0]);
   const [flipping, setFlipping]   = useState(false);
   const [flipDir, setFlipDir]     = useState<"next" | "prev">("next");

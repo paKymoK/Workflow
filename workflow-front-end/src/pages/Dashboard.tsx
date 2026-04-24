@@ -1,4 +1,6 @@
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useState } from "react";
+import { useUrlState } from "@state";
 import { Spin, Table, Tag, Button, Dropdown, message, Input, Select } from "antd";
 import { PlusOutlined, MoreOutlined, SearchOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
@@ -26,14 +28,14 @@ export default function Dashboard() {
   const token       = sessionStorage.getItem("access_token");
 
   // ── Pagination ───────────────────────────────────────────────────────────
-  const [page,     setPage]     = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [page,     setPage]     = useUrlState("page",     0);
+  const [pageSize, setPageSize] = useUrlState("size",     10);
 
   // ── Filter state ─────────────────────────────────────────────────────────
-  const [summary,       setSummary]       = useState("");
-  const [statusId,      setStatusId]      = useState<number | undefined>();
-  const [priorityId,    setPriorityId]    = useState<number | undefined>();
-  const [assigneeEmail, setAssigneeEmail] = useState("");
+  const [summary,       setSummary]       = useUrlState("q",        "");
+  const [statusId,      setStatusId]      = useUrlState<number | undefined>("status",   undefined);
+  const [priorityId,    setPriorityId]    = useUrlState<number | undefined>("priority", undefined);
+  const [assigneeEmail, setAssigneeEmail] = useUrlState("assignee", "");
 
   // ── Modal ────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);

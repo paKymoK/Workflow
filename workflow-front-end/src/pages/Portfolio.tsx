@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useUrlState } from "@state";
 import { useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.jpeg";
 import { useTheme } from "../context/useTheme";
@@ -100,7 +101,7 @@ export default function Portfolio() {
   const cursorRef  = useRef<HTMLDivElement>(null);
   const animRef    = useRef<number>(0);
   const navigate   = useNavigate();
-  const [openProject, setOpenProject] = useState<string | null>(null);
+  const [openProject, setOpenProject] = useUrlState<string | null>("project", null);
   const { isDark, toggleTheme } = useTheme();
   const { isCustomFont, toggleFont } = useFont();
 

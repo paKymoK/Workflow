@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Spin, Typography } from "antd";
 import { useAuth } from "../auth/useAuth";
 
 const { Title } = Typography;
+
+// sessionStorage is not shared across windows, so the popup has no pkce_state/
+// pkce_code_verifier — those live in the parent. Detect popup early so we can
+// skip the sessionStorage checks and let the parent validate instead.
+const isPopup = () =>
+  typeof window !== "undefined" &&
+  !!window.opener &&
+  window.opener !== window;
 
 export default function Callback() {
   const [searchParams] = useSearchParams();
@@ -13,23 +22,40 @@ export default function Callback() {
 
   const validationError = useMemo(() => {
     const code = searchParams.get("code");
-    const state = searchParams.get("state");
-    const savedState = sessionStorage.getItem("pkce_state");
-    const codeVerifier = sessionStorage.getItem("pkce_code_verifier");
 
     if (!code) return "No authorization code received";
+
+    // In popup mode the state and codeVerifier live in the parent's
+    // sessionStorage. The parent's message handler validates them — skip here.
+    if (isPopup()) return null;
+
+    const state        = searchParams.get("state");
+    const savedState   = sessionStorage.getItem("pkce_state");
+    const codeVerifier = sessionStorage.getItem("pkce_code_verifier");
     if (state !== savedState) return "State mismatch — possible CSRF attack";
-    if (!codeVerifier)
-      return "No code verifier found — please try logging in again";
+    if (!codeVerifier) return "No code verifier found — please try logging in again";
     return null;
   }, [searchParams]);
 
   useEffect(() => {
     if (validationError) return;
 
-    const code = searchParams.get("code")!;
-    const codeVerifier = sessionStorage.getItem("pkce_code_verifier")!;
+    const code  = searchParams.get("code")!;
+    const state = searchParams.get("state")!;
 
+    // Popup mode: hand the code back to the parent window and close self.
+    // The parent's AuthProvider message listener handles the token exchange.
+    if (isPopup()) {
+      window.opener.postMessage(
+        { type: "auth-callback", code, state },
+        window.location.origin,
+      );
+      window.close();
+      return;
+    }
+
+    // Full-page redirect mode: exchange the code here as usual.
+    const codeVerifier = sessionStorage.getItem("pkce_code_verifier")!;
     handleCallback(code, codeVerifier)
       .then(() => {
         sessionStorage.removeItem("pkce_code_verifier");

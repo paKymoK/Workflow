@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   generateCodeVerifier,
@@ -21,8 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Always points to the latest closure — safe to call from a timer
-  const doRefreshRef = useRef<() => Promise<void>>(async () => {});
+  // Always points to the latest closure — safe to call from a timer or message handler
+  const doRefreshRef      = useRef<() => Promise<void>>(async () => {});
+  const handleCallbackRef = useRef<(code: string, cv: string) => Promise<void>>(async () => {});
 
   const scheduleRefresh = (expiresInSeconds: number) => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
@@ -73,16 +75,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = async () => {
-    const codeVerifier = generateCodeVerifier();
+  const login = async (usePopup = false) => {
+    let popup: Window | null = null;
+
+    if (usePopup) {
+      // Open about:blank synchronously (before any await) so the browser
+      // treats it as a direct user-gesture — prevents the popup blocker.
+      const w    = 500;
+      const h    = 650;
+      const left = Math.round(window.screenX + (window.outerWidth  - w) / 2);
+      const top  = Math.round(window.screenY + (window.outerHeight - h) / 2);
+      popup = window.open(
+        "about:blank",
+        "auth-popup",
+        `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`,
+      );
+    }
+
+    const codeVerifier  = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
-    const state = generateState();
+    const state         = generateState();
 
     sessionStorage.setItem("pkce_code_verifier", codeVerifier);
     sessionStorage.setItem("pkce_state", state);
 
     const authUrl = buildAuthorizationUrl(codeChallenge, state);
-    window.location.href = authUrl;
+
+    if (usePopup && popup) {
+      popup.location.href = authUrl;
+    } else {
+      window.location.href = authUrl;
+    }
   };
 
   const handleCallback = async (code: string, codeVerifier: string) => {
@@ -90,6 +113,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const tokenResponse = await exchangeCodeForToken(code, codeVerifier);
     setTokenResponse(tokenResponse);
   };
+
+  // Keep ref current so the message listener always calls the latest version
+  handleCallbackRef.current = handleCallback;
+
+  // Listen for the code posted back by the popup's Callback page
+  useEffect(() => {
+    const handler = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if ((event.data as { type?: string })?.type !== "auth-callback") return;
+
+      const { code, state } = event.data as { code: string; state: string };
+      const savedState   = sessionStorage.getItem("pkce_state");
+      const codeVerifier = sessionStorage.getItem("pkce_code_verifier");
+      if (state !== savedState || !codeVerifier) return;
+
+      try {
+        await handleCallbackRef.current(code, codeVerifier);
+        sessionStorage.removeItem("pkce_code_verifier");
+        sessionStorage.removeItem("pkce_state");
+        navigate("/");
+      } catch {
+        navigate("/login");
+      }
+    };
+
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setTokenResponse = (tokenResponse: TokenResponse) => {
     setAccessToken(tokenResponse.access_token);

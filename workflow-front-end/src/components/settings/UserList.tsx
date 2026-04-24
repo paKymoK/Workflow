@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useUrlState } from "@state";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { User } from "../../api/types";
@@ -12,8 +12,8 @@ const columns: ColumnsType<User> = [
 ];
 
 export default function UserList() {
-  const [page,     setPage]     = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [page,     setPage]     = useUrlState("page", 1);
+  const [pageSize, setPageSize] = useUrlState("size", 10);
 
   const { data, isLoading } = useUsers(page - 1, pageSize);
 

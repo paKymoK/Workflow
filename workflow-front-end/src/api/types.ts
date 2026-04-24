@@ -118,6 +118,40 @@ export interface User {
 
 export type UserDetail = User;
 
+export interface RegisteredClient {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientIdIssuedAt: string | null;
+  hasSecret: boolean;
+  authenticationMethods: string[];
+  grantTypes: string[];
+  redirectUris: string[];
+  postLogoutRedirectUris: string[];
+  scopes: string[];
+  requireAuthorizationConsent: boolean;
+  requireProofKey: boolean;
+  accessTokenTtlMinutes: number;
+  refreshTokenTtlDays: number;
+  reuseRefreshTokens: boolean;
+}
+
+export interface RegisteredClientRequest {
+  clientId: string;
+  clientName?: string;
+  clientSecret?: string;
+  authenticationMethods: string[];
+  grantTypes: string[];
+  redirectUris: string[];
+  postLogoutRedirectUris: string[];
+  scopes: string[];
+  requireAuthorizationConsent: boolean;
+  requireProofKey: boolean;
+  accessTokenTtlMinutes: number;
+  refreshTokenTtlDays: number;
+  reuseRefreshTokens: boolean;
+}
+
 export interface StatisticItem {
   name: string;
   value: number;

@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest} from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
@@ -260,6 +260,26 @@ export async function fetchOrgChart() {
     "/auth-service/v1/organization/chart",
   );
   return data.data;
+}
+
+export async function fetchClients() {
+  const { data } = await api.get<ResultMessage<RegisteredClient[]>>("/auth-service/v1/clients");
+  return data.data;
+}
+
+export async function createClient(payload: RegisteredClientRequest) {
+  const { data } = await api.post<ResultMessage<RegisteredClient>>("/auth-service/v1/clients", payload);
+  return data.data;
+}
+
+export async function updateClient(id: string, payload: RegisteredClientRequest) {
+  const { data } = await api.put<ResultMessage<RegisteredClient>>(`/auth-service/v1/clients/${id}`, payload);
+  return data.data;
+}
+
+export async function deleteClient(id: string) {
+  const { data } = await api.delete<ResultMessage<void>>(`/auth-service/v1/clients/${id}`);
+  return data;
 }
 
 export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {

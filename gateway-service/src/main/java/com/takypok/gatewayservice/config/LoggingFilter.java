@@ -48,7 +48,7 @@ public class LoggingFilter implements GlobalFilter {
                   "Incoming request {} | User: {} | Roles: {} | Routed to id: {}, uri: {}",
                   originalUri,
                   username,
-                  roles,
+                  roletes,
                   route.getId(),
                   routeUri);
 

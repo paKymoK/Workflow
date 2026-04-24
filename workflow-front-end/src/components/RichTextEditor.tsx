@@ -1,4 +1,5 @@
-import { useRef, useState, memo } from "react";
+import { useRef, memo } from "react";
+import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
