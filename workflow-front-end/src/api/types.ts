@@ -114,6 +114,7 @@ export interface User {
   email: string;
   title: string;
   department: string;
+  avatar?: string | null;
 }
 
 export type UserDetail = User;

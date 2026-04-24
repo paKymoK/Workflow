@@ -13,5 +13,7 @@ public interface OrgChartProjection {
 
   String getManagerSub();
 
+  String getAvatar();
+
   Integer getDepth();
 }

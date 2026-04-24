@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS authorities
 CREATE TABLE IF NOT EXISTS userinfo
 (
     sub         VARCHAR(50) NOT NULL,
+    avatar      VARCHAR,
     name        VARCHAR     NOT NULL,
     email       VARCHAR,
     title       VARCHAR(100),

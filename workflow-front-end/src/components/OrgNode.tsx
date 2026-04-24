@@ -8,6 +8,7 @@ interface OrgNodeData {
   title:          string;
   department:     string;
   email:          string;
+  avatar:         string | null;
   hasChildren:    boolean;
   isExpanded:     boolean;
   onExpandToggle: (id: string) => void;
@@ -15,7 +16,7 @@ interface OrgNodeData {
 }
 
 export default function OrgNode({ id, data }: NodeProps) {
-  const { name, title, department, hasChildren, isExpanded, onExpandToggle } =
+  const { name, title, department, avatar, hasChildren, isExpanded, onExpandToggle } =
     data as OrgNodeData;
 
   return (
@@ -26,7 +27,8 @@ export default function OrgNode({ id, data }: NodeProps) {
         <div className="flex items-center gap-2">
           <Avatar
             size={34}
-            icon={<UserOutlined />}
+            src={avatar ?? undefined}
+            icon={!avatar && <UserOutlined />}
             className="!bg-[var(--neon-yellow)] !text-black flex-shrink-0"
           />
           <div className="flex flex-col min-w-0">

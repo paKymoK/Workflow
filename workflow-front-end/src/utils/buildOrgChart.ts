@@ -8,6 +8,7 @@ export interface OrgChartUser {
   title:      string;
   department: string;
   managerSub: string | null;
+  avatar:     string | null;
   depth:      number;
 }
 
@@ -56,6 +57,7 @@ export function buildOrgChart(
         title:          user.title,
         department:     user.department,
         email:          user.email,
+        avatar:         user.avatar ?? null,
         hasChildren,
         isExpanded,
         onExpandToggle,
