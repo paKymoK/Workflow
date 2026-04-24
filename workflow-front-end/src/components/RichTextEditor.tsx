@@ -74,9 +74,9 @@ function RichTextEditor({
     if (!editor) return null;
 
     return (
-        <div className={`rich-text-editor border rounded ${editable ? "border-gray-300" : "border-transparent"}`}>
+        <div className={`rich-text-editor border rounded ${editable ? "border-[var(--border-subtle)]" : "border-transparent"}`}>
             {editable && (
-                <div className="flex flex-wrap items-center gap-1 px-2 py-1 border-b border-gray-200 bg-gray-50 rounded-t">
+                <div className="flex flex-wrap items-center gap-1 px-2 py-1 border-b border-[var(--border-subtle)] bg-[var(--darker)] rounded-t">
                     <Button
                         size="small"
                         type={editor.isActive("bold") ? "primary" : "text"}

@@ -49,7 +49,76 @@ SELECT jsonb_build_object('id', 1, 'code', 'IA', 'name', 'Internal Application',
        NULL,
        jsonb_build_object('data', '123', '_clazz', 'com.takypok.workflowservice.model.ticket.Dashboard'),
        priority_json,
-       jsonb_build_object('id', 1, 'name', 'Test'),
+       jsonb_build_object(
+               'id', 1,
+               'name', 'Test',
+               'statuses', jsonb_build_array(
+                       jsonb_build_object(
+                               'x', NULL,
+                               'y', NULL,
+                               'id', 1,
+                               'name', 'Todo',
+                               'color', '#808080',
+                               'group', 'TODO'
+                       ),
+                       jsonb_build_object(
+                               'x', NULL,
+                               'y', NULL,
+                               'id', 2,
+                               'name', 'In-Progress',
+                               'color', '#0000FF',
+                               'group', 'PROCESSING'
+                       ),
+                       jsonb_build_object(
+                               'x', NULL,
+                               'y', NULL,
+                               'id', 3,
+                               'name', 'Done',
+                               'color', '#008000',
+                               'group', 'DONE'
+                       )
+                           ),
+               'transitions', jsonb_build_array(
+                       jsonb_build_object(
+                               'to', jsonb_build_object(
+                               'id', 2,
+                               'name', 'In-Progress',
+                               'color', '#0000FF',
+                               'group', 'PROCESSING'
+                                     ),
+                               'from', jsonb_build_object(
+                                       'id', 1,
+                                       'name', 'Todo',
+                                       'color', '#808080',
+                                       'group', 'TODO'
+                                       ),
+                               'name', 'Approve',
+                               'validator', jsonb_build_array(
+                                       'com.takypok.workflowservice.function.validator.Example1Validator'
+                                            ),
+                               'postFunctions', jsonb_build_array(
+                                       'com.takypok.workflowservice.function.postfunction.Example1Function'
+                                                )
+                       ),
+                       jsonb_build_object(
+                               'to', jsonb_build_object(
+                               'id', 3,
+                               'name', 'Done',
+                               'color', '#008000',
+                               'group', 'DONE'
+                                     ),
+                               'from', jsonb_build_object(
+                                       'id', 2,
+                                       'name', 'In-Progress',
+                                       'color', '#0000FF',
+                                       'group', 'PROCESSING'
+                                       ),
+                               'name', 'Approve',
+                               'validator', '[]'::jsonb,
+                               'postFunctions', '[]'::jsonb
+                       )
+                              )
+       ),
        created_at,
        'admin',
        now(),
