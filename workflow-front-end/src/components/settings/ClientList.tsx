@@ -3,10 +3,11 @@ import {
   Button, Drawer, Form, Input, InputNumber, Popconfirm,
   Select, Space, Switch, Table, Tag, Typography,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { RegisteredClient, RegisteredClientRequest } from "../../api/types";
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from "../../hooks/useClients";
+import ClientRolePanel from "./ClientRolePanel";
 
 const { Text } = Typography;
 
@@ -96,6 +97,7 @@ export default function ClientList() {
 
   const [open, setOpen]       = useState(false);
   const [editing, setEditing] = useState<RegisteredClient | null>(null);
+  const [rolesClient, setRolesClient] = useState<RegisteredClient | null>(null);
   const [form] = Form.useForm<RegisteredClientRequest>();
 
   const watchedMethods: string[] = Form.useWatch("authenticationMethods", form) ?? [];
@@ -194,9 +196,16 @@ export default function ClientList() {
     },
     {
       title: "Action",
-      width: 120,
+      width: 160,
       render: (_, record) => (
         <Space>
+          <Button
+            size="small"
+            icon={<TeamOutlined />}
+            onClick={() => setRolesClient(record)}
+          >
+            Roles
+          </Button>
           <Button
             size="small"
             icon={<EditOutlined />}
@@ -320,6 +329,15 @@ export default function ClientList() {
 
         </Form>
       </Drawer>
+
+      {rolesClient && (
+        <ClientRolePanel
+          clientId={rolesClient.id}
+          clientLabel={rolesClient.clientId}
+          open={!!rolesClient}
+          onClose={() => setRolesClient(null)}
+        />
+      )}
     </>
   );
 }

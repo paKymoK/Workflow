@@ -118,6 +118,39 @@ export interface User {
 
 export type UserDetail = User;
 
+export interface GroupMember {
+  sub: string;
+  name: string;
+  email: string | null;
+}
+
+export interface UserGroup {
+  id: string;
+  name: string;
+  description: string | null;
+  members: GroupMember[];
+}
+
+export interface UserGroupRequest {
+  name: string;
+  description?: string;
+}
+
+export interface ClientRoleAssignment {
+  id: string;
+  registeredClientId: string;
+  type: "USER" | "GROUP";
+  subjectId: string;
+  subjectName: string;
+  role: string;
+}
+
+export interface ClientRoleAssignmentRequest {
+  userSub?: string;
+  groupId?: string;
+  role: string;
+}
+
 export interface RegisteredClient {
   id: string;
   clientId: string;

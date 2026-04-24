@@ -91,6 +91,46 @@ CREATE TABLE IF NOT EXISTS userinfo
     CONSTRAINT fk_manager_sub FOREIGN KEY (manager_sub) REFERENCES userinfo (sub)
 );
 
+CREATE TABLE user_group (
+                            id          VARCHAR(50)  NOT NULL,
+                            name        VARCHAR(100) NOT NULL,
+                            description VARCHAR(200),
+                            CONSTRAINT user_group_pkey    PRIMARY KEY (id),
+                            CONSTRAINT user_group_name_uq UNIQUE (name)
+);
+
+CREATE TABLE user_group_member (
+                                   group_id VARCHAR(50) NOT NULL,
+                                   user_sub VARCHAR(50) NOT NULL,
+                                   CONSTRAINT user_group_member_pkey PRIMARY KEY (group_id, user_sub),
+                                   CONSTRAINT fk_ugm_group FOREIGN KEY (group_id) REFERENCES user_group(id)  ON DELETE CASCADE,
+                                   CONSTRAINT fk_ugm_user  FOREIGN KEY (user_sub)  REFERENCES userinfo(sub)  ON DELETE CASCADE
+);
+
+CREATE TABLE client_role_assignment (
+                                        id                   VARCHAR(50)  NOT NULL,
+                                        registered_client_id VARCHAR(100) NOT NULL,
+                                        user_sub             VARCHAR(50),
+                                        group_id             VARCHAR(50),
+                                        role                 VARCHAR(50)  NOT NULL,
+                                        CONSTRAINT client_role_assignment_pkey PRIMARY KEY (id),
+                                        CONSTRAINT cra_exactly_one CHECK (
+                                            (user_sub IS NULL AND group_id IS NOT NULL)
+                                                OR
+                                            (user_sub IS NOT NULL AND group_id IS NULL)
+                                            ),
+                                        CONSTRAINT fk_cra_client FOREIGN KEY (registered_client_id) REFERENCES oauth2_registered_client(id) ON DELETE CASCADE,
+                                        CONSTRAINT fk_cra_user   FOREIGN KEY (user_sub)             REFERENCES userinfo(sub)                ON DELETE CASCADE,
+                                        CONSTRAINT fk_cra_group  FOREIGN KEY (group_id)             REFERENCES user_group(id)               ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX ux_cra_client_user  ON client_role_assignment(registered_client_id, user_sub)  WHERE user_sub  IS NOT NULL;
+CREATE UNIQUE INDEX ux_cra_client_group ON client_role_assignment(registered_client_id, group_id) WHERE group_id IS NOT NULL;
+
+CREATE INDEX ix_ugm_user_sub           ON user_group_member(user_sub);
+CREATE INDEX ix_cra_client_user_sub    ON client_role_assignment(registered_client_id, user_sub);
+CREATE INDEX ix_cra_client_group_id    ON client_role_assignment(registered_client_id, group_id);
+
 CREATE INDEX IF NOT EXISTS ix_userinfo_manager_sub ON userinfo (manager_sub);
 CREATE INDEX IF NOT EXISTS ix_userinfo_department ON userinfo (department);
 

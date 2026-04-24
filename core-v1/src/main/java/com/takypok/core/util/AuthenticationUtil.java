@@ -8,6 +8,8 @@ import com.takypok.core.model.ResultMessage;
 import com.takypok.core.model.ResultStatus;
 import com.takypok.core.model.authentication.User;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -68,5 +70,17 @@ public class AuthenticationUtil {
   public static User getUserInfo(Authentication authentication) {
     Jwt jwt = (Jwt) authentication.getPrincipal();
     return objectMapper().convertValue(jwt.getClaims().get("detail"), new TypeReference<>() {});
+  }
+
+  public static String getDomain(Authentication authentication) {
+    Jwt jwt = (Jwt) authentication.getPrincipal();
+    return (String) jwt.getClaims().get("domain");
+  }
+
+  public static List<String> getRoles(Authentication authentication) {
+    Jwt jwt = (Jwt) authentication.getPrincipal();
+    Object roles = jwt.getClaims().get("roles");
+    if (roles == null) return Collections.emptyList();
+    return objectMapper().convertValue(roles, new TypeReference<>() {});
   }
 }

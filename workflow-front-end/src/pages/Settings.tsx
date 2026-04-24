@@ -7,11 +7,13 @@ import StatusList from "../components/settings/StatusList";
 import PriorityList from "../components/settings/PriorityList";
 import ProjectList from "../components/settings/ProjectList";
 import ClientList from "../components/settings/ClientList";
+import GroupList from "../components/settings/GroupList";
 
 const authTabs = [
   { key: "user",     label: "User",      children: <UserList /> },
   { key: "orgChart", label: "Org Chart", children: <OrgChartView /> },
   { key: "client",   label: "Client",    children: <ClientList /> },
+  { key: "group",    label: "Group",     children: <GroupList /> },
 ];
 
 const workflowTabs = [

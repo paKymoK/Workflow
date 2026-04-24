@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest, UserGroup, UserGroupRequest, GroupMember, ClientRoleAssignment, ClientRoleAssignmentRequest} from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import api from "./axios.ts";
 
@@ -261,6 +261,57 @@ export async function fetchOrgChart() {
   );
   return data.data;
 }
+
+// ── Groups ────────────────────────────────────────────────────────────────
+
+export async function fetchGroups() {
+  const { data } = await api.get<ResultMessage<UserGroup[]>>("/auth-service/v1/groups");
+  return data.data;
+}
+
+export async function createGroup(payload: UserGroupRequest) {
+  const { data } = await api.post<ResultMessage<UserGroup>>("/auth-service/v1/groups", payload);
+  return data.data;
+}
+
+export async function updateGroup(id: string, payload: UserGroupRequest) {
+  const { data } = await api.put<ResultMessage<UserGroup>>(`/auth-service/v1/groups/${id}`, payload);
+  return data.data;
+}
+
+export async function deleteGroup(id: string) {
+  const { data } = await api.delete<ResultMessage<void>>(`/auth-service/v1/groups/${id}`);
+  return data;
+}
+
+export async function addGroupMember(groupId: string, userSub: string) {
+  const { data } = await api.post<ResultMessage<void>>(`/auth-service/v1/groups/${groupId}/members`, { userSub });
+  return data;
+}
+
+export async function removeGroupMember(groupId: string, userSub: string) {
+  const { data } = await api.delete<ResultMessage<void>>(`/auth-service/v1/groups/${groupId}/members/${userSub}`);
+  return data;
+}
+
+// ── Client role assignments ───────────────────────────────────────────────
+
+export async function fetchClientRoles(clientId: string) {
+  const { data } = await api.get<ResultMessage<ClientRoleAssignment[]>>(`/auth-service/v1/clients/${clientId}/roles`);
+  return data.data;
+}
+
+export async function assignClientRole(clientId: string, payload: ClientRoleAssignmentRequest) {
+  const { data } = await api.post<ResultMessage<ClientRoleAssignment>>(`/auth-service/v1/clients/${clientId}/roles`, payload);
+  return data.data;
+}
+
+export async function removeClientRole(clientId: string, assignmentId: string) {
+  const { data } = await api.delete<ResultMessage<void>>(`/auth-service/v1/clients/${clientId}/roles/${assignmentId}`);
+  return data;
+}
+
+// ── Registered clients ────────────────────────────────────────────────────
 
 export async function fetchClients() {
   const { data } = await api.get<ResultMessage<RegisteredClient[]>>("/auth-service/v1/clients");
