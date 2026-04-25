@@ -10,6 +10,8 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.function.Function;
 import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -56,6 +58,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class AuthorizationServerConfig {
+  @Value("${auth.issuer-uri:http://127.0.0.1:9000}")
+  private String issuerUri;
+
   private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
 
   @Bean
@@ -202,7 +207,7 @@ public class AuthorizationServerConfig {
 
   @Bean
   public AuthorizationServerSettings authorizationServerSettings() {
-    return AuthorizationServerSettings.builder().build();
+    return AuthorizationServerSettings.builder().issuer(issuerUri).build();
   }
 
   @Bean

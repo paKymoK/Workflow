@@ -1,6 +1,9 @@
 server:
   port: 9000
 
+auth:
+  issuer-uri: ${AUTH_ISSUER_URI:http://127.0.0.1:9000}
+
 spring:
   application:
     name: auth-service
@@ -35,6 +38,17 @@ ldap:
   user-search-filter: "(cn={0})"
   group-search-base: ou=groups
 
+
+management:
+  health:
+    redis:
+      enabled: false
+    ldap:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
 
 logging:
   level:

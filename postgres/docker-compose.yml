@@ -23,6 +23,11 @@ services:
       - "postgres"
       - "-c"
       - "config_file=/etc/postgresql/postgresql.conf"
+    logging:
+      driver: json-file
+      options:
+        max-size: "500m"
+        max-file: "1"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]

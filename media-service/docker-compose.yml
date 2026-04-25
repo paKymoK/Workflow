@@ -7,6 +7,7 @@ services:
     ports:
       - "8082:8082"
     environment:
+      AUTH_ISSUER_URI: http://192.168.1.16:9000
       DB_HOST: postgres
       DB_PORT: 5432
       DB_SCHEMA: media
@@ -19,5 +20,10 @@ services:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "500m"
+        max-file: "1"
     restart: on-failure
 
