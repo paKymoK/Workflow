@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Button, Form, Input, Popconfirm, Radio,
-  Select, Space, Table, Tag,
+  Select, Table, Tag,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
