@@ -1,0 +1,20 @@
+services:
+  gateway-service:
+    build:
+      context: ..
+      dockerfile: gateway-service/Dockerfile
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URI: http://discovery-service:8761/eureka
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://auth-service:9000
+    restart: on-failure
+    networks:
+      - takypok-network
+
+networks:
+  takypok-network:
+    external: true

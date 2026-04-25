@@ -1,0 +1,19 @@
+services:
+  discovery-service:
+    build:
+      context: ..        # ← root of project for multi-module gradle
+      dockerfile: discovery-service/Dockerfile
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - takypok-network
+
+networks:
+  takypok-network:
+    external: true

@@ -58,7 +58,7 @@ export default function Dashboard() {
   const { data: priorities = [] }      = usePriorities();
   const { data: statuses = [], isLoading: isStatusesLoading } = useStatuses();
 
-  const tickets = pageData?.content       ?? [];
+  const tickets = useMemo(() => pageData?.content ?? [], [pageData]);
   const total   = pageData?.totalElements ?? 0;
 
   // ── Mutations ────────────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ export default function Dashboard() {
     } finally {
       setRefreshingIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
     }
-  }, [qc, params, pageData]);
+  }, [qc, params]);
 
   useEffect(() => {
     const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
@@ -281,8 +281,8 @@ export default function Dashboard() {
           onChange: (p, size) => {
             setSearchParams((prev) => {
               const params = new URLSearchParams(prev);
-              p - 1 === 0    ? params.delete("page") : params.set("page", JSON.stringify(p - 1));
-              size   === 10  ? params.delete("size") : params.set("size", JSON.stringify(size));
+              if (p - 1 === 0)   params.delete("page"); else params.set("page", JSON.stringify(p - 1));
+              if (size  === 10)  params.delete("size"); else params.set("size", JSON.stringify(size));
               return params;
             }, { replace: true });
           },

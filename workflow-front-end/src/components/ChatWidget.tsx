@@ -9,6 +9,12 @@ interface Message {
   text: string;
 }
 
+const dotDelays = [
+  "[animation-delay:0s]",
+  "[animation-delay:0.2s]",
+  "[animation-delay:0.4s]",
+] as const;
+
 export default function ChatWidget() {
   const [open,     setOpen]     = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -54,40 +60,28 @@ export default function ChatWidget() {
     <>
       {/* ── Chat panel ─────────────────────────────────────────── */}
       {open && (
-        <div
-          style={{
-            position: "fixed", bottom: "80px", right: "24px",
-            width: "360px", height: "480px", zIndex: 1000,
-            display: "flex", flexDirection: "column",
-            background: "var(--dark)",
-            border: "1px solid var(--neon-yellow)",
-            boxShadow: "0 0 24px rgba(0,207,255,0.2)",
-          }}
-        >
+        <div className="fixed bottom-20 right-6 w-[360px] h-[480px] z-[1000] flex flex-col bg-[var(--dark)] border border-[var(--neon-yellow)] shadow-[0_0_24px_rgba(0,207,255,0.2)]">
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid var(--border-subtle)", background: "var(--darker)", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <RobotOutlined style={{ color: "var(--neon-cyan)", fontSize: 14 }} />
-              <span className="font-bebas" style={{ color: "var(--neon-yellow)", fontSize: 15, letterSpacing: "0.2em" }}>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-subtle)] bg-[var(--darker)] shrink-0">
+            <div className="flex items-center gap-2">
+              <RobotOutlined className="text-[var(--neon-cyan)] text-sm" />
+              <span className="font-bebas text-[var(--neon-yellow)] text-[15px] tracking-[0.2em]">
                 AI ASSISTANT
               </span>
             </div>
-            <Button type="text" size="small" icon={<CloseOutlined />} onClick={() => setOpen(false)} style={{ color: "var(--text-muted)" }} />
+            <Button type="text" size="small" icon={<CloseOutlined />} onClick={() => setOpen(false)} className="!text-[var(--text-muted)]" />
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-[10px]">
             {messages.map((msg, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className="font-mono-tech"
-                  style={{
-                    maxWidth: "80%", padding: "8px 12px", fontSize: 12,
-                    lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word",
-                    ...(msg.role === "user"
-                      ? { background: "rgba(0,207,255,0.12)", border: "1px solid var(--neon-yellow)", color: "var(--white)" }
-                      : { background: "rgba(0,245,196,0.08)", border: "1px solid rgba(0,245,196,0.3)", color: "var(--neon-cyan)" }),
-                  }}
+                  className={`font-mono-tech max-w-[80%] px-3 py-2 text-xs leading-[1.6] whitespace-pre-wrap break-words ${
+                    msg.role === "user"
+                      ? "bg-[rgba(0,207,255,0.12)] border border-[var(--neon-yellow)] text-[var(--white)]"
+                      : "bg-[rgba(0,245,196,0.08)] border border-[rgba(0,245,196,0.3)] text-[var(--neon-cyan)]"
+                  }`}
                 >
                   {msg.text}
                 </div>
@@ -96,10 +90,10 @@ export default function ChatWidget() {
 
             {/* Loading dots */}
             {loading && (
-              <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                <div style={{ padding: "8px 14px", border: "1px solid rgba(0,245,196,0.3)", background: "rgba(0,245,196,0.08)", display: "flex", gap: 5, alignItems: "center" }}>
+              <div className="flex justify-start">
+                <div className="px-[14px] py-2 border border-[rgba(0,245,196,0.3)] bg-[rgba(0,245,196,0.08)] flex gap-[5px] items-center">
                   {[0, 1, 2].map((n) => (
-                    <span key={n} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--neon-cyan)", display: "inline-block", animation: `chatDot 1.2s ${n * 0.2}s ease-in-out infinite` }} />
+                    <span key={n} className={`w-[6px] h-[6px] rounded-full bg-[var(--neon-cyan)] inline-block [animation:chatDot_1.2s_ease-in-out_infinite] ${dotDelays[n]}`} />
                   ))}
                 </div>
               </div>
@@ -109,7 +103,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div style={{ display: "flex", gap: 8, padding: "10px 12px", borderTop: "1px solid var(--border-subtle)", background: "var(--darker)", flexShrink: 0 }}>
+          <div className="flex gap-2 px-3 py-[10px] border-t border-[var(--border-subtle)] bg-[var(--darker)] shrink-0">
             <Input.TextArea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -117,8 +111,7 @@ export default function ChatWidget() {
               placeholder="Ask a question..."
               autoSize={{ minRows: 1, maxRows: 3 }}
               disabled={loading}
-              className="font-mono-tech"
-              style={{ flex: 1, fontSize: 12, resize: "none", background: "var(--black)", border: "1px solid var(--border-subtle)", color: "var(--white)" }}
+              className="font-mono-tech !flex-1 !text-xs !resize-none !bg-[var(--black)] !border-[var(--border-subtle)] !text-[var(--white)]"
             />
             <Button
               type="primary"
@@ -126,7 +119,7 @@ export default function ChatWidget() {
               onClick={send}
               loading={loading}
               disabled={!input.trim()}
-              style={{ background: "var(--neon-yellow)", borderColor: "var(--neon-yellow)", color: "var(--dark)", alignSelf: "flex-end" }}
+              className="!bg-[var(--neon-yellow)] !border-[var(--neon-yellow)] !text-[var(--dark)] self-end"
             />
           </div>
         </div>
@@ -135,15 +128,7 @@ export default function ChatWidget() {
       {/* ── Toggle button ───────────────────────────────────────── */}
       <button
         onClick={() => setOpen((v) => !v)}
-        style={{
-          position: "fixed", bottom: "24px", right: "24px", zIndex: 1001,
-          width: 48, height: 48,
-          border: "1px solid var(--neon-yellow)",
-          background: open ? "var(--neon-yellow)" : "var(--dark)",
-          color:      open ? "var(--dark)"        : "var(--neon-yellow)",
-          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 20, boxShadow: "0 0 16px rgba(0,207,255,0.3)", transition: "all 0.2s ease",
-        }}
+        className={`fixed bottom-6 right-6 z-[1001] w-12 h-12 border border-[var(--neon-yellow)] cursor-pointer flex items-center justify-center text-xl shadow-[0_0_16px_rgba(0,207,255,0.3)] transition-all duration-200 ease-in-out ${open ? "bg-[var(--neon-yellow)] text-[var(--dark)]" : "bg-[var(--dark)] text-[var(--neon-yellow)]"}`}
         title="AI Assistant"
       >
         <RobotOutlined />

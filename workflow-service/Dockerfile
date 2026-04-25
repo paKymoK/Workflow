@@ -8,12 +8,12 @@ COPY settings.gradle .
 
 COPY infrastructure infrastructure
 COPY core-v1 core-v1
-COPY gateway-service gateway-service
+COPY workflow-service workflow-service
 
 RUN chmod +x gradlew
-RUN ./gradlew :gateway-service:bootJar -x test --no-daemon
+RUN ./gradlew :workflow-service:bootJar -x test --no-daemon
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=builder /app/gateway-service/build/libs/*.jar app.jar
+COPY --from=builder /app/workflow-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

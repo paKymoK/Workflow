@@ -1,0 +1,29 @@
+services:
+  auth-service:
+    build:
+      context: ..
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "9000:9000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SCHEMA: authentication
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      EUREKA_URI: http://discovery-service:8761/eureka
+      LDAP_URL: ${LDAP_URL}
+      LDAP_BASE: ${LDAP_BASE}
+      LDAP_USERNAME: ${LDAP_USERNAME}
+      LDAP_PASSWORD: ${LDAP_PASSWORD}
+      LDAP_USER_SEARCH_BASE: ${LDAP_USER_SEARCH_BASE}
+      LDAP_USER_SEARCH_FILTER: ${LDAP_USER_SEARCH_FILTER}
+      LDAP_GROUP_SEARCH_BASE: ${LDAP_GROUP_SEARCH_BASE}
+    restart: on-failure
+    networks:
+      - takypok-network
+
+networks:
+  takypok-network:
+    external: true

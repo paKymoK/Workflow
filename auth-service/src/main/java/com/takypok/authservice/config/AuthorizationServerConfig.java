@@ -170,9 +170,6 @@ public class AuthorizationServerConfig {
     JwtGenerator jwtGenerator = new JwtGenerator(new NimbusJwtEncoder(jwkSource));
     OAuth2AccessTokenGenerator accessTokenGenerator = new OAuth2AccessTokenGenerator();
 
-    // Spring's default OAuth2RefreshTokenGenerator refuses to issue refresh tokens to public
-    // clients (NONE auth method). This replacement removes that restriction so PKCE SPAs
-    // receive a refresh token just like confidential clients do.
     OAuth2TokenGenerator<OAuth2RefreshToken> refreshTokenGenerator =
         (OAuth2TokenContext context) -> {
           if (!OAuth2TokenType.REFRESH_TOKEN.equals(context.getTokenType())) return null;

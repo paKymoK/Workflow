@@ -1,0 +1,23 @@
+services:
+  media-service:
+    build:
+      context: ..
+      dockerfile: media-service/Dockerfile
+    container_name: media-service
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SCHEMA: media
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      EUREKA_URI: http://discovery-service:8761/eureka
+      JWK_URI: http://auth-service:9000/oauth2/jwks
+    restart: on-failure
+    networks:
+      - takypok-network
+
+networks:
+  takypok-network:
+    external: true

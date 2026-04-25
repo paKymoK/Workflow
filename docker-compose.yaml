@@ -1,0 +1,14 @@
+# Root docker-compose.yml
+# For local testing only — runs all services together
+
+include:
+  - postgres/docker-compose.yml
+  - discovery-service/docker-compose.yml
+  - auth-service/docker-compose.yml
+  - workflow-service/docker-compose.yml
+  - media-service/docker-compose.yml
+  - gateway-service/docker-compose.yml
+
+networks:
+  takypok-network:
+    external: true

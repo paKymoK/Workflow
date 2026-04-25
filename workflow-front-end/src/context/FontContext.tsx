@@ -6,6 +6,7 @@ export interface FontContextType {
   toggleFont: () => void;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const FontContext = createContext<FontContextType>({
   isCustomFont: false,
   toggleFont: () => {},

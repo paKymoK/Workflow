@@ -36,8 +36,8 @@ export default function UserList() {
         onChange: (p, ps) => {
           setSearchParams((prev) => {
             const params = new URLSearchParams(prev);
-            p  === 1  ? params.delete("page") : params.set("page", JSON.stringify(p));
-            ps === 10 ? params.delete("size") : params.set("size", JSON.stringify(ps));
+            if (p  === 1)  params.delete("page"); else params.set("page", JSON.stringify(p));
+            if (ps === 10) params.delete("size"); else params.set("size", JSON.stringify(ps));
             return params;
           }, { replace: true });
         },

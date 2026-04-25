@@ -42,7 +42,7 @@ function AssignForm({ clientId, onDone }: { clientId: string; onDone: () => void
 
   return (
     <Form form={form} layout="inline" className="mb-4 flex flex-wrap gap-2">
-      <Form.Item style={{ marginBottom: 0 }}>
+      <Form.Item className="!mb-0">
         <Radio.Group
           value={subjectType}
           onChange={(e) => { setSubjectType(e.target.value); form.resetFields(["subjectId"]); }}
@@ -52,7 +52,7 @@ function AssignForm({ clientId, onDone }: { clientId: string; onDone: () => void
         </Radio.Group>
       </Form.Item>
 
-      <Form.Item name="subjectId" rules={[{ required: true, message: "" }]} style={{ marginBottom: 0, minWidth: 220 }}>
+      <Form.Item name="subjectId" rules={[{ required: true, message: "" }]} className="!mb-0 min-w-[220px]">
         <Select
           showSearch
           placeholder={subjectType === "USER" ? "Select user…" : "Select group…"}
@@ -63,11 +63,11 @@ function AssignForm({ clientId, onDone }: { clientId: string; onDone: () => void
         />
       </Form.Item>
 
-      <Form.Item name="role" rules={[{ required: true, message: "" }]} style={{ marginBottom: 0 }}>
-        <Input placeholder="Role  e.g. ADMIN" style={{ width: 160 }} />
+      <Form.Item name="role" rules={[{ required: true, message: "" }]} className="!mb-0">
+        <Input placeholder="Role  e.g. ADMIN" className="w-[160px]" />
       </Form.Item>
 
-      <Form.Item style={{ marginBottom: 0 }}>
+      <Form.Item className="!mb-0">
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -131,7 +131,7 @@ export default function RoleList() {
           options={clientOptions}
           value={selectedClientId}
           onChange={(v) => { setSelectedClientId(v); setShowForm(false); }}
-          style={{ width: 240 }}
+          className="!w-[240px]"
         />
         {activeClient && (
           <Button

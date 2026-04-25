@@ -1,0 +1,27 @@
+services:
+  workflow-service:
+    build:
+      context: ..
+      dockerfile: workflow-service/Dockerfile
+    container_name: workflow-service
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SCHEMA: workflow
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      EUREKA_URI: http://discovery-service:8761/eureka
+      JWK_URI: http://auth-service:9000/oauth2/jwks
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    volumes:
+      - ./src/main/resources/offset.dat:/app/resources/offset.dat
+    restart: on-failure
+    networks:
+      - takypok-network
+
+networks:
+  takypok-network:
+    external: true

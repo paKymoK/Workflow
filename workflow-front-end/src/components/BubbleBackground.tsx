@@ -76,13 +76,7 @@ export default function BubbleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 0,
-        opacity: 0.6,
-        pointerEvents: "none",
-      }}
+      className="fixed inset-0 z-0 opacity-60 pointer-events-none"
     />
   );
 }

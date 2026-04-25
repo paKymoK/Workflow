@@ -34,3 +34,7 @@ volumes:
   postgres-data:
     name: pg_data
     driver: local
+
+networks:
+  takypok-network:
+    external: true
