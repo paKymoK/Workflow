@@ -11,6 +11,9 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://auth-service:9000
+    depends_on:
+      discovery-service:
+        condition: service_healthy
     restart: on-failure
     networks:
       - takypok-network

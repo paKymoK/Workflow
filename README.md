@@ -79,6 +79,14 @@ This repository combines identity, API gateway, service discovery, workflow orch
 
 ## Quick start
 
+### 0) Create Docker network (once per machine)
+
+```bash
+docker network create takypok-network
+```
+
+---
+
 ### 1) Start infrastructure
 
 #### PostgreSQL

@@ -18,6 +18,11 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
     volumes:
       - ./src/main/resources/offset.dat:/app/resources/offset.dat
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     restart: on-failure
     networks:
       - takypok-network

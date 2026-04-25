@@ -7,7 +7,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2024M
+          memory: 2048M
     container_name: tqthai_postgres
     environment:
       POSTGRES_USER: postgres
