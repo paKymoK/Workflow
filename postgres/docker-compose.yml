@@ -8,7 +8,7 @@ services:
       resources:
         limits:
           memory: 2048M
-    container_name: tqthai_postgres
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -34,7 +34,3 @@ volumes:
   postgres-data:
     name: pg_data
     driver: local
-
-networks:
-  takypok-network:
-    external: true

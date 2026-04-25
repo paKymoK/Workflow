@@ -16,17 +16,17 @@ services:
       JWK_URI: http://auth-service:9000/oauth2/jwks
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      DEBEZIUM_OFFSET_PATH: /data/offset.dat
     volumes:
-      - ./src/main/resources/offset.dat:/app/resources/offset.dat
+      - workflow-data:/data
     depends_on:
       postgres:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
     restart: on-failure
-    networks:
-      - takypok-network
 
-networks:
-  takypok-network:
-    external: true
+volumes:
+  workflow-data:
+    name: offset_debezium
+    driver: local

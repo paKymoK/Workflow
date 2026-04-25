@@ -26,9 +26,4 @@ services:
       discovery-service:
         condition: service_healthy
     restart: on-failure
-    networks:
-      - takypok-network
 
-networks:
-  takypok-network:
-    external: true

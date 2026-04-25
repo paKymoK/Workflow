@@ -5,3 +5,6 @@ debezium:
   user: ${DB_USER:postgres}
   password: ${DB_PASSWORD:postgres}
   prefix: ${PREFIX:topix}
+  offset:
+    storage:
+      path: ${DEBEZIUM_OFFSET_PATH:./offset.dat}

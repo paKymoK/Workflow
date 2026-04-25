@@ -9,6 +9,3 @@ include:
   - media-service/docker-compose.yml
   - gateway-service/docker-compose.yml
 
-networks:
-  takypok-network:
-    external: true
