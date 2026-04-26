@@ -148,7 +148,7 @@ public class AuthorizationServerConfig {
             .tokenSettings(tokenSettings)
             .redirectUri("http://localhost:3000/callback")
             .redirectUri("http://localhost:3001/callback")
-            .redirectUri("https://app.thaiha.website/callback")
+            .redirectUri("https://workflow-92l5.vercel.app/callback")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
