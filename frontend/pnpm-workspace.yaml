@@ -1,0 +1,4 @@
+packages:
+  - "packages/*"
+  - "workflow-front-end"
+  - "shop-front-end"
