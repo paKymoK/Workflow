@@ -20,8 +20,8 @@ spring:
       - 'classpath:management.yml'
 
 vnpay:
-  tmn-code: ${VNPAY_TMN_CODE:YOURCODE}
-  hash-secret: ${VNPAY_HASH_SECRET:yoursecret}
+  tmn-code: ${VNPAY_TMN_CODE:BE8FM4RD}
+  hash-secret: ${VNPAY_HASH_SECRET:IN8YPAORH1GN423KCYKTW1UGE61KIYBR}
   url: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   return-url: ${VNPAY_RETURN_URL:http://localhost:8080/shop-service/v1/payment/vnpay-return}
 

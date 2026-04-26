@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd .. && pnpm install --frozen-lockfile",
+  "installCommand": "corepack enable pnpm && cd .. && pnpm install --frozen-lockfile",
   "buildCommand": "cd .. && pnpm --filter shop-front-end build",
   "outputDirectory": "dist",
   "rewrites": [
