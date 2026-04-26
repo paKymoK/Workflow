@@ -4,16 +4,18 @@ import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.shopservice.exception.CheckoutBusyException;
 import com.takypok.shopservice.exception.InsufficientStockException;
+import com.takypok.shopservice.mapper.CartMapper;
 import com.takypok.shopservice.model.entity.Cart;
 import com.takypok.shopservice.model.entity.CartItem;
+import com.takypok.shopservice.model.entity.Order;
 import com.takypok.shopservice.model.entity.Product;
 import com.takypok.shopservice.model.entity.ProductInformation;
 import com.takypok.shopservice.model.request.UpsertCartItemRequest;
-import com.takypok.shopservice.model.response.CartItemResponse;
 import com.takypok.shopservice.model.response.CartResponse;
 import com.takypok.shopservice.model.response.CheckoutResponse;
 import com.takypok.shopservice.repository.CartItemRepository;
 import com.takypok.shopservice.repository.CartRepository;
+import com.takypok.shopservice.repository.OrderRepository;
 import com.takypok.shopservice.repository.ProductRepository;
 import com.takypok.shopservice.service.CartService;
 import io.r2dbc.spi.R2dbcException;
@@ -22,6 +24,7 @@ import java.security.Principal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -37,7 +40,9 @@ public class CartServiceImpl implements CartService {
   private final CartRepository cartRepository;
   private final CartItemRepository cartItemRepository;
   private final ProductRepository<ProductInformation> productRepository;
+  private final OrderRepository orderRepository;
   private final DatabaseClient databaseClient;
+  private final CartMapper cartMapper;
 
   @Override
   public Mono<CartResponse> getActiveCart() {
@@ -125,6 +130,12 @@ public class CartServiceImpl implements CartService {
     List<CartItem> sortedItems =
         items.stream().sorted(Comparator.comparing(CartItem::getProductId)).toList();
 
+    String orderId = UUID.randomUUID().toString().replace("-", "");
+    long totalAmount =
+        items.stream()
+            .mapToLong(item -> item.getUnitPrice().longValue() * item.getQuantity())
+            .sum();
+
     return Flux.fromIterable(sortedItems)
         .concatMap(item -> lockProductRow(item.getProductId()))
         .thenMany(Flux.fromIterable(sortedItems))
@@ -135,9 +146,24 @@ public class CartServiceImpl implements CartService {
                   cart.setStatus(Cart.STATUS_CHECKED_OUT);
                   return cartRepository.save(cart);
                 }))
+        .then(
+            Mono.defer(
+                () -> {
+                  Order order = new Order();
+                  order.setOrderId(orderId);
+                  order.setCartId(cart.getId());
+                  order.setUserId(cart.getUserId());
+                  order.setTotalAmount(totalAmount);
+                  order.setCurrency("VND");
+                  order.setStatus(Order.STATUS_PENDING_PAYMENT);
+                  return orderRepository.save(order);
+                }))
         .thenReturn(
             CheckoutResponse.builder()
                 .cartId(cart.getId())
+                .orderId(orderId)
+                .totalAmount(totalAmount)
+                .currency("VND")
                 .totalItems(items.stream().mapToLong(CartItem::getQuantity).sum())
                 .build());
   }
@@ -177,23 +203,6 @@ public class CartServiceImpl implements CartService {
         .collectList()
         .map(
             items -> {
-              List<CartItemResponse> responseItems =
-                  items.stream()
-                      .map(
-                          item ->
-                              CartItemResponse.builder()
-                                  .productId(item.getProductId())
-                                  .name(item.getProductName())
-                                  .imageUrl(item.getImageUrl())
-                                  .quantity(item.getQuantity())
-                                  .unitPrice(item.getUnitPrice())
-                                  .currency(item.getCurrency())
-                                  .lineTotal(
-                                      item.getUnitPrice()
-                                          .multiply(BigDecimal.valueOf(item.getQuantity())))
-                                  .build())
-                      .toList();
-
               long totalItems = items.stream().mapToLong(CartItem::getQuantity).sum();
               BigDecimal totalPrice =
                   items.stream()
@@ -204,7 +213,7 @@ public class CartServiceImpl implements CartService {
 
               return CartResponse.builder()
                   .id(cartId)
-                  .items(responseItems)
+                  .items(cartMapper.toResponseList(items))
                   .totalItems(totalItems)
                   .totalPrice(totalPrice)
                   .build();

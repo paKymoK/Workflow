@@ -6,13 +6,11 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
@@ -39,16 +37,11 @@ public class LoggingFilter implements GlobalFilter {
         .flatMap(
             authentication -> {
               String username = authentication.getName();
-              String roles =
-                  authentication.getAuthorities().stream()
-                      .map(GrantedAuthority::getAuthority)
-                      .collect(Collectors.joining(", "));
 
               log.info(
-                  "Incoming request {} | User: {} | Roles: {} | Routed to id: {}, uri: {}",
+                  "Incoming request {} | User: {} | Routed to id: {}, uri: {}",
                   originalUri,
                   username,
-                  roles,
                   route.getId(),
                   routeUri);
 

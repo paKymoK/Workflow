@@ -37,12 +37,7 @@ export function useRemoveCartItem() {
 }
 
 export function useCheckoutCart() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: checkoutCart,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.all() });
-      queryClient.invalidateQueries({ queryKey: productKeys.all() });
-    },
   });
 }

@@ -16,7 +16,7 @@ public class ControllerAdvice {
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResultMessage<?> handleValidationExceptions(Exception ex) {
-    log.error("IllegalArgumentException: ", ex);
+    log.error("Exception: ", ex);
     return ResultMessage.error(
         Message.get(Message.Application.ERROR, getExceptionMessageChain(ex).toString()));
   }

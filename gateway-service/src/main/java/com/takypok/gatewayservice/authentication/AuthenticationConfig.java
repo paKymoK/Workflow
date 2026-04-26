@@ -32,7 +32,10 @@ public class AuthenticationConfig {
                         "/v3/api-docs/**",
                         "/*/docs/api-docs",
                         "/api/health",
-                        "/api/health/**")
+                        "/api/health/**",
+                        "/shop-service/v1/payment/vnpay-ipn",
+                        "/shop-service/v1/payment/vnpay-return",
+                        "/shop-service/v1/payment/stream/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())

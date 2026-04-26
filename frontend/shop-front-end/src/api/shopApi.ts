@@ -1,4 +1,4 @@
-import type { ResultMessage, PageResponse, ShopProduct, FilterProductRequest, Cart, UpsertCartItemRequest, CheckoutResponse } from "./types";
+import type { ResultMessage, PageResponse, ShopProduct, FilterProductRequest, Cart, UpsertCartItemRequest, CheckoutResponse, PaymentCreateResponse } from "./types";
 import { api } from "@takypok/shared";
 
 export async function fetchProducts(params: FilterProductRequest) {
@@ -41,6 +41,14 @@ export async function removeCartItem(productId: string | number) {
 export async function checkoutCart() {
   const { data } = await api.post<ResultMessage<CheckoutResponse>>(
     "/shop-service/v1/cart/checkout",
+  );
+  return data.data;
+}
+
+export async function createPayment(orderId: string) {
+  const { data } = await api.post<ResultMessage<PaymentCreateResponse>>(
+    "/shop-service/v1/payment/create",
+    { orderId },
   );
   return data.data;
 }

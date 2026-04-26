@@ -57,5 +57,13 @@ export interface UpsertCartItemRequest {
 
 export interface CheckoutResponse {
   cartId: number;
+  orderId: string;
+  totalAmount: number;
+  currency: string;
   totalItems: number;
+}
+
+export interface PaymentCreateResponse {
+  orderId: string;
+  paymentUrl: string;
 }

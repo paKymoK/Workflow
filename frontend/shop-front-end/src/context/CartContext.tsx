@@ -3,13 +3,15 @@ import { message } from "antd";
 import type { CartItem } from "../api/types";
 import { useCartQuery, useCheckoutCart, useRemoveCartItem, useUpsertCartItem } from "../hooks/useCart";
 
+type CheckoutResult = { orderId: string; totalAmount: number };
+
 type CartContextType = {
   items: CartItem[];
   addItem: (product: { productId: number }) => Promise<void>;
   removeItem: (productId: number) => Promise<void>;
   updateQty: (productId: number, qty: number) => Promise<void>;
   clearCart: () => Promise<void>;
-  checkout: () => Promise<void>;
+  checkout: () => Promise<CheckoutResult>;
   totalPrice: number;
   totalItems: number;
   isLoading: boolean;
@@ -51,9 +53,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await Promise.all(items.map((item) => removeMutation.mutateAsync(item.productId)));
   };
 
-  const checkout = async () => {
-    await checkoutMutation.mutateAsync();
-    message.success("Checkout completed");
+  const checkout = async (): Promise<CheckoutResult> => {
+    const result = await checkoutMutation.mutateAsync();
+    return { orderId: result.orderId, totalAmount: result.totalAmount };
   };
 
   return (
