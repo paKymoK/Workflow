@@ -3,10 +3,12 @@ package com.takypok.shopservice.service.impl;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.shopservice.config.VnpayConfig;
+import com.takypok.shopservice.model.entity.Cart;
 import com.takypok.shopservice.model.entity.CartItem;
 import com.takypok.shopservice.model.entity.Order;
 import com.takypok.shopservice.model.response.PaymentCreateResponse;
 import com.takypok.shopservice.repository.CartItemRepository;
+import com.takypok.shopservice.repository.CartRepository;
 import com.takypok.shopservice.repository.OrderRepository;
 import com.takypok.shopservice.service.PaymentService;
 import com.takypok.shopservice.util.VnpayUtil;
@@ -30,6 +32,7 @@ import reactor.core.publisher.Sinks;
 public class PaymentServiceImpl implements PaymentService {
 
   private final OrderRepository orderRepository;
+  private final CartRepository cartRepository;
   private final CartItemRepository cartItemRepository;
   private final DatabaseClient databaseClient;
   private final VnpayConfig vnpayConfig;
@@ -87,14 +90,35 @@ public class PaymentServiceImpl implements PaymentService {
                 return Mono.just(order);
               }
               order.setStatus(Order.STATUS_PAID);
-              return orderRepository.save(order);
+              return orderRepository
+                  .save(order)
+                  .flatMap(
+                      saved ->
+                          cartRepository
+                              .findById(saved.getCartId())
+                              .flatMap(
+                                  cart -> {
+                                    cart.setStatus(Cart.STATUS_CHECKED_OUT);
+                                    return cartRepository.save(cart);
+                                  })
+                              .onErrorResume(
+                                  ex -> {
+                                    log.error(
+                                        "Could not mark cart {} as checked out: {}",
+                                        saved.getCartId(),
+                                        ex.getMessage());
+                                    return Mono.empty();
+                                  })
+                              .thenReturn(saved));
             })
         .doOnNext(
             order -> {
-              Sinks.Many<String> sink = sinkRegistry.get(orderId);
-              if (sink != null) {
-                sink.tryEmitNext("paid");
-                sink.tryEmitComplete();
+              if (Order.STATUS_PAID.equals(order.getStatus())) {
+                Sinks.Many<String> sink = sinkRegistry.get(orderId);
+                if (sink != null) {
+                  sink.tryEmitNext("paid");
+                  sink.tryEmitComplete();
+                }
               }
             })
         .then();

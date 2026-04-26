@@ -143,12 +143,6 @@ public class CartServiceImpl implements CartService {
         .then(
             Mono.defer(
                 () -> {
-                  cart.setStatus(Cart.STATUS_CHECKED_OUT);
-                  return cartRepository.save(cart);
-                }))
-        .then(
-            Mono.defer(
-                () -> {
                   Order order = new Order();
                   order.setOrderId(orderId);
                   order.setCartId(cart.getId());
