@@ -154,6 +154,9 @@ importers:
       dagre:
         specifier: ^0.8.5
         version: 0.8.5
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.20
       framer-motion:
         specifier: ^12.38.0
         version: 12.38.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
