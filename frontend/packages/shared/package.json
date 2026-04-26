@@ -7,10 +7,16 @@
     ".": "./src/index.ts"
   },
   "peerDependencies": {
+    "@tanstack/react-query": ">=5",
     "antd": ">=6",
     "axios": ">=1",
     "react": ">=19",
     "react-dom": ">=19",
     "react-router-dom": ">=7"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3"
   }
 }

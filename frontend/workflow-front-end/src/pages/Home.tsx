@@ -129,7 +129,7 @@ export default function Home() {
                   labelLine={false}
                 />
                 <Tooltip
-                  formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]}
+                  formatter={(v) => [`${(v as number) ?? 0} tickets`, "Count"]}
                   contentStyle={tooltipContentStyle}
                   labelStyle={tooltipLabelStyle}
                   itemStyle={tooltipItemStyle}
@@ -204,7 +204,7 @@ export default function Home() {
                   {slaStatusDonutData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Pie>
                 <Tooltip
-                  formatter={(v: number | undefined) => [`${v ?? 0} tickets`, "Count"]}
+                  formatter={(v) => [`${(v as number) ?? 0} tickets`, "Count"]}
                   contentStyle={tooltipContentStyle}
                   labelStyle={tooltipLabelStyle}
                   itemStyle={tooltipItemStyle}

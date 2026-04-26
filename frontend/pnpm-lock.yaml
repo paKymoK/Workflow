@@ -23,6 +23,16 @@ importers:
       react-router-dom:
         specifier: '>=7'
         version: 7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+    devDependencies:
+      '@tanstack/react-query':
+        specifier: ^5.90.20
+        version: 5.100.5(react@19.2.5)
+      '@types/react':
+        specifier: ^19.2.5
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
 
   shop-front-end:
     dependencies:
