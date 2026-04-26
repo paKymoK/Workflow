@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd .. && npx --yes pnpm@10.33.2 install --no-frozen-lockfile",
+  "installCommand": "pnpm --version && cd .. && npx --yes pnpm@10.33.2 install --no-frozen-lockfile",
   "buildCommand": "cd .. && npx --yes pnpm@10.33.2 --filter shop-front-end build",
   "outputDirectory": "dist",
   "rewrites": [
