@@ -119,9 +119,9 @@ public class AuthorizationServerConfig {
             .reuseRefreshTokens(false)
             .build();
 
-    RegisteredClient spaClient =
+    RegisteredClient workflow =
         RegisteredClient.withId(UUID.randomUUID().toString())
-            .clientId("workflow-frontend")
+            .clientId("workflow-spa")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
@@ -139,7 +139,29 @@ public class AuthorizationServerConfig {
                     .build())
             .build();
 
-    upsertClient(registeredClientRepository, jdbcTemplate, spaClient);
+    RegisteredClient shop =
+        RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("shop-spa")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+            .tokenSettings(tokenSettings)
+            .redirectUri("http://localhost:3000/callback")
+            .redirectUri("http://localhost:3001/callback")
+            .redirectUri("https://app.thaiha.website/callback")
+            .redirectUri("https://oauth.pstmn.io/v1/callback")
+            .scope(OidcScopes.OPENID)
+            .scope(OidcScopes.PROFILE)
+            .scope("offline_access")
+            .clientSettings(
+                ClientSettings.builder()
+                    .requireAuthorizationConsent(true)
+                    .requireProofKey(true)
+                    .build())
+            .build();
+
+    upsertClient(registeredClientRepository, jdbcTemplate, workflow);
+    upsertClient(registeredClientRepository, jdbcTemplate, shop);
     return registeredClientRepository;
   }
 

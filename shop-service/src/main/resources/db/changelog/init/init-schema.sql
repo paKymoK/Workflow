@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS product
 (
     id          bigserial NOT NULL,
     name        character varying,
-    type        character varying,
+    category    character varying,
     image_url   character varying,
     detail      jsonb,
     stock       bigint NOT NULL,

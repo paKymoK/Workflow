@@ -68,7 +68,7 @@ public class ProductServiceImpl implements ProductService {
   public Mono<Product<ProductInformation>> create(CreateProductRequest request) {
     Product<ProductInformation> product = new Product<>();
     product.setName(request.getName());
-    product.setType(request.getType());
+    product.setCategory(request.getCategory());
     product.setImageUrl(request.getImageUrl());
     product.setDetail(resolveProductInformation(request.getDetail()));
     product.setStock(request.getStock());
@@ -87,7 +87,7 @@ public class ProductServiceImpl implements ProductService {
         .flatMap(
             product -> {
               product.setName(request.getName());
-              product.setType(request.getType());
+              product.setCategory(request.getCategory());
               product.setImageUrl(request.getImageUrl());
               product.setDetail(resolveProductInformation(request.getDetail()));
               product.setStock(request.getStock());

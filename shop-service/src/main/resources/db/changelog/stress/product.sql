@@ -1,6 +1,6 @@
 INSERT INTO product (
     name,
-    type,
+    category,
     image_url,
     detail,
     stock,

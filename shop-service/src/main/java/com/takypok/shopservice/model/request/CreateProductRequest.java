@@ -13,7 +13,7 @@ import lombok.*;
 public class CreateProductRequest {
   @NotBlank private String name;
 
-  @NotBlank private String type;
+  @NotBlank private String category;
 
   private String imageUrl;
 
