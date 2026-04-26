@@ -148,7 +148,7 @@ export default function Login() {
           )}
 
           <button
-            onClick={login}
+            onClick={() => login()}
             disabled={authHealth !== "up"}
             className={`neon-btn w-full py-4 font-bebas text-[22px] tracking-[0.25em] border-none transition-all ${
               authHealth === "up"
