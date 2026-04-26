@@ -201,4 +201,5 @@ README.html
 *.iml
 .idea
 .exercism
-*.claudeoffset.dat
+*.claude
+offset.dat
