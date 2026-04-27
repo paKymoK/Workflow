@@ -43,20 +43,8 @@ export default function Login() {
       <BubbleBackground />
       <div className="login-slash-accent" />
 
-      {/* Ticker tape */}
-      <div className="fixed top-0 left-0 right-0 h-8 bg-[var(--neon-yellow)] overflow-hidden flex items-center z-10">
-        <div className="ticker-track flex whitespace-nowrap">
-          <span className="font-bebas text-[14px] text-[var(--dark)] tracking-[0.2em] pr-20">
-            SHOP ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  BROWSE PRODUCTS ///  ENTER CREDENTIALS ///  SHOP ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  BROWSE PRODUCTS ///  ENTER CREDENTIALS ///
-          </span>
-          <span className="font-bebas text-[14px] text-[var(--dark)] tracking-[0.2em] pr-20">
-            SHOP ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  BROWSE PRODUCTS ///  ENTER CREDENTIALS ///  SHOP ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  BROWSE PRODUCTS ///  ENTER CREDENTIALS ///
-          </span>
-        </div>
-      </div>
-
       {/* Font + Theme toggles */}
-      <div className="fixed top-10 right-4 z-20 flex gap-2">
+      <div className="fixed top-4 right-4 z-20 flex gap-2">
         <button
           onClick={toggleFont}
           title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}

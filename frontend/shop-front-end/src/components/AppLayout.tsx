@@ -17,8 +17,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const { Header, Sider, Content } = Layout;
 
-const TICKER_TEXT =
-  "SHOP ///  BROWSE PRODUCTS ///  ADD TO CART ///  CHECKOUT ///  OAUTH2 SECURED ///  SYSTEM NOMINAL ///  ";
 
 type ServiceHealth = {
   service: string;
@@ -200,16 +198,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
         {/* ── Main area ─────────────────────────────────── */}
         <Layout className="flex flex-col overflow-hidden">
-          <div className="h-7 bg-[var(--neon-yellow)] overflow-hidden flex items-center flex-shrink-0">
-            <div className="ticker-track flex whitespace-nowrap">
-              <span className="font-bebas text-[13px] text-[var(--dark)] tracking-[0.2em] pr-20">
-                {TICKER_TEXT}{TICKER_TEXT}
-              </span>
-              <span className="font-bebas text-[13px] text-[var(--dark)] tracking-[0.2em] pr-20">
-                {TICKER_TEXT}{TICKER_TEXT}
-              </span>
-            </div>
-          </div>
 
           <Header className="neon-header-border flex items-center justify-between !px-4 !h-11 flex-shrink-0">
             <div className="flex items-center gap-3">
