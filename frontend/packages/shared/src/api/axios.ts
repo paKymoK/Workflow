@@ -64,6 +64,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const url: string = error.config?.url ?? "";
+    if (url.includes("/api/health")) return Promise.reject(error);
+
     const status = error.response?.status;
 
     if (status === 401 && isRetriableConfig(error.config) && !error.config._retry) {

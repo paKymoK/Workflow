@@ -61,7 +61,7 @@ public final class VnpayUtil {
 
     String data =
         filtered.entrySet().stream()
-            .map(e -> e.getKey() + "=" + e.getValue())
+            .map(e -> urlEncode(e.getKey()) + "=" + urlEncode(e.getValue()))
             .collect(Collectors.joining("&"));
 
     return hmacSha512(hashSecret, data).equalsIgnoreCase(receivedHash);
@@ -73,7 +73,9 @@ public final class VnpayUtil {
       mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512"));
       byte[] bytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
       StringBuilder sb = new StringBuilder(bytes.length * 2);
-      for (byte b : bytes) sb.append(String.format("%02x", b));
+      for (byte b : bytes)
+        sb.append(
+            String.format("%02x", b & 0xff));
       return sb.toString();
     } catch (Exception e) {
       throw new RuntimeException("HMAC-SHA512 error", e);
@@ -81,6 +83,6 @@ public final class VnpayUtil {
   }
 
   private static String urlEncode(String value) {
-    return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+    return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
 }
