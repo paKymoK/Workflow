@@ -28,6 +28,7 @@ export default function CartDrawer({ open, onClose }: Props) {
   const [isWaitingForPayment, setIsWaitingForPayment] = useState(false);
   const popupRef = useRef<Window | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const paymentConfirmedRef = useRef(false);
 
   const cleanupPayment = () => {
     if (popupRef.current && !popupRef.current.closed) {
@@ -38,6 +39,7 @@ export default function CartDrawer({ open, onClose }: Props) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+    paymentConfirmedRef.current = false;
     setIsWaitingForPayment(false);
   };
 
@@ -48,6 +50,7 @@ export default function CartDrawer({ open, onClose }: Props) {
 
     sse.onmessage = (event) => {
       if (event.data === "paid") {
+        paymentConfirmedRef.current = true;
         cleanupPayment();
         queryClient.invalidateQueries({ queryKey: cartKeys.all() });
         queryClient.invalidateQueries({ queryKey: productKeys.all() });
@@ -64,6 +67,7 @@ export default function CartDrawer({ open, onClose }: Props) {
     });
 
     sse.onerror = () => {
+      if (paymentConfirmedRef.current) return;
       cleanupPayment();
       queryClient.invalidateQueries({ queryKey: cartKeys.all() });
       queryClient.invalidateQueries({ queryKey: productKeys.all() });
@@ -73,6 +77,7 @@ export default function CartDrawer({ open, onClose }: Props) {
 
   const onCheckout = async () => {
     try {
+      paymentConfirmedRef.current = false;
       const { orderId } = await checkout();
       const { paymentUrl } = await createPayment(orderId);
       popupRef.current = window.open(paymentUrl, "vnpay", "width=800,height=600");

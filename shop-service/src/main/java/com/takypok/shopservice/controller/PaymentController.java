@@ -64,13 +64,39 @@ public class PaymentController {
         .onErrorReturn(Map.of("RspCode", "02", "Message", "Order not found or already processed"));
   }
 
-  @GetMapping("/vnpay-return")
-  public Mono<Map<String, String>> vnpayReturn(@RequestParam Map<String, String> params) {
+  @GetMapping(
+      value = "/vnpay-return",
+      produces = org.springframework.http.MediaType.TEXT_HTML_VALUE)
+  public Mono<String> vnpayReturn(@RequestParam Map<String, String> params) {
     String responseCode = params.getOrDefault("vnp_ResponseCode", "99");
-    if ("00".equals(responseCode)) {
-      return Mono.just(Map.of("RspCode", "00", "Message", "Payment successful"));
+    boolean success =
+        "00".equals(responseCode) && VnpayUtil.verifySignature(vnpayConfig.getHashSecret(), params);
+
+    if (success) {
+      String orderId = params.get("vnp_TxnRef");
+      return paymentService
+          .confirmPayment(orderId)
+          .onErrorResume(e -> Mono.empty())
+          .thenReturn(buildReturnHtml(true));
     }
-    return Mono.just(Map.of("RspCode", responseCode, "Message", "Payment not completed"));
+    return Mono.just(buildReturnHtml(false));
+  }
+
+  private static String buildReturnHtml(boolean success) {
+    String message = success ? "Payment successful!" : "Payment was not completed.";
+    String color = success ? "#52c41a" : "#ff4d4f";
+    return """
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Payment Result</title></head>
+        <body style="display:flex;align-items:center;justify-content:center;height:100vh;
+                    font-family:sans-serif;font-size:1.2rem;color:%s;margin:0">
+          <div>%s<br><small style="color:#888;font-size:.9rem">This window will close automatically…</small></div>
+          <script>setTimeout(function(){ window.close(); }, 3000);</script>
+        </body>
+        </html>
+        """
+        .formatted(color, message);
   }
 
   private String extractIpAddress(ServerHttpRequest request) {

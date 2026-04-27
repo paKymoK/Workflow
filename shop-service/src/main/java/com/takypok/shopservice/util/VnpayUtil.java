@@ -73,9 +73,7 @@ public final class VnpayUtil {
       mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512"));
       byte[] bytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
       StringBuilder sb = new StringBuilder(bytes.length * 2);
-      for (byte b : bytes)
-        sb.append(
-            String.format("%02x", b & 0xff));
+      for (byte b : bytes) sb.append(String.format("%02x", b & 0xff));
       return sb.toString();
     } catch (Exception e) {
       throw new RuntimeException("HMAC-SHA512 error", e);
