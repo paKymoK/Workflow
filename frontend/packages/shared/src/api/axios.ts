@@ -37,8 +37,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const url: string = error.config?.url ?? "";
-    if (url.includes("/api/health")) return Promise.reject(error);
-
+    const isHealthCheck = url.includes("/api/health");
     const status = error.response?.status;
 
     if (status === 401 && isRetriableConfig(error.config) && !error.config._retry) {
@@ -51,7 +50,7 @@ api.interceptors.response.use(
         return api({ ...error.config, headers });
       }
 
-      if (!isLoggingOut) {
+      if (!isHealthCheck && !isLoggingOut) {
         isLoggingOut = true;
         notifyLogout();
         setTimeout(() => { isLoggingOut = false; }, 3000);
@@ -59,7 +58,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (status >= 400 && status < 500) {
+    if (!isHealthCheck && status >= 400 && status < 500) {
       const msg: string = error.response?.data?.status?.message;
       message.error(msg || "Internal Server Error");
     }

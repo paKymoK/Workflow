@@ -149,7 +149,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         >
           <div className="flex h-16 flex-col items-center justify-center border-b border-[var(--border-subtle)] px-3 flex-shrink-0">
             <span className="font-bebas text-2xl tracking-[0.2em] glitch-anim neon-text-yellow leading-none">
-              {collapsed ? "S//" : "S//HOP"}
+              {collapsed ? "S" : "SHOP"}
             </span>
             {!collapsed && (
               <span className="font-mono-tech text-[8px] tracking-[0.3em] text-[var(--text-muted)] uppercase mt-0.5">
@@ -259,10 +259,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <span className="font-bebas text-[12px] text-black tracking-[0.15em] flex items-center gap-1.5">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-black blink" />
               LIVE
-            </span>
-            <span className="font-bebas text-[12px] text-black tracking-[0.15em]">SYS: NOMINAL</span>
-            <span className="font-bebas text-[12px] text-black tracking-[0.15em] hidden md:block">
-              LOC: 127.0.0.1
             </span>
             <span className="font-bebas text-[12px] text-black tracking-[0.15em] ml-auto">
               {clock}

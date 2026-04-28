@@ -138,7 +138,7 @@ public class AuthorizationServerConfig {
 
     TokenSettings tokenSettings =
         TokenSettings.builder()
-            .accessTokenTimeToLive(Duration.ofMinutes(1))
+            .accessTokenTimeToLive(Duration.ofMinutes(15))
             .refreshTokenTimeToLive(Duration.ofDays(1))
             .reuseRefreshTokens(false)
             .build();
@@ -149,7 +149,6 @@ public class AuthorizationServerConfig {
             .clientSecret("{noop}workflow-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(tokenSettings)
@@ -172,7 +171,6 @@ public class AuthorizationServerConfig {
             .clientSecret("{noop}shop-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(tokenSettings)
