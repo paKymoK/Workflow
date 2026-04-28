@@ -117,7 +117,7 @@ public class SecurityConfig {
       throws Exception {
 
     return http.csrf(AbstractHttpConfigurer::disable)
-        .cors(AbstractHttpConfigurer::disable)
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .securityContext(
             context ->
                 context
@@ -147,7 +147,10 @@ public class SecurityConfig {
     configuration.setAllowedHeaders(Collections.singletonList("*"));
     configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
     configuration.setAllowCredentials(true);
-    source.registerCorsConfiguration("/**", configuration);
+    // Only cover OAuth2 endpoints — gateway handles CORS for /v1/** and other proxied paths
+    source.registerCorsConfiguration("/oauth2/**", configuration);
+    source.registerCorsConfiguration("/.well-known/**", configuration);
+    source.registerCorsConfiguration("/connect/**", configuration);
     return source;
   }
 

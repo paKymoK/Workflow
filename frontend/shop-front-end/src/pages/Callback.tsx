@@ -12,6 +12,14 @@ export default function Callback() {
   const [exchangeError, setExchangeError] = useState<string | null>(null);
 
   const validationError = useMemo(() => {
+    const oauthError = searchParams.get("error");
+    if (oauthError) {
+      const desc = searchParams.get("error_description");
+      return desc
+        ? decodeURIComponent(desc.replace(/\+/g, " "))
+        : `Authorization failed: ${oauthError}`;
+    }
+
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const savedState = sessionStorage.getItem("pkce_state");

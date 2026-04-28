@@ -1,37 +1,9 @@
 import axios from "axios";
 import { message } from "antd";
-import { navigate } from "../lib/navigate";
-import { refreshAccessToken } from "../auth/pkce";
-import { notifyTokenRefreshed } from "../lib/tokenSync";
+import { notifyLogout } from "../lib/tokenSync";
+import { refreshTokenIfPossible } from "../lib/refreshSingleton";
 
-let refreshPromise: Promise<string | null> | null = null;
-
-async function refreshTokenIfPossible() {
-  const refreshToken = sessionStorage.getItem("refresh_token");
-  if (!refreshToken) return null;
-
-  if (!refreshPromise) {
-    refreshPromise = refreshAccessToken(refreshToken)
-      .then((tokenResponse) => {
-        sessionStorage.setItem("access_token", tokenResponse.access_token);
-        if (tokenResponse.refresh_token) {
-          sessionStorage.setItem("refresh_token", tokenResponse.refresh_token);
-        }
-        notifyTokenRefreshed(tokenResponse);
-        return tokenResponse.access_token;
-      })
-      .catch(() => {
-        sessionStorage.removeItem("access_token");
-        sessionStorage.removeItem("refresh_token");
-        return null;
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
-}
+let isLoggingOut = false;
 
 function toPlainHeaders(headers: unknown): Record<string, string> {
   if (headers && typeof headers === "object" && !Array.isArray(headers)) {
@@ -73,14 +45,17 @@ api.interceptors.response.use(
       error.config._retry = true;
       const newAccessToken = await refreshTokenIfPossible();
       if (newAccessToken) {
+        isLoggingOut = false;
         const headers = toPlainHeaders(error.config.headers);
         headers.Authorization = `Bearer ${newAccessToken}`;
         return api({ ...error.config, headers });
       }
 
-      sessionStorage.removeItem("access_token");
-      sessionStorage.removeItem("refresh_token");
-      navigate("/login");
+      if (!isLoggingOut) {
+        isLoggingOut = true;
+        notifyLogout();
+        setTimeout(() => { isLoggingOut = false; }, 3000);
+      }
       return Promise.reject(error);
     }
 

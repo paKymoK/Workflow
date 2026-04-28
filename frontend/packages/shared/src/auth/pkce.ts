@@ -2,6 +2,7 @@ import axios from "axios";
 
 const AUTH_SERVER = import.meta.env.VITE_AUTH_SERVER;
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
+const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET;
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
 const SCOPES = import.meta.env.VITE_SCOPES;
 
@@ -69,13 +70,17 @@ export async function exchangeCodeForToken(
 export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
   const body = new URLSearchParams({
     grant_type: "refresh_token",
-    client_id: CLIENT_ID,
     refresh_token: refreshToken,
   });
 
   const { data } = await axios.post<TokenResponse>(
     `${AUTH_SERVER}/oauth2/token`,
     body,
+    {
+      headers: {
+        Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
+      },
+    },
   );
 
   if (!data.access_token) {

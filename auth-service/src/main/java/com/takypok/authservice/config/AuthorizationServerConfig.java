@@ -7,6 +7,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.function.Function;
 import javax.sql.DataSource;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -43,7 +45,6 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.JwtGenerator;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2AccessTokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -98,12 +99,35 @@ public class AuthorizationServerConfig {
                         (oidc) ->
                             oidc.userInfoEndpoint(
                                 (userInfo) -> userInfo.userInfoMapper(userInfoMapper))))
-        .authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
+        .authorizeHttpRequests(
+            (authorize) ->
+                authorize
+                    .requestMatchers(
+                        "/oauth2/token",
+                        "/oauth2/jwks",
+                        "/oauth2/revoke",
+                        "/oauth2/introspect",
+                        "/.well-known/openid-configuration",
+                        "/connect/register")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .exceptionHandling(
-            (exceptions) ->
-                exceptions.defaultAuthenticationEntryPointFor(
-                    new LoginUrlAuthenticationEntryPoint("/login"),
-                    new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
+            (exceptions) -> {
+              MediaTypeRequestMatcher htmlMatcher =
+                  new MediaTypeRequestMatcher(MediaType.TEXT_HTML);
+              htmlMatcher.setIgnoredMediaTypes(Collections.singleton(MediaType.ALL));
+              exceptions
+                  .defaultAuthenticationEntryPointFor(
+                      new LoginUrlAuthenticationEntryPoint("/login"), htmlMatcher)
+                  .defaultAuthenticationEntryPointFor(
+                      (request, response, ex) -> {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        response.getWriter().write("{\"error\":\"unauthorized\"}");
+                      },
+                      request -> true);
+            });
     return http.build();
   }
 
@@ -114,7 +138,7 @@ public class AuthorizationServerConfig {
 
     TokenSettings tokenSettings =
         TokenSettings.builder()
-            .accessTokenTimeToLive(Duration.ofMinutes(10))
+            .accessTokenTimeToLive(Duration.ofMinutes(1))
             .refreshTokenTimeToLive(Duration.ofDays(1))
             .reuseRefreshTokens(false)
             .build();
@@ -122,7 +146,10 @@ public class AuthorizationServerConfig {
     RegisteredClient workflow =
         RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("workflow-spa")
+            .clientSecret("{noop}workflow-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(tokenSettings)
@@ -142,7 +169,10 @@ public class AuthorizationServerConfig {
     RegisteredClient shop =
         RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("shop-spa")
+            .clientSecret("{noop}shop-secret")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(tokenSettings)
@@ -160,18 +190,15 @@ public class AuthorizationServerConfig {
                     .build())
             .build();
 
-    upsertClient(registeredClientRepository, jdbcTemplate, workflow);
-    upsertClient(registeredClientRepository, jdbcTemplate, shop);
+    upsertClient(registeredClientRepository, workflow);
+    upsertClient(registeredClientRepository, shop);
     return registeredClientRepository;
   }
 
   private void upsertClient(
-      JdbcRegisteredClientRepository repository,
-      JdbcTemplate jdbcTemplate,
-      RegisteredClient desiredClient) {
+      JdbcRegisteredClientRepository repository, RegisteredClient desiredClient) {
     RegisteredClient existing = repository.findByClientId(desiredClient.getClientId());
     if (existing != null) {
-      jdbcTemplate.update("DELETE FROM oauth2_registered_client WHERE id = ?", existing.getId());
       repository.save(RegisteredClient.from(desiredClient).id(existing.getId()).build());
       return;
     }
@@ -194,7 +221,6 @@ public class AuthorizationServerConfig {
   @Bean
   public OAuth2TokenGenerator<OAuth2Token> tokenGenerator(JWKSource<SecurityContext> jwkSource) {
     JwtGenerator jwtGenerator = new JwtGenerator(new NimbusJwtEncoder(jwkSource));
-    OAuth2AccessTokenGenerator accessTokenGenerator = new OAuth2AccessTokenGenerator();
 
     OAuth2TokenGenerator<OAuth2RefreshToken> refreshTokenGenerator =
         (OAuth2TokenContext context) -> {
@@ -210,8 +236,7 @@ public class AuthorizationServerConfig {
           return new OAuth2RefreshToken(UUID.randomUUID().toString(), now, expiresAt);
         };
 
-    return new DelegatingOAuth2TokenGenerator(
-        jwtGenerator, accessTokenGenerator, refreshTokenGenerator);
+    return new DelegatingOAuth2TokenGenerator(jwtGenerator, refreshTokenGenerator);
   }
 
   @Bean

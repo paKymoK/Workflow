@@ -93,13 +93,11 @@ public class AuthorizationConsentController {
     static {
       scopeDescriptions.put(
           OidcScopes.PROFILE, "This application will be able to read your profile information.");
-      scopeDescriptions.put("message.read", "This application will be able to read your message.");
       scopeDescriptions.put(
-          "message.write",
-          "This application will be able to add new messages. It will also be able to edit and delete existing messages.");
+          "offline_access",
+          "This application will be able to refresh your session automatically so you stay logged in without re-entering your credentials.");
       scopeDescriptions.put(
           "user.read", "This application will be able to read your user information.");
-      scopeDescriptions.put("other.scope", "This is another scope example of a scope description.");
     }
 
     public final String scope;

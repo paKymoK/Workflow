@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   generateCodeVerifier,
@@ -8,12 +8,12 @@ import {
   buildAuthorizationUrl,
   exchangeCodeForToken,
   parseJwtPayload,
-  refreshAccessToken,
   type TokenResponse,
 } from "./pkce";
 import { AuthContext } from "./AuthContext";
 import { registerNavigate, navigate } from "../lib/navigate";
-import { registerTokenSync } from "../lib/tokenSync";
+import { registerTokenSync, registerLogout } from "../lib/tokenSync";
+import { refreshTokenIfPossible } from "../lib/refreshSingleton";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigateFn = useNavigate();
@@ -23,17 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const doRefreshRef        = useRef<() => Promise<void>>(async () => {});
   const handleCallbackRef   = useRef<(code: string, cv: string) => Promise<void>>(async () => {});
   const setTokenResponseRef = useRef<(t: TokenResponse) => void>(() => {});
-
-  const scheduleRefresh = (expiresInSeconds: number) => {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    const delay = Math.max((expiresInSeconds - 60) * 1000, 0);
-    refreshTimerRef.current = setTimeout(() => doRefreshRef.current(), delay);
-  };
 
   const setTokenResponse = (tokenResponse: TokenResponse) => {
     setAccessToken(tokenResponse.access_token);
@@ -42,31 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (tokenResponse.refresh_token) {
       sessionStorage.setItem("refresh_token", tokenResponse.refresh_token);
     }
-    if (tokenResponse.expires_in) {
-      scheduleRefresh(tokenResponse.expires_in);
-    }
 
     try {
       const claims = parseJwtPayload(tokenResponse.access_token);
       setUser(claims);
     } catch {
       // opaque token — no user claims available
-    }
-  };
-
-  doRefreshRef.current = async () => {
-    const storedRefreshToken = sessionStorage.getItem("refresh_token");
-    if (!storedRefreshToken) {
-      logout();
-      navigate("/login");
-      return;
-    }
-    try {
-      const tokenResponse = await refreshAccessToken(storedRefreshToken);
-      setTokenResponse(tokenResponse);
-    } catch {
-      logout();
-      navigate("/login");
     }
   };
 
@@ -81,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!exp || Date.now() / 1000 < exp) {
             setAccessToken(storedToken);
             setUser(claims);
-            if (exp) scheduleRefresh(exp - Date.now() / 1000);
             setIsLoading(false);
             return;
           }
@@ -93,25 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const storedRefreshToken = sessionStorage.getItem("refresh_token");
-      if (storedRefreshToken) {
-        try {
-          const tokenResponse = await refreshAccessToken(storedRefreshToken);
-          setTokenResponse(tokenResponse);
-        } catch {
-          sessionStorage.removeItem("access_token");
-          sessionStorage.removeItem("refresh_token");
-        }
+      const newToken = await refreshTokenIfPossible();
+      if (!newToken) {
+        sessionStorage.removeItem("access_token");
+        sessionStorage.removeItem("refresh_token");
       }
 
       setIsLoading(false);
     };
 
     init();
-
-    return () => {
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -154,9 +117,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokenResponse(tokenResponse);
   };
 
+  const logout = useCallback(() => {
+    setAccessToken(null);
+    setUser(null);
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("pkce_code_verifier");
+    sessionStorage.removeItem("pkce_state");
+  }, []);
+
   handleCallbackRef.current   = handleCallback;
   setTokenResponseRef.current = setTokenResponse;
-  registerTokenSync((t) => setTokenResponseRef.current(t));
+
+  useEffect(() => {
+    registerTokenSync((t) => setTokenResponseRef.current(t));
+    registerLogout(() => { logout(); navigate("/login"); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handler = async (event: MessageEvent) => {
@@ -189,16 +166,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
   }, []);
-
-  const logout = () => {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    setAccessToken(null);
-    setUser(null);
-    sessionStorage.removeItem("access_token");
-    sessionStorage.removeItem("refresh_token");
-    sessionStorage.removeItem("pkce_code_verifier");
-    sessionStorage.removeItem("pkce_state");
-  };
 
   return (
     <AuthContext.Provider
