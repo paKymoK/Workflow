@@ -54,7 +54,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
     const fetchHealth = async () => {
       try {
-        const { data } = await api.get("/api/health");
+        const { data } = await api.get("/api/health?monitors=auth-service,media-service,chat-service,workflow-service");
         const overall = String(data?.overall ?? "UNKNOWN").toUpperCase();
         const serviceList = Array.isArray(data?.services)
           ? (data.services as ServiceHealth[]).map((s) => ({

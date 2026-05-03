@@ -1,5 +1,6 @@
 package com.takypok.gatewayservice.controller;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -22,7 +24,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class HealthController {
 
-  private static final List<String> MONITORED_SERVICES =
+  private static final List<String> DEFAULT_MONITORED_SERVICES =
       List.of("auth-service", "workflow-service", "media-service");
 
   private final ReactorLoadBalancerExchangeFilterFunction loadBalancerFilter;
@@ -44,9 +46,17 @@ public class HealthController {
   }
 
   @GetMapping("/health")
-  public Mono<ResponseEntity<Map<String, Object>>> checkAllServices() {
-    log.info("Checking services: {}", MONITORED_SERVICES);
-    return Flux.fromIterable(MONITORED_SERVICES)
+  public Mono<ResponseEntity<Map<String, Object>>> checkAllServices(
+      @RequestParam(required = false) String monitors) {
+    List<String> services =
+        (monitors != null && !monitors.isBlank())
+            ? Arrays.stream(monitors.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList()
+            : DEFAULT_MONITORED_SERVICES;
+    log.info("Checking services: {}", services);
+    return Flux.fromIterable(services)
         .flatMap(this::doHealthCheck)
         .collectList()
         .map(
