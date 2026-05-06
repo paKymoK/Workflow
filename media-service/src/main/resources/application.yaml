@@ -13,9 +13,27 @@ spring:
       - 'classpath:config/eureka-client.yml'
       - 'classpath:config/springdoc.yml'
       - 'classpath:management.yml'
-  http:
-    codecs:
-      max-in-memory-size: 10MB
+  codec:
+    max-in-memory-size: 512MB
+  webflux:
+    multipart:
+      max-in-memory-size: 512MB
+      max-disk-usage-per-part: -1
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+storage:
+  base-dir: ./storage
+  raw-dir: ./storage/raw
+  hls-dir: ./storage/hls
+
+ffmpeg:
+  path: ""
+  cache-dir: ~/.cache/media-service/ffmpeg
+  download-timeout-seconds: 120
 
 logging:
   config: classpath:log4j2-spring.xml
