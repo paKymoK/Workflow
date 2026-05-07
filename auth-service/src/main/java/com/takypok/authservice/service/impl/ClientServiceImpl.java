@@ -1,7 +1,9 @@
 package com.takypok.authservice.service.impl;
 
+import com.takypok.authservice.model.entity.ClientSessionPolicy;
 import com.takypok.authservice.model.request.RegisteredClientRequest;
 import com.takypok.authservice.model.response.RegisteredClientResponse;
+import com.takypok.authservice.repository.ClientSessionPolicyRepository;
 import com.takypok.authservice.service.ClientService;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
@@ -30,13 +32,20 @@ public class ClientServiceImpl implements ClientService {
 
   private final JdbcRegisteredClientRepository clientRepository;
   private final JdbcTemplate jdbcTemplate;
+  private final ClientSessionPolicyRepository policyRepository;
 
   @Override
   public List<RegisteredClientResponse> getAll() {
     return jdbcTemplate.queryForList(SELECT_ALL_IDS, String.class).stream()
         .map(clientRepository::findById)
         .filter(Objects::nonNull)
-        .map(RegisteredClientResponse::from)
+        .map(
+            c -> {
+              ClientSessionPolicy policy = policyRepository.findById(c.getId()).orElse(null);
+              boolean singleTab = policy != null && policy.isSingleTab();
+              boolean failOpen = policy == null || policy.isFailOpen();
+              return RegisteredClientResponse.from(c, singleTab, failOpen);
+            })
         .collect(Collectors.toList());
   }
 
@@ -46,7 +55,10 @@ public class ClientServiceImpl implements ClientService {
     if (client == null) {
       throw new ApplicationException(Message.Application.ERROR, "Client not found");
     }
-    return RegisteredClientResponse.from(client);
+    ClientSessionPolicy policy = policyRepository.findById(id).orElse(null);
+    boolean singleTab = policy != null && policy.isSingleTab();
+    boolean failOpen = policy == null || policy.isFailOpen();
+    return RegisteredClientResponse.from(client, singleTab, failOpen);
   }
 
   @Override
@@ -56,7 +68,9 @@ public class ClientServiceImpl implements ClientService {
     }
     RegisteredClient client = buildClient(UUID.randomUUID().toString(), request, null);
     clientRepository.save(client);
-    return RegisteredClientResponse.from(client);
+    savePolicy(client.getId(), request.isSingleTabSession(), request.isFailOpen());
+    return RegisteredClientResponse.from(
+        client, request.isSingleTabSession(), request.isFailOpen());
   }
 
   @Override
@@ -73,7 +87,9 @@ public class ClientServiceImpl implements ClientService {
     jdbcTemplate.update(DELETE_BY_ID, id);
     RegisteredClient updated = buildClient(id, request, existing.getClientSecret());
     clientRepository.save(updated);
-    return RegisteredClientResponse.from(updated);
+    savePolicy(id, request.isSingleTabSession(), request.isFailOpen());
+    return RegisteredClientResponse.from(
+        updated, request.isSingleTabSession(), request.isFailOpen());
   }
 
   @Override
@@ -82,6 +98,10 @@ public class ClientServiceImpl implements ClientService {
       throw new ApplicationException(Message.Application.ERROR, "Client not found");
     }
     jdbcTemplate.update(DELETE_BY_ID, id);
+  }
+
+  private void savePolicy(String registeredClientId, boolean singleTab, boolean failOpen) {
+    policyRepository.save(new ClientSessionPolicy(registeredClientId, singleTab, failOpen));
   }
 
   private RegisteredClient buildClient(

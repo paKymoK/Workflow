@@ -43,4 +43,8 @@ public class RegisteredClientRequest {
   private long refreshTokenTtlDays = 1;
 
   private boolean reuseRefreshTokens;
+
+  private boolean singleTabSession;
+
+  private boolean failOpen = true;
 }

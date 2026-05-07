@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/init/init-admin-user.sql
   - include:
       file: db/changelog/seed/seed-fake-users.sql
+  - include:
+      file: db/changelog/migration/add-client-session-policy.yaml
+  - include:
+      file: db/changelog/migration/add-client-session-policy-fail-open.yaml

@@ -27,8 +27,11 @@ public class RegisteredClientResponse {
   private long accessTokenTtlMinutes;
   private long refreshTokenTtlDays;
   private boolean reuseRefreshTokens;
+  private boolean singleTabSession;
+  private boolean failOpen;
 
-  public static RegisteredClientResponse from(RegisteredClient c) {
+  public static RegisteredClientResponse from(
+      RegisteredClient c, boolean singleTabSession, boolean failOpen) {
     return RegisteredClientResponse.builder()
         .id(c.getId())
         .clientId(c.getClientId())
@@ -52,6 +55,8 @@ public class RegisteredClientResponse {
         .accessTokenTtlMinutes(c.getTokenSettings().getAccessTokenTimeToLive().toMinutes())
         .refreshTokenTtlDays(c.getTokenSettings().getRefreshTokenTimeToLive().toDays())
         .reuseRefreshTokens(c.getTokenSettings().isReuseRefreshTokens())
+        .singleTabSession(singleTabSession)
+        .failOpen(failOpen)
         .build();
   }
 }

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-client-session-policy-fail-open
+      author: system
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE client_session_policy
+                ADD COLUMN fail_open BOOLEAN NOT NULL DEFAULT TRUE;

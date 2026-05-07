@@ -30,8 +30,12 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.takypok.authservice.repository.ClientSessionPolicyRepository;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -206,9 +210,16 @@ public class AuthorizationServerConfig {
   }
 
   @Bean
-  public JdbcOAuth2AuthorizationService authorizationService(
-      JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
-    return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+  public OAuth2AuthorizationService authorizationService(
+      JdbcTemplate jdbcTemplate,
+      RegisteredClientRepository registeredClientRepository,
+      ClientSessionPolicyRepository policyRepository,
+      StringRedisTemplate redisTemplate,
+      ObjectMapper objectMapper) {
+    JdbcOAuth2AuthorizationService jdbcService =
+        new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+    return new SingleTabOAuth2AuthorizationService(
+        jdbcService, policyRepository, jdbcTemplate, redisTemplate, objectMapper);
   }
 
   @Bean

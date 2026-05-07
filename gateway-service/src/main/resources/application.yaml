@@ -85,6 +85,9 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 
+single-tab:
+  redis-on-failure: ${SINGLE_TAB_REDIS_ON_FAILURE:FAIL_OPEN}
+
 logging:
   level:
     root: INFO
