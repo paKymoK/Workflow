@@ -28,19 +28,21 @@ function OrgChartInner() {
   const fetchUserMutation               = useFetchUserBySub();
   const detailLoading                   = fetchUserMutation.isPending;
 
-  // Initialise visible nodes (depth ≤ 1) once data arrives
-  useMemo(() => {
-    if (users.length > 0 && visibleSubs.size === 0) {
-      setVisibleSubs(new Set(users.filter((u) => u.depth <= 1).map((u) => u.sub)));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users]);
+  // Default visible set (depth ≤ 1) derived during render — no side-effect needed
+  const defaultVisibleSubs = useMemo(
+    () => new Set(users.filter((u) => u.depth <= 1).map((u) => u.sub)),
+    [users],
+  );
+
+  // Use the default until the user makes an explicit toggle/search
+  const effectiveVisibleSubs = visibleSubs.size === 0 ? defaultVisibleSubs : visibleSubs;
 
   const handleExpandToggle = useCallback((nodeId: string) => {
     setVisibleSubs((prev) => {
-      const next     = new Set(prev);
+      const base = prev.size === 0 ? defaultVisibleSubs : prev;
+      const next     = new Set(base);
       const children = users.filter((u) => u.managerSub === nodeId);
-      const alreadyExpanded = children.length > 0 && children.every((c) => prev.has(c.sub));
+      const alreadyExpanded = children.length > 0 && children.every((c) => base.has(c.sub));
       if (alreadyExpanded) {
         const queue = [nodeId];
         while (queue.length) {
@@ -52,7 +54,7 @@ function OrgChartInner() {
       }
       return next;
     });
-  }, [users]);
+  }, [users, defaultVisibleSubs]);
 
   const handleNodeClick = useCallback((_event: unknown, node: { id: string }) => {
     setDrawerOpen(true);
@@ -78,7 +80,8 @@ function OrgChartInner() {
     if (!target) { setSearchError(`No user found with sub "${sub}"`); return; }
     const ancestors = getAncestorSubs(sub);
     setVisibleSubs((prev) => {
-      const next = new Set(prev);
+      const base = prev.size === 0 ? defaultVisibleSubs : prev;
+      const next = new Set(base);
       [...ancestors, sub].forEach((s) => next.add(s));
       return next;
     });
@@ -92,11 +95,11 @@ function OrgChartInner() {
         );
       }
     }, 100);
-  }, [users, getAncestorSubs, getNode, setCenter]);
+  }, [users, defaultVisibleSubs, getAncestorSubs, getNode, setCenter]);
 
   const { nodes, edges } = useMemo(
-    () => buildOrgChart(users as OrgChartUser[], visibleSubs, handleExpandToggle),
-    [users, visibleSubs, handleExpandToggle],
+    () => buildOrgChart(users as OrgChartUser[], effectiveVisibleSubs, handleExpandToggle),
+    [users, effectiveVisibleSubs, handleExpandToggle],
   );
 
   if (isLoading) {
