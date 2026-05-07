@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 public class StorageProperties {
-  private String baseDir = "./storage";
-  private String rawDir = "./storage/raw";
-  private String hlsDir = "./storage/hls";
+  private String baseDir = "./uploads";
+  private String imagesDir = "./uploads/images";
+  private String rawDir = "./uploads/raw";
+  private String hlsDir = "./uploads/hls";
 }

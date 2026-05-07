@@ -15,6 +15,7 @@ import RichTextEditor from "../components/RichTextEditor.tsx";
 import dayjs from "dayjs";
 import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket } from "../hooks/useTickets";
 import { useComments, useCreateComment } from "../hooks/useComments";
+import CommentContent from "../components/CommentContent.tsx";
 
 const { Title, Text } = Typography;
 
@@ -73,7 +74,9 @@ export default function TicketDetail() {
 
   const handleSubmitComment = useCallback(async () => {
     const html = commentHtmlRef.current;
-    if (html.replace(/<[^>]*>/g, "").trim() === "") return;
+    const hasText  = html.replace(/<[^>]*>/g, "").trim() !== "";
+    const hasMedia = html.includes('data-type="video-embed"') || html.includes("<img");
+    if (!hasText && !hasMedia) return;
     try {
       await commentMutation.mutateAsync({ ticketId: id!, content: html });
       message.success("Comment submitted");
@@ -208,12 +211,7 @@ export default function TicketDetail() {
                     <List.Item.Meta
                       avatar={<Avatar className="!bg-[#1677ff]">{comment.commenter.name.charAt(0).toUpperCase()}</Avatar>}
                       title={<Text strong>{comment.commenter.name}</Text>}
-                      description={
-                        <div
-                          className="prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: comment.content }}
-                        />
-                      }
+                      description={<CommentContent html={comment.content} />}
                     />
                   </List.Item>
                 )}

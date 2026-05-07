@@ -26,6 +26,7 @@ public class AuthenticationConfig {
                     .pathMatchers(
                         "/workflow-service/web-socket/**",
                         "/media-service/images/**",
+                        "/media-service/v1/videos/**",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/webjars/**",

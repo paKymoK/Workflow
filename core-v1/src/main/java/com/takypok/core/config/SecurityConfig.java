@@ -31,6 +31,7 @@ public class SecurityConfig {
                         "/actuator/**",
                         "/swagger-ui.html",
                         "/images/**",
+                        "/v1/videos/**",
                         "/v1/doc/swagger-ui.html",
                         "/v1/doc/swagger-ui/**",
                         "/docs/api-docs",

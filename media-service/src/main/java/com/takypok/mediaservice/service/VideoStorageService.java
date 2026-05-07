@@ -21,6 +21,7 @@ public class VideoStorageService {
 
   @PostConstruct
   public void init() throws IOException {
+    Files.createDirectories(Path.of(props.getImagesDir()));
     Files.createDirectories(Path.of(props.getRawDir()));
     Files.createDirectories(Path.of(props.getHlsDir()));
     log.info("Storage directories ready: {}", props.getBaseDir());

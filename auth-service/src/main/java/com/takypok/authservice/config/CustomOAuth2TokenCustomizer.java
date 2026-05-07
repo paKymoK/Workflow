@@ -23,27 +23,26 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
 
   @Override
   public void customize(JwtEncodingContext context) {
+    if (!OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) return;
     Authentication principal = context.getPrincipal();
+    if (principal == null) return;
     String subject = principal.getName();
-    if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
-      Userinfo userinfo = userInfoRepository.getBySub(subject);
-      if (userinfo != null) {
-        context.getClaims().claim("info", mapper.convertValue(userinfo, HashMap.class));
-      }
+    Userinfo userinfo = userInfoRepository.getBySub(subject);
+    if (userinfo != null) {
+      context.getClaims().claim("info", mapper.convertValue(userinfo, HashMap.class));
+    }
 
-      if (principal instanceof DomainAuthenticationToken domainToken) {
-        context.getClaims().claim("domain", domainToken.getDomain());
-      } else {
-        context.getClaims().claim("domain", "INTERNAL");
-      }
+    if (principal instanceof DomainAuthenticationToken domainToken) {
+      context.getClaims().claim("domain", domainToken.getDomain());
+    } else {
+      context.getClaims().claim("domain", "INTERNAL");
+    }
 
-      // Resolve all roles for this user on the requesting client (UNION of direct + group roles)
-      String clientId = context.getRegisteredClient().getId();
-      List<String> roles =
-          clientRoleAssignmentRepository.findRolesForUserOnClient(clientId, subject);
-      if (!roles.isEmpty()) {
-        context.getClaims().claim("roles", roles);
-      }
+    // Resolve all roles for this user on the requesting client (UNION of direct + group roles)
+    String clientId = context.getRegisteredClient().getId();
+    List<String> roles = clientRoleAssignmentRepository.findRolesForUserOnClient(clientId, subject);
+    if (!roles.isEmpty()) {
+      context.getClaims().claim("roles", roles);
     }
   }
 }

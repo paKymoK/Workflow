@@ -62,7 +62,7 @@ public class TranscodeJobService {
 
     transcodeService
         .transcode(job.getVideoId())
-        .then(hlsPackagerService.writeMasterPlaylist(job.getVideoId()))
+        .flatMap(qualities -> hlsPackagerService.writeMasterPlaylist(job.getVideoId(), qualities))
         .doOnSuccess(
             v -> {
               job.setStatus(JobStatus.DONE);

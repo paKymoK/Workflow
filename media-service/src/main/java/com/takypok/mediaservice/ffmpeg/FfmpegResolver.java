@@ -44,6 +44,12 @@ public class FfmpegResolver {
     return resolvedPath;
   }
 
+  public String resolveProbe() {
+    String probe = resolvedPath.replaceAll("ffmpeg(\\.exe)?$", "ffprobe$1");
+    File f = new File(probe);
+    return (f.exists() && f.canExecute()) ? probe : "ffprobe";
+  }
+
   private Mono<String> buildResolutionChain() {
     return Mono.fromCallable(this::tryConfiguredPath)
         .filter(p -> p != null)

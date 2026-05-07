@@ -14,10 +14,13 @@ import {
     UndoOutlined,
     RedoOutlined,
     PaperClipOutlined,
+    VideoCameraOutlined,
 } from "@ant-design/icons";
-import { uploadFile, getFileUrl } from "../api/ticketApi.ts";
+import { uploadFile, getFileUrl, uploadVideo, fetchJobStatus } from "../api/ticketApi.ts";
+import { VideoEmbed } from "./VideoEmbed.tsx";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/webm"];
 
 interface RichTextEditorProps {
     content?: string;
@@ -32,14 +35,17 @@ function RichTextEditor({
     onChange,
     placeholder = "Write something...",
 }: RichTextEditorProps) {
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef  = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [uploadingVideo, setUploadingVideo] = useState(false);
 
     const editor = useEditor({
         extensions: [
             StarterKit,
             Image.configure({ inline: false }),
             Placeholder.configure({ placeholder }),
+            VideoEmbed,
         ],
         content,
         editable,
@@ -69,6 +75,28 @@ function RichTextEditor({
             }
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !editor) return;
+        e.target.value = "";
+
+        setUploadingVideo(true);
+        try {
+            let job = await uploadVideo(file);
+            while (job.status !== "DONE" && job.status !== "FAILED") {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                job = await fetchJobStatus(job.jobId);
+            }
+            if (job.status === "FAILED") return;
+            editor.chain().focus().insertContent({
+                type: "videoEmbed",
+                attrs: { videoId: job.videoId, fileName: file.name },
+            }).run();
+        } finally {
+            setUploadingVideo(false);
         }
     };
 
@@ -134,11 +162,27 @@ function RichTextEditor({
                             onMouseDown={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
                         />
                     </Tooltip>
+                    <Tooltip title="Attach video">
+                        <Button
+                            size="small"
+                            type="text"
+                            icon={uploadingVideo ? <Spin size="small" /> : <VideoCameraOutlined />}
+                            disabled={uploadingVideo}
+                            onMouseDown={(e) => { e.preventDefault(); videoInputRef.current?.click(); }}
+                        />
+                    </Tooltip>
                     <input
                         ref={fileInputRef}
                         type="file"
                         className="hidden"
                         onChange={handleFileChange}
+                    />
+                    <input
+                        ref={videoInputRef}
+                        type="file"
+                        accept={VIDEO_TYPES.join(",")}
+                        className="hidden"
+                        onChange={handleVideoChange}
                     />
                 </div>
             )}

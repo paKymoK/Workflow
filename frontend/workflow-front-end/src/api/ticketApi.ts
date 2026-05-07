@@ -145,6 +145,31 @@ export async function resumeTicket(id: string | number) {
     return data;
 }
 
+export interface VideoJobResponse {
+  videoId: string;
+  jobId: string;
+  status: "QUEUED" | "PROCESSING" | "DONE" | "FAILED";
+  message?: string;
+  errorMessage?: string;
+  createdAt?: string;
+  completedAt?: string;
+  hlsUrl?: string;
+}
+
+export async function uploadVideo(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await api.post<VideoJobResponse>("/media-service/v1/videos/upload", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function fetchJobStatus(jobId: string) {
+  const { data } = await api.get<VideoJobResponse>(`/media-service/v1/jobs/${jobId}`);
+  return data;
+}
+
 export async function uploadFile(file: File) {
     const form = new FormData();
     form.append("file", file);

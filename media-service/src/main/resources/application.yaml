@@ -26,9 +26,10 @@ management:
       show-details: always
 
 storage:
-  base-dir: ./storage
-  raw-dir: ./storage/raw
-  hls-dir: ./storage/hls
+  base-dir: ./uploads
+  images-dir: ./uploads/images
+  raw-dir: ./uploads/raw
+  hls-dir: ./uploads/hls
 
 ffmpeg:
   path: ""

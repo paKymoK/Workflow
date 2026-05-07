@@ -2,6 +2,7 @@ package com.takypok.mediaservice.service.impl;
 
 import static com.takypok.mediaservice.util.FileUtil.getFileExtension;
 
+import com.takypok.mediaservice.config.StorageProperties;
 import com.takypok.mediaservice.model.entity.UploadFile;
 import com.takypok.mediaservice.model.mapper.UploadFileMapper;
 import com.takypok.mediaservice.repository.UploadFileRepository;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 public class UploadFileServiceImpl implements UploadFileService {
   private final UploadFileRepository uploadFileRepository;
   private final UploadFileMapper uploadFileMapper;
+  private final StorageProperties storageProperties;
 
   @Override
   public Mono<UploadFile> upload(FilePart filePart) {
@@ -29,7 +31,12 @@ public class UploadFileServiceImpl implements UploadFileService {
         .flatMap(
             uploadFile ->
                 filePart
-                    .transferTo(new File("uploads/images/" + uploadFile.getId() + extension))
+                    .transferTo(
+                        new File(
+                            storageProperties.getImagesDir()
+                                + "/"
+                                + uploadFile.getId()
+                                + extension))
                     .thenReturn(uploadFile));
   }
 }
