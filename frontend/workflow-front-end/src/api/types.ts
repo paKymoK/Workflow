@@ -168,6 +168,8 @@ export interface RegisteredClient {
   accessTokenTtlMinutes: number;
   refreshTokenTtlDays: number;
   reuseRefreshTokens: boolean;
+  singleTabSession: boolean;
+  failOpen: boolean;
 }
 
 export interface RegisteredClientRequest {
@@ -184,6 +186,8 @@ export interface RegisteredClientRequest {
   accessTokenTtlMinutes: number;
   refreshTokenTtlDays: number;
   reuseRefreshTokens: boolean;
+  singleTabSession: boolean;
+  failOpen: boolean;
 }
 
 export interface StatisticItem {

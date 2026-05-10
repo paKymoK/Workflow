@@ -42,6 +42,8 @@ const DEFAULT_VALUES: Partial<RegisteredClientRequest> = {
   accessTokenTtlMinutes: 10,
   refreshTokenTtlDays: 1,
   reuseRefreshTokens: false,
+  singleTabSession: false,
+  failOpen: true,
 };
 
 /** Controlled tag-list input for URIs */
@@ -102,6 +104,7 @@ export default function ClientList() {
 
   const watchedMethods: string[] = Form.useWatch("authenticationMethods", form) ?? [];
   const isPublic = watchedMethods.every((m) => m === "none");
+  const isSingleTab: boolean = Form.useWatch("singleTabSession", form) ?? false;
 
   const onAdd = () => {
     setEditing(null);
@@ -124,6 +127,8 @@ export default function ClientList() {
       accessTokenTtlMinutes:     record.accessTokenTtlMinutes,
       refreshTokenTtlDays:       record.refreshTokenTtlDays,
       reuseRefreshTokens:        record.reuseRefreshTokens,
+      singleTabSession:          record.singleTabSession,
+      failOpen:                  record.failOpen,
     });
     setOpen(true);
   };
@@ -188,9 +193,10 @@ export default function ClientList() {
       width: 140,
       render: (_, r) => (
         <div className="text-xs leading-relaxed">
-          {r.requireProofKey           && <div>🔑 PKCE</div>}
+          {r.requireProofKey             && <div>🔑 PKCE</div>}
           {r.requireAuthorizationConsent && <div>✅ Consent</div>}
-          {r.hasSecret                 && <div>🔒 Secret</div>}
+          {r.hasSecret                   && <div>🔒 Secret</div>}
+          {r.singleTabSession            && <div>🪟 Single Tab</div>}
         </div>
       ),
     },
@@ -325,6 +331,27 @@ export default function ClientList() {
             <Form.Item name="reuseRefreshTokens" label="Reuse Refresh Tokens" valuePropName="checked">
               <Switch />
             </Form.Item>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4">
+            <Form.Item
+              name="singleTabSession"
+              label="Single-Tab Session"
+              valuePropName="checked"
+              tooltip="When enabled, logging in on a new tab instantly invalidates any existing session for this client."
+            >
+              <Switch />
+            </Form.Item>
+            {isSingleTab && (
+              <Form.Item
+                name="failOpen"
+                label="Fail Open (Redis down)"
+                valuePropName="checked"
+                tooltip="On: if Redis is unavailable, allow the request and degrade to token-expiry behavior. Off: reject the request until Redis recovers."
+              >
+                <Switch />
+              </Form.Item>
+            )}
           </div>
 
         </Form>
