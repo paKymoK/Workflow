@@ -1,16 +1,21 @@
 package com.takypok.gatewayservice.authentication;
 
 import com.takypok.core.Constants;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -57,19 +62,35 @@ public class RevocationCheckFilter implements GlobalFilter, Ordered {
                               e.getMessage());
                           return Mono.just(false);
                         }
-                        return Mono.error(e);
+                        log.error(
+                            "Redis unavailable (fail-closed) — blocking request for jti={}: {}",
+                            jti,
+                            e.getMessage());
+                        return Mono.error(
+                            new ResponseStatusException(
+                                HttpStatus.SERVICE_UNAVAILABLE,
+                                "Token validation service unavailable"));
                       })
                   .flatMap(
                       revoked -> {
                         if (Boolean.TRUE.equals(revoked)) {
                           log.debug("Rejected revoked token jti={}", jti);
-                          exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                          return exchange.getResponse().setComplete();
+                          return writeUnauthorized(exchange);
                         }
                         return chain.filter(exchange);
                       });
             })
         .switchIfEmpty(chain.filter(exchange));
+  }
+
+  private Mono<Void> writeUnauthorized(ServerWebExchange exchange) {
+    var response = exchange.getResponse();
+    response.setStatusCode(HttpStatus.UNAUTHORIZED);
+    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+    response.getHeaders().set(HttpHeaders.WWW_AUTHENTICATE, "Bearer error=\"invalid_token\"");
+    byte[] body = "{\"error\":\"unauthorized\"}".getBytes(StandardCharsets.UTF_8);
+    DataBuffer buffer = response.bufferFactory().wrap(body);
+    return response.writeWith(Mono.just(buffer));
   }
 
   private boolean resolveFailOpen(String policyClaim) {

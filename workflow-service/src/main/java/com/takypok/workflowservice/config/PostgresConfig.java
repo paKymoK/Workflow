@@ -2,10 +2,12 @@ package com.takypok.workflowservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.workflowservice.config.postgres.*;
+import io.r2dbc.spi.Option;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.r2dbc.ConnectionFactoryOptionsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -17,6 +19,11 @@ import org.springframework.data.r2dbc.dialect.PostgresDialect;
 @RequiredArgsConstructor
 public class PostgresConfig {
   private final ObjectMapper mapper;
+
+  @Bean
+  public ConnectionFactoryOptionsBuilderCustomizer r2dbcFetchSizeCustomizer() {
+    return builder -> builder.option(Option.valueOf("fetchSize"), 1000);
+  }
 
   @Bean
   public R2dbcCustomConversions customConversions() {

@@ -3,12 +3,14 @@ package com.takypok.core.config;
 import com.takypok.core.Constants;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
@@ -69,12 +71,42 @@ public class TraceFilter implements WebFilter {
                                 .put(Constants.USER_ID, tuple.getT2())));
   }
 
+  private static final Set<String> LOGGABLE_TYPES = Set.of("text", "application");
+  private static final Set<String> BINARY_SUBTYPES =
+      Set.of(
+          "octet-stream",
+          "pdf",
+          "zip",
+          "gzip",
+          "vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "vnd.ms-excel");
+
+  private boolean isLoggable(MediaType contentType) {
+    if (contentType == null) return true;
+    if (!LOGGABLE_TYPES.contains(contentType.getType())) return false;
+    return !BINARY_SUBTYPES.contains(contentType.getSubtype());
+  }
+
   private ServerHttpResponse decorateResponse(
       ServerHttpRequest request, ServerHttpResponse response) {
     return new ServerHttpResponseDecorator(response) {
       @NonNull
       @Override
       public Mono<Void> writeWith(@NonNull Publisher<? extends DataBuffer> body) {
+        if (!isLoggable(getHeaders().getContentType())) {
+          String type = String.valueOf(getHeaders().getContentType());
+          String size =
+              Optional.ofNullable(getHeaders().getFirst("Content-Length")).orElse("unknown");
+          String disposition =
+              Optional.ofNullable(getHeaders().getFirst("Content-Disposition")).orElse("-");
+          log.info(
+              "[Response to {}]: [binary] type={}, size={} bytes, disposition={}",
+              request.getRemoteAddress(),
+              type,
+              size,
+              disposition);
+          return super.writeWith(body);
+        }
         return DataBufferUtils.join(body)
             .flatMap(
                 dataBuffer -> {

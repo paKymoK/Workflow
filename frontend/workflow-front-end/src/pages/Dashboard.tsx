@@ -3,12 +3,12 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
 import { Spin, Table, Tag, Button, Dropdown, message, Input, Select } from "antd";
-import { PlusOutlined, MoreOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, MoreOutlined, SearchOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchTicketById } from "../api/ticketApi";
+import { fetchTicketById, exportTickets, type ExportTicketRequest } from "../api/ticketApi";
 import { wsBaseUrl } from "@takypok/shared";
 import type { TicketSla, Priority, WorkflowStatus } from "../api/types.ts";
 import {
@@ -40,7 +40,25 @@ export default function Dashboard() {
   const [assigneeEmail, setAssigneeEmail] = useUrlState("assignee", "");
 
   // ── Modal ────────────────────────────────────────────────────────────────
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen,  setIsModalOpen]  = useState(false);
+  const [isExporting,  setIsExporting]  = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const exportParams: ExportTicketRequest = {
+        ...(summary.trim()       && { summary: summary.trim() }),
+        ...(statusId  != null    && { statusId }),
+        ...(priorityId != null   && { priorityId }),
+        ...(assigneeEmail.trim() && { assigneeEmail: assigneeEmail.trim() }),
+      };
+      await exportTickets(exportParams);
+    } catch {
+      message.error("Export failed");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // ── Build query params memo ───────────────────────────────────────────────
   // Changing any of these values changes the queryKey → automatic refetch.
@@ -212,14 +230,24 @@ export default function Dashboard() {
             // TICKET QUEUE
           </span>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsModalOpen(true)}
-          className="neon-btn font-bebas! tracking-widest!"
-        >
-          <span className="neon-btn-content">Create Ticket</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            icon={<DownloadOutlined />}
+            loading={isExporting}
+            onClick={handleExport}
+            className="neon-btn font-bebas! tracking-widest!"
+          >
+            <span className="neon-btn-content">Export</span>
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsModalOpen(true)}
+            className="neon-btn font-bebas! tracking-widest!"
+          >
+            <span className="neon-btn-content">Create Ticket</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filter bar */}

@@ -49,6 +49,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
     implementation "org.springframework.integration:spring-integration-debezium:7.0.2"
     implementation "io.debezium:debezium-connector-postgres:3.4.0.Final"
+    implementation 'org.dhatim:fastexcel:0.15.7'
 }
 
 tasks.named('test') {

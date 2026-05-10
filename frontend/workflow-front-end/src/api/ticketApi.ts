@@ -358,6 +358,26 @@ export async function deleteClient(id: string) {
   return data;
 }
 
+export interface ExportTicketRequest {
+    summary?: string;
+    statusId?: number;
+    priorityId?: number;
+    assigneeEmail?: string;
+}
+
+export async function exportTickets(params?: ExportTicketRequest): Promise<void> {
+    const { data } = await api.get("/workflow-service/v1/ticket/export", {
+        params,
+        responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(data);
+    const a   = document.createElement("a");
+    a.href     = url;
+    a.download = "tickets.xlsx";
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
 export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {
     const { data } = await api.post<ResultMessage<void>>(
         `/workflow-service/v1/ticket/transition`,
