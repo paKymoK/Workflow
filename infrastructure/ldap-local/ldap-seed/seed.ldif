@@ -33,7 +33,7 @@ sn: Doe
 givenName: John
 uid: john.doe
 mail: john.doe@mycompany.local
-userPassword: password123
+userPassword: 123456
 departmentNumber: engineering
 
 dn: cn=jane.smith,ou=users,dc=mycompany,dc=local
@@ -43,7 +43,7 @@ sn: Smith
 givenName: Jane
 uid: jane.smith
 mail: jane.smith@mycompany.local
-userPassword: password456
+userPassword: 123456
 departmentNumber: it
 
 # ── Guest Users ───────────────────────────────────
@@ -55,4 +55,4 @@ sn: User
 givenName: Guest
 uid: guest.user
 mail: guest@external.com
-userPassword: guestpass
+userPassword: 123456

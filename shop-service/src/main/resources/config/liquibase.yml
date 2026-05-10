@@ -1,5 +1,5 @@
 spring:
   liquibase:
-    url: jdbc:postgresql://127.0.0.1:5432/shop
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5433}/${DB_SCHEMA:shop}
     user: postgres
     password: postgres

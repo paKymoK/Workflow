@@ -10,6 +10,7 @@ import com.takypok.authservice.service.UserService;
 import com.takypok.core.model.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.User;
@@ -28,6 +29,9 @@ public class UserServiceImpl implements UserService {
   private final JdbcUserDetailsManager userDetailsManager;
   private final UserinfoMapper userinfoMapper;
 
+  @Value("${auth.internal-domain}")
+  private String internalDomain;
+
   @Override
   public PageResponse<UserinfoResponse> getUsers(FilterUserRequest request) {
     Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
@@ -42,6 +46,7 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   public UserinfoResponse create(UserinfoRequest request) {
+    validateUsername(request.getUsername());
     PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
     UserDetails user =
         User.builder()
@@ -52,5 +57,18 @@ public class UserServiceImpl implements UserService {
     userDetailsManager.createUser(user);
     Userinfo info = userinfoMapper.toEntity(request.getUserinfo(), user.getUsername());
     return userinfoMapper.toResponse(userInfoRepository.save(info));
+  }
+
+  private void validateUsername(String username) {
+    int atIndex = username.indexOf('@');
+    if (atIndex < 1) {
+      throw new IllegalArgumentException(
+          "Username must be an email address (e.g. john@example.com)");
+    }
+    String domain = username.substring(atIndex + 1);
+    if (domain.equalsIgnoreCase(internalDomain)) {
+      throw new IllegalArgumentException(
+          "Domain @" + internalDomain + " is reserved for internal accounts");
+    }
   }
 }

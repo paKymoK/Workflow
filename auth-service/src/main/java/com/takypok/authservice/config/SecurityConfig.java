@@ -2,9 +2,13 @@ package com.takypok.authservice.config;
 
 import com.takypok.authservice.config.auth.DomainAuthenticationFilter;
 import com.takypok.authservice.config.auth.DomainAuthenticationManager;
+import com.takypok.authservice.config.auth.ProfileCompleteSuccessHandler;
+import com.takypok.authservice.config.auth.ProfileIncompleteFilter;
+import com.takypok.authservice.repository.UserInfoRepository;
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,7 +16,6 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,7 +27,6 @@ import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
@@ -99,24 +101,44 @@ public class SecurityConfig {
   @Bean
   public DomainAuthenticationFilter domainAuthenticationFilter(
       DomainAuthenticationManager domainAuthenticationManager,
-      SecurityContextRepository securityContextRepository) {
+      SecurityContextRepository securityContextRepository,
+      UserInfoRepository userInfoRepository) {
     DomainAuthenticationFilter filter = new DomainAuthenticationFilter(domainAuthenticationManager);
     filter.setFilterProcessesUrl("/login");
     filter.setSecurityContextRepository(securityContextRepository);
-    filter.setAuthenticationSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler());
+    filter.setAuthenticationSuccessHandler(new ProfileCompleteSuccessHandler(userInfoRepository));
     filter.setAuthenticationFailureHandler(
         new SimpleUrlAuthenticationFailureHandler("/login?error"));
     return filter;
   }
 
   @Bean
+  public FilterRegistrationBean<ProfileIncompleteFilter> profileIncompleteFilterRegistration(
+      ProfileIncompleteFilter filter) {
+    FilterRegistrationBean<ProfileIncompleteFilter> registration =
+        new FilterRegistrationBean<>(filter);
+    registration.setEnabled(false);
+    return registration;
+  }
+
+  @Bean
   public SecurityFilterChain defaultSecurityFilterChain(
       HttpSecurity http,
       DomainAuthenticationFilter domainAuthenticationFilter,
+      ProfileIncompleteFilter profileIncompleteFilter,
       SecurityContextRepository securityContextRepository)
       throws Exception {
 
-    return http.csrf(AbstractHttpConfigurer::disable)
+    return http.csrf(
+            csrf ->
+                csrf.ignoringRequestMatchers(
+                    "/oauth2/**",
+                    "/login",
+                    "/logout",
+                    "/v1/**",
+                    "/actuator/**",
+                    "/.well-known/**",
+                    "/connect/**"))
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .securityContext(
             context ->
@@ -133,6 +155,7 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated())
         .addFilterAt(domainAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(profileIncompleteFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(
             ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
         .build();

@@ -1,9 +1,12 @@
 package com.takypok.authservice.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.takypok.authservice.config.auth.ProfileIncompleteFilter;
+import com.takypok.authservice.repository.ClientSessionPolicyRepository;
 import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
 import java.time.Instant;
@@ -16,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,9 +34,6 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.takypok.authservice.repository.ClientSessionPolicyRepository;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -57,6 +58,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -74,7 +76,8 @@ public class AuthorizationServerConfig {
   public SecurityFilterChain authorizationServerSecurityFilterChain(
       HttpSecurity http,
       CorsConfigurationSource corsConfigurationSource,
-      SecurityContextRepository securityContextRepository)
+      SecurityContextRepository securityContextRepository,
+      ProfileIncompleteFilter profileIncompleteFilter)
       throws Exception {
     Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper =
         (context) -> {
@@ -118,6 +121,7 @@ public class AuthorizationServerConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
+        .addFilterAfter(profileIncompleteFilter, SecurityContextHolderFilter.class)
         .exceptionHandling(
             (exceptions) -> {
               MediaTypeRequestMatcher htmlMatcher =

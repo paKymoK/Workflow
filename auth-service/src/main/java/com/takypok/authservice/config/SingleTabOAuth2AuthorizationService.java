@@ -2,6 +2,7 @@ package com.takypok.authservice.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.takypok.authservice.model.entity.ClientSessionPolicy;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -45,7 +46,7 @@ public class SingleTabOAuth2AuthorizationService implements OAuth2AuthorizationS
     if (isNew) {
       policyRepository
           .findById(authorization.getRegisteredClientId())
-          .filter(p -> p.isSingleTab())
+          .filter(ClientSessionPolicy::isSingleTab)
           .ifPresent(
               policy -> {
                 try {
