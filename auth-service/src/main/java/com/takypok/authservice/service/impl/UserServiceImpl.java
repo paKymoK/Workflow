@@ -35,6 +35,11 @@ public class UserServiceImpl implements UserService {
   @Override
   public PageResponse<UserinfoResponse> getUsers(FilterUserRequest request) {
     Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+    if (request.getQ() != null && !request.getQ().isBlank()) {
+      return userinfoMapper.toPageResponse(
+          userInfoRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+              request.getQ(), request.getQ(), pageable));
+    }
     return userinfoMapper.toPageResponse(userInfoRepository.findAll(pageable));
   }
 

@@ -1,9 +1,13 @@
 import { useRef, memo } from "react";
 import { useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, ReactRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import Mention from "@tiptap/extension-mention";
+import type { AnyExtension } from "@tiptap/core";
+import tippy, { type Instance as TippyInstance } from "tippy.js";
+import "tippy.js/dist/tippy.css";
 import { Button, Divider, Spin, Tooltip } from "antd";
 import {
     BoldOutlined,
@@ -16,8 +20,9 @@ import {
     PaperClipOutlined,
     VideoCameraOutlined,
 } from "@ant-design/icons";
-import { uploadFile, getFileUrl, uploadVideo, fetchJobStatus } from "../api/ticketApi.ts";
+import { uploadFile, getFileUrl, uploadVideo, fetchJobStatus, searchMentions } from "../api/ticketApi.ts";
 import { VideoEmbed } from "./VideoEmbed.tsx";
+import MentionList, { type MentionListHandle } from "./MentionList.tsx";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
 const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/webm"];
@@ -46,6 +51,53 @@ function RichTextEditor({
             Image.configure({ inline: false }),
             Placeholder.configure({ placeholder }),
             VideoEmbed,
+            (Mention.configure({
+                HTMLAttributes: { class: "mention" },
+                suggestion: {
+                    items: async ({ query }) => {
+                        if (!query) return [];
+                        return searchMentions(query).catch(() => []);
+                    },
+                    render() {
+                        let component: ReactRenderer<MentionListHandle>;
+                        let popup: TippyInstance[];
+                        return {
+                            onStart(props) {
+                                component = new ReactRenderer(MentionList, {
+                                    props,
+                                    editor: props.editor,
+                                });
+                                popup = tippy("body", {
+                                    getReferenceClientRect: props.clientRect as () => DOMRect,
+                                    appendTo: () => document.body,
+                                    content: component.element,
+                                    showOnCreate: true,
+                                    interactive: true,
+                                    trigger: "manual",
+                                    placement: "bottom-start",
+                                });
+                            },
+                            onUpdate(props) {
+                                component.updateProps(props);
+                                popup[0]?.setProps({
+                                    getReferenceClientRect: props.clientRect as () => DOMRect,
+                                });
+                            },
+                            onKeyDown(props) {
+                                if (props.event.key === "Escape") {
+                                    popup[0]?.hide();
+                                    return true;
+                                }
+                                return component.ref?.onKeyDown(props) ?? false;
+                            },
+                            onExit() {
+                                popup[0]?.destroy();
+                                component.destroy();
+                            },
+                        };
+                    },
+                },
+            }) as AnyExtension),
         ],
         content,
         editable,

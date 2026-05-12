@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 
 @Getter
 @Setter
@@ -15,4 +16,7 @@ public class Comment {
   private Long ticketId;
   private User commenter;
   private String content;
+
+  @Column("mentioned_subs")
+  private String[] mentionedSubs;
 }

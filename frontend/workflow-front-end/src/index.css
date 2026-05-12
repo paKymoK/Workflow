@@ -1439,3 +1439,15 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   /* Section label: stack vertically */
   .pf-section-label { flex-direction: column; gap: 4px; }
 }
+
+/* Mention chip — inside editor and rendered comments */
+.mention {
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(0, 207, 255, 0.15);
+  color: #00CFFF;
+  font-weight: 500;
+  cursor: default;
+  white-space: nowrap;
+}

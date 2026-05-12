@@ -16,4 +16,6 @@ public class FilterUserRequest {
   @Min(1)
   @Max(100)
   private Integer size = 10;
+
+  private String q;
 }

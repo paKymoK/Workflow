@@ -1,7 +1,7 @@
 import VideoPlayer from "./VideoPlayer";
 
-interface HtmlPart  { type: "html";  content: string }
-interface VideoPart { type: "video"; videoId: string }
+interface HtmlPart    { type: "html";    content: string }
+interface VideoPart   { type: "video";   videoId: string }
 type Part = HtmlPart | VideoPart;
 
 function parseContent(html: string): Part[] {

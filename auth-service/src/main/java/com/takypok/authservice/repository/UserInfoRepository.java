@@ -3,6 +3,8 @@ package com.takypok.authservice.repository;
 import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.model.response.OrgChartProjection;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,6 +14,9 @@ public interface UserInfoRepository extends JpaRepository<Userinfo, String> {
 
   @Query(value = "SELECT * FROM userinfo WHERE sub = :sub ", nativeQuery = true)
   Userinfo getBySub(String sub);
+
+  Page<Userinfo> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+      String name, String email, Pageable pageable);
 
   @Query(
       value =

@@ -198,6 +198,17 @@ export async function createComment(ticketId: string | number, content: string) 
     return data;
 }
 
+export interface UserSummary {
+    sub: string;
+    name: string;
+    email: string;
+}
+
+export async function searchMentions(q: string): Promise<UserSummary[]> {
+    const { data } = await api.get<UserSummary[]>("/media-service/v1/mention/search", { params: { q } });
+    return data;
+}
+
 export async function fetchTicketByIssueType(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<TicketByIssueType[]>>(
         "/workflow-service/v1/statistic/ticket-by-issue-type",

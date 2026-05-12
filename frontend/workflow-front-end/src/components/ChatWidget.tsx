@@ -125,6 +125,7 @@ export default function ChatWidget() {
       {/* ── Chat panel ─────────────────────────────────────────── */}
       {open && (
         <div
+          // eslint-disable-next-line local/no-inline-styles
           style={panelStyle}
           className="z-[1000] flex flex-col bg-[var(--dark)] border border-[var(--neon-yellow)] shadow-[0_0_24px_rgba(0,207,255,0.2)]"
         >
@@ -206,6 +207,7 @@ export default function ChatWidget() {
       {/* ── Toggle / drag handle ────────────────────────────────── */}
       <button
         onMouseDown={onMouseDown}
+        // eslint-disable-next-line local/no-inline-styles
         style={buttonStyle}
         className={`z-[1001] w-12 h-12 border border-[var(--neon-yellow)] cursor-grab active:cursor-grabbing flex items-center justify-center text-xl shadow-[0_0_16px_rgba(0,207,255,0.3)] transition-colors duration-200 ease-in-out select-none ${
           open

@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public abstract class CommentMapper {
   @Mapping(target = "id", expression = "java(null)")
+  @Mapping(target = "mentionedSubs", ignore = true)
   public abstract Comment mapToEntity(CommentRequest request, User commenter);
 }
