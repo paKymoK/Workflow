@@ -87,6 +87,7 @@ public class GroupServiceImpl implements GroupService {
   @Override
   @Transactional
   public void removeMember(String groupId, String userSub) {
+    findOrThrow(groupId);
     memberRepository.deleteByGroupIdAndUserSub(groupId, userSub);
   }
 

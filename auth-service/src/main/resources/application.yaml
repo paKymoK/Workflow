@@ -12,16 +12,32 @@ spring:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
+      repositories:
+        enabled: false
   datasource:
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5433}/${DB_SCHEMA:authentication}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: AuthServicePool
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 3000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 5000
+      keepalive-time: 60000
   jpa:
     hibernate:
       ddl-auto: none
     database: postgresql
     show-sql: true
+  config:
+    import: 'classpath:management.yml'
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.data.redis.RedisReactiveHealthContributorAutoConfiguration
 
 eureka:
   client:
@@ -44,15 +60,14 @@ ldap:
   group-search-base: ou=groups
 
 management:
+  endpoint:
+    health:
+      show-details: always
   health:
     redis:
-      enabled: false
+      enabled: true
     ldap:
       enabled: false
-  endpoints:
-    web:
-      exposure:
-        include: health,info
 
 logging:
   level:

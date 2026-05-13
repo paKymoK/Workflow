@@ -49,27 +49,63 @@ public class SingleTabOAuth2AuthorizationService implements OAuth2AuthorizationS
           .filter(ClientSessionPolicy::isSingleTab)
           .ifPresent(
               policy -> {
+                String lockKey =
+                    "login-lock:"
+                        + authorization.getRegisteredClientId()
+                        + ":"
+                        + authorization.getPrincipalName();
+                Boolean acquired;
                 try {
-                  blacklistExistingTokens(
-                      authorization.getRegisteredClientId(), authorization.getPrincipalName());
+                  acquired =
+                      redisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofSeconds(5));
                 } catch (Exception e) {
                   if (policy.isFailOpen()) {
                     log.warn(
-                        "Redis unavailable — blacklist skipped, degrading to refresh-token-only"
+                        "Redis unavailable — lock skipped, degrading to refresh-token-only"
                             + " revocation for principal={}: {}",
                         authorization.getPrincipalName(),
                         e.getMessage());
+                    acquired = null;
                   } else {
                     throw e;
                   }
                 }
-                jdbcTemplate.update(
-                    DELETE_BY_CLIENT_PRINCIPAL,
-                    authorization.getRegisteredClientId(),
-                    authorization.getPrincipalName());
+                if (Boolean.TRUE.equals(acquired)) {
+                  try {
+                    blacklistAndCleanup(authorization, policy);
+                  } finally {
+                    redisTemplate.delete(lockKey);
+                  }
+                } else {
+                  log.debug(
+                      "Login lock already held for client={} principal={}, skipping cleanup",
+                      authorization.getRegisteredClientId(),
+                      authorization.getPrincipalName());
+                }
               });
     }
     delegate.save(authorization);
+  }
+
+  private void blacklistAndCleanup(OAuth2Authorization authorization, ClientSessionPolicy policy) {
+    try {
+      blacklistExistingTokens(
+          authorization.getRegisteredClientId(), authorization.getPrincipalName());
+    } catch (Exception e) {
+      if (policy.isFailOpen()) {
+        log.warn(
+            "Redis unavailable — blacklist skipped, degrading to refresh-token-only"
+                + " revocation for principal={}: {}",
+            authorization.getPrincipalName(),
+            e.getMessage());
+      } else {
+        throw e;
+      }
+    }
+    jdbcTemplate.update(
+        DELETE_BY_CLIENT_PRINCIPAL,
+        authorization.getRegisteredClientId(),
+        authorization.getPrincipalName());
   }
 
   @Override
