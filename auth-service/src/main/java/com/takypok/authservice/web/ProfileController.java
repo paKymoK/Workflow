@@ -1,6 +1,5 @@
 package com.takypok.authservice.web;
 
-import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.repository.UserInfoRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -48,18 +47,16 @@ public class ProfileController {
       return "profile-complete";
     }
 
-    Userinfo userinfo = userInfoRepository.getBySub(user.getUsername());
-    if (userinfo == null) {
+    int updated =
+        userInfoRepository.updateProfile(user.getUsername(), title.strip(), department.strip());
+    if (updated == 0) {
       model.addAttribute("username", user.getUsername());
       model.addAttribute("error", "User record not found. Please contact support.");
       return "profile-complete";
     }
 
-    userinfo.setTitle(title.strip());
-    userinfo.setDepartment(department.strip());
-    userInfoRepository.save(userinfo);
-
     SavedRequest savedRequest = requestCache.getRequest(request, response);
+    requestCache.removeRequest(request, response);
     if (savedRequest != null) {
       return "redirect:" + savedRequest.getRedirectUrl();
     }

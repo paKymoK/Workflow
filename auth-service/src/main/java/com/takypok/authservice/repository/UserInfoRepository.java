@@ -6,14 +6,25 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface UserInfoRepository extends JpaRepository<Userinfo, String> {
 
   @Query(value = "SELECT * FROM userinfo WHERE sub = :sub ", nativeQuery = true)
   Userinfo getBySub(String sub);
+
+  @Modifying
+  @Transactional
+  @Query("UPDATE Userinfo u SET u.title = :title, u.department = :department WHERE u.sub = :sub")
+  int updateProfile(
+      @Param("sub") String sub,
+      @Param("title") String title,
+      @Param("department") String department);
 
   Page<Userinfo> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
       String name, String email, Pageable pageable);
