@@ -28,6 +28,7 @@ public class FfmpegHealthIndicator implements ReactiveHealthIndicator {
       ProcessBuilder pb = new ProcessBuilder(path, "-version");
       pb.redirectErrorStream(true);
       Process p = pb.start();
+      String output = new String(p.getInputStream().readAllBytes());
       boolean finished = p.waitFor(5, TimeUnit.SECONDS);
       if (!finished) {
         p.destroyForcibly();
@@ -39,8 +40,7 @@ public class FfmpegHealthIndicator implements ReactiveHealthIndicator {
             .withDetail("error", "exit code " + p.exitValue())
             .build();
       }
-      String version =
-          new String(p.getInputStream().readAllBytes()).lines().findFirst().orElse("unknown");
+      String version = output.lines().findFirst().orElse("unknown");
       return Health.up().withDetail("path", path).withDetail("version", version).build();
     } catch (Exception e) {
       return Health.down().withDetail("path", path).withDetail("error", e.getMessage()).build();

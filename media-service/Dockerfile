@@ -14,6 +14,12 @@ RUN chmod +x gradlew
 RUN ./gradlew :media-service:bootJar -x test --no-daemon
 
 FROM amazoncorretto:17-alpine
+RUN apk add --no-cache ffmpeg
+
 WORKDIR /app
 COPY --from=builder /app/media-service/build/libs/*.jar app.jar
+
+ENV FFMPEG_PATH=/usr/bin/ffmpeg
+ENV FFPROBE_PATH=/usr/bin/ffprobe
+
 ENTRYPOINT ["java", "-jar", "app.jar"]

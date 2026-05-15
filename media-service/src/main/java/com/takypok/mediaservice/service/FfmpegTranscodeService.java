@@ -67,9 +67,19 @@ public class FfmpegTranscodeService {
             storageService.rawPath(videoId).toString());
     pb.redirectErrorStream(false);
     Process p = pb.start();
-    String output = new String(p.getInputStream().readAllBytes()).trim();
-    p.waitFor();
-    return Integer.parseInt(output);
+
+    String stdout = new String(p.getInputStream().readAllBytes()).trim();
+    String stderr = new String(p.getErrorStream().readAllBytes()).trim();
+    int exitCode = p.waitFor();
+
+    if (!stderr.isEmpty()) {
+      log.warn("[FFprobe] stderr for video {}: {}", videoId, stderr);
+    }
+    if (exitCode != 0 || stdout.isEmpty()) {
+      throw new RuntimeException(
+          "ffprobe failed for video " + videoId + " (exit=" + exitCode + "): " + stderr);
+    }
+    return Integer.parseInt(stdout);
   }
 
   private List<String> buildCommand(String videoId, List<String[]> qualities) throws Exception {
@@ -94,7 +104,7 @@ public class FfmpegTranscodeService {
               "-map",
               "0:v",
               "-map",
-              "0:a",
+              "0:a?",
               "-vf",
               "scale=" + scale,
               "-b:v",

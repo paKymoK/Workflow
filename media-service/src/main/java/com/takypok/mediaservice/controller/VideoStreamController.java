@@ -41,12 +41,18 @@ public class VideoStreamController {
     return servePlaylistFile(storageService.qualityDir(videoId, quality).resolve("index.m3u8"));
   }
 
+  private static final java.util.regex.Pattern SEGMENT_PATTERN =
+      java.util.regex.Pattern.compile("^[a-zA-Z0-9_-]+\\.ts$");
+
   @GetMapping("/{videoId}/{quality}/{segment}")
   public Mono<ResponseEntity<byte[]>> serveSegment(
       @PathVariable String videoId,
       @PathVariable String quality,
       @PathVariable String segment,
       ServerHttpRequest request) {
+    if (!SEGMENT_PATTERN.matcher(segment).matches()) {
+      return Mono.just(ResponseEntity.badRequest().build());
+    }
     Path path = storageService.qualityDir(videoId, quality).resolve(segment);
     return Mono.fromCallable(() -> buildSegmentResponse(path, request.getHeaders().getRange()))
         .subscribeOn(Schedulers.boundedElastic());
