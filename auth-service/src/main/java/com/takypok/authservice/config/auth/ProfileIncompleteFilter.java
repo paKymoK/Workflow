@@ -51,6 +51,7 @@ public class ProfileIncompleteFilter extends OncePerRequestFilter {
         || path.startsWith("/assets/")
         || path.startsWith("/login")
         || path.startsWith("/logout")
+        || path.startsWith("/oauth2/consent")
         || path.startsWith("/error")
         || path.startsWith("/actuator/");
   }

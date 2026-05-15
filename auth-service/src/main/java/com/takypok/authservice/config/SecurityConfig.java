@@ -25,10 +25,12 @@ import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
@@ -102,11 +104,16 @@ public class SecurityConfig {
   public DomainAuthenticationFilter domainAuthenticationFilter(
       DomainAuthenticationManager domainAuthenticationManager,
       SecurityContextRepository securityContextRepository,
-      UserInfoRepository userInfoRepository) {
+      UserInfoRepository userInfoRepository,
+      JdbcUserDetailsManager jdbcUserDetailsManager,
+      PasswordEncoder passwordEncoder) {
     DomainAuthenticationFilter filter = new DomainAuthenticationFilter(domainAuthenticationManager);
     filter.setFilterProcessesUrl("/login");
     filter.setSecurityContextRepository(securityContextRepository);
-    filter.setAuthenticationSuccessHandler(new ProfileCompleteSuccessHandler(userInfoRepository));
+    filter.setSessionAuthenticationStrategy(new ChangeSessionIdAuthenticationStrategy());
+    filter.setAuthenticationSuccessHandler(
+        new ProfileCompleteSuccessHandler(
+            userInfoRepository, jdbcUserDetailsManager, passwordEncoder));
     filter.setAuthenticationFailureHandler(
         new SimpleUrlAuthenticationFailureHandler("/login?error"));
     return filter;

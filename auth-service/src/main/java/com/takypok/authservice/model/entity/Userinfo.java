@@ -20,7 +20,7 @@ public class Userinfo {
   private String sub;
 
   @NotBlank private String name;
-  @NotBlank private String email;
-  @NotBlank private String title;
-  @NotBlank private String department;
+  private String email;
+  private String title;
+  private String department;
 }
