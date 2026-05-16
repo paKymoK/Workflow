@@ -1,7 +1,6 @@
 package com.takypok.authservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.takypok.authservice.config.auth.DomainAuthenticationToken;
 import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
@@ -9,6 +8,7 @@ import com.takypok.authservice.repository.UserInfoRepository;
 import com.takypok.core.Constants;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -35,10 +35,9 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
       context.getClaims().claim("info", mapper.convertValue(userinfo, HashMap.class));
     }
 
-    if (principal instanceof DomainAuthenticationToken domainToken) {
-      context.getClaims().claim("domain", domainToken.getDomain());
-    } else {
-      context.getClaims().claim("domain", "INTERNAL");
+    if (principal instanceof AbstractAuthenticationToken aat
+        && aat.getDetails() instanceof String domain) {
+      context.getClaims().claim("domain", domain);
     }
 
     // Resolve all roles for this user on the requesting client (UNION of direct + group roles)

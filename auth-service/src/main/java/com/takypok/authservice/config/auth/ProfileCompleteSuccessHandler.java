@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,7 +36,7 @@ public class ProfileCompleteSuccessHandler extends SavedRequestAwareAuthenticati
       userinfo = provisionUser(username);
     }
 
-    if (isIncomplete(userinfo)) {
+    if (isIncomplete(userinfo) && !isGuest(authentication)) {
       response.sendRedirect(request.getContextPath() + "/profile/complete");
       return;
     }
@@ -51,6 +52,7 @@ public class ProfileCompleteSuccessHandler extends SavedRequestAwareAuthenticati
           User.builder()
               .username(username)
               .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+              .disabled(true)
               .roles("USER")
               .build();
       userDetailsManager.createUser(user);
@@ -64,6 +66,11 @@ public class ProfileCompleteSuccessHandler extends SavedRequestAwareAuthenticati
     Userinfo saved = userInfoRepository.save(info);
     log.info("Created userinfo record for: {}", username);
     return saved;
+  }
+
+  private boolean isGuest(Authentication authentication) {
+    return authentication instanceof AbstractAuthenticationToken aat
+        && "GUEST".equals(aat.getDetails());
   }
 
   private boolean isIncomplete(Userinfo userinfo) {

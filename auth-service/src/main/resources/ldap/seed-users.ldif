@@ -1,0 +1,247 @@
+# ============================================================
+# LDAP seed — 20 internal users
+# Load with: ldapadd -x -H ldap://localhost:389 \
+#              -D "cn=admin,dc=mycompany,dc=local" \
+#              -w admin_secret -f seed-users.ldif
+# Username rule: first-letter(s) of each word except last + full last word
+#   e.g. Truong Quang Thai => tqthai
+# ============================================================
+
+# ── Organisational units (skip if already exist) ─────────────
+
+dn: ou=users,dc=mycompany,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=mycompany,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+
+# ── Users ────────────────────────────────────────────────────
+
+dn: cn=nvhung,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: nvhung
+sn: Hung
+givenName: Nguyen Van
+displayName: Nguyen Van Hung
+mail: nvhung@mycompany.local
+userPassword: password
+
+dn: cn=ltphuong,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: ltphuong
+sn: Phuong
+givenName: Le Thi
+displayName: Le Thi Phuong
+mail: ltphuong@mycompany.local
+userPassword: password
+
+dn: cn=pdhung,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: pdhung
+sn: Hung
+givenName: Pham Duc
+displayName: Pham Duc Hung
+mail: pdhung@mycompany.local
+userPassword: password
+
+dn: cn=hmlong,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: hmlong
+sn: Long
+givenName: Hoang Minh
+displayName: Hoang Minh Long
+mail: hmlong@mycompany.local
+userPassword: password
+
+dn: cn=tqthai,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: tqthai
+sn: Thai
+givenName: Truong Quang
+displayName: Truong Quang Thai
+mail: tqthai@mycompany.local
+userPassword: password
+
+dn: cn=nvbinh,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: nvbinh
+sn: Binh
+givenName: Nguyen Van
+displayName: Nguyen Van Binh
+mail: nvbinh@mycompany.local
+userPassword: password
+
+dn: cn=dqbao,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: dqbao
+sn: Bao
+givenName: Dang Quoc
+displayName: Dang Quoc Bao
+mail: dqbao@mycompany.local
+userPassword: password
+
+dn: cn=vqhieu,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: vqhieu
+sn: Hieu
+givenName: Vu Quang
+displayName: Vu Quang Hieu
+mail: vqhieu@mycompany.local
+userPassword: password
+
+dn: cn=nttung,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: nttung
+sn: Tung
+givenName: Nguyen Thanh
+displayName: Nguyen Thanh Tung
+mail: nttung@mycompany.local
+userPassword: password
+
+dn: cn=dtnam,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: dtnam
+sn: Nam
+givenName: Do Thanh
+displayName: Do Thanh Nam
+mail: dtnam@mycompany.local
+userPassword: password
+
+dn: cn=nthuong,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: nthuong
+sn: Huong
+givenName: Nguyen Thi
+displayName: Nguyen Thi Huong
+mail: nthuong@mycompany.local
+userPassword: password
+
+dn: cn=btlan,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: btlan
+sn: Lan
+givenName: Bui Thi
+displayName: Bui Thi Lan
+mail: btlan@mycompany.local
+userPassword: password
+
+dn: cn=pthoa,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: pthoa
+sn: Hoa
+givenName: Phan Thi
+displayName: Phan Thi Hoa
+mail: pthoa@mycompany.local
+userPassword: password
+
+dn: cn=ltmai,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: ltmai
+sn: Mai
+givenName: Ly Thi
+displayName: Ly Thi Mai
+mail: ltmai@mycompany.local
+userPassword: password
+
+dn: cn=mtngoc,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: mtngoc
+sn: Ngoc
+givenName: Mai Thi
+displayName: Mai Thi Ngoc
+mail: mtngoc@mycompany.local
+userPassword: password
+
+dn: cn=ttthu,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: ttthu
+sn: Thu
+givenName: Tran Thi
+displayName: Tran Thi Thu
+mail: ttthu@mycompany.local
+userPassword: password
+
+dn: cn=dtyen,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: dtyen
+sn: Yen
+givenName: Dinh Thi
+displayName: Dinh Thi Yen
+mail: dtyen@mycompany.local
+userPassword: password
+
+dn: cn=cvphuc,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: cvphuc
+sn: Phuc
+givenName: Cao Van
+displayName: Cao Van Phuc
+mail: cvphuc@mycompany.local
+userPassword: password
+
+dn: cn=nvan,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: nvan
+sn: An
+givenName: Nguyen Van
+displayName: Nguyen Van An
+mail: nvan@mycompany.local
+userPassword: password
+
+dn: cn=tvduc,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: tvduc
+sn: Duc
+givenName: Tran Van
+displayName: Tran Van Duc
+mail: tvduc@mycompany.local
+userPassword: password
+
+# ── Groups ───────────────────────────────────────────────────
+
+dn: cn=management,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: management
+member: cn=nvhung,ou=users,dc=mycompany,dc=local
+member: cn=ltphuong,ou=users,dc=mycompany,dc=local
+member: cn=pdhung,ou=users,dc=mycompany,dc=local
+member: cn=hmlong,ou=users,dc=mycompany,dc=local
+member: cn=btlan,ou=users,dc=mycompany,dc=local
+
+dn: cn=engineering,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: engineering
+member: cn=hmlong,ou=users,dc=mycompany,dc=local
+member: cn=tqthai,ou=users,dc=mycompany,dc=local
+member: cn=nvbinh,ou=users,dc=mycompany,dc=local
+member: cn=dqbao,ou=users,dc=mycompany,dc=local
+member: cn=vqhieu,ou=users,dc=mycompany,dc=local
+member: cn=nttung,ou=users,dc=mycompany,dc=local
+member: cn=dtnam,ou=users,dc=mycompany,dc=local
+member: cn=nthuong,ou=users,dc=mycompany,dc=local
+
+dn: cn=product,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: product
+member: cn=btlan,ou=users,dc=mycompany,dc=local
+member: cn=pthoa,ou=users,dc=mycompany,dc=local
+member: cn=ltmai,ou=users,dc=mycompany,dc=local
+member: cn=mtngoc,ou=users,dc=mycompany,dc=local
+
+dn: cn=design,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: design
+member: cn=ttthu,ou=users,dc=mycompany,dc=local
+member: cn=dtyen,ou=users,dc=mycompany,dc=local
+member: cn=cvphuc,ou=users,dc=mycompany,dc=local
+
+dn: cn=operations,ou=groups,dc=mycompany,dc=local
+objectClass: groupOfNames
+cn: operations
+member: cn=nvan,ou=users,dc=mycompany,dc=local
+member: cn=tvduc,ou=users,dc=mycompany,dc=local
+member: cn=nttung,ou=users,dc=mycompany,dc=local
