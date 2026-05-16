@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
 import { Spin, Table, Tag, Button, Dropdown, message, Input, Select } from "antd";
-import { PlusOutlined, MoreOutlined, SearchOutlined, DownloadOutlined } from "@ant-design/icons";
+import { MoreOutlined, SearchOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
@@ -20,7 +20,6 @@ import {
   ticketKeys,
 } from "../hooks/useTickets";
 import type { FilterTicketRequest } from "../api/ticketApi";
-import CreateTicketModal from "../components/CreateTicketModal";
 import DeadlineTag from "../components/DeadlineTag.tsx";
 
 export default function Dashboard() {
@@ -40,8 +39,7 @@ export default function Dashboard() {
   const [assigneeEmail, setAssigneeEmail] = useUrlState("assignee", "");
 
   // ── Modal ────────────────────────────────────────────────────────────────
-  const [isModalOpen,  setIsModalOpen]  = useState(false);
-  const [isExporting,  setIsExporting]  = useState(false);
+const [isExporting,  setIsExporting]  = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -239,14 +237,6 @@ export default function Dashboard() {
           >
             <span className="neon-btn-content">Export</span>
           </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setIsModalOpen(true)}
-            className="neon-btn font-bebas! tracking-widest!"
-          >
-            <span className="neon-btn-content">Create Ticket</span>
-          </Button>
         </div>
       </div>
 
@@ -317,11 +307,6 @@ export default function Dashboard() {
         }}
       />
 
-      <CreateTicketModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => setIsModalOpen(false)}
-      />
     </>
   );
 }

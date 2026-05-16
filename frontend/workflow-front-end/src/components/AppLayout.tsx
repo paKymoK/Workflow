@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useState } from "react";
 import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
 import ChatWidget from "./ChatWidget";
+import CreateTicketModal from "./CreateTicketModal";
 import { BubbleBackground, useTheme, useFont, useAuth, api } from "@takypok/shared";
 import {
   MenuFoldOutlined,
@@ -13,6 +14,7 @@ import {
   SettingOutlined,
   SunOutlined,
   MoonOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -32,6 +34,7 @@ type ServiceHealth = {
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [createTicketOpen, setCreateTicketOpen] = useState(false);
   const [clock, setClock] = useState("");
   const [systemStatus, setSystemStatus] = useState("CHECKING");
   const [services, setServices] = useState<ServiceHealth[]>([]);
@@ -127,6 +130,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     (user?.sub as string) ??
     "User";
 
+  const displayRole = (() => {
+    const roles = user?.roles;
+    if (Array.isArray(roles) && roles.length > 0) return String(roles[0]).toUpperCase();
+    return null;
+  })();
+
   const routeLabel =
     ROUTE_LABELS[location.pathname] ??
     (location.pathname.startsWith("/dashboard/") ? "// TICKET" : "// TERMINAL");
@@ -217,47 +226,62 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
 
           {/* Header */}
-          <Header className="neon-header-border flex items-center justify-between !px-4 !h-11 flex-shrink-0">
-            <div className="flex items-center gap-3">
+          <Header className="neon-header-border flex items-center justify-between !px-4 !h-14 flex-shrink-0">
+            <div className="flex items-center gap-4">
               <Button
                 type="text"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
-                className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)]"
+                className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)] !h-9 !w-9"
               />
-              <span className="font-bebas text-base tracking-[0.25em] text-[var(--text-muted)] hidden sm:block">
+              <span className="font-bebas text-lg tracking-[0.25em] text-[var(--text-muted)] hidden sm:block">
                 {routeLabel}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-            <Button
-              type="text"
-              onClick={toggleFont}
-              title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
-              className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)] !font-bold !text-xs !tracking-wider"
-            >
-              Aa
-            </Button>
-            <Button
-              type="text"
-              icon={isDark ? <SunOutlined /> : <MoonOutlined />}
-              onClick={toggleTheme}
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)]"
-            />
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <div className="flex cursor-pointer items-center gap-2 px-3 py-1 border border-[var(--border-subtle)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all">
-                <span className="font-mono-tech text-xs text-[var(--white)]">
-                  {displayName}
-                </span>
-                <Avatar
-                  size="small"
-                  icon={<UserOutlined />}
-                  className="!bg-[var(--neon-yellow)] !text-black"
-                />
-              </div>
-            </Dropdown>
+            <div className="flex items-center gap-3">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateTicketOpen(true)}
+                className="neon-btn font-bebas! tracking-widest!"
+              >
+                <span className="neon-btn-content">Create</span>
+              </Button>
+              <Button
+                type="text"
+                onClick={toggleFont}
+                title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
+                className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)] !font-bold !text-sm !tracking-wider !h-9 !w-9"
+              >
+                Aa
+              </Button>
+              <Button
+                type="text"
+                icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+                onClick={toggleTheme}
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                className="!text-[var(--neon-yellow)] hover:!bg-[var(--border-subtle)] !h-9 !w-9"
+              />
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                <div className="flex cursor-pointer items-center gap-2.5 px-3 py-2 border border-[var(--border-subtle)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all">
+                  <div className="flex flex-col items-end">
+                    <span className="font-mono-tech text-xs text-[var(--white)] leading-tight">
+                      {displayName}
+                    </span>
+                    {displayRole && (
+                      <span className="font-mono-tech text-[9px] text-[var(--text-muted)] leading-tight tracking-wider">
+                        {displayRole}
+                      </span>
+                    )}
+                  </div>
+                  <Avatar
+                    size="default"
+                    icon={<UserOutlined />}
+                    className="!bg-[var(--neon-yellow)] !text-black"
+                  />
+                </div>
+              </Dropdown>
             </div>
           </Header>
 
@@ -279,6 +303,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </Layout>
       </Layout>
       <ChatWidget />
+      <CreateTicketModal
+        open={createTicketOpen}
+        onClose={() => setCreateTicketOpen(false)}
+        onSuccess={() => setCreateTicketOpen(false)}
+      />
     </App>
   );
 }
