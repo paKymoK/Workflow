@@ -6,6 +6,7 @@ import {
   generateCodeChallenge,
   generateState,
   buildAuthorizationUrl,
+  buildLogoutUrl,
   exchangeCodeForToken,
   parseJwtPayload,
   type TokenResponse,
@@ -33,6 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (tokenResponse.refresh_token) {
       sessionStorage.setItem("refresh_token", tokenResponse.refresh_token);
+    }
+
+    if (tokenResponse.id_token) {
+      sessionStorage.setItem("id_token", tokenResponse.id_token);
     }
 
     try {
@@ -118,12 +123,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = useCallback(() => {
+    const idToken = sessionStorage.getItem("id_token") ?? undefined;
     setAccessToken(null);
     setUser(null);
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("id_token");
     sessionStorage.removeItem("pkce_code_verifier");
     sessionStorage.removeItem("pkce_state");
+    window.location.href = buildLogoutUrl(`${window.location.origin}/login`, idToken);
   }, []);
 
   handleCallbackRef.current   = handleCallback;
@@ -131,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     registerTokenSync((t) => setTokenResponseRef.current(t));
-    registerLogout(() => { logout(); navigate("/login"); });
+    registerLogout(() => { logout(); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

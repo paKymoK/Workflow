@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const AUTH_SERVER = import.meta.env.VITE_AUTH_SERVER;
+export const AUTH_SERVER = import.meta.env.VITE_AUTH_SERVER as string;
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET;
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
@@ -109,6 +109,17 @@ export function parseJwtPayload(token: string): Record<string, unknown> {
       .join("")
   );
   return JSON.parse(json);
+}
+
+export function buildLogoutUrl(postLogoutRedirectUri: string, idToken?: string): string {
+  const params: Record<string, string> = {
+    client_id: CLIENT_ID,
+    post_logout_redirect_uri: postLogoutRedirectUri,
+  };
+  if (idToken) {
+    params["id_token_hint"] = idToken;
+  }
+  return `${AUTH_SERVER}/connect/logout?${new URLSearchParams(params).toString()}`;
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {
