@@ -6,7 +6,6 @@ import com.takypok.workflowservice.model.enums.StatusSla;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -39,6 +38,6 @@ public abstract class SlaMapper {
         LocalTime.of(18, 0, 0),
         LocalTime.of(12, 0, 0),
         LocalTime.of(13, 0, 0),
-        new ArrayList<>(List.of(0,6)));
+        new ArrayList<>(List.of(0, 6)));
   }
 }

@@ -9,6 +9,8 @@ export interface FilterTicketRequest {
     statusId?: number;
     priorityId?: number;
     assigneeEmail?: string;
+    sortBy?: "resolutionPercent";
+    sortDir?: "asc" | "desc";
 }
 
 export async function fetchTickets(params: FilterTicketRequest) {

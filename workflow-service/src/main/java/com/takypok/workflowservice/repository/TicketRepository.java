@@ -55,6 +55,40 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                             jsonb_build_object(
                               'id',         s.id,
                               'ticketId',   s.ticket_id,
+                              'status',     s.status,
+                              'isPaused',   s.is_paused,
+                              'priority',   s.priority,
+                              'pausedTime', s.paused_time,
+                              'setting',    s.setting
+                            )
+                          END AS sla
+                    FROM ticket t
+                    LEFT JOIN sla s ON t.id = s.ticket_id
+                    WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
+                      AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
+                      AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
+                      AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                    ORDER BY
+                      CASE WHEN :asc = true  THEN (s.status->>'resolutionPercent')::int END ASC  NULLS LAST,
+                      CASE WHEN :asc = false THEN (s.status->>'resolutionPercent')::int END DESC NULLS LAST
+                    LIMIT :limit OFFSET :offset
+                    """)
+  Flux<TicketSla> findAllWithSlaSortByResolution(
+      int limit,
+      int offset,
+      String summary,
+      Long statusId,
+      Long priorityId,
+      String assigneeEmail,
+      boolean asc);
+
+  @Query(
+      """
+                    SELECT t.*,
+                          CASE WHEN s.id IS NOT NULL THEN
+                            jsonb_build_object(
+                              'id',         s.id,
+                              'ticketId',   s.ticket_id,
                               'isPaused',   s.is_paused,
                               'status',     s.status,
                               'priority',   s.priority,

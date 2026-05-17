@@ -1,9 +1,8 @@
-import { useRef, useEffect, useCallback, useMemo } from "react";
-import { useState } from "react";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
-import { Spin, Table, Tag, Button, Dropdown, message, Input, Select } from "antd";
-import { MoreOutlined, SearchOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Spin, Table, Tag, Button, Dropdown, message, Input, Select, Progress } from "antd";
+import { MoreOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
@@ -27,16 +26,52 @@ export default function Dashboard() {
   const qc          = useQueryClient();
   const token       = sessionStorage.getItem("access_token");
 
-  // ── Pagination ───────────────────────────────────────────────────────────
-  const [page,     setPage]     = useUrlState("page",     0);
-  const [pageSize]              = useUrlState("size",     10);
-  const [, setSearchParams]     = useSearchParams();
+  // ── URL state (reads only — all writes go through setSearchParams) ─────────
+  const [page]          = useUrlState("page",    0);
+  const [pageSize]      = useUrlState("size",    10);
+  const [summary]       = useUrlState("q",       "");
+  const [statusId]      = useUrlState<number | undefined>("status",   undefined);
+  const [priorityId]    = useUrlState<number | undefined>("priority", undefined);
+  const [assigneeEmail] = useUrlState("assignee", "");
+  const [sortBy]        = useUrlState<"resolutionPercent" | undefined>("sortBy",  undefined);
+  const [sortDir]       = useUrlState<"asc" | "desc" | undefined>("sortDir", undefined);
+  const [, setSearchParams] = useSearchParams();
 
-  // ── Filter state ─────────────────────────────────────────────────────────
-  const [summary,       setSummary]       = useUrlState("q",        "");
-  const [statusId,      setStatusId]      = useUrlState<number | undefined>("status",   undefined);
-  const [priorityId,    setPriorityId]    = useUrlState<number | undefined>("priority", undefined);
-  const [assigneeEmail, setAssigneeEmail] = useUrlState("assignee", "");
+  // Keep a ref so debounce callbacks always use the latest setSearchParams
+  // without having it as a dep (React Router recreates it on every URL change)
+  const setSearchParamsRef = useRef(setSearchParams);
+  useEffect(() => { setSearchParamsRef.current = setSearchParams; });
+
+  // ── Local input values — update immediately for responsive typing ─────────
+  const [summaryInput,  setSummaryInput]  = useState(summary);
+  const [assigneeInput, setAssigneeInput] = useState(assigneeEmail);
+
+  // ── Debounce text inputs → URL (1 s) + reset page ────────────────────────
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearchParamsRef.current((prev) => {
+        const p = new URLSearchParams(prev);
+        const v = summaryInput.trim();
+        if (v) p.set("q", JSON.stringify(v)); else p.delete("q");
+        p.delete("page");
+        return p;
+      }, { replace: true });
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [summaryInput]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearchParamsRef.current((prev) => {
+        const p = new URLSearchParams(prev);
+        const v = assigneeInput.trim().toLowerCase();
+        if (v) p.set("assignee", JSON.stringify(v)); else p.delete("assignee");
+        p.delete("page");
+        return p;
+      }, { replace: true });
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [assigneeInput]);
 
   // ── Modal ────────────────────────────────────────────────────────────────
 const [isExporting,  setIsExporting]  = useState(false);
@@ -67,7 +102,9 @@ const [isExporting,  setIsExporting]  = useState(false);
     ...(statusId  != null    && { statusId }),
     ...(priorityId != null   && { priorityId }),
     ...(assigneeEmail.trim() && { assigneeEmail: assigneeEmail.trim() }),
-  }), [page, pageSize, summary, statusId, priorityId, assigneeEmail]);
+    ...(sortBy  != null && { sortBy }),
+    ...(sortDir != null && { sortDir }),
+  }), [page, pageSize, summary, statusId, priorityId, assigneeEmail, sortBy, sortDir]);
 
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: pageData, isFetching } = useTicketList(params);
@@ -141,21 +178,69 @@ const [isExporting,  setIsExporting]  = useState(false);
   }, [refreshRow, token]);
 
   // ── Filter handlers ───────────────────────────────────────────────────────
-  // setPage(0) changes the queryKey → automatic refetch via useTicketList
-  const handleSearch = () => setPage(0);
+  const handleStatusChange = (val: number | undefined) => {
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      if (val == null) p.delete("status"); else p.set("status", JSON.stringify(val));
+      p.delete("page");
+      return p;
+    }, { replace: true });
+  };
+
+  const handlePriorityChange = (val: number | undefined) => {
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      if (val == null) p.delete("priority"); else p.set("priority", JSON.stringify(val));
+      p.delete("page");
+      return p;
+    }, { replace: true });
+  };
 
   const handleReset = () => {
-    setSummary("");
-    setStatusId(undefined);
-    setPriorityId(undefined);
-    setAssigneeEmail("");
-    setPage(0);
+    setSummaryInput("");
+    setAssigneeInput("");
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      p.delete("q");
+      p.delete("status");
+      p.delete("priority");
+      p.delete("assignee");
+      p.delete("sortBy");
+      p.delete("sortDir");
+      p.delete("page");
+      return p;
+    }, { replace: true });
   };
 
   // ── Table columns ─────────────────────────────────────────────────────────
   const columns: ColumnsType<TicketSla> = [
     { title: "ID", dataIndex: "id", width: 120 },
-    { title: "Summary", dataIndex: "summary", ellipsis: true },
+    { title: "Summary", dataIndex: "summary", ellipsis: true, width: 220 },
+    {
+      title: "Resolution %",
+      key: "resolutionPercent",
+      width: 160,
+      responsive: ["md"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
+      sorter: true,
+      sortOrder: sortBy === "resolutionPercent"
+        ? (sortDir === "asc" ? "ascend" : "descend")
+        : null,
+      render: (_: unknown, record: TicketSla) => {
+        const percent = record.sla?.status?.resolutionPercent;
+        const overdue = record.sla?.status?.isResolutionOverdue ?? false;
+        if (percent == null) return <span className="text-gray-400 text-xs">—</span>;
+        const clamped = Math.min(Math.round(percent), 100);
+        const strokeColor = overdue || percent >= 100 ? "#ff4d4f" : percent >= 80 ? "#faad14" : "#52c41a";
+        return (
+          <Progress
+            percent={clamped}
+            size="small"
+            strokeColor={strokeColor}
+            format={(p) => <span className="text-[11px]">{p}%</span>}
+          />
+        );
+      },
+    },
     {
       title: "Status",
       dataIndex: ["status", "name"],
@@ -244,16 +329,15 @@ const [isExporting,  setIsExporting]  = useState(false);
       <div className="flex flex-wrap gap-2 mb-4">
         <Input
           placeholder="Search summary"
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          onPressEnter={handleSearch}
+          value={summaryInput}
+          onChange={(e) => setSummaryInput(e.target.value)}
           allowClear
           className="!w-[200px]"
         />
         <Select
           placeholder="Status"
           value={statusId}
-          onChange={setStatusId}
+          onChange={handleStatusChange}
           allowClear
           loading={isStatusesLoading}
           className="!w-[160px]"
@@ -262,22 +346,18 @@ const [isExporting,  setIsExporting]  = useState(false);
         <Select
           placeholder="Priority"
           value={priorityId}
-          onChange={setPriorityId}
+          onChange={handlePriorityChange}
           allowClear
           className="!w-[160px]"
           options={(priorities as Priority[]).map((p) => ({ value: p.id, label: p.name }))}
         />
         <Input
           placeholder="Assignee email"
-          value={assigneeEmail}
-          onChange={(e) => setAssigneeEmail(e.target.value)}
-          onPressEnter={handleSearch}
+          value={assigneeInput}
+          onChange={(e) => setAssigneeInput(e.target.value)}
           allowClear
           className="!w-[200px]"
         />
-        <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-          Search
-        </Button>
         <Button onClick={handleReset}>Reset</Button>
       </div>
 
@@ -290,20 +370,34 @@ const [isExporting,  setIsExporting]  = useState(false);
           onClick: () => navigate(`/dashboard/${record.id}`),
           style: { cursor: "pointer" },
         })}
+        onChange={(pagination, _, sorter, extra) => {
+          setSearchParams((prev) => {
+            const p = new URLSearchParams(prev);
+            if (extra.action === "sort") {
+              const s = Array.isArray(sorter) ? sorter[0] : sorter;
+              if (s?.columnKey === "resolutionPercent" && s.order) {
+                p.set("sortBy",  JSON.stringify("resolutionPercent"));
+                p.set("sortDir", JSON.stringify(s.order === "ascend" ? "asc" : "desc"));
+              } else {
+                p.delete("sortBy");
+                p.delete("sortDir");
+              }
+              p.delete("page");
+            } else if (extra.action === "paginate") {
+              const newPage = (pagination.current ?? 1) - 1;
+              const newSize = pagination.pageSize ?? 10;
+              if (newPage === 0) p.delete("page"); else p.set("page", JSON.stringify(newPage));
+              if (newSize === 10) p.delete("size"); else p.set("size", JSON.stringify(newSize));
+            }
+            return p;
+          }, { replace: true });
+        }}
         pagination={{
           current: page + 1,
           pageSize,
           total,
           showSizeChanger: true,
           showTotal: (t) => `Total ${t} tickets`,
-          onChange: (p, size) => {
-            setSearchParams((prev) => {
-              const params = new URLSearchParams(prev);
-              if (p - 1 === 0)   params.delete("page"); else params.set("page", JSON.stringify(p - 1));
-              if (size  === 10)  params.delete("size"); else params.set("size", JSON.stringify(size));
-              return params;
-            }, { replace: true });
-          },
         }}
       />
 

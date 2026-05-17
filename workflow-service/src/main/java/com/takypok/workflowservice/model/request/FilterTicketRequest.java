@@ -3,6 +3,7 @@ package com.takypok.workflowservice.model.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -31,4 +32,12 @@ public class FilterTicketRequest {
   @Email
   @Size(max = 254)
   private String assigneeEmail;
+
+  @Pattern(
+      regexp = "^(resolutionPercent)?$",
+      message = "sortBy must be 'resolutionPercent' or empty")
+  private String sortBy;
+
+  @Pattern(regexp = "^(asc|desc)?$", message = "sortDir must be 'asc' or 'desc'")
+  private String sortDir;
 }

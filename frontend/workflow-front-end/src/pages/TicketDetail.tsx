@@ -287,26 +287,27 @@ export default function TicketDetail() {
                   <Descriptions.Item label={<Text type="secondary">Resolution</Text>}>
                     <DeadlineTag createdAt={ticket.createdAt} sla={ticket.sla} type="resolution" />
                   </Descriptions.Item>
-                  <Descriptions.Item label={<Text type="secondary">Resolution Progress</Text>}>
-                    {(() => {
-                      const pct = ticket.sla.status.resolutionPercent ?? 0;
-                      const clamped = Math.min(pct, 100);
-                      const color = pct >= 100 ? "#FF2D6B" : pct >= 75 ? "#FFE500" : "#00F5FF";
-                      return (
-                        <Tooltip title={`${pct}% of resolution time elapsed`}>
-                          <Progress
-                            percent={clamped}
-                            strokeColor={color}
-                            trailColor="rgba(255,255,255,0.1)"
-                            format={() => `${pct}%`}
-                            status={pct >= 100 ? "exception" : "active"}
-                            size="small"
-                          />
-                        </Tooltip>
-                      );
-                    })()}
-                  </Descriptions.Item>
                 </Descriptions>
+                {(() => {
+                  const pct = ticket.sla.status.resolutionPercent ?? 0;
+                  const clamped = Math.min(pct, 100);
+                  const color = pct >= 100 ? "#FF2D6B" : pct >= 75 ? "#FFE500" : "#00F5FF";
+                  return (
+                    <div className="mt-2">
+                      <Text type="secondary" className="!text-[11px]">Resolution Progress</Text>
+                      <Tooltip title={`${pct}% of resolution time elapsed`}>
+                        <Progress
+                          percent={clamped}
+                          strokeColor={color}
+                          trailColor="rgba(255,255,255,0.1)"
+                          format={() => `${pct}%`}
+                          status={pct >= 100 ? "exception" : "active"}
+                          size="small"
+                        />
+                      </Tooltip>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </Card>

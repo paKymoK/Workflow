@@ -57,10 +57,16 @@ public class TicketServiceImpl implements TicketService {
     }
     Long statusId = request.getStatusId();
     Long priorityId = request.getPriorityId();
+    boolean sortByResolution = "resolutionPercent".equals(request.getSortBy());
+    boolean sortAsc = "asc".equalsIgnoreCase(request.getSortDir());
+    Flux<TicketSla> query =
+        sortByResolution
+            ? ticketRepository.findAllWithSlaSortByResolution(
+                size, offset, summary, statusId, priorityId, assigneeEmail, sortAsc)
+            : ticketRepository.findAllWithSla(
+                size, offset, summary, statusId, priorityId, assigneeEmail);
     return Mono.zip(
-            ticketRepository
-                .findAllWithSla(size, offset, summary, statusId, priorityId, assigneeEmail)
-                .collectList(),
+            query.collectList(),
             ticketRepository.count(summary, statusId, priorityId, assigneeEmail))
         .map(
             tuple -> {
