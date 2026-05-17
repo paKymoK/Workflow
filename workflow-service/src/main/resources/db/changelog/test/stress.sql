@@ -163,7 +163,7 @@ END
       '[]'::jsonb,
       t.priority,
       jsonb_build_object(
-          'weekend', jsonb_build_array(6,7),
+          'weekend', jsonb_build_array(0,6),
           'workStart','09:00:00',
           'lunchStart','12:00:00',
           'lunchEnd','13:00:00',

@@ -244,6 +244,7 @@ export interface TicketSla {
       isResponseOverdue: boolean | null;
       resolution: string | null;
       isResolutionOverdue: boolean | null;
+      resolutionPercent: number | null;
     };
     isPaused: boolean | null;
     pausedTime: { pausedTime: string; resumeTime: string | null }[];

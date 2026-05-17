@@ -226,8 +226,19 @@ BEGIN
                                 ARRAY(SELECT jsonb_array_elements(s.setting -> 'weekend')::int) AS weekend_days
                          FROM ticket t
                                   INNER JOIN sla s ON t.id = s.ticket_id
-                         WHERE (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
-                            OR (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'),
+                         WHERE (
+                             (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+                                 AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
+                             )
+                            OR (
+                                   (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
+                                       AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
+                                       AND COALESCE((s.status ->> 'resolutionPercent')::int, -1) < 100
+                                   )
+                             AND NOW() - t.created_at > LEAST(
+                                                                (s.priority ->> 'responseTime')::int,
+                                                                (s.priority ->> 'resolutionTime')::int
+                                                        ) * interval '1 hour'),
          office_time_data AS (SELECT td.*,
                                      calculate_office_time(
                                              td.created_at, NOW(), 'Asia/Ho_Chi_Minh',
@@ -236,22 +247,39 @@ BEGIN
                                              td.paused_ranges, td.weekend_days
                                      ) AS office_seconds
                               FROM ticket_data td),
+         office_time_with_percent AS (SELECT *,
+                                             LEAST(
+                                                     FLOOR(office_seconds::float / NULLIF(resolution_time * 3600, 0) * 100)::int,
+                                                     100
+                                             ) AS resolution_percent
+                                      FROM office_time_data),
          update_response AS (
              UPDATE sla s
                  SET status = status || jsonb_build_object('isResponseOverdue', true)
-                 FROM office_time_data td
+                 FROM office_time_with_percent td
                  WHERE s.id = td.sla_id
                      AND (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
                      AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
-                     AND td.office_seconds > td.response_time * 60 * 60
-                 RETURNING s.id)
+                     AND td.office_seconds > td.response_time * 3600),
+         update_resolution_percent AS (
+             UPDATE sla s
+                 SET status = status || jsonb_build_object('resolutionPercent', td.resolution_percent)
+                 FROM office_time_with_percent td
+                 WHERE s.id = td.sla_id
+                     AND (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
+                     AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
+                     AND td.office_seconds <= td.resolution_time * 3600
+                     AND td.resolution_percent != COALESCE((s.status ->> 'resolutionPercent')::int, -1))
     UPDATE sla s
-    SET status = status || jsonb_build_object('isResolutionOverdue', true)
-    FROM office_time_data td
+    SET status = status || jsonb_build_object(
+            'isResolutionOverdue', true,
+            'resolutionPercent', 100
+                           )
+    FROM office_time_with_percent td
     WHERE s.id = td.sla_id
       AND (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
       AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
-      AND td.office_seconds > td.resolution_time * 60 * 60;
+      AND td.office_seconds > td.resolution_time * 3600;
 
     PERFORM pg_advisory_unlock(v_lock_key);
 

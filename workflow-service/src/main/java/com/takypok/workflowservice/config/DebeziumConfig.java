@@ -116,6 +116,14 @@ public class DebeziumConfig {
                     .map(SlaTracker::getStatus)
                     .orElse(null));
         if (!Objects.equals(before, after)) {
+          if (Objects.nonNull(before) && Objects.nonNull(after)) {
+            System.out.println(
+                change.getPayload().getBefore().getId()
+                    + ": "
+                    + before.getResolutionPercent()
+                    + " -> "
+                    + after.getResolutionPercent());
+          }
           sink.tryEmitNext(String.valueOf(change.getPayload().getAfter().getId())).orThrow();
         }
       } catch (Exception e) {
@@ -128,6 +136,7 @@ public class DebeziumConfig {
     try {
       return mapper.readValue(payload, SlaStatus.class);
     } catch (Exception e) {
+      log.error("Failed to deserialize SlaStatus from payload: {}", payload, e);
       return null;
     }
   }
