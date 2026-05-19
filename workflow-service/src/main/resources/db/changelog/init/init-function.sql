@@ -227,18 +227,19 @@ BEGIN
                          FROM ticket t
                                   INNER JOIN sla s ON t.id = s.ticket_id
                          WHERE (
-                             (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
-                                 AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
+                             (
+                                 (s.status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+                                     AND (s.status ->> 'response') IS DISTINCT FROM 'DONE'
+                                 ) OR (
+                                 (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
+                                     AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
+                                     AND COALESCE((s.status ->> 'resolutionPercent')::int, -1) < 100
+                                 )
                              )
-                            OR (
-                                   (s.status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true'
-                                       AND (s.status ->> 'resolution') IS DISTINCT FROM 'DONE'
-                                       AND COALESCE((s.status ->> 'resolutionPercent')::int, -1) < 100
-                                   )
-                             AND NOW() - t.created_at > LEAST(
-                                                                (s.priority ->> 'responseTime')::int,
-                                                                (s.priority ->> 'resolutionTime')::int
-                                                        ) * interval '1 hour'),
+                           AND NOW() - t.created_at > LEAST(
+                                                              (s.priority ->> 'responseTime')::int,
+                                                              (s.priority ->> 'resolutionTime')::int
+                                                      ) * interval '1 hour'),
          office_time_data AS (SELECT td.*,
                                      calculate_office_time(
                                              td.created_at, NOW(), 'Asia/Ho_Chi_Minh',
