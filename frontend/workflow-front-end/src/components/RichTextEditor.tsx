@@ -226,14 +226,14 @@ function RichTextEditor({
                     <input
                         ref={fileInputRef}
                         type="file"
-                        className="hidden"
+                        style={{ display: "none" }}
                         onChange={handleFileChange}
                     />
                     <input
                         ref={videoInputRef}
                         type="file"
                         accept={VIDEO_TYPES.join(",")}
-                        className="hidden"
+                        style={{ display: "none" }}
                         onChange={handleVideoChange}
                     />
                 </div>

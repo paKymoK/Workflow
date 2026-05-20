@@ -51,14 +51,23 @@ export interface IssueType {
   projectId: number;
 }
 
+export interface AttachmentRef {
+  id: string;
+  name: string;
+  extension: string;
+}
+
+export interface InternalApplicationDetail {
+  description: string;
+  attachment?: AttachmentRef[];
+}
+
 export interface CreateTicketRequest {
   summary: string;
   projectId: number;
   issueTypeId: number;
   priority: number;
-  detail: {
-    data: string;
-  };
+  detail: InternalApplicationDetail;
 }
 
 export interface UploadFile {
@@ -229,7 +238,7 @@ export interface TicketSla {
   summary: string;
   reporter: { name: string; email: string };
   assignee: { name: string; email: string } | null;
-  detail: { data: string } | null;
+  detail: { description: string; attachment?: AttachmentRef[] } | null;
   workflow: {
     id: number;
     name: string;

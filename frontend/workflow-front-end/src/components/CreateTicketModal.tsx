@@ -3,8 +3,8 @@ import { Modal, Form, Input, Select, Button, message } from "antd";
 import type { CreateTicketRequest } from "../api/types";
 import { useProjects, useIssueTypes, useCreateTicket } from "../hooks/useTickets";
 import { usePriorities } from "../hooks/useTickets";
-
-const { TextArea } = Input;
+import RichTextEditor from "./RichTextEditor";
+import AttachmentUpload from "./AttachmentUpload";
 
 interface CreateTicketModalProps {
   open:      boolean;
@@ -15,6 +15,7 @@ interface CreateTicketModalProps {
 export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTicketModalProps) {
   const [form]               = Form.useForm();
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [editorKey, setEditorKey] = useState(0);
 
   // ── Queries — reference data cached indefinitely ──────────────────────────
   const { data: projects   = [], isLoading: loadingProjects   } = useProjects();
@@ -35,6 +36,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
       message.success("Ticket created successfully");
       form.resetFields();
       setSelectedProjectId(null);
+      setEditorKey((k) => k + 1);
       onSuccess();
     } catch (error) {
       const axiosError = error as { response?: { data?: { status?: { message?: string } } } };
@@ -45,6 +47,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
   const handleClose = () => {
     form.resetFields();
     setSelectedProjectId(null);
+    setEditorKey((k) => k + 1);
     onClose();
   };
 
@@ -81,8 +84,22 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
           />
         </Form.Item>
 
-        <Form.Item label="Detail" name={["detail", "data"]} rules={[{ required: true, message: "Please enter ticket details" }]}>
-          <TextArea rows={4} placeholder="Enter ticket details" />
+        <Form.Item
+          label="Description"
+          name={["detail", "description"]}
+          valuePropName="content"
+          rules={[{
+            validator: (_, value: string) =>
+              value && value.replace(/<[^>]*>/g, "").trim()
+                ? Promise.resolve()
+                : Promise.reject("Please enter a description"),
+          }]}
+        >
+          <RichTextEditor key={editorKey} placeholder="Describe the issue..." />
+        </Form.Item>
+
+        <Form.Item label="Attachments" name={["detail", "attachment"]}>
+          <AttachmentUpload />
         </Form.Item>
 
         <Form.Item className="mb-0 text-right">

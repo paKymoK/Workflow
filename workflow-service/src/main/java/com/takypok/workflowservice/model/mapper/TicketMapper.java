@@ -9,8 +9,11 @@ import com.takypok.workflowservice.model.entity.*;
 import com.takypok.workflowservice.model.entity.custom.GroupStatus;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class TicketMapper {
   @Autowired protected ObjectMapper mapper;
   @Autowired protected Set<Class<? extends TicketDetail>> configTicket;
+  @Autowired protected Validator validator;
 
   @Mapping(target = "id", expression = "java(null)")
   @Mapping(target = "createdAt", expression = "java(null)")
@@ -45,14 +49,31 @@ public abstract class TicketMapper {
       @MappingTarget Ticket<TicketDetail> ticket, Status nextStatus);
 
   protected TicketDetail getTicketDetail(Object detail, IssueType issueType) {
-    for (Class<? extends TicketDetail> clazz : configTicket) {
-      IssueTypeAnnotation annotation = clazz.getAnnotation(IssueTypeAnnotation.class);
-      if (annotation.value().equals(issueType.getName())) {
-        return mapper.convertValue(detail, clazz);
-      }
+    Class<? extends TicketDetail> clazz =
+        configTicket.stream()
+            .filter(
+                c -> c.getAnnotation(IssueTypeAnnotation.class).value().equals(issueType.getName()))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new ApplicationException(
+                        Message.Application.ERROR,
+                        "IssueType config for " + issueType.getName() + " not found"));
+
+    TicketDetail ticketDetail = mapper.convertValue(detail, clazz);
+    validate(ticketDetail);
+    return ticketDetail;
+  }
+
+  private void validate(TicketDetail ticketDetail) {
+    Set<ConstraintViolation<TicketDetail>> violations = validator.validate(ticketDetail);
+    if (!violations.isEmpty()) {
+      String message =
+          violations.stream()
+              .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+              .collect(Collectors.joining(", "));
+      throw new ApplicationException(Message.Application.ERROR, "detail: " + message);
     }
-    throw new ApplicationException(
-        Message.Application.ERROR, "IssueType config for " + issueType.getName() + " not found");
   }
 
   protected Status getTodoStatus(Workflow workflow) {

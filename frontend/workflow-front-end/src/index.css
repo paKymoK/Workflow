@@ -1440,6 +1440,9 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
   .pf-section-label { flex-direction: column; gap: 4px; }
 }
 
+/* ── TipTap editor ───────────────────────────────────── */
+.ProseMirror:focus { outline: none; }
+
 /* Mention chip — inside editor and rendered comments */
 .mention {
   display: inline-block;

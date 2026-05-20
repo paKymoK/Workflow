@@ -116,16 +116,6 @@ public class DebeziumConfig {
                     .map(SlaTracker::getStatus)
                     .orElse(null));
         if (!Objects.equals(before, after)) {
-          if (Objects.nonNull(before)
-              && Objects.nonNull(after)
-              && !Objects.equals(before.getResolutionPercent(), after.getResolutionPercent())) {
-            System.out.println(
-                change.getPayload().getBefore().getId()
-                    + ": "
-                    + before.getResolutionPercent()
-                    + " -> "
-                    + after.getResolutionPercent());
-          }
           sink.tryEmitNext(String.valueOf(change.getPayload().getAfter().getId())).orThrow();
         }
       } catch (Exception e) {

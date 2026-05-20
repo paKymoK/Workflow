@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket } from "../hooks/useTickets";
 import { useComments, useCreateComment } from "../hooks/useComments";
 import CommentContent from "../components/CommentContent.tsx";
+import AttachmentUpload from "../components/AttachmentUpload.tsx";
 
 const { Title, Text } = Typography;
 
@@ -193,9 +194,15 @@ export default function TicketDetail() {
             <Text className="text-[15px]">{ticket.summary}</Text>
           </Card>
 
-          {ticket.detail?.data && (
+          {ticket.detail?.description && (
             <Card title="Description" className="!mb-4">
-              <Text>{ticket.detail.data}</Text>
+              <CommentContent html={ticket.detail.description} />
+            </Card>
+          )}
+
+          {ticket.detail && (
+            <Card title="Attachments" className="!mb-4">
+              <AttachmentUpload value={ticket.detail.attachment ?? []} readonly />
             </Card>
           )}
 
