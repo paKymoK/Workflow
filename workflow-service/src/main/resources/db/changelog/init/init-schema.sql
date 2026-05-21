@@ -110,13 +110,7 @@ ALTER TABLE sla
 
 CREATE INDEX IF NOT EXISTS idx_ticket_status_group ON ticket ((status->>'group'));
 CREATE INDEX IF NOT EXISTS idx_ticket_issue_type ON ticket ((issue_type->>'name'));
-
-CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla ((status ->> 'response'));
-CREATE INDEX IF NOT EXISTS idx_sla_status_resolution ON sla ((status ->> 'resolution'));
-CREATE INDEX IF NOT EXISTS idx_sla_status_response_overdue ON sla ((status ->> 'isResponseOverdue'));
-CREATE INDEX IF NOT EXISTS idx_sla_status_resolution_overdue ON sla ((status ->> 'isResolutionOverdue'));
-CREATE INDEX IF NOT EXISTS idx_sla_status_resolution_percent ON sla ((status ->> 'resolutionPercent'));
-
+CREATE INDEX idx_tickets_detail_gin ON ticket USING GIN (detail);
 CREATE INDEX IF NOT EXISTS idx_ticket_status_id
 ON ticket (((status ->> 'id')::bigint));
 
@@ -125,6 +119,13 @@ ON ticket (((priority ->> 'id')::bigint));
 
 CREATE INDEX IF NOT EXISTS idx_ticket_assignee_email_lower
 ON ticket ((LOWER(assignee ->> 'email')));
+
+
+CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla ((status ->> 'response'));
+CREATE INDEX IF NOT EXISTS idx_sla_status_resolution ON sla ((status ->> 'resolution'));
+CREATE INDEX IF NOT EXISTS idx_sla_status_response_overdue ON sla ((status ->> 'isResponseOverdue'));
+CREATE INDEX IF NOT EXISTS idx_sla_status_resolution_overdue ON sla ((status ->> 'isResolutionOverdue'));
+CREATE INDEX IF NOT EXISTS idx_sla_status_resolution_percent ON sla ((status ->> 'resolutionPercent'));
 
 CREATE OR REPLACE FUNCTION validate_paused_time()
     RETURNS TRIGGER

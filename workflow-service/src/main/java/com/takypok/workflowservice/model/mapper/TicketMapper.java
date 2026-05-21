@@ -1,6 +1,7 @@
 package com.takypok.workflowservice.model.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.core.model.authentication.User;
@@ -34,7 +35,9 @@ public abstract class TicketMapper {
   @Mapping(target = "status", expression = "java(getTodoStatus(workflow))")
   @Mapping(target = "priority", source = "priority")
   @Mapping(target = "reporter", source = "user")
-  @Mapping(target = "detail", expression = "java(getTicketDetail(request.getDetail(), issueType))")
+  @Mapping(
+      target = "detail",
+      expression = "java(getTicketDetail(request.getDetail(), request.getApplication()))")
   public abstract Ticket<TicketDetail> mapToTicket(
       CreateTicketRequest request,
       Project project,
@@ -48,19 +51,21 @@ public abstract class TicketMapper {
   public abstract Ticket<TicketDetail> mapEntityUpdateStatus(
       @MappingTarget Ticket<TicketDetail> ticket, Status nextStatus);
 
-  protected TicketDetail getTicketDetail(Object detail, IssueType issueType) {
+  protected TicketDetail getTicketDetail(Object detail, String application) {
     Class<? extends TicketDetail> clazz =
         configTicket.stream()
-            .filter(
-                c -> c.getAnnotation(IssueTypeAnnotation.class).value().equals(issueType.getName()))
+            .filter(c -> c.getAnnotation(IssueTypeAnnotation.class).value().equals(application))
             .findFirst()
             .orElseThrow(
                 () ->
                     new ApplicationException(
                         Message.Application.ERROR,
-                        "IssueType config for " + issueType.getName() + " not found"));
+                        "Application config for " + application + " not found"));
 
-    TicketDetail ticketDetail = mapper.convertValue(detail, clazz);
+    ObjectNode detailNode = mapper.convertValue(detail, ObjectNode.class);
+    detailNode.put("application", application);
+
+    TicketDetail ticketDetail = mapper.convertValue(detailNode, clazz);
     validate(ticketDetail);
     return ticketDetail;
   }

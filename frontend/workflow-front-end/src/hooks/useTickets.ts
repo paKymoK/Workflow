@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchTickets, fetchTicketById,
-  fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes,
+  fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes, fetchApplications,
   createTicket, pauseTicket, resumeTicket, transitionTicket,
   createStatus, updateStatus, deleteStatus,
   createPriority, updatePriority, deletePriority,
@@ -12,15 +12,16 @@ import type { FilterTicketRequest } from "../api/ticketApi";
 // ── Query key factory ────────────────────────────────────────────────────────
 // Centralised keys make it easy to invalidate related queries precisely.
 export const ticketKeys = {
-  all:        ()                         => ["tickets"]                           as const,
-  lists:      ()                         => ["tickets", "list"]                   as const,
-  list:       (p: FilterTicketRequest)   => ["tickets", "list", p]                as const,
-  details:    ()                         => ["tickets", "detail"]                 as const,
-  detail:     (id: string | number)      => ["tickets", "detail", id]             as const,
-  priorities: ()                         => ["priorities"]                        as const,
-  statuses:   ()                         => ["statuses"]                          as const,
-  projects:   ()                         => ["projects"]                          as const,
-  issueTypes: (projectId: number)        => ["issueTypes", projectId]             as const,
+  all:          ()                         => ["tickets"]                           as const,
+  lists:        ()                         => ["tickets", "list"]                   as const,
+  list:         (p: FilterTicketRequest)   => ["tickets", "list", p]                as const,
+  details:      ()                         => ["tickets", "detail"]                 as const,
+  detail:       (id: string | number)      => ["tickets", "detail", id]             as const,
+  priorities:   ()                         => ["priorities"]                        as const,
+  statuses:     ()                         => ["statuses"]                          as const,
+  projects:     ()                         => ["projects"]                          as const,
+  issueTypes:   (projectId: number)        => ["issueTypes", projectId]             as const,
+  applications: ()                         => ["applications"]                      as const,
 };
 
 // ── Queries ──────────────────────────────────────────────────────────────────
@@ -76,6 +77,15 @@ export function useIssueTypes(projectId: number | null) {
     queryKey: ticketKeys.issueTypes(projectId!),
     queryFn:  () => fetchIssueTypes(projectId!),
     enabled:  projectId !== null,
+  });
+}
+
+/** Available applications — static list from code, fetched once. */
+export function useApplications() {
+  return useQuery({
+    queryKey: ticketKeys.applications(),
+    queryFn:  fetchApplications,
+    staleTime: Infinity,
   });
 }
 

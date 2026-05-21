@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
-import { Button, List, Spin, Tooltip } from "antd";
-import { PaperClipOutlined, DeleteOutlined, FileOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { Upload, List, Button, Tooltip } from "antd";
+import { InboxOutlined, DeleteOutlined, FileOutlined } from "@ant-design/icons";
+import type { UploadProps } from "antd";
 import type { AttachmentRef } from "../api/types";
 import { uploadFile, getFileUrl } from "../api/ticketApi";
 
@@ -11,20 +12,23 @@ interface AttachmentUploadProps {
 }
 
 export default function AttachmentUpload({ value = [], onChange, readonly = false }: AttachmentUploadProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    setUploading(true);
-    try {
-      const uploaded = await uploadFile(file);
-      onChange?.([...value, uploaded]);
-    } finally {
-      setUploading(false);
-    }
+  const draggerProps: UploadProps = {
+    name: "file",
+    multiple: true,
+    showUploadList: false,
+    disabled: uploading,
+    beforeUpload: async (file) => {
+      setUploading(true);
+      try {
+        const uploaded = await uploadFile(file);
+        onChange?.([...value, uploaded]);
+      } finally {
+        setUploading(false);
+      }
+      return false;
+    },
   };
 
   const handleRemove = (id: string) => {
@@ -34,25 +38,15 @@ export default function AttachmentUpload({ value = [], onChange, readonly = fals
   return (
     <div>
       {!readonly && (
-        <>
-          <Button
-            icon={uploading ? <Spin size="small" /> : <PaperClipOutlined />}
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Attach File
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-        </>
+        <Upload.Dragger {...draggerProps} className="!mb-2">
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">{uploading ? "Uploading…" : "Click or drag files here to upload"}</p>
+        </Upload.Dragger>
       )}
       {value.length > 0 && (
         <List
-          className="mt-2"
           size="small"
           dataSource={value}
           renderItem={(item) => (

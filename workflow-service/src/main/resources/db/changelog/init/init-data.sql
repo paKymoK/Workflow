@@ -79,19 +79,6 @@ VALUES ('Internal Application', 'IA', 1, now(), 'admin', now(), 'admin');
 
 INSERT INTO
     issue_type (name, project_id, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Dashboard', 1 , now(),'admin', now(), 'admin'),
-       ('GAMS System', 1 , now(),'admin', now(), 'admin'),
-       ('HRMS/TMS System', 1 , now(),'admin', now(), 'admin'),
-       ('Jira/Wiki', 1 , now(),'admin', now(), 'admin'),
-       ('OMS System', 1 , now(),'admin', now(), 'admin'),
-       ('POA System', 1 , now(),'admin', now(), 'admin'),
-       ('RTS', 1 , now(),'admin', now(), 'admin'),
-       ('Skillset System', 1 , now(),'admin', now(), 'admin'),
-       ('Websites', 1 , now(),'admin', now(), 'admin'),
-       ('CRM System', 1 , now(),'admin', now(), 'admin'),
-       ('CNOW System', 1 , now(),'admin', now(), 'admin'),
-       ('Bidding', 1 , now(),'admin', now(), 'admin'),
-       ('C-Ticket', 1 , now(),'admin', now(), 'admin'),
-       ('E-Sign', 1 , now(),'admin', now(), 'admin'),
-       ('EC', 1 , now(),'admin', now(), 'admin'),
-       ('Payroll', 1 , now(),'admin', now(), 'admin');
+VALUES ('Problem', 1 , now(),'admin', now(), 'admin'),
+       ('Change Request', 1 , now(),'admin', now(), 'admin'),
+       ('Complain', 1 , now(),'admin', now(), 'admin');

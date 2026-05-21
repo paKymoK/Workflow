@@ -14,5 +14,6 @@ public class CreateTicketRequest {
   @NotNull private Long issueTypeId;
   @NotNull private Long projectId;
   @NotNull private Long priority;
+  @NotBlank private String application;
   @NotNull private Object detail;
 }

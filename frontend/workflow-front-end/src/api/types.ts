@@ -67,6 +67,7 @@ export interface CreateTicketRequest {
   projectId: number;
   issueTypeId: number;
   priority: number;
+  application: string;
   detail: InternalApplicationDetail;
 }
 
@@ -238,7 +239,7 @@ export interface TicketSla {
   summary: string;
   reporter: { name: string; email: string };
   assignee: { name: string; email: string } | null;
-  detail: { description: string; attachment?: AttachmentRef[] } | null;
+  detail: { application?: string; description: string; attachment?: AttachmentRef[] } | null;
   workflow: {
     id: number;
     name: string;

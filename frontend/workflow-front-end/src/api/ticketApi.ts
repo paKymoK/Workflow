@@ -56,6 +56,13 @@ export async function fetchIssueTypes(projectId: number) {
     return data.data;
 }
 
+export async function fetchApplications() {
+    const { data } = await api.get<ResultMessage<string[]>>(
+        "/workflow-service/v1/application",
+    );
+    return data.data;
+}
+
 export async function createStatus(payload: StatusCreateRequest) {
     const { data } = await api.post<ResultMessage<WorkflowStatus>>(
         "/workflow-service/v1/status",

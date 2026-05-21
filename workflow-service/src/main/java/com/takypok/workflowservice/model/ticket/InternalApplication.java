@@ -5,12 +5,15 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @NoArgsConstructor
 @SuperBuilder
 @Getter
+@Setter
 public class InternalApplication {
+  private String application;
   private String department;
   private String region;
   private String location;
