@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Modal, Form, Input, Select, Button, message } from "antd";
 import type { CreateTicketRequest } from "../api/types";
-import { PROJECT_TYPE_INTERNAL } from "../api/types";
+import { PROJECT_CODE_INTERNAL } from "../api/types";
 import { useProjects, useIssueTypes, useApplications, useCreateTicket, usePriorities } from "../hooks/useTickets";
 import RichTextEditor from "./RichTextEditor";
 import AttachmentUpload from "./AttachmentUpload";
@@ -19,7 +19,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
 
   const { data: projects      = [], isLoading: loadingProjects      } = useProjects();
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
-  const isInternalApplication = selectedProject?.type === PROJECT_TYPE_INTERNAL;
+  const isInternalApplication = selectedProject?.code === PROJECT_CODE_INTERNAL;
 
   // ── Queries — reference data cached indefinitely ──────────────────────────
   const { data: priorities    = [], isLoading: loadingPriorities    } = usePriorities();

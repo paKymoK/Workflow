@@ -16,10 +16,9 @@ export interface Project {
   name: string;
   code: string;
   workflowId: number;
-  type: string;
 }
 
-export const PROJECT_TYPE_INTERNAL = "INTERNAL_APPLICATION";
+export const PROJECT_CODE_INTERNAL = "IA";
 
 export interface ProjectCreateRequest {
   name: string;

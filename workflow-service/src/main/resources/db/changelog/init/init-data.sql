@@ -78,7 +78,7 @@ INSERT INTO
 VALUES ('Internal Application', 'IA', 1, now(), 'admin', now(), 'admin');
 
 INSERT INTO
-    issue_type (name, project_id, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Problem', 1 , now(),'admin', now(), 'admin'),
-       ('Change Request', 1 , now(),'admin', now(), 'admin'),
-       ('Complain', 1 , now(),'admin', now(), 'admin');
+    issue_type (name, code, project_id, "created_at", "created_by", "modified_at", "modified_by")
+VALUES ('Problem', 'PROBLEM', 1 , now(),'admin', now(), 'admin'),
+       ('Change Request', 'CHANGE_REQUEST', 1 , now(),'admin', now(), 'admin'),
+       ('Complain', 'COMPLAIN', 1 , now(),'admin', now(), 'admin');

@@ -8,10 +8,10 @@ import com.takypok.core.model.Message;
 import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.*;
-import com.takypok.workflowservice.model.ticket.GenericDetail;
 import com.takypok.workflowservice.model.entity.custom.GroupStatus;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
+import com.takypok.workflowservice.model.ticket.GenericDetail;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.util.Optional;
@@ -39,7 +39,7 @@ public abstract class TicketMapper {
   @Mapping(target = "reporter", source = "user")
   @Mapping(
       target = "detail",
-      expression = "java(getTicketDetail(request.getDetail(), project.getType()))")
+      expression = "java(getTicketDetail(request.getDetail(), project, issueType))")
   public abstract Ticket<TicketDetail> mapToTicket(
       CreateTicketRequest request,
       Project project,
@@ -53,11 +53,21 @@ public abstract class TicketMapper {
   public abstract Ticket<TicketDetail> mapEntityUpdateStatus(
       @MappingTarget Ticket<TicketDetail> ticket, Status nextStatus);
 
-  protected TicketDetail getTicketDetail(JsonNode detail, String projectType) {
-    if (!"INTERNAL_APPLICATION".equals(projectType)) {
-      if (detail == null || detail.isNull()) return null;
-      return mapper.convertValue(detail, GenericDetail.class);
+  protected TicketDetail getTicketDetail(JsonNode detail, Project project, IssueType issueType) {
+    TicketDetail ticketDetail = resolveDetailByProject(detail, project);
+    validateByIssueType(ticketDetail, issueType);
+    return ticketDetail;
+  }
+
+  private TicketDetail resolveDetailByProject(JsonNode detail, Project project) {
+    if ("IA".equals(project.getCode())) {
+      return resolveInternalApplicationDetail(detail);
     }
+    if (detail == null || detail.isNull()) return null;
+    return mapper.convertValue(detail, GenericDetail.class);
+  }
+
+  private TicketDetail resolveInternalApplicationDetail(JsonNode detail) {
     if (detail == null || detail.isNull()) {
       throw new ApplicationException(
           Message.Application.ERROR, "detail is required for Internal Application project");
@@ -90,6 +100,11 @@ public abstract class TicketMapper {
       throw new ApplicationException(
           Message.Application.ERROR, "Invalid detail format for application: " + application);
     }
+  }
+
+  private void validateByIssueType(TicketDetail detail, IssueType issueType) {
+    // add issue type specific validation here when needed
+    // e.g. "COMPLAIN" -> require description or attachment
   }
 
   private void validate(TicketDetail ticketDetail) {

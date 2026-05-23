@@ -96,13 +96,15 @@ CREATE TABLE IF NOT EXISTS issue_type
 (
     id          bigserial         NOT NULL,
     name        character varying NOT NULL,
+    code        character varying NOT NULL,
     project_id  integer           NOT NULL,
     created_at  timestamp with time zone,
     created_by  character varying,
     modified_at timestamp with time zone,
     modified_by character varying,
     PRIMARY KEY (id),
-    UNIQUE (name, project_id)
+    UNIQUE (name, project_id),
+    UNIQUE (code, project_id)
 );
 
 ALTER TABLE sla
@@ -157,6 +159,25 @@ CREATE OR REPLACE TRIGGER validate_paused_time
     ON sla
     FOR EACH ROW
 EXECUTE FUNCTION validate_paused_time();
+
+CREATE OR REPLACE FUNCTION prevent_issue_type_code_update()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF OLD.code IS DISTINCT FROM NEW.code THEN
+        RAISE EXCEPTION 'Column code of issue_type is immutable and cannot be updated';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER prevent_issue_type_code_update
+    BEFORE UPDATE OF code
+    ON issue_type
+    FOR EACH ROW
+EXECUTE FUNCTION prevent_issue_type_code_update();
 
 CREATE OR REPLACE FUNCTION ticket_event_trigger()
     RETURNS TRIGGER

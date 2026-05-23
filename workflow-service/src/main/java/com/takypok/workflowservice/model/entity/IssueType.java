@@ -12,5 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class IssueType extends IdEntity {
   private String name;
+  private String code;
   private Long projectId;
 }

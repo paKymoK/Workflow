@@ -14,5 +14,4 @@ public class Project extends IdEntity {
   private String name;
   private String code;
   private Long workflowId;
-  private String type;
 }
