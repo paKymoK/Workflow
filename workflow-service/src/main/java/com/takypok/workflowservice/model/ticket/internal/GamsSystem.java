@@ -1,6 +1,6 @@
-package com.takypok.workflowservice.model.ticket;
+package com.takypok.workflowservice.model.ticket.internal;
 
-import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -9,5 +9,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @ToString
-@IssueTypeAnnotation(value = "GAMS System")
+@InternalApplicationAnnotation(value = "GAMS System")
 public class GamsSystem extends InternalApplication implements TicketDetail {}

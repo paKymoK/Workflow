@@ -1,12 +1,14 @@
 package com.takypok.workflowservice.model.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.core.model.authentication.User;
-import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.*;
+import com.takypok.workflowservice.model.ticket.GenericDetail;
 import com.takypok.workflowservice.model.entity.custom.GroupStatus;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
@@ -37,7 +39,7 @@ public abstract class TicketMapper {
   @Mapping(target = "reporter", source = "user")
   @Mapping(
       target = "detail",
-      expression = "java(getTicketDetail(request.getDetail(), request.getApplication()))")
+      expression = "java(getTicketDetail(request.getDetail(), project.getType()))")
   public abstract Ticket<TicketDetail> mapToTicket(
       CreateTicketRequest request,
       Project project,
@@ -51,23 +53,43 @@ public abstract class TicketMapper {
   public abstract Ticket<TicketDetail> mapEntityUpdateStatus(
       @MappingTarget Ticket<TicketDetail> ticket, Status nextStatus);
 
-  protected TicketDetail getTicketDetail(Object detail, String application) {
+  protected TicketDetail getTicketDetail(JsonNode detail, String projectType) {
+    if (!"INTERNAL_APPLICATION".equals(projectType)) {
+      if (detail == null || detail.isNull()) return null;
+      return mapper.convertValue(detail, GenericDetail.class);
+    }
+    if (detail == null || detail.isNull()) {
+      throw new ApplicationException(
+          Message.Application.ERROR, "detail is required for Internal Application project");
+    }
+    JsonNode appNode = detail.get("application");
+    if (appNode == null || appNode.isNull() || appNode.asText().isBlank()) {
+      throw new ApplicationException(
+          Message.Application.ERROR,
+          "detail.application is required for Internal Application project");
+    }
+    String application = appNode.asText();
     Class<? extends TicketDetail> clazz =
         configTicket.stream()
-            .filter(c -> c.getAnnotation(IssueTypeAnnotation.class).value().equals(application))
+            .filter(
+                c ->
+                    c.getAnnotation(InternalApplicationAnnotation.class)
+                        .value()
+                        .equals(application))
             .findFirst()
             .orElseThrow(
                 () ->
                     new ApplicationException(
                         Message.Application.ERROR,
                         "Application config for " + application + " not found"));
-
-    ObjectNode detailNode = mapper.convertValue(detail, ObjectNode.class);
-    detailNode.put("application", application);
-
-    TicketDetail ticketDetail = mapper.convertValue(detailNode, clazz);
-    validate(ticketDetail);
-    return ticketDetail;
+    try {
+      TicketDetail ticketDetail = mapper.treeToValue(detail, clazz);
+      validate(ticketDetail);
+      return ticketDetail;
+    } catch (JsonProcessingException e) {
+      throw new ApplicationException(
+          Message.Application.ERROR, "Invalid detail format for application: " + application);
+    }
   }
 
   private void validate(TicketDetail ticketDetail) {

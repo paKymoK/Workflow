@@ -1,5 +1,6 @@
-package com.takypok.workflowservice.model.ticket;
+package com.takypok.workflowservice.model.ticket.internal;
 
+import com.takypok.workflowservice.model.ticket.AttachmentRef;
 import jakarta.validation.constraints.NotNull;
 import java.time.ZonedDateTime;
 import java.util.List;

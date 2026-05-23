@@ -11,6 +11,15 @@ databaseChangeLog:
 #      file: db/changelog/test/stress.sql
 
   - changeSet:
+      id: add-type-to-project
+      author: you
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE project ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'STANDARD';
+              UPDATE project SET type = 'INTERNAL_APPLICATION' WHERE name = 'Internal Application';
+
+  - changeSet:
       id: create-idx-sla-pending-overdue
       author: you
       runInTransaction: false

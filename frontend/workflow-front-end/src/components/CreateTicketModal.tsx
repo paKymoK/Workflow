@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Modal, Form, Input, Select, Button, message } from "antd";
 import type { CreateTicketRequest } from "../api/types";
+import { PROJECT_TYPE_INTERNAL } from "../api/types";
 import { useProjects, useIssueTypes, useApplications, useCreateTicket, usePriorities } from "../hooks/useTickets";
 import RichTextEditor from "./RichTextEditor";
 import AttachmentUpload from "./AttachmentUpload";
-
-const INTERNAL_APPLICATION_PROJECT = "Internal Application";
 
 interface CreateTicketModalProps {
   open:      boolean;
@@ -16,13 +15,13 @@ interface CreateTicketModalProps {
 export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTicketModalProps) {
   const [form]               = Form.useForm();
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [selectedProjectName, setSelectedProjectName] = useState<string | null>(null);
   const [editorKey, setEditorKey] = useState(0);
 
-  const showApplicationField = selectedProjectName === INTERNAL_APPLICATION_PROJECT;
+  const { data: projects      = [], isLoading: loadingProjects      } = useProjects();
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
+  const isInternalApplication = selectedProject?.type === PROJECT_TYPE_INTERNAL;
 
   // ── Queries — reference data cached indefinitely ──────────────────────────
-  const { data: projects      = [], isLoading: loadingProjects      } = useProjects();
   const { data: priorities    = [], isLoading: loadingPriorities    } = usePriorities();
   const { data: issueTypes    = [], isLoading: loadingIssueTypes    } = useIssueTypes(selectedProjectId);
   const { data: applications  = [], isLoading: loadingApplications  } = useApplications();
@@ -31,20 +30,24 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
   const createMutation = useCreateTicket();
 
   const handleProjectChange = (projectId: number) => {
-    const project = projects.find((p) => p.id === projectId);
     setSelectedProjectId(projectId);
-    setSelectedProjectName(project?.name ?? null);
     form.setFieldValue("issueTypeId", undefined);
-    form.setFieldValue("application", undefined);
+    form.setFieldValue("detail", undefined);
   };
 
-  const handleCreateTicket = async (values: CreateTicketRequest) => {
+  const handleCreateTicket = async (values: Record<string, unknown>) => {
     try {
-      await createMutation.mutateAsync(values);
+      const payload: CreateTicketRequest = {
+        summary:     values.summary as string,
+        projectId:   values.projectId as number,
+        issueTypeId: values.issueTypeId as number,
+        priorityId:  values.priorityId as number,
+        detail: isInternalApplication ? (values.detail as CreateTicketRequest["detail"]) : null,
+      };
+      await createMutation.mutateAsync(payload);
       message.success("Ticket created successfully");
       form.resetFields();
       setSelectedProjectId(null);
-      setSelectedProjectName(null);
       setEditorKey((k) => k + 1);
       onSuccess();
     } catch (error) {
@@ -56,7 +59,6 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
   const handleClose = () => {
     form.resetFields();
     setSelectedProjectId(null);
-    setSelectedProjectName(null);
     setEditorKey((k) => k + 1);
     onClose();
   };
@@ -95,21 +97,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
             />
           </Form.Item>
 
-          {showApplicationField && (
-            <Form.Item
-              label="Application"
-              name="application"
-              rules={[{ required: true, message: "Please select an application" }]}
-            >
-              <Select
-                placeholder="Select an application"
-                loading={loadingApplications}
-                options={applications.map((a) => ({ label: a, value: a }))}
-              />
-            </Form.Item>
-          )}
-
-          <Form.Item label="Priority" name="priority" rules={[{ required: true, message: "Please select a priority" }]}>
+          <Form.Item label="Priority" name="priorityId" rules={[{ required: true, message: "Please select a priority" }]}>
             <Select
               placeholder="Select priority"
               loading={loadingPriorities}
@@ -117,23 +105,39 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
             />
           </Form.Item>
 
-          <Form.Item
-            label="Description"
-            name={["detail", "description"]}
-            valuePropName="content"
-            rules={[{
-              validator: (_, value: string) =>
-                value && value.replace(/<[^>]*>/g, "").trim()
-                  ? Promise.resolve()
-                  : Promise.reject("Please enter a description"),
-            }]}
-          >
-            <RichTextEditor key={editorKey} placeholder="Describe the issue..." />
-          </Form.Item>
+          {isInternalApplication && (
+            <>
+              <Form.Item
+                label="Application"
+                name={["detail", "application"]}
+                rules={[{ required: true, message: "Please select an application" }]}
+              >
+                <Select
+                  placeholder="Select an application"
+                  loading={loadingApplications}
+                  options={applications.map((a) => ({ label: a, value: a }))}
+                />
+              </Form.Item>
 
-          <Form.Item label="Attachments" name={["detail", "attachment"]}>
-            <AttachmentUpload />
-          </Form.Item>
+              <Form.Item
+                label="Description"
+                name={["detail", "description"]}
+                valuePropName="content"
+                rules={[{
+                  validator: (_, value: string) =>
+                    value && value.replace(/<[^>]*>/g, "").trim()
+                      ? Promise.resolve()
+                      : Promise.reject("Please enter a description"),
+                }]}
+              >
+                <RichTextEditor key={editorKey} placeholder="Describe the issue..." />
+              </Form.Item>
+
+              <Form.Item label="Attachments" name={["detail", "attachment"]}>
+                <AttachmentUpload />
+              </Form.Item>
+            </>
+          )}
         </div>
 
         {/* Pinned footer */}

@@ -1,6 +1,6 @@
 package com.takypok.workflowservice.config;
 
-import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.repository.SlaRepository;
@@ -24,7 +24,8 @@ public class ApplicationConfig {
   public void onApplicationReady() {
     configTicket.forEach(
         clazz -> {
-          IssueTypeAnnotation annotation = clazz.getAnnotation(IssueTypeAnnotation.class);
+          InternalApplicationAnnotation annotation =
+              clazz.getAnnotation(InternalApplicationAnnotation.class);
           if (Objects.isNull(annotation)) {
             throw new RuntimeException(
                 clazz.getSimpleName() + " is not annotated with @IssueTypeAnnotation");

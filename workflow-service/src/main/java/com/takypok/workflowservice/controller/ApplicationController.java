@@ -1,7 +1,7 @@
 package com.takypok.workflowservice.controller;
 
 import com.takypok.core.model.ResultMessage;
-import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +21,7 @@ public class ApplicationController {
   public Mono<ResultMessage<List<String>>> getApplications() {
     List<String> applications =
         configTicket.stream()
-            .map(c -> c.getAnnotation(IssueTypeAnnotation.class).value())
+            .map(c -> c.getAnnotation(InternalApplicationAnnotation.class).value())
             .sorted()
             .toList();
     return Mono.just(ResultMessage.success(applications));

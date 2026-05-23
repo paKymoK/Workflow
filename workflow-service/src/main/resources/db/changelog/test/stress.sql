@@ -45,7 +45,7 @@ SELECT jsonb_build_object('id', 1, 'code', 'IA', 'name', 'Internal Application',
        jsonb_build_object('name', 'admin', 'email', 'tqthai@gmail.com'),
        NULL,
        jsonb_build_object('data', '123', '_clazz',
-                          'com.takypok.workflowservice.model.ticket.Dashboard'),
+                          'com.takypok.workflowservice.model.ticket.internal.Dashboard'),
        priority_json,
        jsonb_build_object(
                'id', 1,

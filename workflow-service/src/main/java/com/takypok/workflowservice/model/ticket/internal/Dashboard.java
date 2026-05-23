@@ -1,6 +1,6 @@
-package com.takypok.workflowservice.model.ticket;
+package com.takypok.workflowservice.model.ticket.internal;
 
-import com.takypok.workflowservice.model.annotation.IssueTypeAnnotation;
+import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -9,5 +9,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @ToString
-@IssueTypeAnnotation(value = "Dashboard")
+@InternalApplicationAnnotation(value = "Dashboard")
 public class Dashboard extends InternalApplication implements TicketDetail {}

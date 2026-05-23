@@ -16,7 +16,10 @@ export interface Project {
   name: string;
   code: string;
   workflowId: number;
+  type: string;
 }
+
+export const PROJECT_TYPE_INTERNAL = "INTERNAL_APPLICATION";
 
 export interface ProjectCreateRequest {
   name: string;
@@ -58,6 +61,7 @@ export interface AttachmentRef {
 }
 
 export interface InternalApplicationDetail {
+  application: string;
   description: string;
   attachment?: AttachmentRef[];
 }
@@ -66,9 +70,8 @@ export interface CreateTicketRequest {
   summary: string;
   projectId: number;
   issueTypeId: number;
-  priority: number;
-  application: string;
-  detail: InternalApplicationDetail;
+  priorityId: number;
+  detail: InternalApplicationDetail | null;
 }
 
 export interface UploadFile {

@@ -97,7 +97,7 @@ public class TicketServiceImpl implements TicketService {
             getProject(request.getProjectId())
                 .zipWhen(project -> getWorkflow(project.getWorkflowId())),
             getIssueType(request.getIssueTypeId(), request.getProjectId()),
-            getPriority(request.getPriority()))
+            getPriority(request.getPriorityId()))
         .flatMap(
             tuples ->
                 ticketRepository.save(
