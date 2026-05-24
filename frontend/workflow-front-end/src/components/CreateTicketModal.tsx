@@ -124,6 +124,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
                 name={["detail", "description"]}
                 valuePropName="content"
                 rules={[{
+                  required: true,
                   validator: (_, value: string) =>
                     value && value.replace(/<[^>]*>/g, "").trim()
                       ? Promise.resolve()
