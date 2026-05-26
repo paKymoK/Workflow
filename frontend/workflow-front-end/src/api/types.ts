@@ -59,10 +59,22 @@ export interface AttachmentRef {
   extension: string;
 }
 
+export type RelationType = "relates to" | "blocks" | "is blocked by" | "duplicates";
+
+export interface RelatedLink {
+  type: RelationType;
+  ticketId: number;
+}
+
 export interface InternalApplicationDetail {
   application: string;
   description: string;
   attachment?: AttachmentRef[];
+  department?: string;
+  region?: string;
+  location?: string;
+  phoneNumber?: string;
+  relatedLinks?: RelatedLink[];
 }
 
 export interface CreateTicketRequest {

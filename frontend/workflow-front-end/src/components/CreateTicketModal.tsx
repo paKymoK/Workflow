@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Modal, Form, Input, Select, Button, message } from "antd";
-import type { CreateTicketRequest } from "../api/types";
+import type { CreateTicketRequest, InternalApplicationDetail } from "../api/types";
 import { PROJECT_CODE_INTERNAL } from "../api/types";
 import { useProjects, useIssueTypes, useApplications, useCreateTicket, usePriorities } from "../hooks/useTickets";
 import RichTextEditor from "./RichTextEditor";
 import AttachmentUpload from "./AttachmentUpload";
+import RelatedLinksField, { type RelatedLinkEntry } from "./RelatedLinksField";
 
 interface CreateTicketModalProps {
   open:      boolean;
@@ -13,9 +14,17 @@ interface CreateTicketModalProps {
 }
 
 export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTicketModalProps) {
+  // Add more entries here to support additional countries
+  const DIAL_CODES = [
+    { label: "🇻🇳 +84", value: "+84" }, // Vietnam
+    { label: "🇯🇵 +81", value: "+81" }, // Japan
+    { label: "🇰🇷 +82", value: "+82" }, // Korea
+  ];
+
   const [form]               = Form.useForm();
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState(0);
+  const [dialCode, setDialCode] = useState("+84");
 
   const { data: projects      = [], isLoading: loadingProjects      } = useProjects();
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
@@ -37,17 +46,26 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
 
   const handleCreateTicket = async (values: Record<string, unknown>) => {
     try {
+      const detail = values.detail as InternalApplicationDetail | undefined;
       const payload: CreateTicketRequest = {
         summary:     values.summary as string,
         projectId:   values.projectId as number,
         issueTypeId: values.issueTypeId as number,
         priorityId:  values.priorityId as number,
-        detail: isInternalApplication ? (values.detail as CreateTicketRequest["detail"]) : null,
+        detail: isInternalApplication && detail
+          ? {
+              ...detail,
+              phoneNumber:  detail.phoneNumber ? `${dialCode}${detail.phoneNumber}` : undefined,
+              relatedLinks: (detail.relatedLinks as RelatedLinkEntry[] | undefined)
+                ?.map(({ type, ticketId }) => ({ type, ticketId })),
+            }
+          : null,
       };
       await createMutation.mutateAsync(payload);
       message.success("Ticket created successfully");
       form.resetFields();
       setSelectedProjectId(null);
+      setDialCode("+84");
       setEditorKey((k) => k + 1);
       onSuccess();
     } catch (error) {
@@ -59,6 +77,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
   const handleClose = () => {
     form.resetFields();
     setSelectedProjectId(null);
+    setDialCode("+84");
     setEditorKey((k) => k + 1);
     onClose();
   };
@@ -119,6 +138,34 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
                 />
               </Form.Item>
 
+              <div className="grid grid-cols-2 gap-x-4">
+                <Form.Item label="Department" name={["detail", "department"]}>
+                  <Input placeholder="Enter department" />
+                </Form.Item>
+
+                <Form.Item label="Region" name={["detail", "region"]}>
+                  <Input placeholder="Enter region" />
+                </Form.Item>
+
+                <Form.Item label="Location" name={["detail", "location"]}>
+                  <Input placeholder="Enter location" />
+                </Form.Item>
+
+                <Form.Item label="Phone Number" name={["detail", "phoneNumber"]}>
+                  <Input
+                    addonBefore={
+                      <Select
+                        value={dialCode}
+                        onChange={setDialCode}
+                        options={DIAL_CODES}
+                        style={{ width: 105 }}
+                      />
+                    }
+                    placeholder="Enter phone number"
+                  />
+                </Form.Item>
+              </div>
+
               <Form.Item
                 label="Description"
                 name={["detail", "description"]}
@@ -132,6 +179,10 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
                 }]}
               >
                 <RichTextEditor key={editorKey} placeholder="Describe the issue..." />
+              </Form.Item>
+
+              <Form.Item label="Related Tickets" name={["detail", "relatedLinks"]}>
+                <RelatedLinksField />
               </Form.Item>
 
               <Form.Item label="Attachments" name={["detail", "attachment"]}>
