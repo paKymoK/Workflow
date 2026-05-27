@@ -191,34 +191,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             className="flex-1 border-none!"
           />
 
-          {/* Sidebar footer stats */}
-          {!collapsed && (
-            <div className="flex-shrink-0 px-4 py-3 border-t border-[var(--border-subtle)]">
-              <div className="font-mono-tech text-[9px] tracking-[0.15em] space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-muted)] uppercase">Sys</span>
-                  <span className={sysStatusColorClass}>{systemStatusLabel}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-muted)] uppercase">Svc</span>
-                  <span className={serviceStatusColorClass}>{serviceStatusText}</span>
-                </div>
-                {visibleServices.map((service) => (
-                  <div key={service.service} className="flex justify-between pl-2">
-                    <span className="text-[var(--text-muted)] uppercase">{formatServiceName(service.service)}</span>
-                    <span className={getServiceColorClass(service.status)}>{service.status}</span>
-                  </div>
-                ))}
-                {serviceListHint && (
-                  <div className="text-[var(--text-muted)] text-right">{serviceListHint}</div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-muted)] uppercase">Enc</span>
-                  <span className="text-[var(--text-muted)]">AES-256</span>
-                </div>
-              </div>
-            </div>
-          )}
         </Sider>
 
         {/* ── Main area ─────────────────────────────────── */}
@@ -296,6 +268,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-black blink" />
               LIVE
             </span>
+            <span className="font-bebas text-[12px] text-black tracking-[0.15em]">
+              SYS: {systemStatusLabel}
+            </span>
+            <span className="font-bebas text-[12px] text-black tracking-[0.15em]">
+              SVC: {serviceStatusText}
+            </span>
+            {visibleServices.map((service) => (
+              <span key={service.service} className="font-bebas text-[12px] text-black tracking-[0.15em] hidden md:inline">
+                {formatServiceName(service.service).toUpperCase()}: {service.status}
+              </span>
+            ))}
+            {serviceListHint && (
+              <span className="font-bebas text-[12px] text-black tracking-[0.15em] hidden md:inline">
+                {serviceListHint}
+              </span>
+            )}
             <span className="font-bebas text-[12px] text-black tracking-[0.15em] ml-auto">
               {clock}
             </span>

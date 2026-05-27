@@ -208,7 +208,7 @@ export default function TicketDetail() {
 
           <Card title={`Comments (${comments.length})`} className="!mb-4" loading={commentsLoading}>
             {comments.length === 0 && !commentsLoading ? (
-              <Text type="secondary">No comments yet.</Text>
+              <Text type="secondary" className="block mb-4">No comments yet.</Text>
             ) : (
               <List
                 dataSource={comments}
@@ -224,9 +224,7 @@ export default function TicketDetail() {
                 )}
               />
             )}
-          </Card>
-
-          <Card title="Add Comment">
+            <Divider className="!mt-0 !mb-3" />
             <RichTextEditor
               key={editorKey}
               editable={true}
