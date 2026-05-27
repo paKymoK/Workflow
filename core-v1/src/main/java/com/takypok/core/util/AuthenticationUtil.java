@@ -69,7 +69,9 @@ public class AuthenticationUtil {
 
   public static User getUserInfo(Authentication authentication) {
     Jwt jwt = (Jwt) authentication.getPrincipal();
-    return objectMapper().convertValue(jwt.getClaims().get("info"), new TypeReference<>() {});
+    User user = objectMapper().convertValue(jwt.getClaims().get("info"), new TypeReference<>() {});
+    if (user != null) user.setSub(jwt.getSubject());
+    return user;
   }
 
   public static String getDomain(Authentication authentication) {

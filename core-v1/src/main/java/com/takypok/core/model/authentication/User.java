@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class User {
+  @NotNull private String sub;
   @NotNull private String name;
   private String email;
   private String title;

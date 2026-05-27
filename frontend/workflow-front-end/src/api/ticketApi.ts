@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest, UserGroup, UserGroupRequest, ClientRoleAssignment, ClientRoleAssignmentRequest} from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest, UserGroup, UserGroupRequest, ClientRoleAssignment, ClientRoleAssignmentRequest } from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import { api } from "@takypok/shared";
 
@@ -203,6 +203,14 @@ export async function createComment(ticketId: string | number, content: string) 
     const { data } = await api.post<ResultMessage<void>>(
         "/media-service/v1/comment",
         { ticketId, content },
+    );
+    return data;
+}
+
+export async function updateComment(id: string, content: string) {
+    const { data } = await api.put<Comment>(
+        `/media-service/v1/comment/${id}`,
+        { content },
     );
     return data;
 }

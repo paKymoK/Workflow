@@ -4,9 +4,11 @@ import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
 
 import com.takypok.mediaservice.model.entity.Comment;
 import com.takypok.mediaservice.model.request.CommentRequest;
+import com.takypok.mediaservice.model.request.CommentUpdateRequest;
 import com.takypok.mediaservice.service.CommentService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -29,5 +31,13 @@ public class CommentController {
   public Mono<Comment> comment(
       @RequestBody @Valid CommentRequest request, Authentication authentication) {
     return commentService.comment(request, getUserInfo(authentication));
+  }
+
+  @PutMapping("/{id}")
+  public Mono<Comment> update(
+      @PathVariable UUID id,
+      @RequestBody @Valid CommentUpdateRequest request,
+      Authentication authentication) {
+    return commentService.update(id, request.getContent(), getUserInfo(authentication));
   }
 }

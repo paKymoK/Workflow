@@ -7,6 +7,7 @@ import com.takypok.mediaservice.model.request.CommentRequest;
 import com.takypok.mediaservice.repository.CommentRepository;
 import com.takypok.mediaservice.service.CommentService;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,24 @@ public class CommentServiceImpl implements CommentService {
     Comment comment = commentMapper.mapToEntity(request, user);
     comment.setMentionedSubs(parseMentions(request.getContent()));
     return commentRepository.save(comment);
+  }
+
+  @Override
+  public Mono<Comment> update(UUID id, String content, User user) {
+    return commentRepository
+        .findById(id)
+        .switchIfEmpty(Mono.error(new IllegalStateException("Comment not found")))
+        .flatMap(
+            comment -> {
+              if (!comment.getCommenter().getSub().equals(user.getSub())) {
+                return Mono.error(
+                    new IllegalStateException("You are not allowed to edit this comment"));
+              }
+              comment.setContent(content);
+              comment.setIsEdited(true);
+              comment.setMentionedSubs(parseMentions(content));
+              return commentRepository.save(comment);
+            });
   }
 
   private String[] parseMentions(String content) {

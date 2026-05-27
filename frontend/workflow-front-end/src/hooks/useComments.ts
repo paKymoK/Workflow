@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchComments, createComment } from "../api/ticketApi";
+import { fetchComments, createComment, updateComment } from "../api/ticketApi";
 
 export const commentKeys = {
   list: (ticketId: string | number) => ["comments", ticketId] as const,
@@ -22,6 +22,18 @@ export function useCreateComment() {
       createComment(ticketId, content),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: commentKeys.list(ticketId) });
+    },
+  });
+}
+
+/** Update an existing comment; invalidates the comment list on success. */
+export function useUpdateComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, content }: { id: string; content: string }) =>
+      updateComment(id, content),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: commentKeys.list(data.ticketId) });
     },
   });
 }

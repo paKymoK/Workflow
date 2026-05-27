@@ -5,7 +5,7 @@ import {
 } from "antd";
 import {
   ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
-  MoreOutlined, SendOutlined,
+  MoreOutlined, SendOutlined, EditOutlined, CheckOutlined, CloseOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
@@ -14,7 +14,8 @@ import DeadlineTag from "../components/DeadlineTag.tsx";
 import RichTextEditor from "../components/RichTextEditor.tsx";
 import dayjs from "dayjs";
 import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket } from "../hooks/useTickets";
-import { useComments, useCreateComment } from "../hooks/useComments";
+import { useComments, useCreateComment, useUpdateComment } from "../hooks/useComments";
+import { useAuth } from "@takypok/shared";
 import CommentContent from "../components/CommentContent.tsx";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
 
@@ -25,9 +26,13 @@ export default function TicketDetail() {
   const { id }      = useParams<{ id: string }>();
   const navigate    = useNavigate();
   const token       = sessionStorage.getItem("access_token");
+  const { user }    = useAuth();
 
   const commentHtmlRef = useRef("");
+  const editHtmlRef    = useRef("");
   const [editorKey, setEditorKey] = useState(0);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editKey, setEditKey] = useState(0);
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: ticket, isLoading, isFetching: refreshing, refetch } = useTicket(id);
@@ -38,6 +43,7 @@ export default function TicketDetail() {
   const resumeMutation     = useResumeTicket();
   const transitionMutation = useTransitionTicket();
   const commentMutation    = useCreateComment();
+  const editMutation       = useUpdateComment();
 
   const actionLoading     = pauseMutation.isPending || resumeMutation.isPending || transitionMutation.isPending;
   const commentSubmitting = commentMutation.isPending;
@@ -72,6 +78,32 @@ export default function TicketDetail() {
       message.error("Failed to transition ticket");
     }
   }, [id, ticket, transitionMutation, message]);
+
+  const handleStartEdit = useCallback((commentId: string, currentContent: string) => {
+    editHtmlRef.current = currentContent;
+    setEditingCommentId(commentId);
+    setEditKey((k) => k + 1);
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingCommentId(null);
+    editHtmlRef.current = "";
+  }, []);
+
+  const handleSaveEdit = useCallback(async (commentId: string) => {
+    const html = editHtmlRef.current;
+    const hasText  = html.replace(/<[^>]*>/g, "").trim() !== "";
+    const hasMedia = html.includes('data-type="video-embed"') || html.includes("<img");
+    if (!hasText && !hasMedia) return;
+    try {
+      await editMutation.mutateAsync({ id: commentId, content: html });
+      message.success("Comment updated");
+      setEditingCommentId(null);
+      editHtmlRef.current = "";
+    } catch {
+      message.error("Failed to update comment");
+    }
+  }, [editMutation, message]);
 
   const handleSubmitComment = useCallback(async () => {
     const html = commentHtmlRef.current;
@@ -213,15 +245,69 @@ export default function TicketDetail() {
               <List
                 dataSource={comments}
                 rowKey="id"
-                renderItem={(comment) => (
-                  <List.Item className="!items-start !py-3 !px-0">
-                    <List.Item.Meta
-                      avatar={<Avatar className="!bg-[#1677ff]">{comment.commenter.name.charAt(0).toUpperCase()}</Avatar>}
-                      title={<Text strong>{comment.commenter.name}</Text>}
-                      description={<CommentContent html={comment.content} />}
-                    />
-                  </List.Item>
-                )}
+                renderItem={(comment) => {
+                  const isOwner = comment.commenter.sub === (user?.sub as string);
+                  const isEditing = editingCommentId === comment.id;
+                  return (
+                    <List.Item className="!items-start !py-3 !px-0">
+                      <List.Item.Meta
+                        avatar={<Avatar className="!bg-[#1677ff]">{comment.commenter.name.charAt(0).toUpperCase()}</Avatar>}
+                        title={
+                          <div className="flex items-center gap-2">
+                            <Text strong>{comment.commenter.name}</Text>
+                            {comment.isEdited && comment.modifiedAt && (
+                              <Text type="secondary" className="!text-[10px]">
+                                edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
+                              </Text>
+                            )}
+                          </div>
+                        }
+                        description={
+                          isEditing ? (
+                            <div>
+                              <RichTextEditor
+                                key={`edit-${comment.id}-${editKey}`}
+                                editable={true}
+                                content={comment.content}
+                                onChange={(html: string) => { editHtmlRef.current = html; }}
+                                placeholder="Edit your comment..."
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  size="small"
+                                  type="primary"
+                                  icon={<CheckOutlined />}
+                                  loading={editMutation.isPending}
+                                  onClick={() => handleSaveEdit(comment.id)}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="small"
+                                  icon={<CloseOutlined />}
+                                  onClick={handleCancelEdit}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <CommentContent html={comment.content} />
+                          )
+                        }
+                      />
+                      {isOwner && !isEditing && (
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<EditOutlined />}
+                          onClick={() => handleStartEdit(comment.id, comment.content)}
+                          className="!text-[var(--text-muted)] hover:!text-[var(--neon-yellow)] mt-1"
+                        />
+                      )}
+                    </List.Item>
+                  );
+                }}
               />
             )}
             <Divider className="!mt-0 !mb-3" />

@@ -94,8 +94,10 @@ export interface UploadFile {
 export interface Comment {
   id: string;
   ticketId: number;
-  commenter: { name: string; email: string };
+  commenter: { sub: string; name: string; email: string };
   content: string;
+  isEdited: boolean;
+  modifiedAt?: string;
 }
 
 export interface WorkflowStatus {
