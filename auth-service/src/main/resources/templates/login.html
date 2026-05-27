@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LOGIN // ACCESS TERMINAL</title>
+    <title>AMS GATE // ACCESS TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -91,30 +91,6 @@
         .corner-bl { bottom: 0; left: 0;  border-bottom: 3px solid var(--neon-pink);   border-left: 3px solid var(--neon-pink);   box-shadow: -3px 3px 12px rgba(123,47,190,0.5); }
         .corner-br { bottom: 0; right: 0; border-bottom: 3px solid var(--neon-yellow); border-right: 3px solid var(--neon-yellow); box-shadow:  3px  3px 12px rgba(0,207,255,0.5); }
 
-        /* ── Ticker ── */
-        .ticker {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 28px;
-            background: var(--neon-yellow);
-            z-index: 10;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-        }
-        .ticker-track {
-            display: flex;
-            animation: ticker-scroll 22s linear infinite;
-            white-space: nowrap;
-        }
-        .ticker-text {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 13px;
-            color: var(--dark);
-            letter-spacing: 0.2em;
-            padding-right: 80px;
-        }
-        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
         /* ── Status bar ── */
         .status-bar {
@@ -144,9 +120,7 @@
         .container {
             position: relative;
             z-index: 5;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            width: min(900px, 95vw);
+            width: min(440px, 95vw);
             margin-top: 28px;
             animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
@@ -155,74 +129,48 @@
             to   { opacity: 1; transform: none; }
         }
 
-        /* ── Left panel ── */
-        .left-panel {
-            background: var(--neon-yellow);
-            padding: 48px 40px;
+        /* ── Single panel ── */
+        .panel {
+            background: var(--dark);
+            border: 2px solid var(--neon-yellow);
+            padding: 36px 40px 40px;
             display: flex;
             flex-direction: column;
+        }
+
+        /* ── Brand header (inline above form) ── */
+        .brand-header {
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-            color: rgba(2,11,24,0.9);
-        }
-        .left-panel::after {
-            content: '';
-            position: absolute;
-            bottom: -60px; right: -60px;
-            width: 200px; height: 200px;
-            border: 40px solid rgba(2,11,24,0.1);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        .brand-tag {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 11px;
-            letter-spacing: 0.3em;
-            color: rgba(2,11,24,0.5);
-            border: 1.5px solid rgba(2,11,24,0.3);
-            display: inline-block;
-            padding: 4px 10px;
-            width: fit-content;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1.5px solid var(--border-subtle);
         }
         .brand-title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(64px, 8vw, 96px);
-            line-height: 0.9;
-            color: rgba(2,11,24,0.9);
-            letter-spacing: -0.02em;
+            font-size: 32px;
+            line-height: 1;
+            color: var(--neon-yellow);
+            letter-spacing: 0.05em;
             animation: glitch 6s infinite;
         }
         @keyframes glitch {
             0%,90%,100% { text-shadow: none; }
-            92% { text-shadow: -3px 0 var(--neon-pink), 3px 0 var(--neon-cyan); }
-            95% { text-shadow:  3px 0 var(--neon-cyan), -3px 0 var(--neon-pink); }
+            92% { text-shadow: -2px 0 var(--neon-pink), 2px 0 var(--neon-cyan); }
+            95% { text-shadow:  2px 0 var(--neon-cyan), -2px 0 var(--neon-pink); }
         }
-        .brand-subtitle {
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 13px; font-weight: 700;
-            letter-spacing: 0.2em;
-            color: rgba(2,11,24,0.5);
-            text-transform: uppercase;
-            margin-top: 16px;
+        .brand-tag {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            color: var(--text-muted);
+            border: 1.5px solid var(--border-subtle);
+            padding: 3px 8px;
         }
-        .brand-stats { display: flex; flex-direction: column; gap: 12px; }
-        .stat-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1.5px solid rgba(2,11,24,0.15); padding-bottom: 8px; }
-        .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: rgba(2,11,24,0.5); letter-spacing: 0.1em; }
-        .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: rgba(2,11,24,0.9); letter-spacing: 0.05em; }
 
-        /* ── Right panel ── */
-        .right-panel {
-            background: var(--dark);
-            border: 2px solid var(--neon-yellow);
-            border-left: none;
-            padding: 48px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .form-eyebrow { font-size: 10px; color: var(--neon-cyan); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 8px; }
-        .form-title { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--white); letter-spacing: 0.05em; line-height: 1; margin-bottom: 24px; }
+        .form-eyebrow { font-size: 10px; color: var(--neon-cyan); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 6px; }
+        .form-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--white); letter-spacing: 0.05em; line-height: 1; margin-bottom: 20px; }
         .form-title span { color: var(--neon-yellow); }
 
         /* ── Alerts ── */
@@ -233,10 +181,20 @@
             margin-bottom: 20px;
             border-left: 3px solid;
         }
-        .alert-danger  { background: rgba(123,47,190,0.1);  border-color: var(--neon-pink);  color: var(--neon-pink); }
-        .alert-success { background: rgba(0,245,196,0.07);  border-color: var(--neon-cyan);  color: var(--neon-cyan); }
-        .alert-danger::before  { content: '⚠ ERROR //';   margin-right: 8px; }
-        .alert-success::before { content: '✓ STATUS //'; margin-right: 8px; }
+        .alert-danger  { background: rgba(123,47,190,0.1);  border-color: var(--neon-pink);   color: var(--neon-pink); }
+        .alert-success { background: rgba(0,245,196,0.07);  border-color: var(--neon-cyan);   color: var(--neon-cyan); }
+        .alert-warn    { background: rgba(255,165,0,0.08);  border-color: #ffa500;            color: #ffa500; }
+        .alert-lock    { background: rgba(255,50,50,0.1);   border-color: #ff3232;            color: #ff3232; }
+        .alert-danger::before  { content: '⚠ ERROR //';    margin-right: 8px; }
+        .alert-success::before { content: '✓ STATUS //';   margin-right: 8px; }
+        .alert-warn::before    { content: '⚠ WARNING //';  margin-right: 8px; }
+        .alert-lock::before    { content: '⛔ LOCKED //';  margin-right: 8px; }
+        .submit-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .submit-btn:disabled::before { display: none; }
 
         /* ── Domain radio ── */
         .domain-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -323,11 +281,8 @@
             z-index: 100;
         }
 
-        @media (max-width: 640px) {
-            .container { grid-template-columns: 1fr; }
-            .left-panel { padding: 32px 28px; }
-            .right-panel { border-left: 2px solid var(--neon-yellow); border-top: none; padding: 32px 28px; }
-            .brand-title { font-size: 56px; }
+        @media (max-width: 480px) {
+            .panel { padding: 28px 24px 32px; }
         }
     </style>
 </head>
@@ -338,45 +293,24 @@
 <div class="bg-slash"></div>
 <div class="scanlines"></div>
 
-<div class="ticker">
-    <div class="ticker-track">
-        <span class="ticker-text">SYSTEM ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  AUTHORIZED PERSONNEL ONLY ///  ENTER CREDENTIALS ///  SYSTEM ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  AUTHORIZED PERSONNEL ONLY ///  ENTER CREDENTIALS ///</span>
-        <span class="ticker-text">SYSTEM ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  AUTHORIZED PERSONNEL ONLY ///  ENTER CREDENTIALS ///  SYSTEM ACCESS ///  AUTHENTICATE NOW ///  SECURE CONNECTION ESTABLISHED ///  AUTHORIZED PERSONNEL ONLY ///  ENTER CREDENTIALS ///</span>
-    </div>
-</div>
 
 <div class="container">
-    <!-- Left branding -->
-    <div class="left-panel">
-        <div>
+    <div class="panel">
+        <div class="brand-header">
+            <div class="brand-title">AMS GATE</div>
             <div class="brand-tag">▲ SECURE PORTAL</div>
         </div>
-        <div>
-            <div class="brand-title">LOGIN<br>GATE</div>
-            <div class="brand-subtitle">// OAuth2 Access Control v2</div>
-        </div>
-        <div class="brand-stats">
-            <div class="stat-row">
-                <span class="stat-label">UPTIME</span>
-                <span class="stat-value">99.98%</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">ACTIVE NODES</span>
-                <span class="stat-value">4,291</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">ENCRYPTION</span>
-                <span class="stat-value">AES-256</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- Right form -->
-    <div class="right-panel">
         <p class="form-eyebrow">▸ Terminal Login</p>
         <h2 class="form-title">ENTER <span>ACCESS</span></h2>
 
-        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+        <div th:if="${locked != null and locked}" class="alert alert-lock" role="alert">
+            Account locked. Too many failed attempts. Try again in 10 minutes.
+        </div>
+        <div th:if="${attemptsLeft != null}" class="alert alert-warn" role="alert">
+            Invalid credentials. <span th:text="${attemptsLeft}"></span> attempt(s) remaining before lockout.
+        </div>
+        <div th:if="${param.error != null and locked == null and attemptsLeft == null}" class="alert alert-danger" role="alert">
             Invalid username or password.
         </div>
         <div th:if="${param.logout}" class="alert alert-success" role="alert">
@@ -394,7 +328,7 @@
             </div>
 
             <div class="field">
-                <label class="field-label" for="username">// User ID</label>
+                <label class="field-label" for="username">// Username</label>
                 <div class="field-wrap">
                     <span class="field-icon">⬡</span>
                     <input class="field-input" type="text" id="username" name="username"
@@ -404,7 +338,7 @@
             </div>
 
             <div class="field">
-                <label class="field-label" for="password">// Passkey</label>
+                <label class="field-label" for="password">// Password</label>
                 <div class="field-wrap">
                     <span class="field-icon">◈</span>
                     <input class="field-input" type="password" id="password" name="password"
@@ -413,8 +347,8 @@
                 </div>
             </div>
 
-            <button class="submit-btn" type="submit">
-                <span>INITIATE ACCESS ⚡</span>
+            <button class="submit-btn" type="submit" th:disabled="${locked}">
+                <span th:text="${locked} ? 'ACCESS DENIED ⛔' : 'INITIATE ACCESS ⚡'"></span>
             </button>
         </form>
 
@@ -426,8 +360,6 @@
 
 <div class="status-bar">
     <div class="status-item"><div class="status-dot"></div>LIVE</div>
-    <div class="status-item">SYS: NOMINAL</div>
-    <div class="status-item">LOC: 127.0.0.1</div>
     <div class="status-item" id="clock" style="margin-left:auto;"></div>
 </div>
 

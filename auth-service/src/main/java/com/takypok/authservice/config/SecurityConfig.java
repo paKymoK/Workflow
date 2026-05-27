@@ -2,6 +2,7 @@ package com.takypok.authservice.config;
 
 import com.takypok.authservice.config.auth.DomainAuthenticationFilter;
 import com.takypok.authservice.config.auth.DomainAuthenticationManager;
+import com.takypok.authservice.config.auth.LoginFailureHandler;
 import com.takypok.authservice.config.auth.ProfileCompleteSuccessHandler;
 import com.takypok.authservice.config.auth.ProfileIncompleteFilter;
 import com.takypok.authservice.repository.UserInfoRepository;
@@ -28,7 +29,6 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
@@ -106,7 +106,8 @@ public class SecurityConfig {
       SecurityContextRepository securityContextRepository,
       UserInfoRepository userInfoRepository,
       JdbcUserDetailsManager jdbcUserDetailsManager,
-      PasswordEncoder passwordEncoder) {
+      PasswordEncoder passwordEncoder,
+      LoginFailureHandler loginFailureHandler) {
     DomainAuthenticationFilter filter = new DomainAuthenticationFilter(domainAuthenticationManager);
     filter.setFilterProcessesUrl("/login");
     filter.setSecurityContextRepository(securityContextRepository);
@@ -114,8 +115,7 @@ public class SecurityConfig {
     filter.setAuthenticationSuccessHandler(
         new ProfileCompleteSuccessHandler(
             userInfoRepository, jdbcUserDetailsManager, passwordEncoder));
-    filter.setAuthenticationFailureHandler(
-        new SimpleUrlAuthenticationFailureHandler("/login?error"));
+    filter.setAuthenticationFailureHandler(loginFailureHandler);
     return filter;
   }
 

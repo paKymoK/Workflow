@@ -71,51 +71,33 @@ export default function Login() {
       </div>
 
       {/* Main card */}
-      <div className="relative z-10 slide-in grid grid-cols-1 md:grid-cols-2 w-[min(900px,95vw)] mt-8">
+      <div className="relative z-10 slide-in grid grid-cols-1 md:grid-cols-[5fr_3fr] w-[min(1100px,95vw)] mt-8">
 
-        {/* ── Left panel ───────────────────────────────── */}
-        <div className="login-left-panel relative bg-[var(--neon-yellow)] px-10 py-12 flex flex-col justify-between overflow-hidden">
-          {/* Circle decoration */}
-          <div className="absolute -bottom-14 -right-14 w-48 h-48 border-[36px] border-current rounded-full pointer-events-none opacity-10" />
+        {/* ── Left banner placeholder ── */}
+        {/* TODO: replace with actual banner (illustration / brand art) */}
+        <div className="hidden md:flex flex-col items-center justify-center border-2 border-dashed border-[var(--border-subtle)] bg-[rgba(0,207,255,0.02)]">
+          <span className="font-bebas text-[13px] tracking-[0.3em] text-[var(--text-muted)]">[ BANNER PLACEHOLDER ]</span>
+          <span className="font-mono-tech text-[10px] text-[var(--text-muted)] mt-2 opacity-50">e.g. illustration / brand art</span>
+        </div>
 
-          <div>
-            <span className="panel-muted font-bebas text-[11px] tracking-[0.3em] border border-current px-2.5 py-1 inline-block opacity-60">
+        <div className="bg-[var(--dark)] border-2 border-[var(--neon-yellow)] md:border-l-0 flex flex-col px-10 py-9">
+
+          {/* Brand header */}
+          <div className="flex items-center justify-between mb-6 pb-5 border-b border-[var(--border-subtle)]">
+            <span className="font-bebas text-[32px] leading-none tracking-[0.05em] text-[var(--neon-yellow)] glitch-anim">
+              AMS GATE
+            </span>
+            <span className="font-bebas text-[10px] tracking-[0.25em] text-[var(--text-muted)] border border-[var(--border-subtle)] px-2 py-1">
               ▲ SECURE PORTAL
             </span>
           </div>
 
-          <div>
-            <h1 className="font-bebas text-[clamp(64px,8vw,96px)] leading-[0.9] tracking-[-0.02em] glitch-anim">
-              LOGIN<br />GATE
-            </h1>
-            <p className="panel-muted font-barlow text-[13px] font-bold tracking-[0.2em] uppercase mt-4">
-              // OAuth2 Access Control v2
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              { label: "UPTIME",       value: "99.98%" },
-              { label: "ACTIVE NODES", value: "4,291"  },
-              { label: "ENCRYPTION",   value: "AES-256" },
-            ].map(({ label, value }) => (
-              <div key={label} className="panel-stat-border flex justify-between items-baseline border-b pb-2">
-                <span className="panel-muted font-mono-tech text-[10px] tracking-[0.1em]">{label}</span>
-                <span className="font-bebas text-[22px] tracking-[0.05em]">{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Right panel ──────────────────────────────── */}
-        <div className="bg-[var(--dark)] border-2 border-[var(--neon-yellow)] md:border-l-0 flex flex-col justify-center px-10 py-12">
-
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <p className="font-mono-tech text-[10px] text-[var(--neon-cyan)] tracking-[0.3em] uppercase mb-2">
               ▸ Terminal Login
             </p>
-            <h2 className="font-bebas text-[40px] text-[var(--white)] tracking-[0.05em] leading-none">
+            <h2 className="font-bebas text-[36px] text-[var(--white)] tracking-[0.05em] leading-none">
               ENTER <span className="neon-text-yellow">ACCESS</span>
             </h2>
           </div>
@@ -228,8 +210,6 @@ export default function Login() {
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-black blink" />
           LIVE
         </span>
-        <span className="font-bebas text-[12px] text-black tracking-[0.15em]">SYS: NOMINAL</span>
-        <span className="font-bebas text-[12px] text-black tracking-[0.15em]">LOC: 127.0.0.1</span>
         <span className="font-bebas text-[12px] text-black tracking-[0.15em] ml-auto">{clock}</span>
       </div>
     </div>
