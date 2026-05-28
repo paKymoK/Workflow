@@ -3,6 +3,7 @@ import {
   fetchOverviewStatistic,
   fetchTicketByIssueType,
   fetchTicketByProject,
+  fetchSlaOverview,
   fetchSlaByStatus,
   fetchSlaByPriority,
 } from "../api/ticketApi";
@@ -13,6 +14,7 @@ export const statisticKeys = {
   overview:    (from: string, to: string, k = 0) => ["stat", "overview",    from, to, k] as const,
   issueType:   (from: string, to: string, k = 0) => ["stat", "issueType",   from, to, k] as const,
   project:     (from: string, to: string, k = 0) => ["stat", "project",     from, to, k] as const,
+  slaOverview: (from: string, to: string, k = 0) => ["stat", "slaOverview", from, to, k] as const,
   slaStatus:   (from: string, to: string, k = 0) => ["stat", "slaStatus",   from, to, k] as const,
   slaPriority: (from: string, to: string, k = 0) => ["stat", "slaPriority", from, to, k] as const,
 };
@@ -36,6 +38,13 @@ export function useTicketByProject(from: string, to: string, refetchKey = 0) {
     queryKey: statisticKeys.project(from, to, refetchKey),
     queryFn:  () => fetchTicketByProject(from, to),
     retry: false,
+  });
+}
+
+export function useSlaOverview(from: string, to: string, refetchKey = 0) {
+  return useQuery({
+    queryKey: statisticKeys.slaOverview(from, to, refetchKey),
+    queryFn:  () => fetchSlaOverview(from, to),
   });
 }
 

@@ -221,6 +221,16 @@ export interface StatisticItem {
   value: number;
 }
 
+export interface SlaOverviewStatistic {
+  responseInProgress: number;
+  responseDoneInTime: number;
+  responseMissed: number;
+  resolutionInProgress: number;
+  resolutionDoneInTime: number;
+  resolutionMissed: number;
+  total: number;
+}
+
 export interface TicketByIssueType {
   name: string;
   [status: string]: string | number;

@@ -1,6 +1,7 @@
 package com.takypok.workflowservice.service;
 
 import com.takypok.workflowservice.model.request.StatisticRequest;
+import com.takypok.workflowservice.model.response.SlaOverviewStatistic;
 import com.takypok.workflowservice.model.response.SlaPriorityDistribution;
 import com.takypok.workflowservice.model.response.SlaStatusDistribution;
 import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
@@ -15,6 +16,8 @@ public interface StatisticService {
   Mono<List<TicketByIssueTypeStatistic>> ticketByIssueType(StatisticRequest request);
 
   Mono<List<TicketByProjectStatistic>> ticketByProject(StatisticRequest request);
+
+  Mono<SlaOverviewStatistic> slaOverview(StatisticRequest request);
 
   Mono<List<SlaStatusDistribution>> slaByStatusDistribution(StatisticRequest request);
 

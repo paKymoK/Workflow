@@ -253,10 +253,10 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
       extra={colTogglePopover}
       className="min-w-0"
     >
-      <div className="flex gap-4" style={{ minHeight: 420 }}>
+      <div className="flex gap-4 min-h-[420px]">
 
         {/* Left — donut chart */}
-        <div style={{ width: "32%", flexShrink: 0 }}>
+        <div className="w-[32%] shrink-0">
           {donutLoading ? (
             <div className="flex items-center justify-center h-full min-h-[380px]">
               <Spin />
@@ -275,7 +275,7 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
                   dataKey="value"
                   isAnimationActive={false}
                   onClick={handleSliceClick}
-                  style={{ cursor: "pointer" }}
+                  className="cursor-pointer"
                 >
                   {donutData.map((entry, i) => (
                     <Cell
@@ -298,7 +298,7 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
         </div>
 
         {/* Right — ticket table */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           {selectedSlice && (
             <div className="mb-2 flex items-center gap-2 text-xs">
               <span className="opacity-60">Filtered by:</span>

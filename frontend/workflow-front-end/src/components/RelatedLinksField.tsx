@@ -67,7 +67,7 @@ export default function RelatedLinksField({ value = [], onChange }: Props) {
           value={draftType}
           onChange={setDraftType}
           options={RELATION_TYPES}
-          style={{ width: 145 }}
+          className="!w-[145px]"
         />
         <Select
           showSearch
@@ -81,7 +81,7 @@ export default function RelatedLinksField({ value = [], onChange }: Props) {
           }}
           options={ticketOptions}
           loading={searching}
-          style={{ flex: 1 }}
+          className="flex-1"
           notFoundContent={
             inputValue
               ? searching ? "Searching…" : "No tickets found"

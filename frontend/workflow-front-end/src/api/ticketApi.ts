@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest, UserGroup, UserGroupRequest, ClientRoleAssignment, ClientRoleAssignmentRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, User, UserDetail, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, RegisteredClient, RegisteredClientRequest, UserGroup, UserGroupRequest, ClientRoleAssignment, ClientRoleAssignmentRequest } from "./types.ts";
 import type { OrgChartUser } from "../utils/buildOrgChart";
 import { api } from "@takypok/shared";
 
@@ -263,6 +263,14 @@ export async function fetchTicketByProject(from?: string, to?: string) {
 export async function fetchAllIssueTypes() {
     const { data } = await api.get<ResultMessage<IssueType[]>>(
         "/workflow-service/v1/issue",
+    );
+    return data.data;
+}
+
+export async function fetchSlaOverview(from?: string, to?: string) {
+    const { data } = await api.get<ResultMessage<SlaOverviewStatistic>>(
+        "/workflow-service/v1/statistic/sla-overview",
+        { params: { from, to } },
     );
     return data.data;
 }

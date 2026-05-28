@@ -83,21 +83,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const sysStatusColorClass =
-    systemStatus === "UP"
-      ? "neon-text-cyan"
-      : systemStatus === "CHECKING"
-      ? "text-[var(--text-muted)]"
-      : "text-red-400";
-
   const systemStatusLabel =
     systemStatus === "UP" ? "Nominal" : systemStatus === "CHECKING" ? "Checking" : systemStatus;
-
-  const getServiceColorClass = (status: string) => {
-    if (status === "UP") return "neon-text-cyan";
-    if (status === "DOWN") return "text-red-400";
-    return "text-[var(--text-muted)]";
-  };
 
   const formatServiceName = (name: string) => {
     if (name.endsWith("-service")) return name.replace("-service", "");
@@ -112,13 +99,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       : services.every((s) => s.status === "UP")
       ? "All Up"
       : `${services.filter((s) => s.status !== "UP").length} DOWN`;
-
-  const serviceStatusColorClass =
-    services.length === 0
-      ? "text-[var(--text-muted)]"
-      : services.every((s) => s.status === "UP")
-      ? "neon-text-cyan"
-      : "text-red-400";
 
   const isServiceListCollapsed = services.length > 4;
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { wsBaseUrl } from "@takypok/shared";
 import TicketDistributionCard from "../components/stats/TicketDistributionCard.tsx";
+import SlaOverviewCard from "../components/stats/SlaOverviewCard.tsx";
 
 export default function Home() {
   const [refetchKey, setRefetchKey] = useState(0);
@@ -22,6 +23,7 @@ export default function Home() {
 
       <div className="flex flex-col gap-6">
         <TicketDistributionCard refetchKey={refetchKey} />
+        <SlaOverviewCard refetchKey={refetchKey} />
       </div>
     </div>
   );

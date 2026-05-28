@@ -158,7 +158,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
                         value={dialCode}
                         onChange={setDialCode}
                         options={DIAL_CODES}
-                        style={{ width: 105 }}
+                        className="!w-[105px]"
                       />
                     }
                     placeholder="Enter phone number"

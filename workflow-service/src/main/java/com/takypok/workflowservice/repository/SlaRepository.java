@@ -1,6 +1,7 @@
 package com.takypok.workflowservice.repository;
 
 import com.takypok.workflowservice.model.entity.Sla;
+import com.takypok.workflowservice.model.response.SlaOverviewStatistic;
 import com.takypok.workflowservice.model.response.SlaPriorityDistribution;
 import com.takypok.workflowservice.model.response.SlaStatusDistribution;
 import java.time.ZonedDateTime;
@@ -63,4 +64,38 @@ public interface SlaRepository extends R2dbcRepository<Sla, Long> {
           ORDER BY s.priority->>'name'
           """)
   Flux<SlaPriorityDistribution> getSlaByPriorityDistribution(ZonedDateTime from, ZonedDateTime to);
+
+  @Query(
+      """
+          SELECT
+              COUNT(*) FILTER (
+                  WHERE s.status->>'response' = 'TODO'
+                  AND (s.status->>'isResponseOverdue')::boolean IS NOT TRUE
+              ) AS response_in_progress,
+              COUNT(*) FILTER (
+                  WHERE s.status->>'response' <> 'TODO'
+                  AND (s.status->>'isResponseOverdue')::boolean IS NOT TRUE
+              ) AS response_done_in_time,
+              COUNT(*) FILTER (
+                  WHERE (s.status->>'isResponseOverdue')::boolean = true
+              ) AS response_missed,
+              COUNT(*) FILTER (
+                  WHERE s.status->>'resolution' = 'TODO'
+                  AND (s.status->>'isResolutionOverdue')::boolean IS NOT TRUE
+              ) AS resolution_in_progress,
+              COUNT(*) FILTER (
+                  WHERE s.status->>'resolution' <> 'TODO'
+                  AND (s.status->>'isResolutionOverdue')::boolean IS NOT TRUE
+              ) AS resolution_done_in_time,
+              COUNT(*) FILTER (
+                  WHERE (s.status->>'isResolutionOverdue')::boolean = true
+              ) AS resolution_missed,
+              COUNT(*) AS total
+          FROM sla s
+          JOIN ticket t ON t.id = s.ticket_id
+          WHERE
+              (:from::timestamptz IS NULL OR t.created_at >= :from::timestamptz)
+              AND (:to::timestamptz IS NULL OR t.created_at <= :to::timestamptz)
+          """)
+  Mono<SlaOverviewStatistic> getSlaOverview(ZonedDateTime from, ZonedDateTime to);
 }
