@@ -28,11 +28,12 @@ export const ticketKeys = {
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 /** Paginated + filtered ticket list. keepPreviousData keeps old rows visible while fetching. */
-export function useTicketList(params: FilterTicketRequest) {
+export function useTicketList(params: FilterTicketRequest, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ticketKeys.list(params),
     queryFn:  () => fetchTickets(params),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled,
   });
 }
 

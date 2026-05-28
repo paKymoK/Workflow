@@ -132,8 +132,9 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
     setSortDir(undefined);
   };
 
-  const handleSliceClick = (entry: { name: string }) => {
-    setSelectedSlice((prev) => (prev === entry.name ? null : entry.name));
+  const handleSliceClick = (entry: { name?: string }) => {
+    if (!entry.name) return;
+    setSelectedSlice((prev) => (prev === entry.name ? null : entry.name!));
     setPage(0);
   };
 

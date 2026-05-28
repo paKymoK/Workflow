@@ -1,10 +1,12 @@
-WITH seed AS (SELECT gs                                                         AS n,
-                     -- Random created_at between 09:00 today and now (office hours only)
-                     (current_date + interval '9 hours') +
-                     (random() * (NOW() - (current_date + interval '9 hours'))) AS created_at,
-                     random()                                                   AS r_status,
-                     random()                                                   AS r_priority,
-                     random()                                                   AS r_issue
+WITH seed AS (SELECT gs                                                                    AS n,
+                     -- Random created_at spread across last 7 days during office hours
+                     (current_date - (floor(random() * 7)::int * interval '1 day') +
+                      interval '9 hours') +
+                     (random() * interval '8 hours')                                       AS created_at,
+                     random()                                                              AS r_status,
+                     random()                                                              AS r_priority,
+                     random()                                                              AS r_issue,
+                     random()                                                              AS r_app
               FROM generate_series(1, 100000) gs),
      ticket_data AS (SELECT n,
                             created_at,
@@ -27,76 +29,97 @@ WITH seed AS (SELECT gs                                                         
                                     jsonb_build_object('id', 3, 'name', 'High', 'responseTime', 1, 'resolutionTime', 4)
                                 END AS priority_json,
                             CASE
-                                WHEN r_issue < 0.40
-                                    THEN jsonb_build_object('id', 2, 'name', 'GAMS System', 'projectId', 1)
+                                WHEN r_issue < 0.40 THEN
+                                    jsonb_build_object('id', 1, 'name', 'Problem', 'projectId', 1)
+                                WHEN r_issue < 0.70 THEN
+                                    jsonb_build_object('id', 2, 'name', 'Change Request', 'projectId', 1)
                                 ELSE
-                                    jsonb_build_object('id', 1, 'name', 'Dashboard', 'projectId', 1)
-                                END AS issue_type_json
+                                    jsonb_build_object('id', 3, 'name', 'Complain', 'projectId', 1)
+                                END AS issue_type_json,
+                            CASE
+                                WHEN r_app < 0.55 THEN
+                                    jsonb_build_object(
+                                            'application', 'Dashboard',
+                                            'description', 'Load test ticket for Dashboard application',
+                                            '_clazz',
+                                            'com.takypok.workflowservice.model.ticket.internal.Dashboard'
+                                    )
+                                ELSE
+                                    jsonb_build_object(
+                                            'application', 'GAMS System',
+                                            'description', 'Load test ticket for GAMS System application',
+                                            '_clazz',
+                                            'com.takypok.workflowservice.model.ticket.internal.GamsSystem'
+                                    )
+                                END AS detail_json
                      FROM seed),
      ins_ticket AS (
-INSERT
-INTO ticket (project, issue_type, status, summary, reporter, assignee, detail,
-             priority, workflow,
-             created_at, created_by, modified_at, modified_by)
-SELECT jsonb_build_object('id', 1, 'code', 'IA', 'name', 'Internal Application', 'workflowId', 1),
-       issue_type_json,
-       status_json,
-       'Load Test ' || n,
-       jsonb_build_object('name', 'admin', 'email', 'tqthai@gmail.com'),
-       NULL,
-       jsonb_build_object('data', '123', '_clazz',
-                          'com.takypok.workflowservice.model.ticket.internal.Dashboard'),
-       priority_json,
-       jsonb_build_object(
-               'id', 1,
-               'name', 'Test',
-               'statuses', jsonb_build_array(
-                       jsonb_build_object('x', NULL, 'y', NULL, 'id', 1, 'name', 'Todo', 'color',
-                                          '#808080', 'group', 'TODO'),
-                       jsonb_build_object('x', NULL, 'y', NULL, 'id', 2, 'name', 'In-Progress', 'color',
-                                          '#0000FF', 'group', 'PROCESSING'),
-                       jsonb_build_object('x', NULL, 'y', NULL, 'id', 3, 'name', 'Done', 'color',
-                                          '#008000', 'group', 'DONE')
-                           ),
-               'transitions', jsonb_build_array(
-                       jsonb_build_object(
-                               'to', jsonb_build_object('id', 2, 'name', 'In-Progress', 'color', '#0000FF',
-                                                        'group', 'PROCESSING'),
-                               'from', jsonb_build_object('id', 1, 'name', 'Todo', 'color', '#808080',
-                                                          'group', 'TODO'),
-                               'name', 'Approve',
-                               'validator', jsonb_build_array(
-                                       'com.takypok.workflowservice.function.validator.Example1Validator'),
-                               'postFunctions', jsonb_build_array(
-                                       'com.takypok.workflowservice.function.postfunction.Example1Function')
-                       ),
-                       jsonb_build_object(
-                               'to', jsonb_build_object('id', 3, 'name', 'Done', 'color', '#008000',
-                                                        'group', 'DONE'),
-                               'from', jsonb_build_object('id', 2, 'name', 'In-Progress', 'color',
-                                                          '#0000FF', 'group', 'PROCESSING'),
-                               'name', 'Approve',
-                               'validator', '[]'::jsonb,
-                               'postFunctions', '[]'::jsonb
-                       )
-                              )
-       ),
-       created_at,
-       'admin',
-       now(),
-       'admin'
-FROM ticket_data RETURNING id, status, priority, created_at
+         INSERT
+             INTO ticket (project, issue_type, status, summary, reporter, assignee, detail,
+                          priority, workflow,
+                          created_at, created_by, modified_at, modified_by)
+                 SELECT jsonb_build_object('id', 1, 'code', 'IA', 'name', 'Internal Application', 'workflowId', 1),
+                        issue_type_json,
+                        status_json,
+                        'Load Test ' || n,
+                        jsonb_build_object('name', 'admin', 'email', 'tqthai@gmail.com'),
+                        NULL,
+                        detail_json,
+                        priority_json,
+                        jsonb_build_object(
+                                'id', 1,
+                                'name', 'Test',
+                                'statuses', jsonb_build_array(
+                                        jsonb_build_object('x', NULL, 'y', NULL, 'id', 1, 'name', 'Todo', 'color',
+                                                           '#808080', 'group', 'TODO'),
+                                        jsonb_build_object('x', NULL, 'y', NULL, 'id', 2, 'name', 'In-Progress',
+                                                           'color',
+                                                           '#0000FF', 'group', 'PROCESSING'),
+                                        jsonb_build_object('x', NULL, 'y', NULL, 'id', 3, 'name', 'Done', 'color',
+                                                           '#008000', 'group', 'DONE')
+                                ),
+                                'transitions', jsonb_build_array(
+                                        jsonb_build_object(
+                                                'to', jsonb_build_object('id', 2, 'name', 'In-Progress', 'color',
+                                                                         '#0000FF',
+                                                                         'group', 'PROCESSING'),
+                                                'from', jsonb_build_object('id', 1, 'name', 'Todo', 'color', '#808080',
+                                                                           'group', 'TODO'),
+                                                'name', 'Approve',
+                                                'validator', jsonb_build_array(
+                                                        'com.takypok.workflowservice.function.validator.Example1Validator'),
+                                                'postFunctions', jsonb_build_array(
+                                                        'com.takypok.workflowservice.function.postfunction.Example1Function')
+                                        ),
+                                        jsonb_build_object(
+                                                'to', jsonb_build_object('id', 3, 'name', 'Done', 'color', '#008000',
+                                                                         'group', 'DONE'),
+                                                'from', jsonb_build_object('id', 2, 'name', 'In-Progress', 'color',
+                                                                           '#0000FF', 'group', 'PROCESSING'),
+                                                'name', 'Approve',
+                                                'validator', '[]'::jsonb,
+                                                'postFunctions', '[]'::jsonb
+                                        )
+                                )
+                        ),
+                        created_at,
+                        'admin',
+                        now(),
+                        'admin'
+                 FROM ticket_data RETURNING id, status, priority, created_at
      )
 INSERT
 INTO sla (ticket_id, status, is_paused, paused_time, priority, setting,
           created_at, created_by, modified_at, modified_by)
 SELECT t.id,
-       CASE t.status ->> 'group' WHEN 'TODO' THEN
+       CASE t.status ->> 'group'
+           WHEN 'TODO' THEN
                jsonb_build_object(
                        'response', 'TODO',
                        'resolution', 'TODO',
                        'responseTime', NULL,
                        'resolutionTime', NULL,
+                       'resolutionPercent', floor(random() * 25)::int,
                        'isResponseOverdue', false,
                        'isResolutionOverdue', false
                )
@@ -106,7 +129,8 @@ SELECT t.id,
                        'resolution', 'TODO',
                        'responseTime', t.created_at + (random() * interval '2 hours'),
                        'resolutionTime', NULL,
-                       'isResponseOverdue', false,
+                       'resolutionPercent', floor(30 + random() * 60)::int,
+                       'isResponseOverdue', (random() < 0.20),
                        'isResolutionOverdue', false
                )
            ELSE -- DONE
@@ -115,11 +139,12 @@ SELECT t.id,
                        'resolution', 'DONE',
                        'responseTime', t.created_at + (random() * interval '2 hours'),
                        'resolutionTime', t.created_at + interval '2 hours' + (random() * interval '4 hours'),
+                       'resolutionPercent', CASE WHEN random() < 0.15 THEN floor(100 + random() * 40)::int
+                                                 ELSE 100 END,
                        'isResponseOverdue', false,
-                       'isResolutionOverdue', false
+                       'isResolutionOverdue', (random() < 0.15)
                )
-END
-,
+           END,
        false,
        '[]'::jsonb,
        t.priority,

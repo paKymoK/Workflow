@@ -31,11 +31,22 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
                       AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                      AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
+                      AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
+                      AND (:application IS NULL OR t.detail->>'application' = :application)
                     ORDER BY t.id DESC
                     LIMIT :limit OFFSET :offset
                     """)
   Flux<TicketSla> findAllWithSla(
-      int limit, int offset, String summary, Long statusId, Long priorityId, String assigneeEmail);
+      int limit,
+      int offset,
+      String summary,
+      Long statusId,
+      Long priorityId,
+      String assigneeEmail,
+      Long issueTypeId,
+      Long projectId,
+      String application);
 
   @Query(
       """
@@ -45,8 +56,18 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
                       AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                      AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
+                      AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
+                      AND (:application IS NULL OR t.detail->>'application' = :application)
                     """)
-  Mono<Long> count(String summary, Long statusId, Long priorityId, String assigneeEmail);
+  Mono<Long> count(
+      String summary,
+      Long statusId,
+      Long priorityId,
+      String assigneeEmail,
+      Long issueTypeId,
+      Long projectId,
+      String application);
 
   @Query(
       """
@@ -68,6 +89,9 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
                       AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                      AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
+                      AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
+                      AND (:application IS NULL OR t.detail->>'application' = :application)
                     ORDER BY
                       CASE WHEN :asc = true  THEN (s.status->>'resolutionPercent')::int END ASC  NULLS LAST,
                       CASE WHEN :asc = false THEN (s.status->>'resolutionPercent')::int END DESC NULLS LAST
@@ -80,7 +104,10 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       Long statusId,
       Long priorityId,
       String assigneeEmail,
-      boolean asc);
+      boolean asc,
+      Long issueTypeId,
+      Long projectId,
+      String application);
 
   @Query(
       """
@@ -143,4 +170,29 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                     ORDER BY value DESC
                     """)
   Flux<TicketByProjectStatistic> ticketByProjectStatistic(ZonedDateTime from, ZonedDateTime to);
+
+  @Query(
+      """
+                    SELECT
+                        t.detail->>'application' AS application,
+                        COUNT(*) AS total,
+                        COUNT(*) FILTER (WHERE t.status->>'group' = 'TODO')        AS open,
+                        COUNT(*) FILTER (WHERE t.status->>'group' = 'PROCESSING')  AS in_progress,
+                        COUNT(*) FILTER (WHERE t.status->>'group' = 'DONE')        AS done,
+                        COUNT(*) FILTER (WHERE
+                            (s.status->>'isResponseOverdue')::boolean = true
+                            OR (s.status->>'isResolutionOverdue')::boolean = true
+                        ) AS sla_breached
+                    FROM ticket t
+                    LEFT JOIN sla s ON t.id = s.ticket_id
+                    WHERE
+                        t.detail->>'application' IS NOT NULL
+                        AND (:from::timestamptz IS NULL OR t.created_at >= :from::timestamptz)
+                        AND (:to::timestamptz IS NULL OR t.created_at <= :to::timestamptz)
+                    GROUP BY t.detail->>'application'
+                    ORDER BY open DESC
+                    LIMIT 10
+                    """)
+  Flux<ApplicationTicketStatistic> ticketByApplicationStatistic(
+      ZonedDateTime from, ZonedDateTime to);
 }

@@ -221,6 +221,15 @@ export interface StatisticItem {
   value: number;
 }
 
+export interface ApplicationTicketStatistic {
+  application: string;
+  total: number;
+  open: number;
+  inProgress: number;
+  done: number;
+  slaBreached: number;
+}
+
 export interface SlaOverviewStatistic {
   responseInProgress: number;
   responseDoneInTime: number;

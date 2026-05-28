@@ -57,17 +57,38 @@ public class TicketServiceImpl implements TicketService {
     }
     Long statusId = request.getStatusId();
     Long priorityId = request.getPriorityId();
+    Long issueTypeId = request.getIssueTypeId();
+    Long projectId = request.getProjectId();
+    String application = normalize(request.getApplication());
     boolean sortByResolution = "resolutionPercent".equals(request.getSortBy());
     boolean sortAsc = "asc".equalsIgnoreCase(request.getSortDir());
     Flux<TicketSla> query =
         sortByResolution
             ? ticketRepository.findAllWithSlaSortByResolution(
-                size, offset, summary, statusId, priorityId, assigneeEmail, sortAsc)
+                size,
+                offset,
+                summary,
+                statusId,
+                priorityId,
+                assigneeEmail,
+                sortAsc,
+                issueTypeId,
+                projectId,
+                application)
             : ticketRepository.findAllWithSla(
-                size, offset, summary, statusId, priorityId, assigneeEmail);
+                size,
+                offset,
+                summary,
+                statusId,
+                priorityId,
+                assigneeEmail,
+                issueTypeId,
+                projectId,
+                application);
     return Mono.zip(
             query.collectList(),
-            ticketRepository.count(summary, statusId, priorityId, assigneeEmail))
+            ticketRepository.count(
+                summary, statusId, priorityId, assigneeEmail, issueTypeId, projectId, application))
         .map(
             tuple -> {
               List<TicketSla> content = tuple.getT1();

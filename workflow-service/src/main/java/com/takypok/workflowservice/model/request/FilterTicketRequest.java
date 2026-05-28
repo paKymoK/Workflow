@@ -33,9 +33,18 @@ public class FilterTicketRequest {
   @Size(max = 254)
   private String assigneeEmail;
 
+  @Min(1)
+  private Long issueTypeId;
+
+  @Min(1)
+  private Long projectId;
+
+  @Size(max = 255)
+  private String application;
+
   @Pattern(
-      regexp = "^(resolutionPercent)?$",
-      message = "sortBy must be 'resolutionPercent' or empty")
+      regexp = "^(resolutionPercent|id|status|issueType|project|priority|assignee|summary)?$",
+      message = "sortBy must be a valid sort field or empty")
   private String sortBy;
 
   @Pattern(regexp = "^(asc|desc)?$", message = "sortDir must be 'asc' or 'desc'")
