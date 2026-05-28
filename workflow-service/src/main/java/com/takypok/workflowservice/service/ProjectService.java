@@ -14,6 +14,8 @@ public interface ProjectService {
 
   Mono<List<IssueType>> getIssueTypeByProjectId(Long id);
 
+  Mono<List<IssueType>> getAllIssueTypes();
+
   Mono<Project> create(ProjectCreateRequest request);
 
   Mono<Project> update(ProjectUpdateRequest request);

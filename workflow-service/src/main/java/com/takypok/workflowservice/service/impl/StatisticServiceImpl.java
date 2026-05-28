@@ -5,6 +5,7 @@ import com.takypok.workflowservice.model.request.StatisticRequest;
 import com.takypok.workflowservice.model.response.SlaPriorityDistribution;
 import com.takypok.workflowservice.model.response.SlaStatusDistribution;
 import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
+import com.takypok.workflowservice.model.response.TicketByProjectStatistic;
 import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
 import com.takypok.workflowservice.repository.SlaRepository;
 import com.takypok.workflowservice.repository.TicketRepository;
@@ -33,6 +34,13 @@ public class StatisticServiceImpl implements StatisticService {
   public Mono<List<TicketByIssueTypeStatistic>> ticketByIssueType(StatisticRequest request) {
     return ticketRepository
         .ticketByIssueTypeStatistic(request.getFrom(), request.getTo())
+        .collectList();
+  }
+
+  @Override
+  public Mono<List<TicketByProjectStatistic>> ticketByProject(StatisticRequest request) {
+    return ticketRepository
+        .ticketByProjectStatistic(request.getFrom(), request.getTo())
         .collectList();
   }
 

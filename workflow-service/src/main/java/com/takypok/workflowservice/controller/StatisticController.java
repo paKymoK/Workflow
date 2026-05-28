@@ -5,6 +5,7 @@ import com.takypok.workflowservice.model.request.StatisticRequest;
 import com.takypok.workflowservice.model.response.SlaPriorityDistribution;
 import com.takypok.workflowservice.model.response.SlaStatusDistribution;
 import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
+import com.takypok.workflowservice.model.response.TicketByProjectStatistic;
 import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
 import com.takypok.workflowservice.service.StatisticService;
 import jakarta.validation.Valid;
@@ -31,6 +32,12 @@ public class StatisticController {
   public Mono<ResultMessage<List<TicketByIssueTypeStatistic>>> ticketByIssueType(
       @Valid StatisticRequest request) {
     return statisticService.ticketByIssueType(request).map(ResultMessage::success);
+  }
+
+  @GetMapping("/ticket-by-project")
+  public Mono<ResultMessage<List<TicketByProjectStatistic>>> ticketByProject(
+      @Valid StatisticRequest request) {
+    return statisticService.ticketByProject(request).map(ResultMessage::success);
   }
 
   @GetMapping("/sla-by-status")

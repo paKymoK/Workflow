@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchOverviewStatistic,
   fetchTicketByIssueType,
+  fetchTicketByProject,
   fetchSlaByStatus,
   fetchSlaByPriority,
 } from "../api/ticketApi";
@@ -11,6 +12,7 @@ import {
 export const statisticKeys = {
   overview:    (from: string, to: string, k = 0) => ["stat", "overview",    from, to, k] as const,
   issueType:   (from: string, to: string, k = 0) => ["stat", "issueType",   from, to, k] as const,
+  project:     (from: string, to: string, k = 0) => ["stat", "project",     from, to, k] as const,
   slaStatus:   (from: string, to: string, k = 0) => ["stat", "slaStatus",   from, to, k] as const,
   slaPriority: (from: string, to: string, k = 0) => ["stat", "slaPriority", from, to, k] as const,
 };
@@ -26,6 +28,14 @@ export function useTicketByIssueType(from: string, to: string, refetchKey = 0) {
   return useQuery({
     queryKey: statisticKeys.issueType(from, to, refetchKey),
     queryFn:  () => fetchTicketByIssueType(from, to),
+  });
+}
+
+export function useTicketByProject(from: string, to: string, refetchKey = 0) {
+  return useQuery({
+    queryKey: statisticKeys.project(from, to, refetchKey),
+    queryFn:  () => fetchTicketByProject(from, to),
+    retry: false,
   });
 }
 

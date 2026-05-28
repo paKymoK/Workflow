@@ -129,4 +129,18 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       GROUP BY issue_type->>'name';
             """)
   Flux<TicketByIssueTypeStatistic> ticketByIssueTypeStatistic(ZonedDateTime from, ZonedDateTime to);
+
+  @Query(
+      """
+                    SELECT
+                        project->>'name' AS name,
+                        COUNT(*) AS value
+                    FROM ticket
+                    WHERE
+                        (:from::timestamptz IS NULL OR created_at >= :from::timestamptz)
+                        AND (:to::timestamptz IS NULL OR created_at <= :to::timestamptz)
+                    GROUP BY project->>'name'
+                    ORDER BY value DESC
+                    """)
+  Flux<TicketByProjectStatistic> ticketByProjectStatistic(ZonedDateTime from, ZonedDateTime to);
 }

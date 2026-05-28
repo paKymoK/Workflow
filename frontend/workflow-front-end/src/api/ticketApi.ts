@@ -8,8 +8,10 @@ export interface FilterTicketRequest {
     summary?: string;
     statusId?: number;
     priorityId?: number;
+    issueTypeId?: number;
+    projectId?: number;
     assigneeEmail?: string;
-    sortBy?: "resolutionPercent";
+    sortBy?: "resolutionPercent" | "id" | "status" | "issueType" | "project" | "priority" | "assignee" | "summary";
     sortDir?: "asc" | "desc";
 }
 
@@ -246,6 +248,21 @@ export async function fetchSlaByStatus(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<SlaStatusDistribution[]>>(
         "/workflow-service/v1/statistic/sla-by-status",
         { params: { from, to } },
+    );
+    return data.data;
+}
+
+export async function fetchTicketByProject(from?: string, to?: string) {
+    const { data } = await api.get<ResultMessage<StatisticItem[]>>(
+        "/workflow-service/v1/statistic/ticket-by-project",
+        { params: { from, to } },
+    );
+    return data.data;
+}
+
+export async function fetchAllIssueTypes() {
+    const { data } = await api.get<ResultMessage<IssueType[]>>(
+        "/workflow-service/v1/issue",
     );
     return data.data;
 }

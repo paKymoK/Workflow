@@ -43,6 +43,11 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
+  public Mono<List<IssueType>> getAllIssueTypes() {
+    return issueTypeRepository.findAll().collectList();
+  }
+
+  @Override
   public Mono<Project> create(ProjectCreateRequest request) {
     return workflowRepository
         .findById(request.getWorkflowId())
