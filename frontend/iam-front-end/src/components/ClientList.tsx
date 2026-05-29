@@ -5,18 +5,18 @@ import {
 } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { RegisteredClient, RegisteredClientRequest } from "../../api/types";
-import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from "../../hooks/useClients";
+import type { RegisteredClient, RegisteredClientRequest } from "../api/types";
+import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from "../hooks/useClients";
 import ClientRolePanel from "./ClientRolePanel";
 
 const { Text } = Typography;
 
 const AUTH_METHOD_OPTIONS = [
-  { label: "None (public / PKCE)",     value: "none"                },
-  { label: "Client Secret Basic",      value: "client_secret_basic" },
-  { label: "Client Secret Post",       value: "client_secret_post"  },
-  { label: "Client Secret JWT",        value: "client_secret_jwt"   },
-  { label: "Private Key JWT",          value: "private_key_jwt"     },
+  { label: "None (public / PKCE)",  value: "none"                },
+  { label: "Client Secret Basic",   value: "client_secret_basic" },
+  { label: "Client Secret Post",    value: "client_secret_post"  },
+  { label: "Client Secret JWT",     value: "client_secret_jwt"   },
+  { label: "Private Key JWT",       value: "private_key_jwt"     },
 ];
 
 const GRANT_TYPE_OPTIONS = [
@@ -26,9 +26,9 @@ const GRANT_TYPE_OPTIONS = [
 ];
 
 const SCOPE_OPTIONS = [
-  { label: "openid",          value: "openid"          },
-  { label: "profile",         value: "profile"         },
-  { label: "offline_access",  value: "offline_access"  },
+  { label: "openid",         value: "openid"         },
+  { label: "profile",        value: "profile"        },
+  { label: "offline_access", value: "offline_access" },
 ];
 
 const DEFAULT_VALUES: Partial<RegisteredClientRequest> = {
@@ -46,14 +46,7 @@ const DEFAULT_VALUES: Partial<RegisteredClientRequest> = {
   failOpen: true,
 };
 
-/** Controlled tag-list input for URIs */
-function UriListInput({
-  value = [],
-  onChange,
-}: {
-  value?: string[];
-  onChange?: (v: string[]) => void;
-}) {
+function UriListInput({ value = [], onChange }: { value?: string[]; onChange?: (v: string[]) => void }) {
   const [input, setInput] = useState("");
 
   const add = () => {
@@ -77,12 +70,7 @@ function UriListInput({
       </div>
       <div className="flex flex-wrap gap-1">
         {value.map((uri) => (
-          <Tag
-            key={uri}
-            closable
-            onClose={() => onChange?.(value.filter((u) => u !== uri))}
-            className="font-mono text-xs"
-          >
+          <Tag key={uri} closable onClose={() => onChange?.(value.filter((u) => u !== uri))} className="font-mono text-xs">
             {uri}
           </Tag>
         ))}
@@ -103,8 +91,8 @@ export default function ClientList() {
   const [form] = Form.useForm<RegisteredClientRequest>();
 
   const watchedMethods: string[] = Form.useWatch("authenticationMethods", form) ?? [];
-  const isPublic = watchedMethods.every((m) => m === "none");
-  const isSingleTab: boolean = Form.useWatch("singleTabSession", form) ?? false;
+  const isPublic    = watchedMethods.every((m) => m === "none");
+  const isSingleTab = (Form.useWatch("singleTabSession", form) ?? false) as boolean;
 
   const onAdd = () => {
     setEditing(null);
@@ -115,20 +103,20 @@ export default function ClientList() {
   const onEdit = (record: RegisteredClient) => {
     setEditing(record);
     form.setFieldsValue({
-      clientId:                  record.clientId,
-      clientSecret:              undefined,
-      authenticationMethods:     record.authenticationMethods,
-      grantTypes:                record.grantTypes,
-      redirectUris:              record.redirectUris,
-      postLogoutRedirectUris:    record.postLogoutRedirectUris,
-      scopes:                    record.scopes,
+      clientId:                    record.clientId,
+      clientSecret:                undefined,
+      authenticationMethods:       record.authenticationMethods,
+      grantTypes:                  record.grantTypes,
+      redirectUris:                record.redirectUris,
+      postLogoutRedirectUris:      record.postLogoutRedirectUris,
+      scopes:                      record.scopes,
       requireAuthorizationConsent: record.requireAuthorizationConsent,
-      requireProofKey:           record.requireProofKey,
-      accessTokenTtlMinutes:     record.accessTokenTtlMinutes,
-      refreshTokenTtlDays:       record.refreshTokenTtlDays,
-      reuseRefreshTokens:        record.reuseRefreshTokens,
-      singleTabSession:          record.singleTabSession,
-      failOpen:                  record.failOpen,
+      requireProofKey:             record.requireProofKey,
+      accessTokenTtlMinutes:       record.accessTokenTtlMinutes,
+      refreshTokenTtlDays:         record.refreshTokenTtlDays,
+      reuseRefreshTokens:          record.reuseRefreshTokens,
+      singleTabSession:            record.singleTabSession,
+      failOpen:                    record.failOpen,
     });
     setOpen(true);
   };
@@ -146,36 +134,26 @@ export default function ClientList() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const columns: ColumnsType<RegisteredClient> = [
-    {
-      title: "Client ID",
-      dataIndex: "clientId",
-      render: (v: string) => <Text code>{v}</Text>,
-    },
+    { title: "Client ID", dataIndex: "clientId", render: (v: string) => <Text code>{v}</Text> },
     {
       title: "Auth Methods",
       dataIndex: "authenticationMethods",
       render: (methods: string[]) => (
-        <div className="flex flex-wrap gap-1">
-          {methods.map((m) => <Tag key={m}>{m}</Tag>)}
-        </div>
+        <div className="flex flex-wrap gap-1">{methods.map((m) => <Tag key={m}>{m}</Tag>)}</div>
       ),
     },
     {
       title: "Grant Types",
       dataIndex: "grantTypes",
       render: (types: string[]) => (
-        <div className="flex flex-wrap gap-1">
-          {types.map((t) => <Tag key={t} color="blue">{t}</Tag>)}
-        </div>
+        <div className="flex flex-wrap gap-1">{types.map((t) => <Tag key={t} color="blue">{t}</Tag>)}</div>
       ),
     },
     {
       title: "Scopes",
       dataIndex: "scopes",
       render: (scopes: string[]) => (
-        <div className="flex flex-wrap gap-1">
-          {scopes.map((s) => <Tag key={s} color="green">{s}</Tag>)}
-        </div>
+        <div className="flex flex-wrap gap-1">{scopes.map((s) => <Tag key={s} color="green">{s}</Tag>)}</div>
       ),
     },
     {
@@ -205,18 +183,8 @@ export default function ClientList() {
       width: 160,
       render: (_, record) => (
         <Space>
-          <Button
-            size="small"
-            icon={<TeamOutlined />}
-            onClick={() => setRolesClient(record)}
-          >
-            Roles
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
+          <Button size="small" icon={<TeamOutlined />} onClick={() => setRolesClient(record)}>Roles</Button>
+          <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)} />
           <Popconfirm
             title="Delete this client?"
             description="All active sessions for this client will become invalid."
@@ -232,19 +200,10 @@ export default function ClientList() {
   return (
     <>
       <div className="mb-3">
-        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-          Add Client
-        </Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>Add Client</Button>
       </div>
 
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={data}
-        loading={isLoading}
-        pagination={false}
-        scroll={{ x: true }}
-      />
+      <Table rowKey="id" columns={columns} dataSource={data} loading={isLoading} pagination={false} scroll={{ x: true }} />
 
       <Drawer
         title={editing ? `Edit — ${editing.clientId}` : "New Registered Client"}
@@ -254,23 +213,16 @@ export default function ClientList() {
         footer={
           <div className="flex justify-end gap-2">
             <Button onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="primary" loading={isSaving} onClick={onSubmit}>
-              {editing ? "Save" : "Create"}
-            </Button>
+            <Button type="primary" loading={isSaving} onClick={onSubmit}>{editing ? "Save" : "Create"}</Button>
           </div>
         }
       >
         <Form form={form} layout="vertical" requiredMark="optional">
-
           <Form.Item name="clientId" label="Client ID" rules={[{ required: true }]}>
             <Input placeholder="my-app" />
           </Form.Item>
 
-          <Form.Item
-            name="authenticationMethods"
-            label="Authentication Methods"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="authenticationMethods" label="Authentication Methods" rules={[{ required: true }]}>
             <Select mode="multiple" options={AUTH_METHOD_OPTIONS} />
           </Form.Item>
 
@@ -284,11 +236,7 @@ export default function ClientList() {
             </Form.Item>
           )}
 
-          <Form.Item
-            name="grantTypes"
-            label="Grant Types"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="grantTypes" label="Grant Types" rules={[{ required: true }]}>
             <Select mode="multiple" options={GRANT_TYPE_OPTIONS} />
           </Form.Item>
 
@@ -305,18 +253,10 @@ export default function ClientList() {
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-x-4">
-            <Form.Item
-              name="accessTokenTtlMinutes"
-              label="Access Token TTL (minutes)"
-              rules={[{ required: true }]}
-            >
+            <Form.Item name="accessTokenTtlMinutes" label="Access Token TTL (minutes)" rules={[{ required: true }]}>
               <InputNumber min={1} className="w-full" />
             </Form.Item>
-            <Form.Item
-              name="refreshTokenTtlDays"
-              label="Refresh Token TTL (days)"
-              rules={[{ required: true }]}
-            >
+            <Form.Item name="refreshTokenTtlDays" label="Refresh Token TTL (days)" rules={[{ required: true }]}>
               <InputNumber min={1} className="w-full" />
             </Form.Item>
           </div>
@@ -347,13 +287,12 @@ export default function ClientList() {
                 name="failOpen"
                 label="Fail Open (Redis down)"
                 valuePropName="checked"
-                tooltip="On: if Redis is unavailable, allow the request and degrade to token-expiry behavior. Off: reject the request until Redis recovers."
+                tooltip="On: if Redis is unavailable, allow the request. Off: reject until Redis recovers."
               >
                 <Switch />
               </Form.Item>
             )}
           </div>
-
         </Form>
       </Drawer>
 

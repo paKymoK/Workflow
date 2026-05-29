@@ -5,7 +5,8 @@ export { AuthProvider } from "./auth/AuthProvider";
 export { useAuth } from "./auth/useAuth";
 
 // api
-export { default as api, wsBaseUrl } from "./api/axios";
+export { default as api } from "./api/axios";
+export { wsBaseUrl } from "./api/ws";
 export { queryClient } from "./api/queryClient";
 
 // lib

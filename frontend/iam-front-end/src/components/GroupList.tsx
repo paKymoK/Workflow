@@ -5,12 +5,12 @@ import {
 } from "antd";
 import { PlusOutlined, TeamOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { UserGroup, GroupMember } from "../../api/types";
+import type { UserGroup, GroupMember } from "../api/types";
 import {
   useGroups, useCreateGroup, useUpdateGroup, useDeleteGroup,
   useAddGroupMember, useRemoveGroupMember,
-} from "../../hooks/useGroups";
-import { useUsers } from "../../hooks/useUsers";
+} from "../hooks/useGroups";
+import { useUsers } from "../hooks/useUsers";
 
 const { Text } = Typography;
 
@@ -22,7 +22,6 @@ export default function GroupList() {
   const addMemberMutation    = useAddGroupMember();
   const removeMemberMutation = useRemoveGroupMember();
 
-  // Fetch enough users for the member-add select (page 0, size 100)
   const { data: usersPage } = useUsers(0, 100);
   const allUsers = usersPage?.content ?? [];
 
@@ -61,7 +60,6 @@ export default function GroupList() {
     setAddUserSub(undefined);
   };
 
-  // Keep the members panel in sync with latest group data
   const liveGroup = membersGroup
     ? (groups.find((g) => g.id === membersGroup.id) ?? membersGroup)
     : null;
@@ -79,9 +77,7 @@ export default function GroupList() {
       render: (_, m) => (
         <Popconfirm
           title="Remove from group?"
-          onConfirm={() =>
-            removeMemberMutation.mutate({ groupId: liveGroup!.id, userSub: m.sub })
-          }
+          onConfirm={() => removeMemberMutation.mutate({ groupId: liveGroup!.id, userSub: m.sub })}
         >
           <Button size="small" danger icon={<DeleteOutlined />} />
         </Popconfirm>
@@ -109,9 +105,7 @@ export default function GroupList() {
       width: 160,
       render: (_, record) => (
         <Space>
-          <Button size="small" icon={<TeamOutlined />}  onClick={() => setMembersGroup(record)}>
-            Members
-          </Button>
+          <Button size="small" icon={<TeamOutlined />}  onClick={() => setMembersGroup(record)}>Members</Button>
           <Button size="small" icon={<EditOutlined />}  onClick={() => onEdit(record)} />
           <Popconfirm
             title="Delete this group?"
@@ -128,20 +122,11 @@ export default function GroupList() {
   return (
     <>
       <div className="mb-3">
-        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-          Add Group
-        </Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>Add Group</Button>
       </div>
 
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={groups}
-        loading={isLoading}
-        pagination={false}
-      />
+      <Table rowKey="id" columns={columns} dataSource={groups} loading={isLoading} pagination={false} />
 
-      {/* Create / Edit group modal */}
       <Modal
         title={editing ? "Edit Group" : "Create Group"}
         open={groupOpen}
@@ -159,7 +144,6 @@ export default function GroupList() {
         </Form>
       </Modal>
 
-      {/* Manage members drawer */}
       <Drawer
         title={`Members — ${liveGroup?.name ?? ""}`}
         open={!!membersGroup}

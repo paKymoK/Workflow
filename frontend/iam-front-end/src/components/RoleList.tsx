@@ -5,11 +5,11 @@ import {
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { ClientRoleAssignment } from "../../api/types";
-import { useClients } from "../../hooks/useClients";
-import { useClientRoles, useAssignClientRole, useRemoveClientRole } from "../../hooks/useClientRoles";
-import { useUsers } from "../../hooks/useUsers";
-import { useGroups } from "../../hooks/useGroups";
+import type { ClientRoleAssignment } from "../api/types";
+import { useClients } from "../hooks/useClients";
+import { useClientRoles, useAssignClientRole, useRemoveClientRole } from "../hooks/useClientRoles";
+import { useUsers } from "../hooks/useUsers";
+import { useGroups } from "../hooks/useGroups";
 
 function AssignForm({ clientId, onDone }: { clientId: string; onDone: () => void }) {
   const [form] = Form.useForm();
@@ -45,7 +45,7 @@ function AssignForm({ clientId, onDone }: { clientId: string; onDone: () => void
       <Form.Item className="!mb-0">
         <Radio.Group
           value={subjectType}
-          onChange={(e) => { setSubjectType(e.target.value); form.resetFields(["subjectId"]); }}
+          onChange={(e) => { setSubjectType(e.target.value as "USER" | "GROUP"); form.resetFields(["subjectId"]); }}
         >
           <Radio.Button value="USER">User</Radio.Button>
           <Radio.Button value="GROUP">Group</Radio.Button>
@@ -68,12 +68,7 @@ function AssignForm({ clientId, onDone }: { clientId: string; onDone: () => void
       </Form.Item>
 
       <Form.Item className="!mb-0">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          loading={assignMutation.isPending}
-          onClick={onSubmit}
-        >
+        <Button type="primary" icon={<PlusOutlined />} loading={assignMutation.isPending} onClick={onSubmit}>
           Assign
         </Button>
       </Form.Item>
@@ -90,10 +85,7 @@ export default function RoleList() {
   const { data: assignments = [], isLoading: rolesLoading } = useClientRoles(selectedClientId ?? "");
   const removeMutation = useRemoveClientRole(selectedClientId ?? "");
 
-  const clientOptions = clients.map((c) => ({
-    value: c.id,
-    label: c.clientId,
-  }));
+  const clientOptions = clients.map((c) => ({ value: c.id, label: c.clientId }));
 
   const columns: ColumnsType<ClientRoleAssignment> = [
     {
@@ -103,19 +95,12 @@ export default function RoleList() {
       render: (t: string) => <Tag color={t === "USER" ? "blue" : "purple"}>{t}</Tag>,
     },
     { title: "Name", dataIndex: "subjectName" },
-    {
-      title: "Role",
-      dataIndex: "role",
-      render: (r: string) => <Tag color="green">{r}</Tag>,
-    },
+    { title: "Role", dataIndex: "role", render: (r: string) => <Tag color="green">{r}</Tag> },
     {
       title: "",
       width: 60,
       render: (_, record) => (
-        <Popconfirm
-          title="Remove this assignment?"
-          onConfirm={() => removeMutation.mutate(record.id)}
-        >
+        <Popconfirm title="Remove this assignment?" onConfirm={() => removeMutation.mutate(record.id)}>
           <Button size="small" danger icon={<DeleteOutlined />} />
         </Popconfirm>
       ),
@@ -134,11 +119,7 @@ export default function RoleList() {
           className="!w-[240px]"
         />
         {activeClient && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setShowForm((p) => !p)}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setShowForm((p) => !p)}>
             Assign Role
           </Button>
         )}

@@ -51,13 +51,9 @@ export default function OrgNode({ id, data }: NodeProps) {
 
       <Handle type="source" position={Position.Bottom} />
 
-      {/* Expand / collapse toggle */}
       {hasChildren && (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onExpandToggle(id);
-          }}
+          onClick={(e) => { e.stopPropagation(); onExpandToggle(id); }}
           className="absolute -bottom-2 left-1/2 -translate-x-1/2
                      w-4 h-4 rounded-full z-10 flex items-center justify-center
                      bg-[var(--neon-yellow)] border border-[var(--neon-yellow)]

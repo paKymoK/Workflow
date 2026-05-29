@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchGroups, createGroup, updateGroup, deleteGroup,
   addGroupMember, removeGroupMember,
-} from "../api/ticketApi";
+} from "../api/iamApi";
 import type { UserGroupRequest } from "../api/types";
 
 const KEY = ["groups"] as const;

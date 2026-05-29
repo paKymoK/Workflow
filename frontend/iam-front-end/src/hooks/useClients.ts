@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchClients, createClient, updateClient, deleteClient } from "../api/ticketApi";
+import { fetchClients, createClient, updateClient, deleteClient } from "../api/iamApi";
 
 const KEY = ["clients"] as const;
 

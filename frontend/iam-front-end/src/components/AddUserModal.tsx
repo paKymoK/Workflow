@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { Modal, Form, Input, Button, message } from "antd";
-import { api } from "@takypok/shared";
-import type { ResultMessage } from "../../api/types";
+import { useCreateUser } from "../hooks/useUsers";
 
 interface Props {
   open:      boolean;
@@ -19,13 +17,12 @@ interface FormValues {
 }
 
 export default function AddUserModal({ open, onClose, onSuccess }: Props) {
-  const [form]    = Form.useForm<FormValues>();
-  const [loading, setLoading] = useState(false);
+  const [form]         = Form.useForm<FormValues>();
+  const createMutation = useCreateUser();
 
   const handleSubmit = async (values: FormValues) => {
-    setLoading(true);
     try {
-      await api.post<ResultMessage<void>>("/auth-service/v1/users", {
+      await createMutation.mutateAsync({
         username: values.username,
         password: values.password,
         userinfo: {
@@ -40,8 +37,6 @@ export default function AddUserModal({ open, onClose, onSuccess }: Props) {
       onSuccess();
     } catch {
       message.error("Failed to register user");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,8 +67,8 @@ export default function AddUserModal({ open, onClose, onSuccess }: Props) {
           <Input placeholder="Department" />
         </Form.Item>
         <Form.Item className="mb-0 flex justify-end">
-          <Button onClick={handleClose} className="mr-2" disabled={loading}>Cancel</Button>
-          <Button type="primary" htmlType="submit" loading={loading}>Register</Button>
+          <Button onClick={handleClose} className="mr-2" disabled={createMutation.isPending}>Cancel</Button>
+          <Button type="primary" htmlType="submit" loading={createMutation.isPending}>Register</Button>
         </Form.Item>
       </Form>
     </Modal>

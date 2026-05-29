@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@source "../../packages/shared/src";
+
+:root,
+[data-theme="dark"] {
+  --neon-yellow: #00CFFF;
+  --neon-pink: #7B2FBE;
+  --neon-cyan: #00F5C4;
+  --black: #020B18;
+  --dark: #041428;
+  --darker: #030E1E;
+  --white: #C8F0FF;
+  --grid-color: rgba(0, 180, 255, 0.05);
+  --text-muted: rgba(200, 240, 255, 0.35);
+  --border-subtle: rgba(0, 207, 255, 0.15);
+}
+
+[data-theme="light"] {
+  --neon-yellow: #0066BB;
+  --neon-pink: #C8455E;
+  --neon-cyan: #00897B;
+  --black: #DDE1E7;
+  --dark: #E8EAED;
+  --darker: #CDD1D8;
+  --white: #0A2540;
+  --grid-color: rgba(0, 102, 187, 0.01);
+  --text-muted: rgba(10, 37, 64, 0.4);
+  --border-subtle: rgba(0, 102, 187, 0.18);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--black) !important;
+  color: var(--white) !important;
+  cursor: crosshair;
+  font-family: 'Share Tech Mono', monospace;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--darker); }
+::-webkit-scrollbar-thumb { background: var(--neon-yellow); border-radius: 2px; }
+
+@font-face {
+  font-family: 'AegirSeaborn';
+  src: url('./assets/font/AegirSeaborn.woff2') format('woff2');
+  font-display: swap;
+}
+
+.font-bebas  { font-family: 'Bebas Neue', sans-serif !important; }
+.font-mono-tech { font-family: 'Share Tech Mono', monospace !important; }
+
+.neon-text-yellow { color: var(--neon-yellow) !important; }
+.neon-text-pink   { color: var(--neon-pink)   !important; }
+.neon-text-cyan   { color: var(--neon-cyan)   !important; }

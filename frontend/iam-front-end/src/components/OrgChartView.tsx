@@ -1,45 +1,38 @@
-import { useCallback, useMemo } from "react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Spin, Drawer, Descriptions, Badge, Input } from "antd";
-import {
-  ReactFlow, Controls, useReactFlow, ReactFlowProvider,
-} from "@xyflow/react";
+import { ReactFlow, Controls, useReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import type { UserDetail } from "../../api/types";
-import { buildOrgChart } from "../../utils/buildOrgChart";
-import type { OrgChartUser } from "../../utils/buildOrgChart";
-import OrgNode from "../OrgNode";
-import { useOrgChart, useFetchUserBySub } from "../../hooks/useUsers";
+import type { UserDetail } from "../api/types";
+import { buildOrgChart } from "../utils/buildOrgChart";
+import type { OrgChartUser } from "../utils/buildOrgChart";
+import OrgNode from "./OrgNode";
+import { useOrgChart, useFetchUserBySub } from "../hooks/useUsers";
 
 const nodeTypes = { orgNode: OrgNode };
 
-// Inner component — must be inside ReactFlowProvider to use useReactFlow()
 function OrgChartInner() {
-  const [visibleSubs,   setVisibleSubs]   = useState<Set<string>>(new Set());
-  const [selectedUser,  setSelectedUser]  = useState<UserDetail | null>(null);
-  const [drawerOpen,    setDrawerOpen]    = useState(false);
-  const [searchValue,   setSearchValue]   = useState("");
-  const [searchError,   setSearchError]   = useState<string | null>(null);
+  const [visibleSubs,  setVisibleSubs]  = useState<Set<string>>(new Set());
+  const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
+  const [drawerOpen,   setDrawerOpen]   = useState(false);
+  const [searchValue,  setSearchValue]  = useState("");
+  const [searchError,  setSearchError]  = useState<string | null>(null);
 
   const { setCenter, getNode } = useReactFlow();
 
-  // ── Queries / mutations ───────────────────────────────────────────────────
   const { data: users = [], isLoading } = useOrgChart();
   const fetchUserMutation               = useFetchUserBySub();
   const detailLoading                   = fetchUserMutation.isPending;
 
-  // Default visible set (depth ≤ 1) derived during render — no side-effect needed
   const defaultVisibleSubs = useMemo(
     () => new Set(users.filter((u) => u.depth <= 1).map((u) => u.sub)),
     [users],
   );
 
-  // Use the default until the user makes an explicit toggle/search
   const effectiveVisibleSubs = visibleSubs.size === 0 ? defaultVisibleSubs : visibleSubs;
 
   const handleExpandToggle = useCallback((nodeId: string) => {
     setVisibleSubs((prev) => {
-      const base = prev.size === 0 ? defaultVisibleSubs : prev;
+      const base     = prev.size === 0 ? defaultVisibleSubs : prev;
       const next     = new Set(base);
       const children = users.filter((u) => u.managerSub === nodeId);
       const alreadyExpanded = children.length > 0 && children.every((c) => base.has(c.sub));
@@ -122,7 +115,7 @@ function OrgChartInner() {
         )}
       </div>
 
-      <div className="h-[calc(100vh-180px)] min-h-[500px] border border-[rgba(255,229,0,0.25)] overflow-hidden bg-[var(--darker)]">
+      <div className="h-[calc(100vh-220px)] min-h-[500px] border border-[rgba(255,229,0,0.25)] overflow-hidden bg-[var(--darker)]">
         <ReactFlow
           nodes={nodes} edges={edges} nodeTypes={nodeTypes}
           onNodeClick={handleNodeClick} fitView fitViewOptions={{ padding: 0.2 }}

@@ -157,7 +157,13 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
-                    .requestMatchers("/assets/**", "/login/**", "/logout", "/v1/**", "/actuator/**")
+                    .requestMatchers(
+                        "/assets/**",
+                        "/login/**",
+                        "/logout",
+                        "/v1/**",
+                        "/actuator/**",
+                        "/admin/assets/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

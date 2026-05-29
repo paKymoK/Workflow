@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchClientRoles, assignClientRole, removeClientRole } from "../api/ticketApi";
+import { fetchClientRoles, assignClientRole, removeClientRole } from "../api/iamApi";
 import type { ClientRoleAssignmentRequest } from "../api/types";
 
 const key = (clientId: string) => ["clientRoles", clientId] as const;

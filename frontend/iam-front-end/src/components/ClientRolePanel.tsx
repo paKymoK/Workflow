@@ -5,16 +5,16 @@ import {
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { ClientRoleAssignment } from "../../api/types";
-import { useClientRoles, useAssignClientRole, useRemoveClientRole } from "../../hooks/useClientRoles";
-import { useUsers } from "../../hooks/useUsers";
-import { useGroups } from "../../hooks/useGroups";
+import type { ClientRoleAssignment } from "../api/types";
+import { useClientRoles, useAssignClientRole, useRemoveClientRole } from "../hooks/useClientRoles";
+import { useUsers } from "../hooks/useUsers";
+import { useGroups } from "../hooks/useGroups";
 
 interface Props {
-  clientId: string;
+  clientId:    string;
   clientLabel: string;
-  open: boolean;
-  onClose: () => void;
+  open:        boolean;
+  onClose:     () => void;
 }
 
 export default function ClientRolePanel({ clientId, clientLabel, open, onClose }: Props) {
@@ -39,15 +39,13 @@ export default function ClientRolePanel({ clientId, clientLabel, open, onClose }
   const onSubmit = async () => {
     const { subjectId, role } = await form.validateFields();
     await assignMutation.mutateAsync(
-      subjectType === "USER"
-        ? { userSub: subjectId, role }
-        : { groupId: subjectId, role },
+      subjectType === "USER" ? { userSub: subjectId, role } : { groupId: subjectId, role },
     );
     setFormOpen(false);
   };
 
-  const assignedUserSubs  = assignments.filter((a) => a.type === "USER").map((a) => a.subjectId);
-  const assignedGroupIds  = assignments.filter((a) => a.type === "GROUP").map((a) => a.subjectId);
+  const assignedUserSubs = assignments.filter((a) => a.type === "USER").map((a) => a.subjectId);
+  const assignedGroupIds = assignments.filter((a) => a.type === "GROUP").map((a) => a.subjectId);
 
   const userOptions  = allUsers
     .filter((u) => !assignedUserSubs.includes(u.sub))
@@ -62,20 +60,15 @@ export default function ClientRolePanel({ clientId, clientLabel, open, onClose }
       title: "Type",
       dataIndex: "type",
       width: 80,
-      render: (t: string) => (
-        <Tag color={t === "USER" ? "blue" : "purple"}>{t}</Tag>
-      ),
+      render: (t: string) => <Tag color={t === "USER" ? "blue" : "purple"}>{t}</Tag>,
     },
-    { title: "Name",  dataIndex: "subjectName" },
-    { title: "Role",  dataIndex: "role", render: (r) => <Tag color="green">{r}</Tag> },
+    { title: "Name", dataIndex: "subjectName" },
+    { title: "Role", dataIndex: "role", render: (r) => <Tag color="green">{r}</Tag> },
     {
       title: "",
       width: 60,
       render: (_, record) => (
-        <Popconfirm
-          title="Remove this assignment?"
-          onConfirm={() => removeMutation.mutate(record.id)}
-        >
+        <Popconfirm title="Remove this assignment?" onConfirm={() => removeMutation.mutate(record.id)}>
           <Button size="small" danger icon={<DeleteOutlined />} />
         </Popconfirm>
       ),
@@ -83,26 +76,12 @@ export default function ClientRolePanel({ clientId, clientLabel, open, onClose }
   ];
 
   return (
-    <Drawer
-      title={`Roles — ${clientLabel}`}
-      open={open}
-      onClose={onClose}
-      width={520}
-    >
+    <Drawer title={`Roles — ${clientLabel}`} open={open} onClose={onClose} width={520}>
       <div className="mb-3">
-        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-          Assign Role
-        </Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>Assign Role</Button>
       </div>
 
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={assignments}
-        loading={isLoading}
-        pagination={false}
-        size="small"
-      />
+      <Table rowKey="id" columns={columns} dataSource={assignments} loading={isLoading} pagination={false} size="small" />
 
       <Drawer
         title="Assign Role"
@@ -112,9 +91,7 @@ export default function ClientRolePanel({ clientId, clientLabel, open, onClose }
         footer={
           <Space className="flex justify-end">
             <Button onClick={() => setFormOpen(false)}>Cancel</Button>
-            <Button type="primary" loading={assignMutation.isPending} onClick={onSubmit}>
-              Assign
-            </Button>
+            <Button type="primary" loading={assignMutation.isPending} onClick={onSubmit}>Assign</Button>
           </Space>
         }
       >
@@ -122,10 +99,7 @@ export default function ClientRolePanel({ clientId, clientLabel, open, onClose }
           <Form.Item label="Assign to">
             <Radio.Group
               value={subjectType}
-              onChange={(e) => {
-                setSubjectType(e.target.value);
-                form.resetFields(["subjectId"]);
-              }}
+              onChange={(e) => { setSubjectType(e.target.value as "USER" | "GROUP"); form.resetFields(["subjectId"]); }}
             >
               <Radio.Button value="USER">User</Radio.Button>
               <Radio.Button value="GROUP">Group</Radio.Button>
