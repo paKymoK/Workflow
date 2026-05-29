@@ -1,23 +1,31 @@
 import { useState, useMemo } from "react";
-import { Card, Table, Button, Tag, Checkbox, Popover, Progress, Spin } from "antd";
+import { Card, Table, Button, Tag, Checkbox, Popover, Progress, Select, Spin } from "antd";
 import { ArrowLeftOutlined, SettingOutlined } from "@ant-design/icons";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell,
+  LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import type { ColumnsType } from "antd/es/table";
-import type { ApplicationTicketStatistic, TicketSla } from "../../api/types.ts";
+import type { ApplicationTicketStatistic, ApplicationTrendPoint, TicketSla } from "../../api/types.ts";
 import type { FilterTicketRequest } from "../../api/ticketApi.ts";
-import { useTicketByApplication } from "../../hooks/useStatistics";
+import { useTicketByApplication, useTicketByApplicationTrend } from "../../hooks/useStatistics";
 import { useTicketList } from "../../hooks/useTickets";
 import DeadlineTag from "../DeadlineTag.tsx";
 import { useTheme } from "@takypok/shared";
 import dayjs from "dayjs";
 
-const APP_COLORS = {
-  Open:        "#FF2D6B",
-  "In Progress": "#FFE500",
-  Done:        "#00F5FF",
-};
+const LINE_COLORS = [
+  "#FFE500", "#00F5FF", "#FF2D6B", "#FF6B35",
+  "#A855F7", "#22D3EE", "#10B981", "#F59E0B", "#6366F1", "#EC4899",
+];
+
+const STATUS_GROUPS = ["TODO", "PROCESSING", "DONE"] as const;
+type StatusGroup = typeof STATUS_GROUPS[number];
+
+const STATUS_OPTIONS = [
+  { label: "Todo",        value: "TODO"       },
+  { label: "In Progress", value: "PROCESSING" },
+  { label: "Done",        value: "DONE"       },
+];
 
 type ColKey =
   | "id" | "summary" | "status" | "issueType" | "priority"
@@ -38,6 +46,44 @@ const COL_LABELS: Record<ColKey, string> = {
 
 const DEFAULT_COLS: ColKey[] = ["id", "summary", "priority", "slaPercent", "response", "resolution"];
 
+function buildChartData(
+  rawPoints: ApplicationTrendPoint[],
+  selectedGroups: StatusGroup[],
+): { date: string; [app: string]: number | string }[] {
+  if (!rawPoints.length) return [];
+
+  const dates = [...new Set(rawPoints.map((p) => p.date))].sort();
+  const apps  = [...new Set(rawPoints.map((p) => p.application))];
+
+  // Index raw points for O(1) lookup
+  const idx = new Map<string, number>();
+  for (const p of rawPoints) {
+    idx.set(`${p.date}|${p.application}|${p.statusGroup}`, p.count);
+  }
+
+  // Carry-forward last known cumulative per (app, group)
+  const lastCum = new Map<string, number>();
+
+  return dates.map((date) => {
+    const row: { date: string; [app: string]: number | string } = {
+      date: dayjs(date).format("MM/DD"),
+    };
+
+    for (const app of apps) {
+      let total = 0;
+      for (const group of STATUS_GROUPS) {
+        const key  = `${date}|${app}|${group}`;
+        const lk   = `${app}|${group}`;
+        const val  = idx.has(key) ? idx.get(key)! : (lastCum.get(lk) ?? 0);
+        if (idx.has(key)) lastCum.set(lk, val);
+        if (selectedGroups.includes(group)) total += val;
+      }
+      row[app] = total;
+    }
+    return row;
+  });
+}
+
 interface Props {
   refetchKey?: number;
 }
@@ -50,44 +96,27 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
     to:   dayjs().endOf("day").toISOString(),
   }), []);
 
-  const [selectedApp,  setSelectedApp]  = useState<string | null>(null);
-  const [visibleCols,  setVisibleCols]  = useState<ColKey[]>(DEFAULT_COLS);
-  const [page,         setPage]         = useState(0);
-  const [pageSize,     setPageSize]     = useState(10);
-  const [sortBy,       setSortBy]       = useState<SortField>("resolutionPercent");
-  const [sortDir,      setSortDir]      = useState<"asc" | "desc">("desc");
+  const [selectedGroups, setSelectedGroups] = useState<StatusGroup[]>([...STATUS_GROUPS]);
+  const [selectedApp,    setSelectedApp]    = useState<string | null>(null);
+  const [visibleCols,    setVisibleCols]    = useState<ColKey[]>(DEFAULT_COLS);
+  const [page,           setPage]           = useState(0);
+  const [pageSize,       setPageSize]       = useState(10);
+  const [sortBy,         setSortBy]         = useState<SortField>("resolutionPercent");
+  const [sortDir,        setSortDir]        = useState<"asc" | "desc">("desc");
 
-  const { data: appData, isLoading } = useTicketByApplication(from, to, refetchKey);
+  const { data: trendData, isLoading: trendLoading } = useTicketByApplicationTrend(from, to, refetchKey);
+  const { data: appData,   isLoading: appLoading    } = useTicketByApplication(from, to, refetchKey);
 
-  const chartData = useMemo(() => {
-    if (!appData) return [];
-    return appData.map((row) => ({
-      name:          row.application,
-      Open:          row.open,
-      "In Progress": row.inProgress,
-      Done:          row.done,
-      _raw:          row,
-    }));
-  }, [appData]);
+  const apps = useMemo(
+    () => [...new Set((trendData ?? []).map((p) => p.application))],
+    [trendData],
+  );
 
-  const handleBarClick = (data: { name?: string }) => {
-    if (data?.name) {
-      setSelectedApp(data.name);
-      setPage(0);
-    }
-  };
+  const chartData = useMemo(
+    () => buildChartData(trendData ?? [], selectedGroups),
+    [trendData, selectedGroups],
+  );
 
-  const handleRowClick = (row: ApplicationTicketStatistic) => {
-    setSelectedApp(row.application);
-    setPage(0);
-  };
-
-  const handleBack = () => {
-    setSelectedApp(null);
-    setPage(0);
-  };
-
-  // Drill-down ticket table params
   const tableParams = useMemo<FilterTicketRequest>(() => ({
     page, size: pageSize,
     application: selectedApp ?? undefined,
@@ -96,8 +125,21 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
   }), [page, pageSize, selectedApp, sortBy, sortDir]);
 
   const { data: pageData, isFetching } = useTicketList(tableParams, { enabled: selectedApp !== null });
-  const tickets = pageData?.content ?? [];
+  const tickets     = pageData?.content ?? [];
   const totalTickets = pageData?.totalElements ?? 0;
+
+  const handleLegendClick = (e: { value?: string }) => {
+    const app = e?.value;
+    if (typeof app === "string") {
+      setSelectedApp((prev) => prev === app ? null : app);
+      setPage(0);
+    }
+  };
+
+  const handleBack = () => {
+    setSelectedApp(null);
+    setPage(0);
+  };
 
   const handleColToggle = (key: ColKey, checked: boolean) => {
     setVisibleCols(
@@ -206,36 +248,49 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
       render: (v: string) => (
         <span
           className="cursor-pointer font-medium hover:underline"
-          onClick={() => handleRowClick({ application: v } as ApplicationTicketStatistic)}
+          onClick={() => { setSelectedApp(v); setPage(0); }}
         >
           {v}
         </span>
       ),
     },
-    { title: "Open",        dataIndex: "open",        key: "open",        width: 70,  render: (v: number) => <span className="text-[#FF2D6B] font-semibold">{v}</span> },
-    { title: "In Progress", dataIndex: "inProgress",  key: "inProgress",  width: 90,  render: (v: number) => <span className="text-[#FFE500] font-semibold">{v}</span> },
-    { title: "Done",        dataIndex: "done",        key: "done",        width: 70,  render: (v: number) => <span className="text-[#00F5FF] font-semibold">{v}</span> },
-    { title: "Total",       dataIndex: "total",       key: "total",       width: 70  },
-    { title: "SLA Breached",dataIndex: "slaBreached", key: "slaBreached", width: 100, render: (v: number) => v > 0 ? <Tag color="red">{v}</Tag> : <span className="text-gray-400">0</span> },
+    { title: "Open",         dataIndex: "open",        key: "open",        width: 70,  render: (v: number) => <span className="text-[#FF2D6B] font-semibold">{v}</span> },
+    { title: "In Progress",  dataIndex: "inProgress",  key: "inProgress",  width: 90,  render: (v: number) => <span className="text-[#FFE500] font-semibold">{v}</span> },
+    { title: "Done",         dataIndex: "done",        key: "done",        width: 70,  render: (v: number) => <span className="text-[#00F5FF] font-semibold">{v}</span> },
+    { title: "Total",        dataIndex: "total",       key: "total",       width: 70  },
+    { title: "SLA Breached", dataIndex: "slaBreached", key: "slaBreached", width: 100, render: (v: number) => v > 0 ? <Tag color="red">{v}</Tag> : <span className="text-gray-400">0</span> },
   ];
-
-  const cardExtra = selectedApp !== null ? (
-    <div className="flex items-center gap-2">
-      <Button icon={<ArrowLeftOutlined />} size="small" onClick={handleBack}>Back</Button>
-      {colTogglePopover}
-    </div>
-  ) : null;
 
   const cardTitle = selectedApp !== null
     ? <span>Application Health — <span className="text-[#00F5FF]">{selectedApp}</span></span>
     : "Application Health";
 
+  const cardExtra = (
+    <div className="flex items-center gap-2">
+      {selectedApp !== null && (
+        <Button icon={<ArrowLeftOutlined />} size="small" onClick={handleBack}>Back</Button>
+      )}
+      {selectedApp !== null && colTogglePopover}
+      <Select
+        mode="multiple"
+        size="small"
+        maxTagCount={1}
+        placeholder="Status"
+        value={selectedGroups}
+        onChange={(v) => setSelectedGroups(v.length ? v as StatusGroup[] : [...STATUS_GROUPS])}
+        options={STATUS_OPTIONS}
+        className="!min-w-[130px]"
+        allowClear={false}
+      />
+    </div>
+  );
+
   return (
     <Card title={cardTitle} extra={cardExtra} className="min-w-0">
       <div className="flex flex-col gap-6">
 
-        {/* Top — full-width horizontal stacked bar chart */}
-        {isLoading ? (
+        {/* Line chart — full width */}
+        {trendLoading ? (
           <div className="flex items-center justify-center min-h-[300px]">
             <Spin />
           </div>
@@ -244,59 +299,58 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
             No data
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={Math.max(300, chartData.length * 36 + 60)}>
-            <BarChart
-              layout="vertical"
-              data={chartData}
-              margin={{ top: 8, right: 24, left: 8, bottom: 8 }}
-              barSize={20}
-              onClick={(e) => {
-                const name = e?.activeLabel;
-                if (typeof name === "string") handleBarClick({ name });
-              }}
-            >
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 8 }}>
               <XAxis
-                type="number"
-                tick={{ fill: isDark ? "rgba(240,240,240,0.5)" : "rgba(0,0,0,0.45)", fontSize: 11 }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={140}
+                dataKey="date"
                 tick={{ fill: isDark ? "rgba(240,240,240,0.6)" : "rgba(0,0,0,0.65)", fontSize: 12 }}
               />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                cursor={{ fill: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}
+              <YAxis
+                tick={{ fill: isDark ? "rgba(240,240,240,0.5)" : "rgba(0,0,0,0.45)", fontSize: 11 }}
+                allowDecimals={false}
               />
-              <Legend />
-              {(Object.keys(APP_COLORS) as (keyof typeof APP_COLORS)[]).map((key) => (
-                <Bar key={key} dataKey={key} stackId="app" fill={APP_COLORS[key]} className="cursor-pointer">
-                  {chartData.map((entry) => (
-                    <Cell
-                      key={entry.name}
-                      fill={APP_COLORS[key]}
-                      opacity={selectedApp === null || selectedApp === entry.name ? 1 : 0.35}
-                    />
-                  ))}
-                </Bar>
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend
+                onClick={handleLegendClick}
+                formatter={(value) => (
+                  <span
+                    className="cursor-pointer"
+                    style={{ opacity: selectedApp === null || selectedApp === value ? 1 : 0.4 }}
+                  >
+                    {value}
+                  </span>
+                )}
+              />
+              {apps.map((app, i) => (
+                <Line
+                  key={app}
+                  type="natural"
+                  dataKey={app}
+                  stroke={LINE_COLORS[i % LINE_COLORS.length]}
+                  strokeWidth={selectedApp === null || selectedApp === app ? 2 : 1}
+                  dot={false}
+                  opacity={selectedApp === null || selectedApp === app ? 1 : 0.25}
+                />
               ))}
-            </BarChart>
+            </LineChart>
           </ResponsiveContainer>
         )}
 
-        {/* Bottom — summary or drill-down table */}
+        {/* Table — summary or drill-down */}
         <div className="min-w-0">
           {selectedApp === null ? (
             <Table<ApplicationTicketStatistic>
               columns={summaryColumns}
               dataSource={appData ?? []}
               rowKey="application"
-              loading={isLoading}
+              loading={appLoading}
               size="small"
               scroll={{ x: "max-content" }}
               pagination={false}
-              onRow={(row) => ({ onClick: () => handleRowClick(row), className: "cursor-pointer" })}
+              onRow={(row) => ({
+                onClick: () => { setSelectedApp(row.application); setPage(0); },
+                className: "cursor-pointer",
+              })}
             />
           ) : (
             <Table<TicketSla>

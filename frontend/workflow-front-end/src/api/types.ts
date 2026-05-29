@@ -221,6 +221,13 @@ export interface StatisticItem {
   value: number;
 }
 
+export interface ApplicationTrendPoint {
+  date: string; // ISO datetime string, e.g. "2026-05-29T00:00:00+07:00"
+  application: string;
+  statusGroup: string;
+  count: number;
+}
+
 export interface ApplicationTicketStatistic {
   application: string;
   total: number;

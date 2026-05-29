@@ -7,6 +7,7 @@ import {
   fetchSlaByStatus,
   fetchSlaByPriority,
   fetchTicketByApplication,
+  fetchTicketByApplicationTrend,
 } from "../api/ticketApi";
 
 // refetchKey is included in query keys so that incrementing it from the
@@ -19,6 +20,7 @@ export const statisticKeys = {
   slaStatus:      (from: string, to: string, k = 0) => ["stat", "slaStatus",      from, to, k] as const,
   slaPriority:    (from: string, to: string, k = 0) => ["stat", "slaPriority",    from, to, k] as const,
   appHealth:      (from: string, to: string, k = 0) => ["stat", "appHealth",      from, to, k] as const,
+  appTrend:       (from: string, to: string, k = 0) => ["stat", "appTrend",       from, to, k] as const,
 };
 
 export function useOverviewStatistic(from: string, to: string, refetchKey = 0) {
@@ -73,6 +75,14 @@ export function useTicketByApplication(from: string, to: string, refetchKey = 0)
   return useQuery({
     queryKey:        statisticKeys.appHealth(from, to, refetchKey),
     queryFn:         () => fetchTicketByApplication(from, to),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useTicketByApplicationTrend(from: string, to: string, refetchKey = 0) {
+  return useQuery({
+    queryKey:        statisticKeys.appTrend(from, to, refetchKey),
+    queryFn:         () => fetchTicketByApplicationTrend(from, to),
     placeholderData: keepPreviousData,
   });
 }

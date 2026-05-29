@@ -195,4 +195,43 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                     """)
   Flux<ApplicationTicketStatistic> ticketByApplicationStatistic(
       ZonedDateTime from, ZonedDateTime to);
+
+  @Query(
+      """
+                    WITH top_apps AS (
+                        SELECT detail->>'application' AS application
+                        FROM ticket
+                        WHERE detail->>'application' IS NOT NULL
+                          AND (:from::timestamptz IS NULL OR created_at >= :from::timestamptz)
+                          AND (:to::timestamptz IS NULL OR created_at <= :to::timestamptz)
+                        GROUP BY 1
+                        ORDER BY COUNT(*) DESC
+                        LIMIT 10
+                    ),
+                    daily AS (
+                        SELECT
+                            date_trunc('day', created_at AT TIME ZONE 'Asia/Ho_Chi_Minh') AT TIME ZONE 'Asia/Ho_Chi_Minh' AS date,
+                            detail->>'application'                                             AS application,
+                            status->>'group'                                                   AS status_group,
+                            COUNT(*)                                                           AS daily_count
+                        FROM ticket
+                        WHERE detail->>'application' IS NOT NULL
+                          AND detail->>'application' IN (SELECT application FROM top_apps)
+                          AND (:from::timestamptz IS NULL OR created_at >= :from::timestamptz)
+                          AND (:to::timestamptz IS NULL OR created_at <= :to::timestamptz)
+                        GROUP BY 1, 2, 3
+                    )
+                    SELECT
+                        date,
+                        application,
+                        status_group,
+                        SUM(daily_count) OVER (
+                            PARTITION BY application, status_group
+                            ORDER BY date
+                            ROWS UNBOUNDED PRECEDING
+                        ) AS count
+                    FROM daily
+                    ORDER BY date, application, status_group
+                    """)
+  Flux<ApplicationTrendPoint> ticketByApplicationTrend(ZonedDateTime from, ZonedDateTime to);
 }
