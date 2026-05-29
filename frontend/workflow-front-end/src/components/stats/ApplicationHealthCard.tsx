@@ -232,64 +232,61 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
 
   return (
     <Card title={cardTitle} extra={cardExtra} className="min-w-0">
-      <div className="flex gap-4 min-h-[420px]">
+      <div className="flex flex-col gap-6">
 
-        {/* Left — horizontal stacked bar chart */}
-        <div className="w-[32%] shrink-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full min-h-[380px]">
-              <Spin />
-            </div>
-          ) : !chartData.length ? (
-            <div className="flex items-center justify-center h-full min-h-[380px] text-gray-400 text-sm">
-              No data
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={Math.max(300, chartData.length * 40 + 60)}>
-              <BarChart
-                layout="vertical"
-                data={chartData}
-                margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
-                barSize={18}
-                onClick={(e) => {
-                  const name = e?.activeLabel;
-                  if (typeof name === "string") handleBarClick({ name });
-                }}
-              >
-                <XAxis
-                  type="number"
-                  tick={{ fill: isDark ? "rgba(240,240,240,0.5)" : "rgba(0,0,0,0.45)", fontSize: 11 }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={120}
-                  tick={{ fill: isDark ? "rgba(240,240,240,0.6)" : "rgba(0,0,0,0.65)", fontSize: 11 }}
-                  tickFormatter={(v: string) => v.length > 14 ? v.slice(0, 13) + "…" : v}
-                />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  cursor={{ fill: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}
-                />
-                <Legend />
-                {(Object.keys(APP_COLORS) as (keyof typeof APP_COLORS)[]).map((key) => (
-                  <Bar key={key} dataKey={key} stackId="app" fill={APP_COLORS[key]} className="cursor-pointer">
-                    {chartData.map((entry) => (
-                      <Cell
-                        key={entry.name}
-                        fill={APP_COLORS[key]}
-                        opacity={selectedApp === null || selectedApp === entry.name ? 1 : 0.35}
-                      />
-                    ))}
-                  </Bar>
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
+        {/* Top — full-width horizontal stacked bar chart */}
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[300px]">
+            <Spin />
+          </div>
+        ) : !chartData.length ? (
+          <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
+            No data
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={Math.max(300, chartData.length * 36 + 60)}>
+            <BarChart
+              layout="vertical"
+              data={chartData}
+              margin={{ top: 8, right: 24, left: 8, bottom: 8 }}
+              barSize={20}
+              onClick={(e) => {
+                const name = e?.activeLabel;
+                if (typeof name === "string") handleBarClick({ name });
+              }}
+            >
+              <XAxis
+                type="number"
+                tick={{ fill: isDark ? "rgba(240,240,240,0.5)" : "rgba(0,0,0,0.45)", fontSize: 11 }}
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={140}
+                tick={{ fill: isDark ? "rgba(240,240,240,0.6)" : "rgba(0,0,0,0.65)", fontSize: 12 }}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}
+              />
+              <Legend />
+              {(Object.keys(APP_COLORS) as (keyof typeof APP_COLORS)[]).map((key) => (
+                <Bar key={key} dataKey={key} stackId="app" fill={APP_COLORS[key]} className="cursor-pointer">
+                  {chartData.map((entry) => (
+                    <Cell
+                      key={entry.name}
+                      fill={APP_COLORS[key]}
+                      opacity={selectedApp === null || selectedApp === entry.name ? 1 : 0.35}
+                    />
+                  ))}
+                </Bar>
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        )}
 
-        {/* Right — summary or drill-down */}
-        <div className="flex-1 min-w-0">
+        {/* Bottom — summary or drill-down table */}
+        <div className="min-w-0">
           {selectedApp === null ? (
             <Table<ApplicationTicketStatistic>
               columns={summaryColumns}

@@ -34,7 +34,7 @@ const DEFAULT_COLS: ColKey[] = ["id", "summary", "priority", "slaPercent", "resp
 
 const SLA_COLORS = {
   "In Progress": "#FFE500",
-  "Done in Time": "#00F5FF",
+  "Done": "#00F5FF",
   "Missed":       "#FF2D6B",
 };
 
@@ -69,13 +69,13 @@ export default function SlaOverviewCard({ refetchKey = 0 }: Props) {
       {
         name: "Response",
         "In Progress": pct(data.responseInProgress, total),
-        "Done in Time": pct(data.responseDoneInTime, total),
+        "Done": pct(data.responseDoneInTime, total),
         "Missed":       pct(data.responseMissed, total),
       },
       {
         name: "Resolution",
         "In Progress": pct(data.resolutionInProgress, total),
-        "Done in Time": pct(data.resolutionDoneInTime, total),
+        "Done": pct(data.resolutionDoneInTime, total),
         "Missed":       pct(data.resolutionMissed, total),
       },
     ];

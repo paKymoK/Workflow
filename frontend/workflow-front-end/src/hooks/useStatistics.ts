@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchOverviewStatistic,
   fetchTicketByIssueType,
@@ -23,50 +23,56 @@ export const statisticKeys = {
 
 export function useOverviewStatistic(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.overview(from, to, refetchKey),
-    queryFn:  () => fetchOverviewStatistic(from, to),
+    queryKey:        statisticKeys.overview(from, to, refetchKey),
+    queryFn:         () => fetchOverviewStatistic(from, to),
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useTicketByIssueType(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.issueType(from, to, refetchKey),
-    queryFn:  () => fetchTicketByIssueType(from, to),
+    queryKey:        statisticKeys.issueType(from, to, refetchKey),
+    queryFn:         () => fetchTicketByIssueType(from, to),
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useTicketByProject(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.project(from, to, refetchKey),
-    queryFn:  () => fetchTicketByProject(from, to),
-    retry: false,
+    queryKey:        statisticKeys.project(from, to, refetchKey),
+    queryFn:         () => fetchTicketByProject(from, to),
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useSlaOverview(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.slaOverview(from, to, refetchKey),
-    queryFn:  () => fetchSlaOverview(from, to),
+    queryKey:        statisticKeys.slaOverview(from, to, refetchKey),
+    queryFn:         () => fetchSlaOverview(from, to),
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useSlaByStatus(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.slaStatus(from, to, refetchKey),
-    queryFn:  () => fetchSlaByStatus(from, to),
+    queryKey:        statisticKeys.slaStatus(from, to, refetchKey),
+    queryFn:         () => fetchSlaByStatus(from, to),
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useSlaByPriority(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.slaPriority(from, to, refetchKey),
-    queryFn:  () => fetchSlaByPriority(from, to),
+    queryKey:        statisticKeys.slaPriority(from, to, refetchKey),
+    queryFn:         () => fetchSlaByPriority(from, to),
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useTicketByApplication(from: string, to: string, refetchKey = 0) {
   return useQuery({
-    queryKey: statisticKeys.appHealth(from, to, refetchKey),
-    queryFn:  () => fetchTicketByApplication(from, to),
+    queryKey:        statisticKeys.appHealth(from, to, refetchKey),
+    queryFn:         () => fetchTicketByApplication(from, to),
+    placeholderData: keepPreviousData,
   });
 }
