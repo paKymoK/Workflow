@@ -156,6 +156,14 @@ export interface ApplicationTicketStatistic {
   slaBreached: number;
 }
 
+export interface AvgResolutionByPriority {
+  priorityId: number;
+  priorityName: string;
+  avgHours: number | null;
+  avgResponseHours: number | null;
+  count: number;
+}
+
 export interface SlaOverviewStatistic {
   responseInProgress: number;
   responseDoneInTime: number;

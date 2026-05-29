@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest } from "./types.ts";
 import { api } from "@takypok/shared";
 
 export interface FilterTicketRequest {
@@ -286,6 +286,14 @@ export async function fetchTicketByApplicationTrend(from?: string, to?: string) 
 export async function fetchTicketByApplication(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<ApplicationTicketStatistic[]>>(
         "/workflow-service/v1/statistic/ticket-by-application",
+        { params: { from, to } },
+    );
+    return data.data;
+}
+
+export async function fetchAvgResolutionByPriority(from?: string, to?: string) {
+    const { data } = await api.get<ResultMessage<AvgResolutionByPriority[]>>(
+        "/workflow-service/v1/statistic/avg-resolution-by-priority",
         { params: { from, to } },
     );
     return data.data;
