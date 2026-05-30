@@ -127,7 +127,12 @@ SELECT t.id,
                jsonb_build_object(
                        'response', 'DONE',
                        'resolution', 'TODO',
-                       'responseTime', t.created_at + (random() * interval '2 hours'),
+                       'responseTime', t.created_at + (random() * (
+                           CASE t.priority->>'name'
+                               WHEN 'High'   THEN interval '1 hour'
+                               WHEN 'Medium' THEN interval '3 hours'
+                               ELSE               interval '8 hours'
+                           END)),
                        'resolutionTime', NULL,
                        'resolutionPercent', floor(30 + random() * 60)::int,
                        'isResponseOverdue', (random() < 0.20),
@@ -137,8 +142,18 @@ SELECT t.id,
                jsonb_build_object(
                        'response', 'DONE',
                        'resolution', 'DONE',
-                       'responseTime', t.created_at + (random() * interval '2 hours'),
-                       'resolutionTime', t.created_at + interval '2 hours' + (random() * interval '4 hours'),
+                       'responseTime', t.created_at + (random() * (
+                           CASE t.priority->>'name'
+                               WHEN 'High'   THEN interval '1 hour'
+                               WHEN 'Medium' THEN interval '3 hours'
+                               ELSE               interval '8 hours'
+                           END)),
+                       'resolutionTime', t.created_at + (
+                           CASE t.priority->>'name'
+                               WHEN 'High'   THEN interval '1 hour'  + random() * interval '7 hours'
+                               WHEN 'Medium' THEN interval '4 hours' + random() * interval '20 hours'
+                               ELSE               interval '12 hours' + random() * interval '60 hours'
+                           END),
                        'resolutionPercent', CASE WHEN random() < 0.15 THEN floor(100 + random() * 40)::int
                                                  ELSE 100 END,
                        'isResponseOverdue', false,
