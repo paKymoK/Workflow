@@ -308,7 +308,7 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
                   </span>
                 )}
               />
-              <Bar dataKey="avgResponseHours" name="Avg First Response (h)" radius={[4, 4, 0, 0]} onClick={(data) => handleBarClick(data as unknown as AvgResolutionByPriority)}>
+              <Bar dataKey="avgResponseHours" name="Avg First Response (h)" fill={COLOR_RESPONSE} radius={[4, 4, 0, 0]} onClick={(data) => handleBarClick(data as unknown as AvgResolutionByPriority)}>
                 {resolutionData.map((entry) => (
                   <Cell
                     key={`resp-${entry.priorityId}`}
@@ -318,7 +318,7 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
                   />
                 ))}
               </Bar>
-              <Bar dataKey="avgHours" name="Avg Resolution (h)" radius={[4, 4, 0, 0]} onClick={(data) => handleBarClick(data as unknown as AvgResolutionByPriority)}>
+              <Bar dataKey="avgHours" name="Avg Resolution (h)" fill={COLOR_RESOLUTION} radius={[4, 4, 0, 0]} onClick={(data) => handleBarClick(data as unknown as AvgResolutionByPriority)}>
                 {resolutionData.map((entry) => (
                   <Cell
                     key={`res-${entry.priorityId}`}

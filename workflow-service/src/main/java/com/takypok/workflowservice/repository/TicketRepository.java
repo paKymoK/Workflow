@@ -30,7 +30,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                     WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
-                      AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                      AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
                       AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
                       AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
                       AND (:application IS NULL OR t.detail->>'application' = :application)
@@ -43,7 +43,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       String summary,
       Long statusId,
       Long priorityId,
-      String assigneeEmail,
+      String assigneeSub,
       Long issueTypeId,
       Long projectId,
       String application);
@@ -55,7 +55,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                     WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
-                      AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                      AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
                       AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
                       AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
                       AND (:application IS NULL OR t.detail->>'application' = :application)
@@ -64,7 +64,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       String summary,
       Long statusId,
       Long priorityId,
-      String assigneeEmail,
+      String assigneeSub,
       Long issueTypeId,
       Long projectId,
       String application);
@@ -88,7 +88,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                     WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
-                      AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+                      AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
                       AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
                       AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
                       AND (:application IS NULL OR t.detail->>'application' = :application)
@@ -103,7 +103,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       String summary,
       Long statusId,
       Long priorityId,
-      String assigneeEmail,
+      String assigneeSub,
       boolean asc,
       Long issueTypeId,
       Long projectId,

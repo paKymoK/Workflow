@@ -10,7 +10,7 @@ export interface FilterTicketRequest {
     issueTypeId?: number;
     projectId?: number;
     application?: string;
-    assigneeEmail?: string;
+    assigneeSub?: string;
     sortBy?: "resolutionPercent" | "id" | "status" | "issueType" | "project" | "priority" | "assignee" | "summary";
     sortDir?: "asc" | "desc";
 }
@@ -228,6 +228,23 @@ export async function searchMentions(q: string): Promise<UserSummary[]> {
     return data;
 }
 
+export async function fetchUsers(q: string, size = 10): Promise<UserSummary[]> {
+    const { data } = await api.get<ResultMessage<{ content: UserSummary[] }>>(
+        "/auth-service/v1/users",
+        { params: { q, size } },
+    );
+    return data.data?.content ?? [];
+}
+
+export async function fetchUserBySub(sub: string): Promise<UserSummary | null> {
+    try {
+        const { data } = await api.get<ResultMessage<UserSummary>>(`/auth-service/v1/users/${sub}`);
+        return data.data ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export async function fetchTicketByIssueType(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<TicketByIssueType[]>>(
         "/workflow-service/v1/statistic/ticket-by-issue-type",
@@ -324,7 +341,7 @@ export interface ExportTicketRequest {
     summary?: string;
     statusId?: number;
     priorityId?: number;
-    assigneeEmail?: string;
+    assigneeSub?: string;
 }
 
 export async function exportTickets(params?: ExportTicketRequest): Promise<void> {

@@ -1,4 +1,28 @@
-WITH seed AS (SELECT gs                                                                    AS n,
+WITH internal_users(u) AS (
+     VALUES
+       ('{"sub":"nvhung",  "name":"Nguyen Van Hung",    "email":"nvhung@mycompany.local"}'::jsonb),
+       ('{"sub":"ltphuong","name":"Le Thi Phuong",      "email":"ltphuong@mycompany.local"}'::jsonb),
+       ('{"sub":"pdhung",  "name":"Pham Duc Hung",      "email":"pdhung@mycompany.local"}'::jsonb),
+       ('{"sub":"hmlong",  "name":"Hoang Minh Long",    "email":"hmlong@mycompany.local"}'::jsonb),
+       ('{"sub":"tqthai",  "name":"Truong Quang Thai",  "email":"tqthai@mycompany.local"}'::jsonb),
+       ('{"sub":"nvbinh",  "name":"Nguyen Van Binh",    "email":"nvbinh@mycompany.local"}'::jsonb),
+       ('{"sub":"dqbao",   "name":"Dang Quoc Bao",      "email":"dqbao@mycompany.local"}'::jsonb),
+       ('{"sub":"vqhieu",  "name":"Vu Quang Hieu",      "email":"vqhieu@mycompany.local"}'::jsonb),
+       ('{"sub":"nttung",  "name":"Nguyen Thanh Tung",  "email":"nttung@mycompany.local"}'::jsonb),
+       ('{"sub":"dtnam",   "name":"Do Thanh Nam",        "email":"dtnam@mycompany.local"}'::jsonb),
+       ('{"sub":"nthuong", "name":"Nguyen Thi Huong",   "email":"nthuong@mycompany.local"}'::jsonb),
+       ('{"sub":"btlan",   "name":"Bui Thi Lan",         "email":"btlan@mycompany.local"}'::jsonb),
+       ('{"sub":"pthoa",   "name":"Phan Thi Hoa",        "email":"pthoa@mycompany.local"}'::jsonb),
+       ('{"sub":"ltmai",   "name":"Ly Thi Mai",           "email":"ltmai@mycompany.local"}'::jsonb),
+       ('{"sub":"mtngoc",  "name":"Mai Thi Ngoc",         "email":"mtngoc@mycompany.local"}'::jsonb),
+       ('{"sub":"ttthu",   "name":"Tran Thi Thu",         "email":"ttthu@mycompany.local"}'::jsonb),
+       ('{"sub":"dtyen",   "name":"Dinh Thi Yen",         "email":"dtyen@mycompany.local"}'::jsonb),
+       ('{"sub":"cvphuc",  "name":"Cao Van Phuc",         "email":"cvphuc@mycompany.local"}'::jsonb),
+       ('{"sub":"nvan",    "name":"Nguyen Van An",        "email":"nvan@mycompany.local"}'::jsonb),
+       ('{"sub":"tvduc",   "name":"Tran Van Duc",         "email":"tvduc@mycompany.local"}'::jsonb)
+),
+     users_arr AS (SELECT array_agg(u) AS arr FROM internal_users),
+     seed AS (SELECT gs                                                                    AS n,
                      -- Uneven created_at distribution to produce visible daily spikes
                      (current_date - ((ARRAY[0,0,0,1,2,3,3,5,6,6])[floor(random() * 10)::int + 1] * interval '1 day') +
                       interval '9 hours') +
@@ -6,7 +30,9 @@ WITH seed AS (SELECT gs                                                         
                      random()                                                              AS r_status,
                      random()                                                              AS r_priority,
                      random()                                                              AS r_issue,
-                     random()                                                              AS r_app
+                     random()                                                              AS r_app,
+                     random()                                                              AS r_reporter,
+                     random()                                                              AS r_assignee
               FROM generate_series(1, 100000) gs),
      ticket_data AS (SELECT n,
                             created_at,
@@ -36,6 +62,8 @@ WITH seed AS (SELECT gs                                                         
                                 ELSE
                                     jsonb_build_object('id', 3, 'name', 'Complain', 'projectId', 1)
                                 END AS issue_type_json,
+                            (SELECT arr FROM users_arr)[floor(r_reporter * 20)::int + 1] AS reporter_json,
+                            (SELECT arr FROM users_arr)[floor(r_assignee * 20)::int + 1] AS assignee_json,
                             CASE
                                 WHEN r_app < 0.55 THEN
                                     jsonb_build_object(
@@ -62,8 +90,8 @@ WITH seed AS (SELECT gs                                                         
                         issue_type_json,
                         status_json,
                         'Load Test ' || n,
-                        jsonb_build_object('name', 'admin', 'email', 'tqthai@gmail.com'),
-                        NULL,
+                        reporter_json,
+                        assignee_json,
                         detail_json,
                         priority_json,
                         jsonb_build_object(
@@ -103,9 +131,9 @@ WITH seed AS (SELECT gs                                                         
                                 )
                         ),
                         created_at,
-                        'admin',
+                        reporter_json->>'sub',
                         now(),
-                        'admin'
+                        reporter_json->>'sub'
                  FROM ticket_data RETURNING id, status, priority, created_at
      )
 INSERT
@@ -154,12 +182,12 @@ SELECT t.id,
                                WHEN 'Medium' THEN interval '4 hours' + random() * interval '20 hours'
                                ELSE               interval '12 hours' + random() * interval '60 hours'
                            END),
-                       'resolutionPercent', CASE WHEN random() < 0.15
-                                                 THEN floor(100 + random() * 40)::int
+                       'resolutionPercent', CASE WHEN rd.r_done_overdue < 0.15
+                                                 THEN 100
                                                  ELSE floor(20 + random() * 79)::int
                                             END,
                        'isResponseOverdue', false,
-                       'isResolutionOverdue', (random() < 0.15)
+                       'isResolutionOverdue', (rd.r_done_overdue < 0.15)
                )
            END,
        false,
@@ -177,4 +205,5 @@ SELECT t.id,
        'Anonymous',
        now(),
        'Anonymous'
-FROM ins_ticket t;
+FROM ins_ticket t
+CROSS JOIN LATERAL (SELECT random() AS r_done_overdue) rd;

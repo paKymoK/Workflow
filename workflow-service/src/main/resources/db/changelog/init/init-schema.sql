@@ -119,8 +119,8 @@ ON ticket (((status ->> 'id')::bigint));
 CREATE INDEX IF NOT EXISTS idx_ticket_priority_id
 ON ticket (((priority ->> 'id')::bigint));
 
-CREATE INDEX IF NOT EXISTS idx_ticket_assignee_email_lower
-ON ticket ((LOWER(assignee ->> 'email')));
+CREATE INDEX IF NOT EXISTS idx_ticket_assignee_sub
+ON ticket ((assignee ->> 'sub'));
 
 
 CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla ((status ->> 'response'));

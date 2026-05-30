@@ -20,7 +20,6 @@ import com.takypok.workflowservice.repository.*;
 import com.takypok.workflowservice.service.TicketService;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
@@ -51,10 +50,7 @@ public class TicketServiceImpl implements TicketService {
     int size = request.getSize().intValue();
     int offset = page * size;
     String summary = normalize(request.getSummary());
-    String assigneeEmail = normalize(request.getAssigneeEmail());
-    if (assigneeEmail != null) {
-      assigneeEmail = assigneeEmail.toLowerCase(Locale.ROOT);
-    }
+    String assigneeSub = normalize(request.getAssigneeSub());
     Long statusId = request.getStatusId();
     Long priorityId = request.getPriorityId();
     Long issueTypeId = request.getIssueTypeId();
@@ -70,7 +66,7 @@ public class TicketServiceImpl implements TicketService {
                 summary,
                 statusId,
                 priorityId,
-                assigneeEmail,
+                assigneeSub,
                 sortAsc,
                 issueTypeId,
                 projectId,
@@ -81,14 +77,14 @@ public class TicketServiceImpl implements TicketService {
                 summary,
                 statusId,
                 priorityId,
-                assigneeEmail,
+                assigneeSub,
                 issueTypeId,
                 projectId,
                 application);
     return Mono.zip(
             query.collectList(),
             ticketRepository.count(
-                summary, statusId, priorityId, assigneeEmail, issueTypeId, projectId, application))
+                summary, statusId, priorityId, assigneeSub, issueTypeId, projectId, application))
         .map(
             tuple -> {
               List<TicketSla> content = tuple.getT1();

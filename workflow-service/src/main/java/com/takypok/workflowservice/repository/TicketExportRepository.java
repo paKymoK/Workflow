@@ -40,10 +40,7 @@ public class TicketExportRepository {
   public Flux<TicketExportRow> stream(ExportTicketRequest request) {
     String sql = buildSql(detailFieldNames);
 
-    String assigneeEmail =
-        request.getAssigneeEmail() != null
-            ? request.getAssigneeEmail().toLowerCase(Locale.ROOT)
-            : null;
+    String assigneeSub = request.getAssigneeSub();
 
     DatabaseClient.GenericExecuteSpec spec =
         databaseClient
@@ -51,7 +48,7 @@ public class TicketExportRepository {
             .bind("summary", bindValue(request.getSummary(), String.class))
             .bind("statusId", bindValue(request.getStatusId(), Long.class))
             .bind("priorityId", bindValue(request.getPriorityId(), Long.class))
-            .bind("assigneeEmail", bindValue(assigneeEmail, String.class));
+            .bind("assigneeSub", bindValue(assigneeSub, String.class));
 
     return spec.map(
             row -> {
@@ -114,7 +111,7 @@ public class TicketExportRepository {
         WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
           AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
           AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
-          AND (:assigneeEmail IS NULL OR LOWER(t.assignee->>'email') = :assigneeEmail)
+          AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
         ORDER BY t.id DESC
         """);
 

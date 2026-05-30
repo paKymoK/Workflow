@@ -2,12 +2,12 @@ import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
 import { Spin, Table, Tag, Button, Dropdown, message, Input, Select, Progress } from "antd";
-import { MoreOutlined, DownloadOutlined } from "@ant-design/icons";
+import { MoreOutlined, DownloadOutlined, UserOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchTicketById, exportTickets, type ExportTicketRequest } from "../api/ticketApi";
+import { fetchTicketById, exportTickets, fetchUsers, fetchUserBySub, type ExportTicketRequest, type UserSummary } from "../api/ticketApi";
 import { wsBaseUrl } from "@takypok/shared";
 import type { TicketSla, Priority, WorkflowStatus } from "../api/types.ts";
 import {
@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [summary]       = useUrlState("q",       "");
   const [statusId]      = useUrlState<number | undefined>("status",   undefined);
   const [priorityId]    = useUrlState<number | undefined>("priority", undefined);
-  const [assigneeEmail] = useUrlState("assignee", "");
+  const [assigneeSub]   = useUrlState("assignee", "");
   const [sortBy]        = useUrlState<"resolutionPercent" | undefined>("sortBy",  undefined);
   const [sortDir]       = useUrlState<"asc" | "desc" | undefined>("sortDir", undefined);
   const [, setSearchParams] = useSearchParams();
@@ -43,10 +43,9 @@ export default function Dashboard() {
   useEffect(() => { setSearchParamsRef.current = setSearchParams; });
 
   // ── Local input values — update immediately for responsive typing ─────────
-  const [summaryInput,  setSummaryInput]  = useState(summary);
-  const [assigneeInput, setAssigneeInput] = useState(assigneeEmail);
+  const [summaryInput, setSummaryInput] = useState(summary);
 
-  // ── Debounce text inputs → URL (1 s) + reset page ────────────────────────
+  // ── Debounce summary → URL (1 s) + reset page ────────────────────────────
   useEffect(() => {
     const id = setTimeout(() => {
       setSearchParamsRef.current((prev) => {
@@ -60,18 +59,43 @@ export default function Dashboard() {
     return () => clearTimeout(id);
   }, [summaryInput]);
 
+  // ── Assignee autocomplete ─────────────────────────────────────────────────
+  const [userQuery,        setUserQuery]        = useState("");
+  const [userOptions,      setUserOptions]      = useState<{ value: string; label: string }[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+
+  // Populate display option when a sub is already in the URL (page reload / deep link)
   useEffect(() => {
-    const id = setTimeout(() => {
-      setSearchParamsRef.current((prev) => {
-        const p = new URLSearchParams(prev);
-        const v = assigneeInput.trim().toLowerCase();
-        if (v) p.set("assignee", JSON.stringify(v)); else p.delete("assignee");
-        p.delete("page");
-        return p;
-      }, { replace: true });
-    }, 1000);
+    if (!assigneeSub) return;
+    fetchUserBySub(assigneeSub).then((u: UserSummary | null) => {
+      if (u) setUserOptions([{ value: u.sub, label: `${u.name} — ${u.email}` }]);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced search as user types
+  useEffect(() => {
+    if (!userQuery.trim()) { setUserOptions([]); return; }
+    const id = setTimeout(async () => {
+      setIsSearchingUsers(true);
+      try {
+        const users = await fetchUsers(userQuery);
+        setUserOptions(users.map((u: UserSummary) => ({ value: u.sub, label: `${u.name} — ${u.email}` })));
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    }, 400);
     return () => clearTimeout(id);
-  }, [assigneeInput]);
+  }, [userQuery]);
+
+  const handleAssigneeChange = (sub: string | undefined) => {
+    setSearchParamsRef.current((prev) => {
+      const p = new URLSearchParams(prev);
+      if (sub) p.set("assignee", JSON.stringify(sub)); else p.delete("assignee");
+      p.delete("page");
+      return p;
+    }, { replace: true });
+  };
 
   // ── Modal ────────────────────────────────────────────────────────────────
 const [isExporting,  setIsExporting]  = useState(false);
@@ -80,10 +104,10 @@ const [isExporting,  setIsExporting]  = useState(false);
     setIsExporting(true);
     try {
       const exportParams: ExportTicketRequest = {
-        ...(summary.trim()       && { summary: summary.trim() }),
-        ...(statusId  != null    && { statusId }),
-        ...(priorityId != null   && { priorityId }),
-        ...(assigneeEmail.trim() && { assigneeEmail: assigneeEmail.trim() }),
+        ...(summary.trim()     && { summary: summary.trim() }),
+        ...(statusId  != null  && { statusId }),
+        ...(priorityId != null && { priorityId }),
+        ...(assigneeSub.trim() && { assigneeSub: assigneeSub.trim() }),
       };
       await exportTickets(exportParams);
     } catch {
@@ -98,13 +122,13 @@ const [isExporting,  setIsExporting]  = useState(false);
   const params = useMemo<FilterTicketRequest>(() => ({
     page,
     size: pageSize,
-    ...(summary.trim()       && { summary: summary.trim() }),
-    ...(statusId  != null    && { statusId }),
-    ...(priorityId != null   && { priorityId }),
-    ...(assigneeEmail.trim() && { assigneeEmail: assigneeEmail.trim() }),
+    ...(summary.trim()     && { summary: summary.trim() }),
+    ...(statusId  != null  && { statusId }),
+    ...(priorityId != null && { priorityId }),
+    ...(assigneeSub.trim() && { assigneeSub: assigneeSub.trim() }),
     ...(sortBy  != null && { sortBy }),
     ...(sortDir != null && { sortDir }),
-  }), [page, pageSize, summary, statusId, priorityId, assigneeEmail, sortBy, sortDir]);
+  }), [page, pageSize, summary, statusId, priorityId, assigneeSub, sortBy, sortDir]);
 
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: pageData, isFetching } = useTicketList(params);
@@ -198,7 +222,8 @@ const [isExporting,  setIsExporting]  = useState(false);
 
   const handleReset = () => {
     setSummaryInput("");
-    setAssigneeInput("");
+    setUserQuery("");
+    setUserOptions([]);
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
       p.delete("q");
@@ -351,12 +376,19 @@ const [isExporting,  setIsExporting]  = useState(false);
           className="!w-[160px]"
           options={(priorities as Priority[]).map((p) => ({ value: p.id, label: p.name }))}
         />
-        <Input
-          placeholder="Assignee email"
-          value={assigneeInput}
-          onChange={(e) => setAssigneeInput(e.target.value)}
+        <Select
+          showSearch
           allowClear
-          className="!w-[200px]"
+          filterOption={false}
+          placeholder={<span><UserOutlined className="mr-1" />Assignee</span>}
+          value={assigneeSub || undefined}
+          onSearch={setUserQuery}
+          onChange={handleAssigneeChange}
+          onClear={() => handleAssigneeChange(undefined)}
+          options={userOptions}
+          loading={isSearchingUsers}
+          notFoundContent={isSearchingUsers ? <Spin size="small" /> : userQuery ? "No users found" : null}
+          className="!w-[220px]"
         />
         <Button onClick={handleReset}>Reset</Button>
       </div>

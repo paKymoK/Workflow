@@ -1,6 +1,5 @@
 package com.takypok.workflowservice.model.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -29,9 +28,8 @@ public class FilterTicketRequest {
   @Min(1)
   private Long priorityId;
 
-  @Email
-  @Size(max = 254)
-  private String assigneeEmail;
+  @Size(max = 255)
+  private String assigneeSub;
 
   @Min(1)
   private Long issueTypeId;
