@@ -1,6 +1,6 @@
 WITH seed AS (SELECT gs                                                                    AS n,
-                     -- Random created_at spread across last 7 days during office hours
-                     (current_date - (floor(random() * 7)::int * interval '1 day') +
+                     -- Uneven created_at distribution to produce visible daily spikes
+                     (current_date - ((ARRAY[0,0,0,1,2,3,3,5,6,6])[floor(random() * 10)::int + 1] * interval '1 day') +
                       interval '9 hours') +
                      (random() * interval '8 hours')                                       AS created_at,
                      random()                                                              AS r_status,
@@ -154,8 +154,10 @@ SELECT t.id,
                                WHEN 'Medium' THEN interval '4 hours' + random() * interval '20 hours'
                                ELSE               interval '12 hours' + random() * interval '60 hours'
                            END),
-                       'resolutionPercent', CASE WHEN random() < 0.15 THEN floor(100 + random() * 40)::int
-                                                 ELSE 100 END,
+                       'resolutionPercent', CASE WHEN random() < 0.15
+                                                 THEN floor(100 + random() * 40)::int
+                                                 ELSE floor(20 + random() * 79)::int
+                                            END,
                        'isResponseOverdue', false,
                        'isResolutionOverdue', (random() < 0.15)
                )

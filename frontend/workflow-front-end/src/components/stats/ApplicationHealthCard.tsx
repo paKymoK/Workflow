@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Card, Table, Button, Tag, Checkbox, Popover, Progress, Select, Spin } from "antd";
+import { Card, Table, Button, Tag, Checkbox, Popover, Progress, Select, Spin, DatePicker } from "antd";
 import { ArrowLeftOutlined, SettingOutlined } from "@ant-design/icons";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
@@ -11,7 +11,7 @@ import { useTicketByApplication, useTicketByApplicationTrend } from "../../hooks
 import { useTicketList } from "../../hooks/useTickets";
 import DeadlineTag from "../DeadlineTag.tsx";
 import { useTheme } from "@takypok/shared";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 
 const LINE_COLORS = [
   "#FFE500", "#00F5FF", "#FF2D6B", "#FF6B35",
@@ -46,40 +46,37 @@ const COL_LABELS: Record<ColKey, string> = {
 
 const DEFAULT_COLS: ColKey[] = ["id", "summary", "priority", "slaPercent", "response", "resolution"];
 
+type Granularity = "daily" | "weekly";
+
 function buildChartData(
   rawPoints: ApplicationTrendPoint[],
   selectedGroups: StatusGroup[],
+  granularity: Granularity,
 ): { date: string; [app: string]: number | string }[] {
   if (!rawPoints.length) return [];
 
-  const dates = [...new Set(rawPoints.map((p) => p.date))].sort();
-  const apps  = [...new Set(rawPoints.map((p) => p.application))];
+  const apps = [...new Set(rawPoints.map((p) => p.application))];
 
-  // Index raw points for O(1) lookup
-  const idx = new Map<string, number>();
+  const bucketKey   = (d: string) => granularity === "weekly"
+    ? dayjs(d).startOf("week").toISOString()
+    : d;
+  const bucketLabel = (k: string) => granularity === "weekly"
+    ? `W${dayjs(k).format("ww")} ${dayjs(k).format("MM/DD")}`
+    : dayjs(k).format("MM/DD");
+
+  const buckets = new Map<string, Map<string, number>>();
   for (const p of rawPoints) {
-    idx.set(`${p.date}|${p.application}|${p.statusGroup}`, p.count);
+    if (!selectedGroups.includes(p.statusGroup as StatusGroup)) continue;
+    const bk = bucketKey(p.date);
+    if (!buckets.has(bk)) buckets.set(bk, new Map());
+    const m = buckets.get(bk)!;
+    m.set(p.application, (m.get(p.application) ?? 0) + p.count);
   }
 
-  // Carry-forward last known cumulative per (app, group)
-  const lastCum = new Map<string, number>();
-
-  return dates.map((date) => {
-    const row: { date: string; [app: string]: number | string } = {
-      date: dayjs(date).format("MM/DD"),
-    };
-
-    for (const app of apps) {
-      let total = 0;
-      for (const group of STATUS_GROUPS) {
-        const key  = `${date}|${app}|${group}`;
-        const lk   = `${app}|${group}`;
-        const val  = idx.has(key) ? idx.get(key)! : (lastCum.get(lk) ?? 0);
-        if (idx.has(key)) lastCum.set(lk, val);
-        if (selectedGroups.includes(group)) total += val;
-      }
-      row[app] = total;
-    }
+  return [...buckets.keys()].sort().map((key) => {
+    const row: { date: string; [app: string]: number | string } = { date: bucketLabel(key) };
+    const m = buckets.get(key)!;
+    for (const app of apps) row[app] = m.get(app) ?? 0;
     return row;
   });
 }
@@ -91,10 +88,14 @@ interface Props {
 export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
   const { isDark } = useTheme();
 
-  const { from, to } = useMemo(() => ({
-    from: dayjs().subtract(6, "day").startOf("day").toISOString(),
-    to:   dayjs().endOf("day").toISOString(),
-  }), []);
+  const [granularity, setGranularity] = useState<Granularity>("daily");
+  const defaultRange = useMemo<[Dayjs, Dayjs]>(() => [
+    dayjs().subtract(6, "day").startOf("day"),
+    dayjs().endOf("day"),
+  ], []);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>(defaultRange);
+  const from = dateRange[0].toISOString();
+  const to   = dateRange[1].toISOString();
 
   const [selectedGroups, setSelectedGroups] = useState<StatusGroup[]>([...STATUS_GROUPS]);
   const [selectedApp,    setSelectedApp]    = useState<string | null>(null);
@@ -113,8 +114,8 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
   );
 
   const chartData = useMemo(
-    () => buildChartData(trendData ?? [], selectedGroups),
-    [trendData, selectedGroups],
+    () => buildChartData(trendData ?? [], selectedGroups, granularity),
+    [trendData, selectedGroups, granularity],
   );
 
   const tableParams = useMemo<FilterTicketRequest>(() => ({
@@ -281,6 +282,41 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
         options={STATUS_OPTIONS}
         className="!min-w-[130px]"
         allowClear={false}
+      />
+      <Select
+        size="small"
+        value={granularity}
+        onChange={(v: Granularity) => {
+          setGranularity(v);
+          setDateRange(v === "weekly"
+            ? [dayjs().subtract(3, "week").startOf("week"), dayjs().endOf("week")]
+            : [dayjs().subtract(6, "day").startOf("day"), dayjs().endOf("day")],
+          );
+          setSelectedApp(null);
+          setPage(0);
+        }}
+        options={[
+          { label: "Daily",  value: "daily"  },
+          { label: "Weekly", value: "weekly" },
+        ]}
+        className="!min-w-[90px]"
+      />
+      <DatePicker.RangePicker
+        size="small"
+        picker={granularity === "weekly" ? "week" : "date"}
+        value={dateRange}
+        onChange={(v) => {
+          if (v?.[0] && v?.[1]) {
+            setDateRange([
+              v[0].startOf(granularity === "weekly" ? "week" : "day"),
+              v[1].endOf(granularity === "weekly" ? "week" : "day"),
+            ]);
+            setSelectedApp(null);
+            setPage(0);
+          }
+        }}
+        allowClear={false}
+        format={granularity === "weekly" ? undefined : "DD/MM/YYYY"}
       />
     </div>
   );

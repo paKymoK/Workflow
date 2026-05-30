@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, SlaStatusDistribution, SlaPriorityDistribution, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest } from "./types.ts";
 import { api } from "@takypok/shared";
 
 export interface FilterTicketRequest {
@@ -244,14 +244,6 @@ export async function fetchOverviewStatistic(from?: string, to?: string) {
     return data.data;
 }
 
-export async function fetchSlaByStatus(from?: string, to?: string) {
-    const { data } = await api.get<ResultMessage<SlaStatusDistribution[]>>(
-        "/workflow-service/v1/statistic/sla-by-status",
-        { params: { from, to } },
-    );
-    return data.data;
-}
-
 export async function fetchTicketByProject(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<StatisticItem[]>>(
         "/workflow-service/v1/statistic/ticket-by-project",
@@ -294,14 +286,6 @@ export async function fetchTicketByApplication(from?: string, to?: string) {
 export async function fetchAvgResolutionByPriority(from?: string, to?: string) {
     const { data } = await api.get<ResultMessage<AvgResolutionByPriority[]>>(
         "/workflow-service/v1/statistic/avg-resolution-by-priority",
-        { params: { from, to } },
-    );
-    return data.data;
-}
-
-export async function fetchSlaByPriority(from?: string, to?: string) {
-    const { data } = await api.get<ResultMessage<SlaPriorityDistribution[]>>(
-        "/workflow-service/v1/statistic/sla-by-priority",
         { params: { from, to } },
     );
     return data.data;

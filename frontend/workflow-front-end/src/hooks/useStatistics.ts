@@ -4,8 +4,6 @@ import {
   fetchTicketByIssueType,
   fetchTicketByProject,
   fetchSlaOverview,
-  fetchSlaByStatus,
-  fetchSlaByPriority,
   fetchTicketByApplication,
   fetchTicketByApplicationTrend,
   fetchAvgResolutionByPriority,
@@ -18,8 +16,6 @@ export const statisticKeys = {
   issueType:      (from: string, to: string, k = 0) => ["stat", "issueType",      from, to, k] as const,
   project:        (from: string, to: string, k = 0) => ["stat", "project",        from, to, k] as const,
   slaOverview:    (from: string, to: string, k = 0) => ["stat", "slaOverview",    from, to, k] as const,
-  slaStatus:      (from: string, to: string, k = 0) => ["stat", "slaStatus",      from, to, k] as const,
-  slaPriority:    (from: string, to: string, k = 0) => ["stat", "slaPriority",    from, to, k] as const,
   appHealth:      (from: string, to: string, k = 0) => ["stat", "appHealth",      from, to, k] as const,
   appTrend:       (from: string, to: string, k = 0) => ["stat", "appTrend",       from, to, k] as const,
   avgResolution:  (from: string, to: string, k = 0) => ["stat", "avgResolution",  from, to, k] as const,
@@ -53,22 +49,6 @@ export function useSlaOverview(from: string, to: string, refetchKey = 0) {
   return useQuery({
     queryKey:        statisticKeys.slaOverview(from, to, refetchKey),
     queryFn:         () => fetchSlaOverview(from, to),
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useSlaByStatus(from: string, to: string, refetchKey = 0) {
-  return useQuery({
-    queryKey:        statisticKeys.slaStatus(from, to, refetchKey),
-    queryFn:         () => fetchSlaByStatus(from, to),
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useSlaByPriority(from: string, to: string, refetchKey = 0) {
-  return useQuery({
-    queryKey:        statisticKeys.slaPriority(from, to, refetchKey),
-    queryFn:         () => fetchSlaByPriority(from, to),
     placeholderData: keepPreviousData,
   });
 }

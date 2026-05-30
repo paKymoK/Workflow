@@ -263,6 +263,19 @@ input:focus-within ~ .focus-bar { width: 100%; }
   letter-spacing: 0.12em !important;
   font-size: 14px !important;
 }
+/* Table body cells — explicit background to prevent bleed-through on horizontal scroll */
+[data-theme="dark"] .ant-table-wrapper .ant-table-tbody > tr > td {
+  background: #041428 !important;
+}
+[data-theme="dark"] .ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #051B30 !important;
+}
+[data-theme="light"] .ant-table-wrapper .ant-table-tbody > tr > td {
+  background: #F0FAFF !important;
+}
+[data-theme="light"] .ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: #E0F0FF !important;
+}
 /* Tab labels */
 .ant-tabs .ant-tabs-tab {
   font-family: 'Bebas Neue', sans-serif !important;

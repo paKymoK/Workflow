@@ -179,20 +179,6 @@ export interface TicketByIssueType {
   [status: string]: string | number;
 }
 
-export interface SlaStatusDistribution {
-  responseStatus: string;
-  resolutionStatus: string;
-  count: number;
-}
-
-export interface SlaPriorityDistribution {
-  priorityName: string;
-  "Response Overdue": number;
-  "Resolution Overdue": number;
-  Success: number;
-  total: number;
-}
-
 export interface TicketSla {
   id: number;
   createdAt: string;

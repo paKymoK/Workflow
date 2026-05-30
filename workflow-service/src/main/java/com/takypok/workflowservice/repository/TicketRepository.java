@@ -225,11 +225,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                         date,
                         application,
                         status_group,
-                        SUM(daily_count) OVER (
-                            PARTITION BY application, status_group
-                            ORDER BY date
-                            ROWS UNBOUNDED PRECEDING
-                        ) AS count
+                        daily_count AS count
                     FROM daily
                     ORDER BY date, application, status_group
                     """)

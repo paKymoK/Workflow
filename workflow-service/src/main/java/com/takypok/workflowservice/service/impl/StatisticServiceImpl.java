@@ -6,8 +6,6 @@ import com.takypok.workflowservice.model.response.ApplicationTicketStatistic;
 import com.takypok.workflowservice.model.response.ApplicationTrendPoint;
 import com.takypok.workflowservice.model.response.AvgResolutionByPriority;
 import com.takypok.workflowservice.model.response.SlaOverviewStatistic;
-import com.takypok.workflowservice.model.response.SlaPriorityDistribution;
-import com.takypok.workflowservice.model.response.SlaStatusDistribution;
 import com.takypok.workflowservice.model.response.TicketByIssueTypeStatistic;
 import com.takypok.workflowservice.model.response.TicketByProjectStatistic;
 import com.takypok.workflowservice.model.response.TicketByStatusStatistic;
@@ -51,20 +49,6 @@ public class StatisticServiceImpl implements StatisticService {
   @Override
   public Mono<SlaOverviewStatistic> slaOverview(StatisticRequest request) {
     return slaRepository.getSlaOverview(request.getFrom(), request.getTo());
-  }
-
-  @Override
-  public Mono<List<SlaStatusDistribution>> slaByStatusDistribution(StatisticRequest request) {
-    return slaRepository
-        .getSlaByStatusDistribution(request.getFrom(), request.getTo())
-        .collectList();
-  }
-
-  @Override
-  public Mono<List<SlaPriorityDistribution>> slaByPriorityDistribution(StatisticRequest request) {
-    return slaRepository
-        .getSlaByPriorityDistribution(request.getFrom(), request.getTo())
-        .collectList();
   }
 
   @Override
