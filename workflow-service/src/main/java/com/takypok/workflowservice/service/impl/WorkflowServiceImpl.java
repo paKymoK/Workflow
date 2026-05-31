@@ -101,6 +101,8 @@ public class WorkflowServiceImpl implements WorkflowService {
           Message.Application.ERROR, "Workflow must have one TODO node !");
     }
 
+    if (transitions.isEmpty()) return List.of();
+
     boolean hasDuplicate = transitions.stream().distinct().count() < transitions.size();
 
     if (hasDuplicate) {

@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest } from "./types.ts";
 import { api } from "@takypok/shared";
 
 export interface FilterTicketRequest {
@@ -308,6 +308,28 @@ export async function fetchAvgResolutionByPriority(from?: string, to?: string) {
     return data.data;
 }
 
+export async function fetchValidators() {
+    const { data } = await api.get<ResultMessage<FunctionResponse[]>>(
+        "/workflow-service/v1/function/validator",
+    );
+    return data.data;
+}
+
+export async function fetchPostFunctions() {
+    const { data } = await api.get<ResultMessage<FunctionResponse[]>>(
+        "/workflow-service/v1/function/postfunction",
+    );
+    return data.data;
+}
+
+export async function createWorkflow(payload: WorkflowCreateRequest) {
+    const { data } = await api.post<ResultMessage<Workflow>>(
+        "/workflow-service/v1/workflow",
+        payload,
+    );
+    return data.data;
+}
+
 export async function fetchWorkflows() {
     const { data } = await api.get<ResultMessage<Workflow[]>>(
         "/workflow-service/v1/workflow",
@@ -355,6 +377,14 @@ export async function exportTickets(params?: ExportTicketRequest): Promise<void>
     a.download = "tickets.xlsx";
     a.click();
     window.URL.revokeObjectURL(url);
+}
+
+export async function updateAssignee(ticketId: string | number, payload: { sub: string; name: string; email: string }) {
+    const { data } = await api.patch<ResultMessage<void>>(
+        `/workflow-service/v1/ticket/${ticketId}/assignee`,
+        payload,
+    );
+    return data;
 }
 
 export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {

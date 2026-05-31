@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import {
   fetchTickets, fetchTicketById,
   fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes, fetchAllIssueTypes, fetchApplications,
-  createTicket, pauseTicket, resumeTicket, transitionTicket,
+  createTicket, pauseTicket, resumeTicket, transitionTicket, updateAssignee,
   createStatus, updateStatus, deleteStatus,
   createPriority, updatePriority, deletePriority,
   createProject, updateProject, deleteProject,
@@ -132,6 +132,18 @@ export function useResumeTicket() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ticketKeys.lists() });
       qc.invalidateQueries({ queryKey: ticketKeys.detail(id) });
+    },
+  });
+}
+
+export function useUpdateAssignee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, sub, name, email }: { ticketId: string | number; sub: string; name: string; email: string }) =>
+      updateAssignee(ticketId, { sub, name, email }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
+      qc.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
   });
 }

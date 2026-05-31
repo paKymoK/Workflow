@@ -134,6 +134,17 @@ export interface Workflow {
   transitions: WorkflowTransition[];
 }
 
+export interface FunctionResponse {
+  name: string;
+  value: string;
+}
+
+export interface WorkflowCreateRequest {
+  name: string;
+  statuses: number[];
+  transitions: { name: string; from: number; to: number; validator: string[]; postFunctions: string[] }[];
+}
+
 
 export interface StatisticItem {
   name: string;

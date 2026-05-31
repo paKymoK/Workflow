@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert,
-  Dropdown, App, Avatar, List, Row, Col, Divider, Progress, Tooltip,
+  Dropdown, App, Avatar, List, Row, Col, Divider, Progress, Tooltip, Select, Modal,
 } from "antd";
 import {
   ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
-  MoreOutlined, SendOutlined, EditOutlined, CheckOutlined, CloseOutlined,
+  MoreOutlined, SendOutlined, EditOutlined, CheckOutlined, CloseOutlined, UserSwitchOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
@@ -13,9 +13,10 @@ import { wsBaseUrl } from "@takypok/shared";
 import DeadlineTag from "../components/DeadlineTag.tsx";
 import RichTextEditor from "../components/RichTextEditor.tsx";
 import dayjs from "dayjs";
-import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket } from "../hooks/useTickets";
+import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket, useUpdateAssignee } from "../hooks/useTickets";
 import { useComments, useCreateComment, useUpdateComment } from "../hooks/useComments";
 import { useAuth } from "@takypok/shared";
+import { fetchUsers, type UserSummary } from "../api/ticketApi";
 import CommentContent from "../components/CommentContent.tsx";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
 
@@ -44,6 +45,40 @@ export default function TicketDetail() {
   const transitionMutation = useTransitionTicket();
   const commentMutation    = useCreateComment();
   const editMutation       = useUpdateComment();
+  const assigneeMutation   = useUpdateAssignee();
+
+  // ── Assignee edit state ───────────────────────────────────────────────────
+  const [assigneeModalOpen,  setAssigneeModalOpen]  = useState(false);
+  const [userQuery,          setUserQuery]          = useState("");
+  const [userOptions,        setUserOptions]        = useState<{ value: string; label: string; user: UserSummary }[]>([]);
+  const [isSearchingUsers,   setIsSearchingUsers]   = useState(false);
+
+  useEffect(() => {
+    if (!userQuery.trim()) { setUserOptions([]); return; }
+    const t = setTimeout(async () => {
+      setIsSearchingUsers(true);
+      try {
+        const users = await fetchUsers(userQuery);
+        setUserOptions(users.map((u) => ({ value: u.sub, label: `${u.name} — ${u.email}`, user: u })));
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [userQuery]);
+
+  const handleAssigneeSelect = useCallback(async (_: string, option: { user: UserSummary }) => {
+    if (!id) return;
+    try {
+      await assigneeMutation.mutateAsync({ ticketId: id, sub: option.user.sub, name: option.user.name, email: option.user.email ?? "" });
+      message.success("Assignee updated");
+      setAssigneeModalOpen(false);
+      setUserQuery("");
+      setUserOptions([]);
+    } catch {
+      message.error("Failed to update assignee");
+    }
+  }, [id, assigneeMutation, message]);
 
   const actionLoading     = pauseMutation.isPending || resumeMutation.isPending || transitionMutation.isPending;
   const commentSubmitting = commentMutation.isPending;
@@ -160,6 +195,11 @@ export default function TicketDetail() {
 
   const isPaused  = ticket.sla?.isPaused;
   const menuItems: MenuProps["items"] = [
+    {
+      key: "assignee", label: "Change Assignee", icon: <UserSwitchOutlined />,
+      onClick: () => setAssigneeModalOpen(true),
+    },
+    { type: "divider" as const },
     ...(!isPaused && ticket.sla ? [{
       key: "pause", label: "Pause SLA", disabled: actionLoading, onClick: handlePause,
     }] : []),
@@ -177,6 +217,27 @@ export default function TicketDetail() {
 
   return (
     <div>
+      <Modal
+        title="Change Assignee"
+        open={assigneeModalOpen}
+        onCancel={() => { setAssigneeModalOpen(false); setUserQuery(""); setUserOptions([]); }}
+        footer={null}
+      >
+        <Select
+          showSearch
+          autoFocus
+          filterOption={false}
+          placeholder="Search by name or email..."
+          className="!w-full !mt-3"
+          value={undefined}
+          onSearch={setUserQuery}
+          onSelect={handleAssigneeSelect}
+          options={userOptions}
+          loading={isSearchingUsers || assigneeMutation.isPending}
+          notFoundContent={isSearchingUsers ? <Spin size="small" /> : userQuery ? "No users found" : null}
+        />
+      </Modal>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard")}>Back</Button>

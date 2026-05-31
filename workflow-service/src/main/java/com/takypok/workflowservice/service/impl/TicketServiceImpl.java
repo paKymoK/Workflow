@@ -12,6 +12,7 @@ import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.mapper.SlaMapper;
 import com.takypok.workflowservice.model.mapper.TicketMapper;
+import com.takypok.workflowservice.model.request.AssigneeUpdateRequest;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
@@ -291,6 +292,20 @@ public class TicketServiceImpl implements TicketService {
             Mono.error(
                 new ApplicationException(
                     Message.Application.ERROR, "Issue Type not valid or exist !")));
+  }
+
+  @Override
+  public Mono<Ticket<TicketDetail>> updateAssignee(Long id, AssigneeUpdateRequest request) {
+    return ticketRepository
+        .findById(id)
+        .switchIfEmpty(
+            Mono.error(new ApplicationException(Message.Application.ERROR, "Ticket do not exist")))
+        .flatMap(
+            ticket -> {
+              ticket.setAssignee(
+                  new User(request.getSub(), request.getName(), request.getEmail(), null, null));
+              return ticketRepository.save(ticket);
+            });
   }
 
   private Mono<Void> initValidator(

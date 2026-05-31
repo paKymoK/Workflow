@@ -14,5 +14,5 @@ import lombok.*;
 public class WorkflowCreateRequest {
   @NotNull private String name;
   @NotEmpty private List<Long> statuses;
-  @NotEmpty private List<@Valid WorkflowTransitionRequest> transitions;
+  @NotNull private List<@Valid WorkflowTransitionRequest> transitions;
 }

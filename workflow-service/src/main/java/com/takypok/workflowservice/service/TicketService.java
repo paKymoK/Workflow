@@ -5,6 +5,7 @@ import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.AssigneeUpdateRequest;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
@@ -23,4 +24,6 @@ public interface TicketService {
   Mono<Sla> resume(Long id, User user);
 
   Mono<Ticket<TicketDetail>> transition(TransitionRequest transitionRequest, User currentUser);
+
+  Mono<Ticket<TicketDetail>> updateAssignee(Long id, AssigneeUpdateRequest request);
 }

@@ -7,6 +7,7 @@ import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.AssigneeUpdateRequest;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
@@ -50,6 +51,12 @@ public class TicketController {
   public Mono<ResultMessage<Sla>> resume(
       @Valid @PathVariable Long id, Authentication authentication) {
     return ticketService.resume(id, getUserInfo(authentication)).map(ResultMessage::success);
+  }
+
+  @PatchMapping("/{id}/assignee")
+  public Mono<ResultMessage<Ticket<TicketDetail>>> updateAssignee(
+      @PathVariable Long id, @Valid @RequestBody AssigneeUpdateRequest request) {
+    return ticketService.updateAssignee(id, request).map(ResultMessage::success);
   }
 
   @PostMapping("/transition")
