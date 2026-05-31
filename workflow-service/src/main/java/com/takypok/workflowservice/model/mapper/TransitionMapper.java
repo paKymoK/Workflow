@@ -20,6 +20,8 @@ public abstract class TransitionMapper {
         .filter(s -> Objects.equals(s.getId(), statusId))
         .findFirst()
         .orElseThrow(
-            () -> new IllegalStateException("Status id " + statusId + " not found in workflow statuses"));
+            () ->
+                new IllegalStateException(
+                    "Status id " + statusId + " not found in workflow statuses"));
   }
 }

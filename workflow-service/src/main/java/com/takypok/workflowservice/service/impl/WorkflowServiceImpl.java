@@ -144,12 +144,20 @@ public class WorkflowServiceImpl implements WorkflowService {
           if (!statusIdSet.contains(t.getFrom())) {
             throw new ApplicationException(
                 Message.Application.ERROR,
-                "Transition '" + t.getName() + "': 'from' status id " + t.getFrom() + " is not in this workflow !");
+                "Transition '"
+                    + t.getName()
+                    + "': 'from' status id "
+                    + t.getFrom()
+                    + " is not in this workflow !");
           }
           if (!statusIdSet.contains(t.getTo())) {
             throw new ApplicationException(
                 Message.Application.ERROR,
-                "Transition '" + t.getName() + "': 'to' status id " + t.getTo() + " is not in this workflow !");
+                "Transition '"
+                    + t.getName()
+                    + "': 'to' status id "
+                    + t.getTo()
+                    + " is not in this workflow !");
           }
         });
 

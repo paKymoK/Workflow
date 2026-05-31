@@ -158,14 +158,33 @@ function DetailPanel({
   const shortName = (s: string) => s.includes(".") ? s.split(".").pop()! : s;
 
   return (
-    <div className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-[10px] px-[18px] py-4 w-72 shadow-lg flex flex-col gap-3">
+    <div
+      className="absolute top-3 right-3 z-10 rounded-[10px] px-[18px] py-4 w-72 shadow-lg flex flex-col gap-3 border"
+      style={{ background: "var(--dark)", borderColor: "var(--border-subtle)" }}
+    >
       <div className="flex justify-between items-start">
-        <div className="font-mono text-[9px] text-indigo-500 tracking-[0.15em] uppercase">Transition</div>
-        <button onClick={onClose} className="text-gray-400 bg-transparent border-none cursor-pointer text-lg leading-none p-0">✕</button>
+        <div
+          className="font-mono text-[9px] tracking-[0.15em] uppercase"
+          style={{ color: "var(--neon-yellow)" }}
+        >
+          Transition
+        </div>
+        <button
+          onClick={onClose}
+          className="bg-transparent border-none cursor-pointer text-lg leading-none p-0"
+          style={{ color: "var(--text-muted)" }}
+        >
+          ✕
+        </button>
       </div>
 
       <div>
-        <div className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.12em] mb-1">Name</div>
+        <div
+          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Name
+        </div>
         <Input
           size="small"
           value={name}
@@ -175,7 +194,12 @@ function DetailPanel({
       </div>
 
       <div>
-        <div className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.12em] mb-1">Validators</div>
+        <div
+          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Validators
+        </div>
         <Select
           mode="multiple"
           size="small"
@@ -185,10 +209,15 @@ function DetailPanel({
           placeholder="Add validators"
           options={availableValidators.map((v) => ({ label: v.name, value: v.value }))}
           optionRender={(opt) => (
-            <span className="font-mono text-[11px] text-amber-600">{shortName(opt.value as string)}</span>
+            <span className="font-mono text-[11px]" style={{ color: "var(--neon-yellow)" }}>
+              {shortName(opt.value as string)}
+            </span>
           )}
           tagRender={({ label, closable, onClose: onTagClose }) => (
-            <span className="font-mono text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-px mr-1 flex items-center gap-1">
+            <span
+              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border"
+              style={{ color: "var(--neon-yellow)", background: "rgba(0,207,255,0.1)", borderColor: "var(--border-subtle)" }}
+            >
               <span className="opacity-50 text-[9px]">V</span>{label}
               {closable && <span onClick={onTagClose} className="cursor-pointer opacity-50 hover:opacity-100">✕</span>}
             </span>
@@ -197,7 +226,12 @@ function DetailPanel({
       </div>
 
       <div>
-        <div className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.12em] mb-1">Post Functions</div>
+        <div
+          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Post Functions
+        </div>
         <Select
           mode="multiple"
           size="small"
@@ -207,10 +241,15 @@ function DetailPanel({
           placeholder="Add post functions"
           options={availablePostFunctions.map((f) => ({ label: f.name, value: f.value }))}
           optionRender={(opt) => (
-            <span className="font-mono text-[11px] text-violet-600">{shortName(opt.value as string)}</span>
+            <span className="font-mono text-[11px]" style={{ color: "var(--neon-cyan)" }}>
+              {shortName(opt.value as string)}
+            </span>
           )}
           tagRender={({ label, closable, onClose: onTagClose }) => (
-            <span className="font-mono text-[10px] text-violet-600 bg-violet-50 border border-violet-200 rounded px-1.5 py-px mr-1 flex items-center gap-1">
+            <span
+              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border"
+              style={{ color: "var(--neon-cyan)", background: "rgba(0,245,196,0.1)", borderColor: "rgba(0,245,196,0.25)" }}
+            >
               <span className="opacity-50 text-[9px]">F</span>{label}
               {closable && <span onClick={onTagClose} className="cursor-pointer opacity-50 hover:opacity-100">✕</span>}
             </span>
@@ -218,7 +257,10 @@ function DetailPanel({
         />
       </div>
 
-      <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+      <div
+        className="flex justify-between items-center pt-1 border-t"
+        style={{ borderColor: "var(--border-subtle)" }}
+      >
         <Popconfirm title="Remove this transition?" onConfirm={() => onDelete(edge.id)} okText="Remove" okButtonProps={{ danger: true }}>
           <Button size="small" danger type="text">Remove</Button>
         </Popconfirm>
