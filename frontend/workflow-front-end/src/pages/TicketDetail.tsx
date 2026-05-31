@@ -229,7 +229,6 @@ export default function TicketDetail() {
           filterOption={false}
           placeholder="Search by name or email..."
           className="!w-full !mt-3"
-          value={undefined}
           onSearch={setUserQuery}
           onSelect={handleAssigneeSelect}
           options={userOptions}
