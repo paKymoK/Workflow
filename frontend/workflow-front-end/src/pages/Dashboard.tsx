@@ -273,18 +273,18 @@ const [isExporting,  setIsExporting]  = useState(false);
       render: (name: string, record) => <Tag color={record.status?.color}>{name}</Tag>,
     },
     {
-      title: "Response",
+      title: "SLA",
       width: 200,
-      render: (_, record) => record.sla
-        ? <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="response" />
-        : "-",
-    },
-    {
-      title: "Resolution",
-      width: 200,
-      render: (_, record) => record.sla
-        ? <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="resolution" />
-        : "-",
+      responsive: ["lg"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
+      render: (_, record) => {
+        if (!record.sla) return <span className="text-gray-400 text-xs">—</span>;
+        return (
+          <div className="flex flex-col gap-1">
+            <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="response" />
+            <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="resolution" />
+          </div>
+        );
+      },
     },
     { title: "Priority", dataIndex: ["priority", "name"], width: 100 },
     {
@@ -338,16 +338,6 @@ const [isExporting,  setIsExporting]  = useState(false);
             // TICKET QUEUE
           </span>
         </div>
-        <div className="flex gap-2">
-          <Button
-            icon={<DownloadOutlined />}
-            loading={isExporting}
-            onClick={handleExport}
-            className="neon-btn font-bebas! tracking-widest!"
-          >
-            <span className="neon-btn-content">Export</span>
-          </Button>
-        </div>
       </div>
 
       {/* Filter bar */}
@@ -391,6 +381,14 @@ const [isExporting,  setIsExporting]  = useState(false);
           className="!w-[220px]"
         />
         <Button onClick={handleReset}>Reset</Button>
+        <Button
+          icon={<DownloadOutlined />}
+          loading={isExporting}
+          onClick={handleExport}
+          className="neon-btn font-bebas! tracking-widest!"
+        >
+          <span className="neon-btn-content">Export</span>
+        </Button>
       </div>
 
       <Table<TicketSla>

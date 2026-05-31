@@ -354,7 +354,7 @@ export default function TicketDetail() {
                 {ticket.assignee ? (
                   <>
                     <div>{ticket.assignee.name}</div>
-                    <Text type="secondary" className="!text-[11px]">{ticket.assignee.email}</Text>
+                    <Text type="secondary" className="!text-[11px] pl-0.5">({ticket.assignee.email})</Text>
                   </>
                 ) : (
                   <Text type="secondary">Unassigned</Text>
