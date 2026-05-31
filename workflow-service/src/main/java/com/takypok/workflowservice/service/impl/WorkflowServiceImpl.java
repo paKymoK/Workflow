@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -90,19 +89,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private List<Transition> validatedTransition(
       List<WorkflowTransitionRequest> transitions, List<? extends Status> statuses) {
-    AtomicLong todoNodeCount = new AtomicLong(0L);
-    statuses.forEach(
-        status -> {
-          if (GroupStatus.TODO.equals(status.getGroup())) {
-            todoNodeCount.getAndIncrement();
-            if (todoNodeCount.get() > 1) {
-              throw new ApplicationException(
-                  Message.Application.ERROR, "Workflow can't have more than one TODO node");
-            }
-          }
-        });
+    long todoNodeCount =
+        statuses.stream().filter(s -> GroupStatus.TODO.equals(s.getGroup())).count();
 
-    if (todoNodeCount.get() < 1) {
+    if (todoNodeCount > 1) {
+      throw new ApplicationException(
+          Message.Application.ERROR, "Workflow can't have more than one TODO node");
+    }
+    if (todoNodeCount < 1) {
       throw new ApplicationException(
           Message.Application.ERROR, "Workflow must have one TODO node !");
     }

@@ -27,10 +27,7 @@ public class WorkflowController {
 
   @GetMapping("/{id}")
   public Mono<ResultMessage<Workflow>> getById(
-      @PathVariable Long id, Authentication authentication) {
-    System.out.println(getUserInfo(authentication));
-    System.out.println(getDomain(authentication));
-    System.out.println(getRoles(authentication));
+      @PathVariable Long id) {
     return workflowService.getById(id).map(ResultMessage::success);
   }
 
