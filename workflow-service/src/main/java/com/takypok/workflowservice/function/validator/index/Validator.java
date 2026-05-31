@@ -2,7 +2,9 @@ package com.takypok.workflowservice.function.validator.index;
 
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
+import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Ticket;
+import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,17 +18,19 @@ import reactor.core.publisher.Mono;
 public class Validator {
   private final ApplicationContext applicationContext;
 
-  public final Mono<Boolean> validate(String clazzName, Ticket<TicketDetail> ticket) {
+  public final Mono<Boolean> validate(
+      String clazzName, Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
     try {
       ValidatorInterface myInstance =
           (ValidatorInterface) applicationContext.getBean(Class.forName(clazzName));
-      return myInstance.validate(ticket);
+      return myInstance.validate(ticket, currentUser, transition);
     } catch (ClassNotFoundException e) {
       return Mono.error(
           new ApplicationException(Message.Application.ERROR, "Validator not found !"));
     } catch (Exception e) {
       return Mono.error(
-          new ApplicationException(Message.Application.ERROR, "Validator not registered as a Spring bean !"));
+          new ApplicationException(
+              Message.Application.ERROR, "Validator not registered as a Spring bean !"));
     }
   }
 
@@ -38,7 +42,8 @@ public class Validator {
     } catch (ClassNotFoundException e) {
       throw new ApplicationException(Message.Application.ERROR, "Validator not found !");
     } catch (Exception e) {
-      throw new ApplicationException(Message.Application.ERROR, "Validator not registered as a Spring bean !");
+      throw new ApplicationException(
+          Message.Application.ERROR, "Validator not registered as a Spring bean !");
     }
   }
 }

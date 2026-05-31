@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS ticket
     detail      jsonb     NOT NULL,
     priority    jsonb     NOT NULL,
     workflow    jsonb     NOT NULL,
+    version     bigint    NOT NULL DEFAULT 0,
+    approvals   jsonb     NOT NULL DEFAULT '[]',
     created_at  timestamp with time zone,
     created_by  character varying,
     modified_at timestamp with time zone,
@@ -121,6 +123,8 @@ ON ticket (((priority ->> 'id')::bigint));
 
 CREATE INDEX IF NOT EXISTS idx_ticket_assignee_sub
 ON ticket ((assignee ->> 'sub'));
+
+CREATE INDEX IF NOT EXISTS idx_ticket_approvals_gin ON ticket USING GIN (approvals);
 
 
 CREATE INDEX IF NOT EXISTS idx_sla_status_response ON sla ((status ->> 'response'));

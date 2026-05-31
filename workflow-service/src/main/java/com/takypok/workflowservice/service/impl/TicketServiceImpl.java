@@ -232,10 +232,10 @@ public class TicketServiceImpl implements TicketService {
             })
         .flatMap(
             tuples ->
-                initValidator(tuples.getT1(), tuples.getT2().getValidator())
+                initValidator(tuples.getT1(), tuples.getT2().getValidator(), currentUser, tuples.getT2())
                     .then(
                         initPostFunction(
-                            tuples.getT1(), tuples.getT2().getPostFunctions(), currentUser))
+                            tuples.getT1(), tuples.getT2().getPostFunctions(), currentUser, tuples.getT2()))
                     .thenReturn(tuples))
         .flatMap(
             tuples ->
@@ -289,12 +289,13 @@ public class TicketServiceImpl implements TicketService {
                     Message.Application.ERROR, "Issue Type not valid or exist !")));
   }
 
-  private Mono<Void> initValidator(Ticket<TicketDetail> ticket, List<String> function) {
+  private Mono<Void> initValidator(
+      Ticket<TicketDetail> ticket, List<String> function, User currentUser, Transition transition) {
     return Flux.fromIterable(function)
         .flatMap(
             s ->
                 validator
-                    .validate(s, ticket)
+                    .validate(s, ticket, currentUser, transition)
                     .flatMap(
                         result -> {
                           if (!result) {
@@ -308,12 +309,12 @@ public class TicketServiceImpl implements TicketService {
   }
 
   private Mono<Ticket<TicketDetail>> initPostFunction(
-      Ticket<TicketDetail> ticket, List<String> function, User currentUser) {
+      Ticket<TicketDetail> ticket, List<String> function, User currentUser, Transition transition) {
     return Flux.fromIterable(function)
         .reduce(
             Mono.just(ticket),
             (accMono, s) ->
-                accMono.flatMap(latestTicket -> postFunction.apply(s, latestTicket, currentUser)))
+                accMono.flatMap(latestTicket -> postFunction.apply(s, latestTicket, currentUser, transition)))
         .flatMap(mono -> mono);
   }
 

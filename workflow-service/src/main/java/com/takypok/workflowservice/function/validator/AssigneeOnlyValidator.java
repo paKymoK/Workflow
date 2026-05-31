@@ -5,23 +5,28 @@ import com.takypok.workflowservice.function.validator.index.ValidatorInterface;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 @Slf4j
-public class Example1Validator implements ValidatorInterface {
+public class AssigneeOnlyValidator implements ValidatorInterface {
+
   @Override
-  public Mono<Boolean> validate(Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
-    System.out.println("Ex1 validate triggered !");
-    return Mono.just(true);
+  public Mono<Boolean> validate(
+      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+    if (ticket.getAssignee() == null) {
+      return Mono.just(false);
+    }
+    return Mono.just(Objects.equals(ticket.getAssignee().getSub(), currentUser.getSub()));
   }
 
   @Override
   public String validateFailedMessage() {
-    return "Failed 1";
+    return "Only the assignee can perform this transition !";
   }
 }
