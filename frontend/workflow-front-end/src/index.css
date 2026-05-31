@@ -319,6 +319,14 @@ input:focus-within ~ .focus-bar { width: 100%; }
   letter-spacing: 0.08em !important;
   opacity: 0.55;
 }
+/* Form item label background bleed fix */
+.ant-form-item .ant-form-item-label {
+  background: transparent !important;
+}
+/* Modal header background bleed fix */
+.ant-modal .ant-modal-header {
+  background: transparent !important;
+}
 
 /* ── ReactFlow dark theme ────────────────────────────── */
 .react-flow__background { background: var(--darker) !important; }

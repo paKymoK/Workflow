@@ -72,13 +72,40 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public Mono<Workflow> update(WorkflowUpdateRequest request) {
-    return workflowRepository.save(
-        workflowMapper.mapToEntity(
-            request.getId(),
-            request.getName(),
-            new ListWorkflowNode(request.getStatuses()),
-            new ListTransition(
-                validatedTransition(request.getTransitions(), request.getStatuses()))));
+    List<Long> statusIds =
+        request.getStatuses().stream().map(IdEntity::getId).collect(Collectors.toList());
+
+    return workflowRepository
+        .findById(request.getId())
+        .switchIfEmpty(
+            Mono.error(
+                new ApplicationException(Message.Application.ERROR, "Workflow không tồn tại !")))
+        .flatMap(
+            existing ->
+                statusRepository
+                    .findAllById(statusIds)
+                    .collectList()
+                    .flatMap(
+                        dbStatuses -> {
+                          if (dbStatuses.size() != statusIds.size()) {
+                            return Mono.error(
+                                new ApplicationException(
+                                    Message.Application.ERROR,
+                                    findStatusNotExist(
+                                        statusIds,
+                                        dbStatuses.stream()
+                                            .map(IdEntity::getId)
+                                            .collect(Collectors.toList()))));
+                          }
+                          return workflowRepository.save(
+                              workflowMapper.mapToEntity(
+                                  request.getId(),
+                                  request.getName(),
+                                  new ListWorkflowNode(request.getStatuses()),
+                                  new ListTransition(
+                                      validatedTransition(
+                                          request.getTransitions(), request.getStatuses()))));
+                        }));
   }
 
   private String findStatusNotExist(List<Long> request, List<Long> database) {
@@ -109,6 +136,22 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new ApplicationException(
           Message.Application.ERROR, "Workflow transition has duplicate !");
     }
+
+    Set<Long> statusIdSet = statuses.stream().map(IdEntity::getId).collect(Collectors.toSet());
+
+    transitions.forEach(
+        t -> {
+          if (!statusIdSet.contains(t.getFrom())) {
+            throw new ApplicationException(
+                Message.Application.ERROR,
+                "Transition '" + t.getName() + "': 'from' status id " + t.getFrom() + " is not in this workflow !");
+          }
+          if (!statusIdSet.contains(t.getTo())) {
+            throw new ApplicationException(
+                Message.Application.ERROR,
+                "Transition '" + t.getName() + "': 'to' status id " + t.getTo() + " is not in this workflow !");
+          }
+        });
 
     return transitions.stream()
         .map(

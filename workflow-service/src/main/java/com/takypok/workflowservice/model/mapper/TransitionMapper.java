@@ -16,11 +16,10 @@ public abstract class TransitionMapper {
       WorkflowTransitionRequest request, List<Status> statuses);
 
   protected Status getStatus(Long statusId, List<Status> statuses) {
-    for (Status status : statuses) {
-      if (Objects.equals(status.getId(), statusId)) {
-        return status;
-      }
-    }
-    return null;
+    return statuses.stream()
+        .filter(s -> Objects.equals(s.getId(), statusId))
+        .findFirst()
+        .orElseThrow(
+            () -> new IllegalStateException("Status id " + statusId + " not found in workflow statuses"));
   }
 }
