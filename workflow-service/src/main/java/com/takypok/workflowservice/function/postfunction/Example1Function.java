@@ -17,7 +17,8 @@ import reactor.core.publisher.Mono;
 public class Example1Function implements PostFunctionInterface {
 
   @Override
-  public Mono<Ticket<TicketDetail>> run(Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+  public Mono<Ticket<TicketDetail>> run(
+      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
     ticket.setAssignee(currentUser);
     return Mono.empty().delayElement(Duration.ofSeconds(5)).thenReturn(ticket);
   }

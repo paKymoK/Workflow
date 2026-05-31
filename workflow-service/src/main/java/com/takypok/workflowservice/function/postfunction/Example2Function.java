@@ -16,7 +16,8 @@ import reactor.core.publisher.Mono;
 public class Example2Function implements PostFunctionInterface {
 
   @Override
-  public Mono<Ticket<TicketDetail>> run(Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+  public Mono<Ticket<TicketDetail>> run(
+      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
     return Mono.defer(
         () -> {
           System.out.println("Ex2 func triggered !");

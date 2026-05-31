@@ -15,7 +15,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class Example2Validator implements ValidatorInterface {
   @Override
-  public Mono<Boolean> validate(Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+  public Mono<Boolean> validate(
+      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
     System.out.println("Ex2 validate triggered !");
     return Mono.just(true);
   }

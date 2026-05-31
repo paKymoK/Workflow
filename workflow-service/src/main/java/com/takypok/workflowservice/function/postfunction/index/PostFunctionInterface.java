@@ -7,5 +7,6 @@ import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import reactor.core.publisher.Mono;
 
 public interface PostFunctionInterface {
-  Mono<Ticket<TicketDetail>> run(Ticket<TicketDetail> ticket, User currentUser, Transition transition);
+  Mono<Ticket<TicketDetail>> run(
+      Ticket<TicketDetail> ticket, User currentUser, Transition transition);
 }

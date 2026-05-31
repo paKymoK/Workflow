@@ -10,7 +10,6 @@ import com.takypok.workflowservice.service.WorkflowService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -26,8 +25,7 @@ public class WorkflowController {
   }
 
   @GetMapping("/{id}")
-  public Mono<ResultMessage<Workflow>> getById(
-      @PathVariable Long id) {
+  public Mono<ResultMessage<Workflow>> getById(@PathVariable Long id) {
     return workflowService.getById(id).map(ResultMessage::success);
   }
 

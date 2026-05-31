@@ -232,10 +232,14 @@ public class TicketServiceImpl implements TicketService {
             })
         .flatMap(
             tuples ->
-                initValidator(tuples.getT1(), tuples.getT2().getValidator(), currentUser, tuples.getT2())
+                initValidator(
+                        tuples.getT1(), tuples.getT2().getValidator(), currentUser, tuples.getT2())
                     .then(
                         initPostFunction(
-                            tuples.getT1(), tuples.getT2().getPostFunctions(), currentUser, tuples.getT2()))
+                            tuples.getT1(),
+                            tuples.getT2().getPostFunctions(),
+                            currentUser,
+                            tuples.getT2()))
                     .thenReturn(tuples))
         .flatMap(
             tuples ->
@@ -314,7 +318,8 @@ public class TicketServiceImpl implements TicketService {
         .reduce(
             Mono.just(ticket),
             (accMono, s) ->
-                accMono.flatMap(latestTicket -> postFunction.apply(s, latestTicket, currentUser, transition)))
+                accMono.flatMap(
+                    latestTicket -> postFunction.apply(s, latestTicket, currentUser, transition)))
         .flatMap(mono -> mono);
   }
 
