@@ -3,8 +3,10 @@ package com.takypok.gatewayservice.authentication;
 import java.util.Arrays;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -17,6 +19,16 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 public class AuthenticationConfig {
 
   @Bean
+  @Order(0)
+  public SecurityWebFilterChain actuatorSecurityWebFilterChain(ServerHttpSecurity http) {
+    return http.securityMatcher(EndpointRequest.toAnyEndpoint())
+        .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
+        .csrf(ServerHttpSecurity.CsrfSpec::disable)
+        .build();
+  }
+
+  @Bean
+  @Order(1)
   public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
     return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
         .cors(corsSpec -> corsSpec.configurationSource(corsFilter()))

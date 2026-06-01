@@ -85,6 +85,22 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 
+management:
+  server:
+    port: 8090
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      access: unrestricted
+    prometheus:
+      access: unrestricted
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 single-tab:
   redis-on-failure: ${SINGLE_TAB_REDIS_ON_FAILURE:FAIL_OPEN}
 

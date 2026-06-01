@@ -8,4 +8,5 @@ include:
   - workflow-service/docker-compose.yml
   - media-service/docker-compose.yml
   - gateway-service/docker-compose.yml
+  - infrastructure/monitor/docker-compose.yml
 
