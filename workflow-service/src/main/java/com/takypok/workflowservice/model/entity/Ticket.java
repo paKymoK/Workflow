@@ -5,6 +5,7 @@ import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.custom.ListApprovalRecord;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import lombok.*;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 
 @Getter
@@ -24,4 +25,6 @@ public class Ticket<T extends TicketDetail> extends IdEntity {
   private Workflow workflow;
   @Version private Long version;
   private ListApprovalRecord approvals;
+
+  @Transient private String mediaServiceWarning;
 }
