@@ -202,7 +202,7 @@ BEGIN
         UPDATE sla
         SET status = status || jsonb_build_object(
                 'resolution', 'DONE',
-                'responseTime', NOW()
+                'resolutionTime', NOW()
                                )
         WHERE NEW.id = ticket_id;
     END IF;
