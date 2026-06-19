@@ -5,6 +5,7 @@ import com.takypok.workflowservice.function.validator.index.ValidatorInterface;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.TransitionRequest;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,10 @@ public class AssigneeOnlyValidator implements ValidatorInterface {
 
   @Override
   public Mono<Boolean> validate(
-      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+      Ticket<TicketDetail> ticket,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     if (ticket.getAssignee() == null) {
       return Mono.just(false);
     }

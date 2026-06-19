@@ -150,6 +150,29 @@ export interface WorkflowCreateRequest {
 }
 
 
+export type PendingReason =
+  | "AWAITING_USER"
+  | "AWAITING_THIRD_PARTY"
+  | "AWAITING_CHANGE"
+  | "AWAITING_PARTS"
+  | "SCHEDULED_MAINTENANCE";
+
+export const PENDING_REASON_LABELS: Record<PendingReason, string> = {
+  AWAITING_USER: "Awaiting User",
+  AWAITING_THIRD_PARTY: "Awaiting Third Party",
+  AWAITING_CHANGE: "Awaiting Change",
+  AWAITING_PARTS: "Awaiting Parts / Procurement",
+  SCHEDULED_MAINTENANCE: "Scheduled Maintenance",
+};
+
+export interface TransitionRequest {
+  ticketId: number;
+  currentStatusId: number;
+  transitionName: string;
+  pendingReason?: PendingReason;
+  pendingDescription?: string;
+}
+
 export interface StatisticItem {
   name: string;
   value: number;
@@ -227,7 +250,12 @@ export interface TicketSla {
       resolutionPercent: number | null;
     };
     isPaused: boolean | null;
-    pausedTime: { pausedTime: string; resumeTime: string | null }[];
+    pausedTime: {
+      pausedTime: string;
+      resumeTime: string | null;
+      reason: PendingReason | null;
+      description: string | null;
+    }[];
     priority: {
       id: number;
       name: string;

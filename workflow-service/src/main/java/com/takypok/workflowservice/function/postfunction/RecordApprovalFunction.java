@@ -7,6 +7,7 @@ import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.ListApprovalRecord;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.TransitionRequest;
 import java.time.ZonedDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,10 @@ public class RecordApprovalFunction implements PostFunctionInterface {
 
   @Override
   public Mono<Ticket<TicketDetail>> run(
-      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+      Ticket<TicketDetail> ticket,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     ListApprovalRecord approvals = ticket.getApprovals();
     if (approvals == null) {
       approvals = new ListApprovalRecord();

@@ -5,6 +5,7 @@ import com.takypok.workflowservice.function.postfunction.index.PostFunctionInter
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.TransitionRequest;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,10 @@ public class Example1Function implements PostFunctionInterface {
 
   @Override
   public Mono<Ticket<TicketDetail>> run(
-      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+      Ticket<TicketDetail> ticket,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     ticket.setAssignee(currentUser);
     return Mono.empty().delayElement(Duration.ofSeconds(5)).thenReturn(ticket);
   }

@@ -8,6 +8,7 @@ import {
   createProject, updateProject, deleteProject,
 } from "../api/ticketApi";
 import type { FilterTicketRequest } from "../api/ticketApi";
+import type { PendingReason } from "../api/types";
 
 // ── Query key factory ────────────────────────────────────────────────────────
 // Centralised keys make it easy to invalidate related queries precisely.
@@ -166,11 +167,15 @@ export function useTransitionTicket() {
       ticketId,
       currentStatusId,
       transitionName,
+      pendingReason,
+      pendingDescription,
     }: {
       ticketId: string | number;
       currentStatusId: number;
       transitionName: string;
-    }) => transitionTicket(ticketId, currentStatusId, transitionName),
+      pendingReason?: PendingReason;
+      pendingDescription?: string;
+    }) => transitionTicket({ ticketId: Number(ticketId), currentStatusId, transitionName, pendingReason, pendingDescription }),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
     },

@@ -71,7 +71,9 @@ VALUES ('Incident', '[
     "from": { "id": 2, "name": "In Progress", "color": "#0052CC", "group": "PROCESSING" },
     "to":   { "id": 3, "name": "Pending",     "color": "#FF8B00", "group": "PROCESSING" },
     "name": "Put On Hold",
-    "validator": [],
+    "validator": [
+      "com.takypok.workflowservice.function.validator.RequirePendingReasonValidator"
+    ],
     "postFunctions": [
       "com.takypok.workflowservice.function.postfunction.PauseSlaFunction"
     ]

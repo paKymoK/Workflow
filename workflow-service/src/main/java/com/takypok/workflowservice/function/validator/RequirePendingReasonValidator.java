@@ -11,22 +11,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 @Slf4j
-public class Example2Validator implements ValidatorInterface {
+public class RequirePendingReasonValidator implements ValidatorInterface {
+
   @Override
   public Mono<Boolean> validate(
       Ticket<TicketDetail> ticket,
       User currentUser,
       Transition transition,
       TransitionRequest request) {
-    System.out.println("Ex2 validate triggered !");
-    return Mono.just(true);
+    return Mono.just(request.getPendingReason() != null);
   }
 
   @Override
   public String validateFailedMessage() {
-    return null;
+    return "A pending reason is required to put this ticket on hold.";
   }
 }

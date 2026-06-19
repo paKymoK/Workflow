@@ -4,9 +4,13 @@ import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.TransitionRequest;
 import reactor.core.publisher.Mono;
 
 public interface PostFunctionInterface {
   Mono<Ticket<TicketDetail>> run(
-      Ticket<TicketDetail> ticket, User currentUser, Transition transition);
+      Ticket<TicketDetail> ticket,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request);
 }

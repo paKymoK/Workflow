@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert,
-  Dropdown, App, Avatar, List, Row, Col, Divider, Progress, Tooltip, Select, Modal,
+  Dropdown, App, Avatar, List, Row, Col, Divider, Progress, Tooltip, Select, Modal, Form, Input,
 } from "antd";
 import {
   ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
@@ -17,6 +17,7 @@ import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket, useUpd
 import { useComments, useCreateComment, useUpdateComment } from "../hooks/useComments";
 import { useAuth } from "@takypok/shared";
 import { fetchUsers, type UserSummary } from "../api/ticketApi";
+import { type PendingReason, PENDING_REASON_LABELS } from "../api/types";
 import CommentContent from "../components/CommentContent.tsx";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
 
@@ -52,6 +53,11 @@ export default function TicketDetail() {
   const [userQuery,          setUserQuery]          = useState("");
   const [userOptions,        setUserOptions]        = useState<{ value: string; label: string; user: UserSummary }[]>([]);
   const [isSearchingUsers,   setIsSearchingUsers]   = useState(false);
+
+  // ── Pending reason modal state ────────────────────────────────────────────
+  const [pendingModalOpen,       setPendingModalOpen]       = useState(false);
+  const [pendingTransitionName,  setPendingTransitionName]  = useState("");
+  const [pendingForm]                                       = Form.useForm<{ reason: PendingReason; description?: string }>();
 
   useEffect(() => {
     if (!userQuery.trim()) { setUserOptions([]); return; }
@@ -101,18 +107,32 @@ export default function TicketDetail() {
     }
   }, [id, resumeMutation, message]);
 
-  const handleTransition = useCallback(async (transitionName: string) => {
+  const handleTransition = useCallback(async (transitionName: string, pendingReason?: PendingReason, pendingDescription?: string) => {
     if (!id || !ticket) return;
     try {
       await transitionMutation.mutateAsync({
         ticketId: id,
         currentStatusId: ticket.status.id,
         transitionName,
+        pendingReason,
+        pendingDescription,
       });
     } catch {
       message.error("Failed to transition ticket");
     }
   }, [id, ticket, transitionMutation, message]);
+
+  const handlePendingTransitionClick = useCallback((transitionName: string) => {
+    setPendingTransitionName(transitionName);
+    pendingForm.resetFields();
+    setPendingModalOpen(true);
+  }, [pendingForm]);
+
+  const handlePendingConfirm = useCallback(async () => {
+    const values = await pendingForm.validateFields();
+    await handleTransition(pendingTransitionName, values.reason, values.description);
+    setPendingModalOpen(false);
+  }, [pendingForm, pendingTransitionName, handleTransition]);
 
   const handleStartEdit = useCallback((commentId: string, currentContent: string) => {
     editHtmlRef.current = currentContent;
@@ -210,13 +230,40 @@ export default function TicketDetail() {
       { type: "divider" as const },
       ...availableTransitions.map((t) => ({
         key: t.name, label: t.name, disabled: actionLoading,
-        onClick: () => handleTransition(t.name),
+        onClick: () =>
+          t.to.name === "Pending"
+            ? handlePendingTransitionClick(t.name)
+            : handleTransition(t.name),
       })),
     ] : []),
   ];
 
   return (
     <div>
+      <Modal
+        title="Put On Hold"
+        open={pendingModalOpen}
+        onCancel={() => setPendingModalOpen(false)}
+        onOk={handlePendingConfirm}
+        confirmLoading={transitionMutation.isPending}
+        okText="Confirm"
+      >
+        <Form form={pendingForm} layout="vertical" className="mt-3">
+          <Form.Item name="reason" label="Reason" rules={[{ required: true, message: "Please select a reason" }]}>
+            <Select
+              placeholder="Select a reason..."
+              options={(Object.keys(PENDING_REASON_LABELS) as PendingReason[]).map((k) => ({
+                label: PENDING_REASON_LABELS[k],
+                value: k,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item name="description" label="Description (optional)">
+            <Input.TextArea rows={3} placeholder="Provide additional context if needed..." />
+          </Form.Item>
+        </Form>
+      </Modal>
+
       <Modal
         title="Change Assignee"
         open={assigneeModalOpen}
@@ -459,6 +506,25 @@ export default function TicketDetail() {
                     </div>
                   );
                 })()}
+                {ticket.sla.pausedTime.length > 0 && (
+                  <div className="mt-3">
+                    <Text type="secondary" className="!text-[11px] block mb-1">Pause History</Text>
+                    {ticket.sla.pausedTime.map((p, i) => (
+                      <div key={i} className="mb-2 pl-2 border-l-2 border-[rgba(255,255,255,0.15)]">
+                        {p.reason && (
+                          <Tag color="orange" className="mb-1">{PENDING_REASON_LABELS[p.reason]}</Tag>
+                        )}
+                        {p.description && (
+                          <Text className="!text-[11px] block text-[rgba(240,240,240,0.6)]">{p.description}</Text>
+                        )}
+                        <Text type="secondary" className="!text-[10px]">
+                          {dayjs(p.pausedTime).format("DD MMM YYYY HH:mm")}
+                          {p.resumeTime ? ` → ${dayjs(p.resumeTime).format("DD MMM YYYY HH:mm")}` : " → ongoing"}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </Card>

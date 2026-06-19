@@ -245,13 +245,18 @@ public class TicketServiceImpl implements TicketService {
         .flatMap(
             tuples ->
                 initValidator(
-                        tuples.getT1(), tuples.getT2().getValidator(), currentUser, tuples.getT2())
+                        tuples.getT1(),
+                        tuples.getT2().getValidator(),
+                        currentUser,
+                        tuples.getT2(),
+                        request)
                     .then(
                         initPostFunction(
                             tuples.getT1(),
                             tuples.getT2().getPostFunctions(),
                             currentUser,
-                            tuples.getT2()))
+                            tuples.getT2(),
+                            request))
                     .thenReturn(tuples))
         .flatMap(
             tuples ->
@@ -327,12 +332,16 @@ public class TicketServiceImpl implements TicketService {
   }
 
   private Mono<Void> initValidator(
-      Ticket<TicketDetail> ticket, List<String> function, User currentUser, Transition transition) {
+      Ticket<TicketDetail> ticket,
+      List<String> function,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     return Flux.fromIterable(function)
         .flatMap(
             s ->
                 validator
-                    .validate(s, ticket, currentUser, transition)
+                    .validate(s, ticket, currentUser, transition, request)
                     .flatMap(
                         result -> {
                           if (!result) {
@@ -346,13 +355,18 @@ public class TicketServiceImpl implements TicketService {
   }
 
   private Mono<Ticket<TicketDetail>> initPostFunction(
-      Ticket<TicketDetail> ticket, List<String> function, User currentUser, Transition transition) {
+      Ticket<TicketDetail> ticket,
+      List<String> function,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     return Flux.fromIterable(function)
         .reduce(
             Mono.just(ticket),
             (accMono, s) ->
                 accMono.flatMap(
-                    latestTicket -> postFunction.apply(s, latestTicket, currentUser, transition)))
+                    latestTicket ->
+                        postFunction.apply(s, latestTicket, currentUser, transition, request)))
         .flatMap(mono -> mono);
   }
 

@@ -6,6 +6,7 @@ import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.TransitionRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -19,11 +20,15 @@ public class Validator {
   private final ApplicationContext applicationContext;
 
   public final Mono<Boolean> validate(
-      String clazzName, Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+      String clazzName,
+      Ticket<TicketDetail> ticket,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     try {
       ValidatorInterface myInstance =
           (ValidatorInterface) applicationContext.getBean(Class.forName(clazzName));
-      return myInstance.validate(ticket, currentUser, transition);
+      return myInstance.validate(ticket, currentUser, transition, request);
     } catch (ClassNotFoundException e) {
       return Mono.error(
           new ApplicationException(Message.Application.ERROR, "Validator not found !"));

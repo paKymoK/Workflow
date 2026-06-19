@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, IssueTypeUpdateRequest, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, IssueTypeUpdateRequest, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest, TransitionRequest } from "./types.ts";
 import { api } from "@takypok/shared";
 
 export interface FilterTicketRequest {
@@ -395,10 +395,10 @@ export async function updateAssignee(ticketId: string | number, payload: { sub: 
     return data;
 }
 
-export async function transitionTicket(ticketId: string | number, currentStatusId: number, transitionName: string) {
+export async function transitionTicket(payload: TransitionRequest) {
     const { data } = await api.post<ResultMessage<void>>(
         `/workflow-service/v1/ticket/transition`,
-        { ticketId, currentStatusId, transitionName },
+        payload,
     );
     return data;
 }

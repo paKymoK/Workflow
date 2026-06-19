@@ -6,6 +6,7 @@ import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.TransitionRequest;
 import com.takypok.workflowservice.repository.SlaRepository;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -29,7 +30,10 @@ public class ResumeSlaFunction implements PostFunctionInterface {
 
   @Override
   public Mono<Ticket<TicketDetail>> run(
-      Ticket<TicketDetail> ticket, User currentUser, Transition transition) {
+      Ticket<TicketDetail> ticket,
+      User currentUser,
+      Transition transition,
+      TransitionRequest request) {
     return slaRepository
         .findByTicketId(ticket.getId())
         .flatMap(
