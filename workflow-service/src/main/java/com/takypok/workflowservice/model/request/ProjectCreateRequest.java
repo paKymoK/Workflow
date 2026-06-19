@@ -11,5 +11,4 @@ import lombok.*;
 public class ProjectCreateRequest {
   @NotNull private String name;
   @NotNull private String code;
-  @NotNull private Long workflowId;
 }

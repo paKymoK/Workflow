@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import {
   fetchTickets, fetchTicketById,
   fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes, fetchAllIssueTypes, fetchApplications,
-  createTicket, pauseTicket, resumeTicket, transitionTicket, updateAssignee,
+  createTicket, pauseTicket, resumeTicket, transitionTicket, updateAssignee, updateIssueType,
   createStatus, updateStatus, deleteStatus,
   createPriority, updatePriority, deletePriority,
   createProject, updateProject, deleteProject,
@@ -139,11 +139,22 @@ export function useResumeTicket() {
 export function useUpdateAssignee() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketId, sub, name, email }: { ticketId: string | number; sub: string; name: string; email: string }) =>
-      updateAssignee(ticketId, { sub, name, email }),
+    mutationFn: ({ ticketId, sub }: { ticketId: string | number; sub: string }) =>
+      updateAssignee(ticketId, { sub }),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
       qc.invalidateQueries({ queryKey: ticketKeys.lists() });
+    },
+  });
+}
+
+export function useUpdateIssueType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, workflowId }: { id: number; workflowId: number }) =>
+      updateIssueType(id, { workflowId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.allIssueTypes() });
     },
   });
 }

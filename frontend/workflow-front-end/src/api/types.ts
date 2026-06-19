@@ -15,7 +15,6 @@ export interface Project {
   id: number;
   name: string;
   code: string;
-  workflowId: number;
 }
 
 export const PROJECT_CODE_INTERNAL = "IA";
@@ -23,7 +22,6 @@ export const PROJECT_CODE_INTERNAL = "IA";
 export interface ProjectCreateRequest {
   name: string;
   code: string;
-  workflowId: number;
 }
 
 export interface ProjectUpdateRequest extends ProjectCreateRequest {
@@ -50,7 +48,13 @@ export interface PriorityUpdateRequest extends PriorityCreateRequest {
 export interface IssueType {
   id: number;
   name: string;
+  code: string;
   projectId: number;
+  workflowId: number;
+}
+
+export interface IssueTypeUpdateRequest {
+  workflowId: number;
 }
 
 export interface AttachmentRef {
@@ -193,8 +197,8 @@ export interface TicketByIssueType {
 export interface TicketSla {
   id: number;
   createdAt: string;
-  project: { id: number; name: string; code: string; workflowId: number };
-  issueType: { id: number; name: string; projectId: number };
+  project: { id: number; name: string; code: string };
+  issueType: { id: number; name: string; code: string; projectId: number; workflowId: number };
   priority: {
     id: number;
     name: string;

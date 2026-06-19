@@ -116,20 +116,25 @@ public class TicketServiceImpl implements TicketService {
   @Override
   public Mono<Ticket<TicketDetail>> create(CreateTicketRequest request, User user) {
     return Mono.zip(
-            getProject(request.getProjectId())
-                .zipWhen(project -> getWorkflow(project.getWorkflowId())),
+            getProject(request.getProjectId()),
             getIssueType(request.getIssueTypeId(), request.getProjectId()),
             getPriority(request.getPriorityId()))
         .flatMap(
             tuples -> {
-              Project project = tuples.getT1().getT1();
-              Ticket<TicketDetail> ticket =
-                  ticketMapper.mapToTicket(
-                      request, project, tuples.getT1().getT2(), tuples.getT2(), tuples.getT3(), user);
-              return assigneeResolver
-                  .resolve(request.getDetail(), project)
-                  .doOnNext(ticket::setAssignee)
-                  .thenReturn(ticket);
+              Project project = tuples.getT1();
+              IssueType issueType = tuples.getT2();
+              Priority priority = tuples.getT3();
+              return getWorkflow(issueType.getWorkflowId())
+                  .flatMap(
+                      workflow -> {
+                        Ticket<TicketDetail> ticket =
+                            ticketMapper.mapToTicket(
+                                request, project, workflow, issueType, priority, user);
+                        return assigneeResolver
+                            .resolve(request.getDetail(), project)
+                            .doOnNext(ticket::setAssignee)
+                            .thenReturn(ticket);
+                      });
             })
         .flatMap(ticketRepository::save)
         .doOnNext(
@@ -313,8 +318,7 @@ public class TicketServiceImpl implements TicketService {
                 .getUser(request.getSub())
                 .switchIfEmpty(
                     Mono.error(
-                        new ApplicationException(
-                            Message.Application.ERROR, "User not found"))))
+                        new ApplicationException(Message.Application.ERROR, "User not found"))))
         .flatMap(
             tuple -> {
               tuple.getT1().setAssignee(tuple.getT2());

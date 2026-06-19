@@ -3,6 +3,7 @@ package com.takypok.workflowservice.client;
 import com.takypok.core.model.ResultMessage;
 import com.takypok.core.model.authentication.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,7 +15,7 @@ public class AuthServiceClient {
 
   private final WebClient webClient;
 
-  public AuthServiceClient(WebClient.Builder webClientBuilder) {
+  public AuthServiceClient(@Qualifier("lbWebClientBuilder") WebClient.Builder webClientBuilder) {
     this.webClient = webClientBuilder.build();
   }
 

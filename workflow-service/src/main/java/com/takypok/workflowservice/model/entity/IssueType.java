@@ -14,4 +14,5 @@ public class IssueType extends IdEntity {
   private String name;
   private String code;
   private Long projectId;
+  private Long workflowId;
 }

@@ -12,5 +12,4 @@ public class ProjectUpdateRequest {
   @NotNull private Long id;
   @NotNull private String name;
   @NotNull private String code;
-  @NotNull private Long workflowId;
 }

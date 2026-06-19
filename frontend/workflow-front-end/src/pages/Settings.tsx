@@ -4,12 +4,14 @@ import WorkflowList from "../components/settings/WorkflowList";
 import StatusList from "../components/settings/StatusList";
 import PriorityList from "../components/settings/PriorityList";
 import ProjectList from "../components/settings/ProjectList";
+import IssueTypeList from "../components/settings/IssueTypeList";
 
 const workflowTabs = [
-  { key: "workflow", label: "Workflow", children: <WorkflowList /> },
-  { key: "status",   label: "Status",   children: <StatusList /> },
-  { key: "priority", label: "Priority", children: <PriorityList /> },
-  { key: "project",  label: "Project",  children: <ProjectList /> },
+  { key: "workflow",   label: "Workflow",   children: <WorkflowList /> },
+  { key: "status",     label: "Status",     children: <StatusList /> },
+  { key: "priority",   label: "Priority",   children: <PriorityList /> },
+  { key: "project",    label: "Project",    children: <ProjectList /> },
+  { key: "issue-type", label: "Issue Type", children: <IssueTypeList /> },
 ];
 
 export default function Settings() {

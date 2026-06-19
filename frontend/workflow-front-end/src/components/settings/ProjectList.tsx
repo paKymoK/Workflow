@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Table } from "antd";
+import { Button, Form, Input, Modal, Popconfirm, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { Project } from "../../api/types";
 import {
@@ -8,11 +8,9 @@ import {
   useProjects,
   useUpdateProject,
 } from "../../hooks/useTickets";
-import { useWorkflows } from "../../hooks/useWorkflows";
 
 export default function ProjectList() {
   const { data = [], isLoading } = useProjects();
-  const { data: workflows = [] } = useWorkflows();
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject();
   const deleteMutation = useDeleteProject();
@@ -43,18 +41,10 @@ export default function ProjectList() {
     setOpen(false);
   };
 
-  const workflowLabel = (workflowId: number) =>
-    workflows.find((w) => w.id === workflowId)?.name ?? workflowId;
-
   const columns: ColumnsType<Project> = [
     { title: "ID", dataIndex: "id", width: 80 },
     { title: "Name", dataIndex: "name" },
     { title: "Code", dataIndex: "code", width: 120 },
-    {
-      title: "Workflow",
-      dataIndex: "workflowId",
-      render: (workflowId: number) => workflowLabel(workflowId),
-    },
     {
       title: "Action",
       width: 180,
@@ -88,13 +78,6 @@ export default function ProjectList() {
           </Form.Item>
           <Form.Item name="code" label="Code" rules={[{ required: true }]}>
             <Input />
-          </Form.Item>
-          <Form.Item name="workflowId" label="Workflow" rules={[{ required: true }]}>
-            <Select
-              options={workflows.map((w) => ({ label: w.name, value: w.id }))}
-              showSearch
-              optionFilterProp="label"
-            />
           </Form.Item>
         </Form>
       </Modal>

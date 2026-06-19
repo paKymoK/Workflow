@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, IssueTypeUpdateRequest, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest } from "./types.ts";
 import { api } from "@takypok/shared";
 
 export interface FilterTicketRequest {
@@ -379,7 +379,15 @@ export async function exportTickets(params?: ExportTicketRequest): Promise<void>
     window.URL.revokeObjectURL(url);
 }
 
-export async function updateAssignee(ticketId: string | number, payload: { sub: string; name: string; email: string }) {
+export async function updateIssueType(id: number, payload: IssueTypeUpdateRequest) {
+    const { data } = await api.put<ResultMessage<IssueType>>(
+        `/workflow-service/v1/issue/${id}`,
+        payload,
+    );
+    return data.data;
+}
+
+export async function updateAssignee(ticketId: string | number, payload: { sub: string }) {
     const { data } = await api.patch<ResultMessage<void>>(
         `/workflow-service/v1/ticket/${ticketId}/assignee`,
         payload,

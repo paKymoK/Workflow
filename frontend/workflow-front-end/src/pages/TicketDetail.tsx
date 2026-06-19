@@ -70,7 +70,7 @@ export default function TicketDetail() {
   const handleAssigneeSelect = useCallback(async (_: string, option: { user: UserSummary }) => {
     if (!id) return;
     try {
-      await assigneeMutation.mutateAsync({ ticketId: id, sub: option.user.sub, name: option.user.name, email: option.user.email ?? "" });
+      await assigneeMutation.mutateAsync({ ticketId: id, sub: option.user.sub });
       message.success("Assignee updated");
       setAssigneeModalOpen(false);
       setUserQuery("");

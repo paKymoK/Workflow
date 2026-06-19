@@ -13,5 +13,4 @@ import lombok.Setter;
 public class Project extends IdEntity {
   private String name;
   private String code;
-  private Long workflowId;
 }

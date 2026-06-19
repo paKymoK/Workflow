@@ -2,6 +2,7 @@ package com.takypok.workflowservice.service;
 
 import com.takypok.workflowservice.model.entity.IssueType;
 import com.takypok.workflowservice.model.entity.Project;
+import com.takypok.workflowservice.model.request.IssueTypeUpdateRequest;
 import com.takypok.workflowservice.model.request.ProjectCreateRequest;
 import com.takypok.workflowservice.model.request.ProjectUpdateRequest;
 import java.util.List;
@@ -15,6 +16,8 @@ public interface ProjectService {
   Mono<List<IssueType>> getIssueTypeByProjectId(Long id);
 
   Mono<List<IssueType>> getAllIssueTypes();
+
+  Mono<IssueType> updateIssueType(Long id, IssueTypeUpdateRequest request);
 
   Mono<Project> create(ProjectCreateRequest request);
 

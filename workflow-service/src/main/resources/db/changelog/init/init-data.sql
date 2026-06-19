@@ -118,12 +118,12 @@ VALUES ('Incident', '[
 ]', now(), 'admin', now(), 'admin');
 
 INSERT INTO
-    project ( name, code, workflow_id, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Internal Application', 'IA', 1, now(), 'admin', now(), 'admin');
+    project (name, code, "created_at", "created_by", "modified_at", "modified_by")
+VALUES ('Internal Application', 'IA', now(), 'admin', now(), 'admin');
 
 INSERT INTO
-    issue_type (name, code, project_id, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Incident',        'INCIDENT',        1, now(), 'admin', now(), 'admin'),
-       ('Service Request', 'SERVICE_REQUEST',  1, now(), 'admin', now(), 'admin'),
-       ('Problem',         'PROBLEM',          1, now(), 'admin', now(), 'admin'),
-       ('Change Request',  'CHANGE_REQUEST',   1, now(), 'admin', now(), 'admin');
+    issue_type (name, code, project_id, workflow_id, "created_at", "created_by", "modified_at", "modified_by")
+VALUES ('Incident',        'INCIDENT',        1, 1, now(), 'admin', now(), 'admin'),
+       ('Service Request', 'SERVICE_REQUEST',  1, 1, now(), 'admin', now(), 'admin'),
+       ('Problem',         'PROBLEM',          1, 1, now(), 'admin', now(), 'admin'),
+       ('Change Request',  'CHANGE_REQUEST',   1, 1, now(), 'admin', now(), 'admin');

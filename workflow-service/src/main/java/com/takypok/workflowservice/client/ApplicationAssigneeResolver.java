@@ -28,8 +28,7 @@ public class ApplicationAssigneeResolver {
     String application = appNode.asText();
     return configTicket.stream()
         .filter(
-            c ->
-                c.getAnnotation(InternalApplicationAnnotation.class).value().equals(application))
+            c -> c.getAnnotation(InternalApplicationAnnotation.class).value().equals(application))
         .findFirst()
         .map(
             c -> {
