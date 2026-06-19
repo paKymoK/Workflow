@@ -64,12 +64,6 @@ spring:
                 - Path=/chat-service/**
               filters:
                 - RewritePath=/chat-service/(?<segment>.*), /${segment}
-            - id: shop
-              uri: lb://shop-service
-              predicates:
-                - Path=/shop-service/**
-              filters:
-                - RewritePath=/shop-service/(?<segment>.*), /${segment}
 
 springdoc:
   swagger-ui:
@@ -80,8 +74,6 @@ springdoc:
         url: /workflow-service/docs/api-docs
       - name: media-service
         url: /media-service/docs/api-docs
-      - name: shop-service
-        url: /shop-service/docs/api-docs
   api-docs:
     path: /v3/api-docs
 
