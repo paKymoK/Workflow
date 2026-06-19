@@ -9,5 +9,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @ToString
-@InternalApplicationAnnotation(value = "Dashboard")
+@InternalApplicationAnnotation(value = "Dashboard", assignee = "admin")
 public class Dashboard extends InternalApplication implements TicketDetail {}

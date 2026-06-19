@@ -4,6 +4,8 @@ import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.authentication.User;
+import com.takypok.workflowservice.client.ApplicationAssigneeResolver;
+import com.takypok.workflowservice.client.AuthServiceClient;
 import com.takypok.workflowservice.function.postfunction.index.PostFunction;
 import com.takypok.workflowservice.function.validator.index.Validator;
 import com.takypok.workflowservice.model.entity.*;
@@ -44,6 +46,8 @@ public class TicketServiceImpl implements TicketService {
   private final TicketMapper ticketMapper;
   private final SlaMapper slaMapper;
   private final SlaRepository slaRepository;
+  private final ApplicationAssigneeResolver assigneeResolver;
+  private final AuthServiceClient authServiceClient;
 
   @Override
   public Mono<PageResponse<TicketSla>> get(FilterTicketRequest request) {
@@ -117,15 +121,17 @@ public class TicketServiceImpl implements TicketService {
             getIssueType(request.getIssueTypeId(), request.getProjectId()),
             getPriority(request.getPriorityId()))
         .flatMap(
-            tuples ->
-                ticketRepository.save(
-                    ticketMapper.mapToTicket(
-                        request,
-                        tuples.getT1().getT1(),
-                        tuples.getT1().getT2(),
-                        tuples.getT2(),
-                        tuples.getT3(),
-                        user)))
+            tuples -> {
+              Project project = tuples.getT1().getT1();
+              Ticket<TicketDetail> ticket =
+                  ticketMapper.mapToTicket(
+                      request, project, tuples.getT1().getT2(), tuples.getT2(), tuples.getT3(), user);
+              return assigneeResolver
+                  .resolve(request.getDetail(), project)
+                  .doOnNext(ticket::setAssignee)
+                  .thenReturn(ticket);
+            })
+        .flatMap(ticketRepository::save)
         .doOnNext(
             ticket ->
                 slaRepository
@@ -296,15 +302,23 @@ public class TicketServiceImpl implements TicketService {
 
   @Override
   public Mono<Ticket<TicketDetail>> updateAssignee(Long id, AssigneeUpdateRequest request) {
-    return ticketRepository
-        .findById(id)
-        .switchIfEmpty(
-            Mono.error(new ApplicationException(Message.Application.ERROR, "Ticket do not exist")))
+    return Mono.zip(
+            ticketRepository
+                .findById(id)
+                .switchIfEmpty(
+                    Mono.error(
+                        new ApplicationException(
+                            Message.Application.ERROR, "Ticket do not exist"))),
+            authServiceClient
+                .getUser(request.getSub())
+                .switchIfEmpty(
+                    Mono.error(
+                        new ApplicationException(
+                            Message.Application.ERROR, "User not found"))))
         .flatMap(
-            ticket -> {
-              ticket.setAssignee(
-                  new User(request.getSub(), request.getName(), request.getEmail(), null, null));
-              return ticketRepository.save(ticket);
+            tuple -> {
+              tuple.getT1().setAssignee(tuple.getT2());
+              return ticketRepository.save(tuple.getT1());
             });
   }
 

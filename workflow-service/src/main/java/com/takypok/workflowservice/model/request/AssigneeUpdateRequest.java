@@ -12,6 +12,4 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AssigneeUpdateRequest {
   @NotBlank private String sub;
-  @NotBlank private String name;
-  private String email;
 }

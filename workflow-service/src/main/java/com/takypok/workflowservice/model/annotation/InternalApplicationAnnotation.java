@@ -9,4 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface InternalApplicationAnnotation {
   String value();
+
+  /** Sub (username) of the person responsible for tickets in this application. */
+  String assignee() default "";
 }
