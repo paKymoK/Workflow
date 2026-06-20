@@ -16,4 +16,5 @@ public class TransitionRequest {
   @NotBlank private String transitionName;
   private PendingReason pendingReason;
   private String pendingDescription;
+  private String rejectionNote;
 }
