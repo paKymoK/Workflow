@@ -1,3 +1,13 @@
+-- stress.sql — 100 k ticket load-test seed
+-- Requires init-data.sql to have run first (status / priority / project / issue_type / workflow rows).
+--
+-- Fixed from original:
+--   • Status ids/names/colors now match the real status table (id 4 = Resolved for DONE branch)
+--   • Issue-type ids, names, codes and workflowId now match issue_type table
+--   • Embedded workflow JSON is the real Incident workflow (id 1) not a fake 3-step stub
+--   • resolutionPercent for overdue DONE tickets now > 100 (110-149) so the value is meaningful
+--   • KanbanBoard group key corrected separately in the frontend (PROCESSING not IN_PROGRESS)
+
 WITH internal_users(u) AS (
      VALUES
        ('{"sub":"nvhung",  "name":"Nguyen Van Hung",    "email":"nvhung@mycompany.local"}'::jsonb),
@@ -36,31 +46,31 @@ WITH internal_users(u) AS (
               FROM generate_series(1, 100000) gs),
      ticket_data AS (SELECT n,
                             created_at,
+                            -- FIX: status names/colors match real status table; DONE uses id 4 (Resolved) not id 3 (Pending)
                             CASE
                                 WHEN r_status < 0.45 THEN
-                                    jsonb_build_object('id', 1, 'name', 'Todo', 'color', '#808080', 'group', 'TODO')
+                                    jsonb_build_object('id', 1, 'name', 'To Do',      'color', '#808080', 'group', 'TODO')
                                 WHEN r_status < 0.80 THEN
-                                    jsonb_build_object('id', 2, 'name', 'In-Progress', 'color', '#0000FF', 'group',
-                                                       'PROCESSING')
+                                    jsonb_build_object('id', 2, 'name', 'In Progress','color', '#0052CC', 'group', 'PROCESSING')
                                 ELSE
-                                    jsonb_build_object('id', 3, 'name', 'Done', 'color', '#008000', 'group', 'DONE')
+                                    jsonb_build_object('id', 4, 'name', 'Resolved',   'color', '#36B37E', 'group', 'DONE')
                                 END AS status_json,
                             CASE
                                 WHEN r_priority < 0.50 THEN
-                                    jsonb_build_object('id', 1, 'name', 'Low', 'responseTime', 1, 'resolutionTime', 30)
+                                    jsonb_build_object('id', 1, 'name', 'Low',    'responseTime', 1, 'resolutionTime', 30)
                                 WHEN r_priority < 0.85 THEN
-                                    jsonb_build_object('id', 2, 'name', 'Medium', 'responseTime', 1, 'resolutionTime',
-                                                       12)
+                                    jsonb_build_object('id', 2, 'name', 'Medium', 'responseTime', 1, 'resolutionTime', 12)
                                 ELSE
-                                    jsonb_build_object('id', 3, 'name', 'High', 'responseTime', 1, 'resolutionTime', 4)
+                                    jsonb_build_object('id', 3, 'name', 'High',   'responseTime', 1, 'resolutionTime',  4)
                                 END AS priority_json,
+                            -- FIX: ids, names, codes and workflowId now match the real issue_type table
                             CASE
                                 WHEN r_issue < 0.40 THEN
-                                    jsonb_build_object('id', 1, 'name', 'Problem', 'projectId', 1)
+                                    jsonb_build_object('id', 3, 'name', 'Problem',        'code', 'PROBLEM',        'projectId', 1, 'workflowId', 1)
                                 WHEN r_issue < 0.70 THEN
-                                    jsonb_build_object('id', 2, 'name', 'Change Request', 'projectId', 1)
+                                    jsonb_build_object('id', 4, 'name', 'Change Request', 'code', 'CHANGE_REQUEST', 'projectId', 1, 'workflowId', 1)
                                 ELSE
-                                    jsonb_build_object('id', 3, 'name', 'Complain', 'projectId', 1)
+                                    jsonb_build_object('id', 1, 'name', 'Incident',       'code', 'INCIDENT',       'projectId', 1, 'workflowId', 1)
                                 END AS issue_type_json,
                             (SELECT arr FROM users_arr)[floor(r_reporter * 20)::int + 1] AS reporter_json,
                             (SELECT arr FROM users_arr)[floor(r_assignee * 20)::int + 1] AS assignee_json,
@@ -94,42 +104,8 @@ WITH internal_users(u) AS (
                         assignee_json,
                         detail_json,
                         priority_json,
-                        jsonb_build_object(
-                                'id', 1,
-                                'name', 'Test',
-                                'statuses', jsonb_build_array(
-                                        jsonb_build_object('x', NULL, 'y', NULL, 'id', 1, 'name', 'Todo', 'color',
-                                                           '#808080', 'group', 'TODO'),
-                                        jsonb_build_object('x', NULL, 'y', NULL, 'id', 2, 'name', 'In-Progress',
-                                                           'color',
-                                                           '#0000FF', 'group', 'PROCESSING'),
-                                        jsonb_build_object('x', NULL, 'y', NULL, 'id', 3, 'name', 'Done', 'color',
-                                                           '#008000', 'group', 'DONE')
-                                ),
-                                'transitions', jsonb_build_array(
-                                        jsonb_build_object(
-                                                'to', jsonb_build_object('id', 2, 'name', 'In-Progress', 'color',
-                                                                         '#0000FF',
-                                                                         'group', 'PROCESSING'),
-                                                'from', jsonb_build_object('id', 1, 'name', 'Todo', 'color', '#808080',
-                                                                           'group', 'TODO'),
-                                                'name', 'Approve',
-                                                'validator', jsonb_build_array(
-                                                        'com.takypok.workflowservice.function.validator.Example1Validator'),
-                                                'postFunctions', jsonb_build_array(
-                                                        'com.takypok.workflowservice.function.postfunction.Example1Function')
-                                        ),
-                                        jsonb_build_object(
-                                                'to', jsonb_build_object('id', 3, 'name', 'Done', 'color', '#008000',
-                                                                         'group', 'DONE'),
-                                                'from', jsonb_build_object('id', 2, 'name', 'In-Progress', 'color',
-                                                                           '#0000FF', 'group', 'PROCESSING'),
-                                                'name', 'Approve',
-                                                'validator', '[]'::jsonb,
-                                                'postFunctions', '[]'::jsonb
-                                        )
-                                )
-                        ),
+                        -- FIX: real Incident workflow (id 1) instead of the fake 3-step stub
+                        '{"id":1,"name":"Incident","statuses":[{"id":1,"name":"To Do","color":"#808080","group":"TODO"},{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},{"id":5,"name":"Closed","color":"#008000","group":"DONE"}],"transitions":[{"from":{"id":1,"name":"To Do","color":"#808080","group":"TODO"},"to":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"name":"Start Progress","validator":[],"postFunctions":[]},{"from":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"to":{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},"name":"Put On Hold","validator":["com.takypok.workflowservice.function.validator.RequirePendingReasonValidator"],"postFunctions":["com.takypok.workflowservice.function.postfunction.PauseSlaFunction"]},{"from":{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},"to":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"name":"Resume","validator":[],"postFunctions":["com.takypok.workflowservice.function.postfunction.ResumeSlaFunction"]},{"from":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"to":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"name":"Resolve","validator":[],"postFunctions":[]},{"from":{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},"to":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"name":"Resolve","validator":[],"postFunctions":["com.takypok.workflowservice.function.postfunction.ResumeSlaFunction"]},{"from":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"to":{"id":5,"name":"Closed","color":"#008000","group":"DONE"},"name":"Close","validator":[],"postFunctions":[]},{"from":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"to":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"name":"Reopen","validator":[],"postFunctions":[]}]}'::jsonb,
                         created_at,
                         reporter_json->>'sub',
                         now(),
@@ -143,50 +119,51 @@ SELECT t.id,
        CASE t.status ->> 'group'
            WHEN 'TODO' THEN
                jsonb_build_object(
-                       'response', 'TODO',
-                       'resolution', 'TODO',
-                       'responseTime', NULL,
-                       'resolutionTime', NULL,
-                       'resolutionPercent', floor(random() * 25)::int,
-                       'isResponseOverdue', false,
+                       'response',            'TODO',
+                       'resolution',          'TODO',
+                       'responseTime',        NULL,
+                       'resolutionTime',      NULL,
+                       'resolutionPercent',   floor(random() * 25)::int,
+                       'isResponseOverdue',   false,
                        'isResolutionOverdue', false
                )
            WHEN 'PROCESSING' THEN
                jsonb_build_object(
-                       'response', 'DONE',
-                       'resolution', 'TODO',
-                       'responseTime', t.created_at + (random() * (
+                       'response',            'DONE',
+                       'resolution',          'TODO',
+                       'responseTime',        t.created_at + (random() * (
                            CASE t.priority->>'name'
                                WHEN 'High'   THEN interval '1 hour'
                                WHEN 'Medium' THEN interval '3 hours'
                                ELSE               interval '8 hours'
                            END)),
-                       'resolutionTime', NULL,
-                       'resolutionPercent', floor(30 + random() * 60)::int,
-                       'isResponseOverdue', (random() < 0.20),
+                       'resolutionTime',      NULL,
+                       'resolutionPercent',   floor(30 + random() * 60)::int,
+                       'isResponseOverdue',   (random() < 0.20),
                        'isResolutionOverdue', false
                )
-           ELSE -- DONE
+           ELSE -- DONE (Resolved)
                jsonb_build_object(
-                       'response', 'DONE',
-                       'resolution', 'DONE',
-                       'responseTime', t.created_at + (random() * (
+                       'response',            'DONE',
+                       'resolution',          'DONE',
+                       'responseTime',        t.created_at + (random() * (
                            CASE t.priority->>'name'
                                WHEN 'High'   THEN interval '1 hour'
                                WHEN 'Medium' THEN interval '3 hours'
                                ELSE               interval '8 hours'
                            END)),
-                       'resolutionTime', t.created_at + (
+                       'resolutionTime',      t.created_at + (
                            CASE t.priority->>'name'
-                               WHEN 'High'   THEN interval '1 hour'  + random() * interval '7 hours'
-                               WHEN 'Medium' THEN interval '4 hours' + random() * interval '20 hours'
+                               WHEN 'High'   THEN interval '1 hour'   + random() * interval '7 hours'
+                               WHEN 'Medium' THEN interval '4 hours'  + random() * interval '20 hours'
                                ELSE               interval '12 hours' + random() * interval '60 hours'
                            END),
-                       'resolutionPercent', CASE WHEN rd.r_done_overdue < 0.15
-                                                 THEN 100
-                                                 ELSE floor(20 + random() * 79)::int
-                                            END,
-                       'isResponseOverdue', false,
+                       -- FIX: overdue tickets get percent > 100 (110–149) so the value signals breach
+                       'resolutionPercent',   CASE WHEN rd.r_done_overdue < 0.15
+                                                   THEN floor(110 + random() * 40)::int
+                                                   ELSE floor(20  + random() * 79)::int
+                                              END,
+                       'isResponseOverdue',   false,
                        'isResolutionOverdue', (rd.r_done_overdue < 0.15)
                )
            END,
@@ -194,12 +171,12 @@ SELECT t.id,
        '[]'::jsonb,
        t.priority,
        jsonb_build_object(
-               'weekend', jsonb_build_array(0, 6),
-               'workStart', '09:00:00',
+               'weekend',    jsonb_build_array(0, 6),
+               'workStart',  '09:00:00',
                'lunchStart', '12:00:00',
-               'lunchEnd', '13:00:00',
-               'workEnd', '18:00:00',
-               'timezone', 'Asia/Ho_Chi_Minh'
+               'lunchEnd',   '13:00:00',
+               'workEnd',    '18:00:00',
+               'timezone',   'Asia/Ho_Chi_Minh'
        ),
        now(),
        'Anonymous',

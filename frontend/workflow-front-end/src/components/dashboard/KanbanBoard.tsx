@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 
 const GROUPS = [
   { key: "TODO",        label: "TODO",        color: "var(--acc-1)" },
-  { key: "IN_PROGRESS", label: "IN PROGRESS",  color: "var(--acc-warn)" },
+  { key: "PROCESSING",  label: "IN PROGRESS",  color: "var(--acc-warn)" },
   { key: "DONE",        label: "DONE",         color: "var(--acc-3)" },
 ] as const;
 

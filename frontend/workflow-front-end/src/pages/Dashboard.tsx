@@ -26,6 +26,7 @@ import InspectorDrawer from "../components/dashboard/InspectorDrawer";
 import KanbanBoard from "../components/dashboard/KanbanBoard";
 import SlaOverviewCard from "../components/stats/SlaOverviewCard";
 import TicketDistributionCard from "../components/stats/TicketDistributionCard";
+import KpiStrip from "../components/home/KpiStrip";
 
 type Layout = "console" | "board" | "stream";
 
@@ -415,7 +416,7 @@ export default function Dashboard() {
       dataSource={tickets}
       rowKey="id"
       loading={isFetching}
-      size="small"
+      size="middle"
       scroll={{ x: "max-content" }}
       sticky={{ offsetHeader: 0 }}
       onRow={(record) => ({
@@ -466,7 +467,10 @@ export default function Dashboard() {
       {/* Page header */}
       <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0">▸ TICKET QUEUE</h2>
+          <h2
+            className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0"
+            style={{ textShadow: "0 0 calc(16px * var(--glow)) color-mix(in oklab, var(--acc-1) 60%, transparent)" }}
+          >▸ TICKET QUEUE</h2>
           <span className="font-mono-tech text-xs text-[var(--fg-faint)] tracking-widest hidden sm:block">
             {LAYOUT_LABEL[layout]}
           </span>
@@ -487,9 +491,23 @@ export default function Dashboard() {
         <KanbanBoard onCardClick={setInspectorId} />
       )}
 
-      {/* Console view */}
+      {/* Console view — stat rail above filter + table */}
       {layout === "console" && (
         <>
+          <div className="mb-4">
+            <KpiStrip />
+          </div>
+          <div
+            className="grid gap-4 mb-4 min-w-0"
+            style={{ gridTemplateColumns: "1.1fr 1fr" }}
+          >
+            <div className="min-w-0 overflow-hidden">
+              <TicketDistributionCard />
+            </div>
+            <div className="min-w-0 overflow-hidden">
+              <SlaOverviewCard />
+            </div>
+          </div>
           {filterBar}
           {ticketTable}
         </>

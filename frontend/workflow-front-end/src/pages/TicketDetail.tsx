@@ -6,7 +6,6 @@ import {
 import {
   ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
   MoreOutlined, SendOutlined, EditOutlined, CheckOutlined, CloseOutlined, UserSwitchOutlined,
-  CaretRightFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
@@ -23,6 +22,12 @@ import CommentContent from "../components/CommentContent.tsx";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
 import SlaBar from "../components/dashboard/SlaBar.tsx";
 import PriorityBars from "../components/dashboard/PriorityBars.tsx";
+import WorkflowStepper from "../components/ticket/WorkflowStepper";
+import Panel from "../components/ui/Panel";
+
+const GLOW_STYLE = {
+  textShadow: "0 0 calc(16px * var(--glow)) color-mix(in oklab, var(--acc-1) 60%, transparent)",
+};
 
 export default function TicketDetail() {
   const { message } = App.useApp();
@@ -33,9 +38,9 @@ export default function TicketDetail() {
 
   const commentHtmlRef = useRef("");
   const editHtmlRef    = useRef("");
-  const [editorKey, setEditorKey]           = useState(0);
+  const [editorKey, setEditorKey]               = useState(0);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editKey, setEditKey]               = useState(0);
+  const [editKey, setEditKey]                   = useState(0);
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: ticket, isLoading, isFetching: refreshing, refetch } = useTicket(id);
@@ -187,11 +192,6 @@ export default function TicketDetail() {
     return ticket.workflow.transitions.filter((t) => t.from?.id === ticket.status.id);
   }, [ticket]);
 
-  const currentStepIndex = useMemo(() => {
-    if (!ticket?.workflow || !ticket.status) return 0;
-    return ticket.workflow.statuses.findIndex((s) => s.id === ticket.status.id);
-  }, [ticket]);
-
   // ── Guards ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return <div className="flex justify-center py-20"><Spin size="large" /></div>;
@@ -271,9 +271,7 @@ export default function TicketDetail() {
         footer={null}
       >
         <Select
-          showSearch
-          autoFocus
-          filterOption={false}
+          showSearch autoFocus filterOption={false}
           placeholder="Search by name or email..."
           className="!w-full !mt-3"
           onSearch={setUserQuery}
@@ -286,26 +284,23 @@ export default function TicketDetail() {
 
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             size="small"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/dashboard")}
-            className="font-bebas! tracking-wider!"
+            className="font-bebas! tracking-wider! flex-shrink-0"
           >
             Back
           </Button>
-          <span className="font-mono-tech text-[13px] text-[var(--acc-1)]">{ticketCode}</span>
-          <h2 className="font-bebas text-2xl tracking-[.1em] neon-text-acc m-0">
-            {ticket.summary}
+          <span className="font-mono-tech text-[13px] text-[var(--acc-1)] flex-shrink-0">{ticketCode}</span>
+          <h2 className="font-bebas text-2xl tracking-[.1em] neon-text-acc m-0 truncate" style={GLOW_STYLE}>
+            ▸ TICKET #{ticket.id}
           </h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {(refreshing || actionLoading) && <Spin size="small" />}
-          <Tag
-            className="font-bebas! tracking-wider! text-xs!"
-            color={ticket.status.color}
-          >
+          <Tag color={ticket.status.color} className="font-bebas! tracking-wider! text-xs!">
             {ticket.status.name}
           </Tag>
           {ticket.sla && (
@@ -323,76 +318,13 @@ export default function TicketDetail() {
         </div>
       </div>
 
-      {/* ── Workflow stepper (full width) ─────────────────────────────────── */}
+      {/* ── Workflow stepper (fix ①) ──────────────────────────────────────── */}
       {ticket.workflow && (
-        <div className="border border-[var(--line)] bg-[var(--bg-1)] px-5 py-4">
-          <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// WORKFLOW</p>
-          <div className="flex items-center gap-0 overflow-x-auto pb-1">
-            {ticket.workflow.statuses.map((s, i) => {
-              const isDone    = i < currentStepIndex;
-              const isCurrent = i === currentStepIndex;
-              const isFuture  = i > currentStepIndex;
-              const nodeColor = isCurrent ? s.color : isDone ? "var(--acc-3)" : "var(--bg-3)";
-              const textColor = isCurrent ? s.color : isDone ? "var(--acc-3)" : "var(--fg-faint)";
-              return (
-                <div key={s.id} className="flex items-center flex-shrink-0">
-                  {/* Node */}
-                  <div className="flex flex-col items-center gap-1">
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        background: nodeColor,
-                        boxShadow: isCurrent ? `0 0 10px ${s.color}, 0 0 20px ${s.color}40` : "none",
-                      }}
-                    />
-                    <span
-                      className="font-bebas text-[9px] tracking-wider whitespace-nowrap"
-                      style={{ color: textColor }}
-                    >
-                      {s.name}
-                    </span>
-                    <span
-                      className="font-mono-tech text-[8px] whitespace-nowrap"
-                      style={{ color: isCurrent ? s.color : "var(--fg-faint)", opacity: isFuture ? 0.4 : 1 }}
-                    >
-                      {s.group}
-                    </span>
-                  </div>
-
-                  {/* Connector */}
-                  {i < ticket.workflow!.statuses.length - 1 && (
-                    <div className="flex items-center mx-2 mt-[-16px]">
-                      <div
-                        style={{
-                          width: 32,
-                          height: 1,
-                          background: isDone ? "var(--acc-3)" : "var(--line)",
-                        }}
-                      />
-                      <CaretRightFilled
-                        style={{
-                          fontSize: 8,
-                          color: isDone ? "var(--acc-3)" : "var(--line)",
-                          marginLeft: -2,
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {ticket.status.group === "DONE" && (
-            <Alert
-              message={<span className="font-bebas tracking-wider">TICKET RESOLVED</span>}
-              type="success"
-              showIcon
-              className="!mt-3"
-            />
-          )}
-        </div>
+        <WorkflowStepper
+          statuses={ticket.workflow.statuses}
+          currentStatusId={ticket.status.id}
+          isDone={ticket.status.group === "DONE"}
+        />
       )}
 
       {/* ── Two-column grid ───────────────────────────────────────────────── */}
@@ -401,142 +333,146 @@ export default function TicketDetail() {
         {/* ── LEFT COLUMN ───────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
 
+          {/* Fix ③ — dedicated Summary panel */}
+          <Panel title="SUMMARY">
+            <p className="font-mono-tech text-[15px] leading-[1.5] text-[var(--fg)] m-0">
+              {ticket.summary}
+            </p>
+          </Panel>
+
           {/* Description */}
           {ticket.detail?.description && (
-            <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
-              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// DESCRIPTION</p>
+            <Panel title="DESCRIPTION">
               <CommentContent html={ticket.detail.description} />
-            </div>
+            </Panel>
           )}
 
           {/* Attachments */}
           {ticket.detail && (
-            <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
-              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// ATTACHMENTS</p>
+            <Panel title="ATTACHMENTS">
               <AttachmentUpload value={ticket.detail.attachment ?? []} readonly />
-            </div>
+            </Panel>
           )}
 
           {/* Comments */}
-          <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
-            <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">
-              // COMMENTS ({comments.length})
-            </p>
-
-            {commentsLoading ? (
-              <div className="flex justify-center py-6"><Spin size="small" /></div>
-            ) : comments.length === 0 ? (
-              <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] mb-4">No comments yet.</p>
-            ) : (
-              <List
-                dataSource={comments}
-                rowKey="id"
-                renderItem={(comment) => {
-                  const isOwner   = comment.commenter.sub === (user?.sub as string);
-                  const isEditing = editingCommentId === comment.id;
-                  return (
-                    <List.Item className="!items-start !py-3 !px-0">
-                      <List.Item.Meta
-                        avatar={
-                          <Avatar
-                            style={{ background: "var(--acc-2)", color: "var(--bg-0)" }}
-                            className="font-bebas!"
-                          >
-                            {comment.commenter.name.charAt(0).toUpperCase()}
-                          </Avatar>
-                        }
-                        title={
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono-tech text-[12px] text-[var(--fg)]">
-                              {comment.commenter.name}
-                            </span>
-                            {comment.isEdited && comment.modifiedAt && (
-                              <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
-                                edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
+          <Panel
+            title={`COMMENTS (${comments.length})`}
+            bodyClassName="p-0"
+          >
+            <div className="px-4 pt-4">
+              {commentsLoading ? (
+                <div className="flex justify-center py-6"><Spin size="small" /></div>
+              ) : comments.length === 0 ? (
+                <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] mb-4">No comments yet.</p>
+              ) : (
+                <List
+                  dataSource={comments}
+                  rowKey="id"
+                  renderItem={(comment) => {
+                    const isOwner   = comment.commenter.sub === (user?.sub as string);
+                    const isEditing = editingCommentId === comment.id;
+                    return (
+                      <List.Item className="!items-start !py-3 !px-0">
+                        <List.Item.Meta
+                          avatar={
+                            <Avatar
+                              style={{ background: "var(--acc-2)", color: "var(--bg-0)" }}
+                              className="font-bebas!"
+                            >
+                              {comment.commenter.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                          }
+                          title={
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono-tech text-[12px] text-[var(--fg)]">
+                                {comment.commenter.name}
                               </span>
-                            )}
-                          </div>
-                        }
-                        description={
-                          isEditing ? (
-                            <div>
-                              <RichTextEditor
-                                key={`edit-${comment.id}-${editKey}`}
-                                editable={true}
-                                content={comment.content}
-                                onChange={(html: string) => { editHtmlRef.current = html; }}
-                                placeholder="Edit your comment..."
-                              />
-                              <div className="flex gap-2 mt-2">
-                                <Button size="small" type="primary" icon={<CheckOutlined />}
-                                  loading={editMutation.isPending}
-                                  onClick={() => handleSaveEdit(comment.id)}
-                                  className="font-bebas! tracking-wider!"
-                                >Save</Button>
-                                <Button size="small" icon={<CloseOutlined />}
-                                  onClick={handleCancelEdit}
-                                  className="font-bebas! tracking-wider!"
-                                >Cancel</Button>
-                              </div>
+                              {comment.isEdited && comment.modifiedAt && (
+                                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                  edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
+                                </span>
+                              )}
                             </div>
-                          ) : (
-                            <CommentContent html={comment.content} />
-                          )
-                        }
-                      />
-                      {isOwner && !isEditing && (
-                        <Button
-                          type="text" size="small" icon={<EditOutlined />}
-                          onClick={() => handleStartEdit(comment.id, comment.content)}
-                          className="!text-[var(--fg-faint)] hover:!text-[var(--acc-1)] mt-1"
+                          }
+                          description={
+                            isEditing ? (
+                              <div>
+                                <RichTextEditor
+                                  key={`edit-${comment.id}-${editKey}`}
+                                  editable={true}
+                                  content={comment.content}
+                                  onChange={(html: string) => { editHtmlRef.current = html; }}
+                                  placeholder="Edit your comment..."
+                                />
+                                <div className="flex gap-2 mt-2">
+                                  <Button size="small" type="primary" icon={<CheckOutlined />}
+                                    loading={editMutation.isPending}
+                                    onClick={() => handleSaveEdit(comment.id)}
+                                    className="font-bebas! tracking-wider!"
+                                  >Save</Button>
+                                  <Button size="small" icon={<CloseOutlined />}
+                                    onClick={handleCancelEdit}
+                                    className="font-bebas! tracking-wider!"
+                                  >Cancel</Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <CommentContent html={comment.content} />
+                            )
+                          }
                         />
-                      )}
-                    </List.Item>
-                  );
+                        {isOwner && !isEditing && (
+                          <Button
+                            type="text" size="small" icon={<EditOutlined />}
+                            onClick={() => handleStartEdit(comment.id, comment.content)}
+                            className="!text-[var(--fg-faint)] hover:!text-[var(--acc-1)] mt-1"
+                          />
+                        )}
+                      </List.Item>
+                    );
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="px-4 pb-4">
+              <Divider className="!mt-0 !mb-3" style={{ borderColor: "var(--line)" }} />
+              {/* ⌘/Ctrl+↵ to submit */}
+              <div
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    handleSubmitComment();
+                  }
                 }}
-              />
-            )}
-
-            <Divider className="!mt-0 !mb-3" style={{ borderColor: "var(--line)" }} />
-
-            {/* Composer — ⌘/Ctrl+↵ submits */}
-            <div
-              onKeyDown={(e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                  e.preventDefault();
-                  handleSubmitComment();
-                }
-              }}
-            >
-              <RichTextEditor
-                key={editorKey}
-                editable={true}
-                onChange={(html: string) => { commentHtmlRef.current = html; }}
-                placeholder="Write a comment…  (⌘/Ctrl+↵ to submit)"
-              />
-            </div>
-            <div className="flex items-center justify-between mt-3">
-              <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">⌘/Ctrl+↵ to submit</span>
-              <Button
-                type="primary"
-                size="small"
-                icon={<SendOutlined />}
-                loading={commentSubmitting}
-                onClick={handleSubmitComment}
-                className="font-bebas! tracking-wider!"
               >
-                SUBMIT
-              </Button>
+                <RichTextEditor
+                  key={editorKey}
+                  editable={true}
+                  onChange={(html: string) => { commentHtmlRef.current = html; }}
+                  placeholder="Write a comment…  (⌘/Ctrl+↵ to submit)"
+                />
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">⌘/Ctrl+↵ to submit</span>
+                <Button
+                  type="primary" size="small" icon={<SendOutlined />}
+                  loading={commentSubmitting}
+                  onClick={handleSubmitComment}
+                  className="font-bebas! tracking-wider!"
+                >
+                  SUBMIT
+                </Button>
+              </div>
             </div>
-          </div>
+          </Panel>
         </div>
 
         {/* ── RIGHT COLUMN (sticky) ─────────────────────────────────────── */}
         <div style={{ position: "sticky", top: 16 }} className="flex flex-col gap-4">
 
           {/* Details */}
-          <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
-            <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// DETAILS</p>
+          <Panel title="DETAILS">
             <div className="flex flex-col gap-3">
               <MetaRow label="Priority">
                 <PriorityBars priority={ticket.priority} />
@@ -572,13 +508,11 @@ export default function TicketDetail() {
                 </span>
               </MetaRow>
             </div>
-          </div>
+          </Panel>
 
           {/* SLA */}
           {ticket.sla && (
-            <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
-              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// SLA</p>
-
+            <Panel title="SLA">
               {/* Big resolution % */}
               <div className="flex items-end gap-2 mb-3">
                 <span className="font-bebas text-5xl leading-none" style={{ color: slaColor }}>
@@ -589,7 +523,6 @@ export default function TicketDetail() {
 
               <SlaBar sla={ticket.sla} />
 
-              {/* Response / resolution status */}
               <div className="flex gap-4 mt-2 mb-3">
                 {[
                   ["Response",   !ticket.sla.status.isResponseOverdue],
@@ -603,21 +536,19 @@ export default function TicketDetail() {
                 ))}
               </div>
 
-              {/* SLA times */}
               <div className="flex flex-col gap-2 mb-3">
-                <MetaRow label="Response SLA">
+                <MetaRow label="Response">
                   <Tooltip title={`${ticket.sla.priority.responseTime}h window`}>
                     <DeadlineTag createdAt={ticket.createdAt} sla={ticket.sla} type="response" />
                   </Tooltip>
                 </MetaRow>
-                <MetaRow label="Resolution SLA">
+                <MetaRow label="Resolution">
                   <Tooltip title={`${ticket.sla.priority.resolutionTime}h window`}>
                     <DeadlineTag createdAt={ticket.createdAt} sla={ticket.sla} type="resolution" />
                   </Tooltip>
                 </MetaRow>
               </div>
 
-              {/* Pause indicator */}
               {isPaused && (
                 <div className="px-3 py-2 border-l-2 border-[var(--acc-amber)] bg-[var(--bg-2)] mb-3">
                   <p className="font-mono-tech text-[10px] text-[var(--acc-amber)] m-0">
@@ -629,7 +560,6 @@ export default function TicketDetail() {
                 </div>
               )}
 
-              {/* Pause history */}
               {ticket.sla.pausedTime.length > 0 && (
                 <>
                   <p className="font-bebas text-[10px] tracking-[.2em] text-[var(--acc-1)] mb-2">
@@ -657,7 +587,7 @@ export default function TicketDetail() {
                   </div>
                 </>
               )}
-            </div>
+            </Panel>
           )}
         </div>
       </div>
