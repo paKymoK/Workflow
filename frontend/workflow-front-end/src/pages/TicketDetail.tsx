@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Spin, Typography, Card, Descriptions, Tag, Button, Steps, Alert,
-  Dropdown, App, Avatar, List, Row, Col, Divider, Progress, Tooltip, Select, Modal, Form, Input,
+  Spin, Tag, Button, Alert,
+  Dropdown, App, Avatar, List, Divider, Tooltip, Select, Modal, Form, Input,
 } from "antd";
 import {
   ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
   MoreOutlined, SendOutlined, EditOutlined, CheckOutlined, CloseOutlined, UserSwitchOutlined,
+  CaretRightFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
@@ -20,8 +21,8 @@ import { fetchUsers, type UserSummary } from "../api/ticketApi";
 import { type PendingReason, PENDING_REASON_LABELS } from "../api/types";
 import CommentContent from "../components/CommentContent.tsx";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
-
-const { Title, Text } = Typography;
+import SlaBar from "../components/dashboard/SlaBar.tsx";
+import PriorityBars from "../components/dashboard/PriorityBars.tsx";
 
 export default function TicketDetail() {
   const { message } = App.useApp();
@@ -32,9 +33,9 @@ export default function TicketDetail() {
 
   const commentHtmlRef = useRef("");
   const editHtmlRef    = useRef("");
-  const [editorKey, setEditorKey] = useState(0);
+  const [editorKey, setEditorKey]           = useState(0);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editKey, setEditKey] = useState(0);
+  const [editKey, setEditKey]               = useState(0);
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: ticket, isLoading, isFetching: refreshing, refetch } = useTicket(id);
@@ -48,16 +49,16 @@ export default function TicketDetail() {
   const editMutation       = useUpdateComment();
   const assigneeMutation   = useUpdateAssignee();
 
-  // ── Assignee edit state ───────────────────────────────────────────────────
-  const [assigneeModalOpen,  setAssigneeModalOpen]  = useState(false);
-  const [userQuery,          setUserQuery]          = useState("");
-  const [userOptions,        setUserOptions]        = useState<{ value: string; label: string; user: UserSummary }[]>([]);
-  const [isSearchingUsers,   setIsSearchingUsers]   = useState(false);
+  // ── Assignee modal ────────────────────────────────────────────────────────
+  const [assigneeModalOpen, setAssigneeModalOpen] = useState(false);
+  const [userQuery,         setUserQuery]         = useState("");
+  const [userOptions,       setUserOptions]       = useState<{ value: string; label: string; user: UserSummary }[]>([]);
+  const [isSearchingUsers,  setIsSearchingUsers]  = useState(false);
 
-  // ── Pending reason modal state ────────────────────────────────────────────
-  const [pendingModalOpen,       setPendingModalOpen]       = useState(false);
-  const [pendingTransitionName,  setPendingTransitionName]  = useState("");
-  const [pendingForm]                                       = Form.useForm<{ reason: PendingReason; description?: string }>();
+  // ── Pending reason modal ──────────────────────────────────────────────────
+  const [pendingModalOpen,      setPendingModalOpen]      = useState(false);
+  const [pendingTransitionName, setPendingTransitionName] = useState("");
+  const [pendingForm] = Form.useForm<{ reason: PendingReason; description?: string }>();
 
   useEffect(() => {
     if (!userQuery.trim()) { setUserOptions([]); return; }
@@ -91,23 +92,19 @@ export default function TicketDetail() {
 
   const handlePause = useCallback(async () => {
     if (!id) return;
-    try {
-      await pauseMutation.mutateAsync(id);
-    } catch {
-      message.error("Failed to pause ticket");
-    }
+    try { await pauseMutation.mutateAsync(id); } catch { message.error("Failed to pause ticket"); }
   }, [id, pauseMutation, message]);
 
   const handleResume = useCallback(async () => {
     if (!id) return;
-    try {
-      await resumeMutation.mutateAsync(id);
-    } catch {
-      message.error("Failed to resume ticket");
-    }
+    try { await resumeMutation.mutateAsync(id); } catch { message.error("Failed to resume ticket"); }
   }, [id, resumeMutation, message]);
 
-  const handleTransition = useCallback(async (transitionName: string, pendingReason?: PendingReason, pendingDescription?: string) => {
+  const handleTransition = useCallback(async (
+    transitionName: string,
+    pendingReason?: PendingReason,
+    pendingDescription?: string,
+  ) => {
     if (!id || !ticket) return;
     try {
       await transitionMutation.mutateAsync({
@@ -175,14 +172,12 @@ export default function TicketDetail() {
     }
   }, [id, commentMutation, message]);
 
-  // ── WebSocket — untouched; just call refetch() on matching push ───────────
+  // ── WebSocket ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
     const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
     ws.onopen    = () => { ws.send(token ?? ""); };
-    ws.onmessage = (event) => {
-      if (Number(event.data) === Number(id)) refetch();
-    };
+    ws.onmessage = (event) => { if (Number(event.data) === Number(id)) refetch(); };
     return () => ws.close();
   }, [id, token, refetch]);
 
@@ -197,7 +192,7 @@ export default function TicketDetail() {
     return ticket.workflow.statuses.findIndex((s) => s.id === ticket.status.id);
   }, [ticket]);
 
-  // ── Render guards ─────────────────────────────────────────────────────────
+  // ── Guards ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return <div className="flex justify-center py-20"><Spin size="large" /></div>;
   }
@@ -208,24 +203,29 @@ export default function TicketDetail() {
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard")} className="mb-4">
           Back to Dashboard
         </Button>
-        <Title level={4}>Ticket not found</Title>
+        <p className="font-bebas text-xl text-[var(--fg-faint)]">Ticket not found</p>
       </div>
     );
   }
 
-  const isPaused  = ticket.sla?.isPaused;
+  const isPaused      = ticket.sla?.isPaused;
+  const ticketCode    = `${ticket.project.code}-${String(ticket.id).padStart(4, "0")}`;
+  const resolutionPct = ticket.sla?.status.resolutionPercent ?? 0;
+  const clamped       = Math.min(100, Math.round(resolutionPct));
+  const slaColor      = resolutionPct >= 100
+    ? "var(--priority-critical)"
+    : resolutionPct >= 80
+    ? "var(--acc-amber)"
+    : "var(--acc-1)";
+
   const menuItems: MenuProps["items"] = [
     {
       key: "assignee", label: "Change Assignee", icon: <UserSwitchOutlined />,
       onClick: () => setAssigneeModalOpen(true),
     },
     { type: "divider" as const },
-    ...(!isPaused && ticket.sla ? [{
-      key: "pause", label: "Pause SLA", disabled: actionLoading, onClick: handlePause,
-    }] : []),
-    ...(isPaused && ticket.sla ? [{
-      key: "resume", label: "Resume SLA", disabled: actionLoading, onClick: handleResume,
-    }] : []),
+    ...(!isPaused && ticket.sla ? [{ key: "pause",  label: "Pause SLA",  disabled: actionLoading, onClick: handlePause  }] : []),
+    ...(isPaused  && ticket.sla ? [{ key: "resume", label: "Resume SLA", disabled: actionLoading, onClick: handleResume }] : []),
     ...(availableTransitions.length > 0 ? [
       { type: "divider" as const },
       ...availableTransitions.map((t) => ({
@@ -239,7 +239,8 @@ export default function TicketDetail() {
   ];
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
+      {/* Modals */}
       <Modal
         title="Put On Hold"
         open={pendingModalOpen}
@@ -253,8 +254,7 @@ export default function TicketDetail() {
             <Select
               placeholder="Select a reason..."
               options={(Object.keys(PENDING_REASON_LABELS) as PendingReason[]).map((k) => ({
-                label: PENDING_REASON_LABELS[k],
-                value: k,
+                label: PENDING_REASON_LABELS[k], value: k,
               }))}
             />
           </Form.Item>
@@ -284,88 +284,176 @@ export default function TicketDetail() {
         />
       </Modal>
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard")}>Back</Button>
+      {/* ── Top bar ───────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            size="small"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/dashboard")}
+            className="font-bebas! tracking-wider!"
+          >
+            Back
+          </Button>
+          <span className="font-mono-tech text-[13px] text-[var(--acc-1)]">{ticketCode}</span>
+          <h2 className="font-bebas text-2xl tracking-[.1em] neon-text-acc m-0">
+            {ticket.summary}
+          </h2>
+        </div>
         <div className="flex items-center gap-2">
           {(refreshing || actionLoading) && <Spin size="small" />}
+          <Tag
+            className="font-bebas! tracking-wider! text-xs!"
+            color={ticket.status.color}
+          >
+            {ticket.status.name}
+          </Tag>
+          {ticket.sla && (
+            isPaused
+              ? <Tag icon={<PauseCircleOutlined />} color="warning" className="font-bebas! tracking-wider!">PAUSED</Tag>
+              : <Tag icon={<PlayCircleOutlined />}  color="success" className="font-bebas! tracking-wider!">ACTIVE</Tag>
+          )}
           {menuItems.length > 0 && (
             <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
-              <Button icon={<MoreOutlined />}>Actions</Button>
+              <Button size="small" icon={<MoreOutlined />} className="font-bebas! tracking-wider!">
+                Actions
+              </Button>
             </Dropdown>
           )}
         </div>
       </div>
 
-      {/* Title row */}
-      <div className="flex items-center gap-3 mb-4">
-        <h2 className="font-bebas text-3xl tracking-[0.1em] neon-text-yellow m-0">▸ TICKET #{ticket.id}</h2>
-        <Tag color={ticket.status.color} className="!text-[13px] !py-[2px] !px-[10px]">{ticket.status.name}</Tag>
-        {ticket.sla && (
-          isPaused
-            ? <Tag icon={<PauseCircleOutlined />} color="orange">SLA Paused</Tag>
-            : <Tag icon={<PlayCircleOutlined />}  color="green">SLA Active</Tag>
-        )}
-      </div>
-
-      {/* Workflow steps */}
+      {/* ── Workflow stepper (full width) ─────────────────────────────────── */}
       {ticket.workflow && (
-        <Card className="!mb-4">
-          <Steps
-            size="small"
-            current={currentStepIndex}
-            items={ticket.workflow.statuses.map((s) => ({
-              title:       <Tag color={s.color} className="!m-0">{s.name}</Tag>,
-              description: <Text type="secondary" className="!text-[11px]">{s.group}</Text>,
-            }))}
-          />
-          {currentStepIndex === ticket.workflow.statuses.length - 1 && (
-            <Alert message="This ticket has reached its final status." type="success" showIcon className="!mt-3" />
+        <div className="border border-[var(--line)] bg-[var(--bg-1)] px-5 py-4">
+          <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// WORKFLOW</p>
+          <div className="flex items-center gap-0 overflow-x-auto pb-1">
+            {ticket.workflow.statuses.map((s, i) => {
+              const isDone    = i < currentStepIndex;
+              const isCurrent = i === currentStepIndex;
+              const isFuture  = i > currentStepIndex;
+              const nodeColor = isCurrent ? s.color : isDone ? "var(--acc-3)" : "var(--bg-3)";
+              const textColor = isCurrent ? s.color : isDone ? "var(--acc-3)" : "var(--fg-faint)";
+              return (
+                <div key={s.id} className="flex items-center flex-shrink-0">
+                  {/* Node */}
+                  <div className="flex flex-col items-center gap-1">
+                    <div
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        background: nodeColor,
+                        boxShadow: isCurrent ? `0 0 10px ${s.color}, 0 0 20px ${s.color}40` : "none",
+                      }}
+                    />
+                    <span
+                      className="font-bebas text-[9px] tracking-wider whitespace-nowrap"
+                      style={{ color: textColor }}
+                    >
+                      {s.name}
+                    </span>
+                    <span
+                      className="font-mono-tech text-[8px] whitespace-nowrap"
+                      style={{ color: isCurrent ? s.color : "var(--fg-faint)", opacity: isFuture ? 0.4 : 1 }}
+                    >
+                      {s.group}
+                    </span>
+                  </div>
+
+                  {/* Connector */}
+                  {i < ticket.workflow!.statuses.length - 1 && (
+                    <div className="flex items-center mx-2 mt-[-16px]">
+                      <div
+                        style={{
+                          width: 32,
+                          height: 1,
+                          background: isDone ? "var(--acc-3)" : "var(--line)",
+                        }}
+                      />
+                      <CaretRightFilled
+                        style={{
+                          fontSize: 8,
+                          color: isDone ? "var(--acc-3)" : "var(--line)",
+                          marginLeft: -2,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {ticket.status.group === "DONE" && (
+            <Alert
+              message={<span className="font-bebas tracking-wider">TICKET RESOLVED</span>}
+              type="success"
+              showIcon
+              className="!mt-3"
+            />
           )}
-        </Card>
+        </div>
       )}
 
-      <Row gutter={24} align="top">
-        {/* Left — main content */}
-        <Col xs={24} lg={16}>
-          <Card className="!mb-4">
-            <Text strong>Summary: </Text>
-            <Text className="text-[15px]">{ticket.summary}</Text>
-          </Card>
+      {/* ── Two-column grid ───────────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.7fr 0.9fr", gap: 16, alignItems: "start" }}>
 
+        {/* ── LEFT COLUMN ───────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4">
+
+          {/* Description */}
           {ticket.detail?.description && (
-            <Card title="Description" className="!mb-4">
+            <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
+              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// DESCRIPTION</p>
               <CommentContent html={ticket.detail.description} />
-            </Card>
+            </div>
           )}
 
+          {/* Attachments */}
           {ticket.detail && (
-            <Card title="Attachments" className="!mb-4">
+            <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
+              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// ATTACHMENTS</p>
               <AttachmentUpload value={ticket.detail.attachment ?? []} readonly />
-            </Card>
+            </div>
           )}
 
-          <Card title={`Comments (${comments.length})`} className="!mb-4" loading={commentsLoading}>
-            {comments.length === 0 && !commentsLoading ? (
-              <Text type="secondary" className="block mb-4">No comments yet.</Text>
+          {/* Comments */}
+          <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
+            <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">
+              // COMMENTS ({comments.length})
+            </p>
+
+            {commentsLoading ? (
+              <div className="flex justify-center py-6"><Spin size="small" /></div>
+            ) : comments.length === 0 ? (
+              <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] mb-4">No comments yet.</p>
             ) : (
               <List
                 dataSource={comments}
                 rowKey="id"
                 renderItem={(comment) => {
-                  const isOwner = comment.commenter.sub === (user?.sub as string);
+                  const isOwner   = comment.commenter.sub === (user?.sub as string);
                   const isEditing = editingCommentId === comment.id;
                   return (
                     <List.Item className="!items-start !py-3 !px-0">
                       <List.Item.Meta
-                        avatar={<Avatar className="!bg-[#1677ff]">{comment.commenter.name.charAt(0).toUpperCase()}</Avatar>}
+                        avatar={
+                          <Avatar
+                            style={{ background: "var(--acc-2)", color: "var(--bg-0)" }}
+                            className="font-bebas!"
+                          >
+                            {comment.commenter.name.charAt(0).toUpperCase()}
+                          </Avatar>
+                        }
                         title={
                           <div className="flex items-center gap-2">
-                            <Text strong>{comment.commenter.name}</Text>
+                            <span className="font-mono-tech text-[12px] text-[var(--fg)]">
+                              {comment.commenter.name}
+                            </span>
                             {comment.isEdited && comment.modifiedAt && (
-                              <Text type="secondary" className="!text-[10px]">
+                              <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
                                 edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
-                              </Text>
+                              </span>
                             )}
                           </div>
                         }
@@ -380,22 +468,15 @@ export default function TicketDetail() {
                                 placeholder="Edit your comment..."
                               />
                               <div className="flex gap-2 mt-2">
-                                <Button
-                                  size="small"
-                                  type="primary"
-                                  icon={<CheckOutlined />}
+                                <Button size="small" type="primary" icon={<CheckOutlined />}
                                   loading={editMutation.isPending}
                                   onClick={() => handleSaveEdit(comment.id)}
-                                >
-                                  Save
-                                </Button>
-                                <Button
-                                  size="small"
-                                  icon={<CloseOutlined />}
+                                  className="font-bebas! tracking-wider!"
+                                >Save</Button>
+                                <Button size="small" icon={<CloseOutlined />}
                                   onClick={handleCancelEdit}
-                                >
-                                  Cancel
-                                </Button>
+                                  className="font-bebas! tracking-wider!"
+                                >Cancel</Button>
                               </div>
                             </div>
                           ) : (
@@ -405,11 +486,9 @@ export default function TicketDetail() {
                       />
                       {isOwner && !isEditing && (
                         <Button
-                          type="text"
-                          size="small"
-                          icon={<EditOutlined />}
+                          type="text" size="small" icon={<EditOutlined />}
                           onClick={() => handleStartEdit(comment.id, comment.content)}
-                          className="!text-[var(--text-muted)] hover:!text-[var(--neon-yellow)] mt-1"
+                          className="!text-[var(--fg-faint)] hover:!text-[var(--acc-1)] mt-1"
                         />
                       )}
                     </List.Item>
@@ -417,119 +496,182 @@ export default function TicketDetail() {
                 }}
               />
             )}
-            <Divider className="!mt-0 !mb-3" />
-            <RichTextEditor
-              key={editorKey}
-              editable={true}
-              onChange={(html: string) => { commentHtmlRef.current = html; }}
-              placeholder="Write a comment..."
-            />
-            <div className="flex justify-end mt-3">
+
+            <Divider className="!mt-0 !mb-3" style={{ borderColor: "var(--line)" }} />
+
+            {/* Composer — ⌘/Ctrl+↵ submits */}
+            <div
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                  e.preventDefault();
+                  handleSubmitComment();
+                }
+              }}
+            >
+              <RichTextEditor
+                key={editorKey}
+                editable={true}
+                onChange={(html: string) => { commentHtmlRef.current = html; }}
+                placeholder="Write a comment…  (⌘/Ctrl+↵ to submit)"
+              />
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">⌘/Ctrl+↵ to submit</span>
               <Button
                 type="primary"
+                size="small"
                 icon={<SendOutlined />}
                 loading={commentSubmitting}
                 onClick={handleSubmitComment}
+                className="font-bebas! tracking-wider!"
               >
-                Submit
+                SUBMIT
               </Button>
             </div>
-          </Card>
-        </Col>
+          </div>
+        </div>
 
-        {/* Right — metadata */}
-        <Col xs={24} lg={8}>
-          <Card>
-            <Descriptions column={1} size="small" colon={false}>
-              <Descriptions.Item label={<Text type="secondary">Created</Text>}>
-                {dayjs(ticket.createdAt).format("DD MMM YYYY, HH:mm")}
-              </Descriptions.Item>
-              <Descriptions.Item label={<Text type="secondary">Priority</Text>}>
-                {ticket.priority.name}
-              </Descriptions.Item>
-              <Descriptions.Item label={<Text type="secondary">Project</Text>}>
-                {ticket.project.name} <Text className="pl-0.5" type="secondary">({ticket.project.code})</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label={<Text type="secondary">Issue Type</Text>}>
-                {ticket.issueType.name}
-              </Descriptions.Item>
-              <Descriptions.Item label={<Text type="secondary">Reporter</Text>}>
-                <div>{ticket.reporter.name}</div>
-                <Text type="secondary" className="!text-[11px] pl-0.5">({ticket.reporter.email})</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label={<Text type="secondary">Assignee</Text>}>
+        {/* ── RIGHT COLUMN (sticky) ─────────────────────────────────────── */}
+        <div style={{ position: "sticky", top: 16 }} className="flex flex-col gap-4">
+
+          {/* Details */}
+          <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
+            <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// DETAILS</p>
+            <div className="flex flex-col gap-3">
+              <MetaRow label="Priority">
+                <PriorityBars priority={ticket.priority} />
+              </MetaRow>
+              <MetaRow label="Project">
+                <span className="font-mono-tech text-[11px] text-[var(--fg)]">
+                  {ticket.project.name}
+                  <span className="text-[var(--fg-faint)] ml-1">({ticket.project.code})</span>
+                </span>
+              </MetaRow>
+              <MetaRow label="Issue Type">
+                <span className="font-mono-tech text-[11px] text-[var(--fg)]">{ticket.issueType.name}</span>
+              </MetaRow>
+              <MetaRow label="Reporter">
+                <div>
+                  <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0">{ticket.reporter.name}</p>
+                  <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">{ticket.reporter.email}</p>
+                </div>
+              </MetaRow>
+              <MetaRow label="Assignee">
                 {ticket.assignee ? (
-                  <>
-                    <div>{ticket.assignee.name}</div>
-                    <Text type="secondary" className="!text-[11px] pl-0.5">({ticket.assignee.email})</Text>
-                  </>
+                  <div>
+                    <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0">{ticket.assignee.name}</p>
+                    <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">{ticket.assignee.email}</p>
+                  </div>
                 ) : (
-                  <Text type="secondary">Unassigned</Text>
+                  <span className="font-mono-tech text-[11px] text-[var(--fg-faint)]">UNASSIGNED</span>
                 )}
-              </Descriptions.Item>
-            </Descriptions>
+              </MetaRow>
+              <MetaRow label="Created">
+                <span className="font-mono-tech text-[11px] text-[var(--fg)]">
+                  {dayjs(ticket.createdAt).format("DD MMM YYYY, HH:mm")}
+                </span>
+              </MetaRow>
+            </div>
+          </div>
 
-            {ticket.sla && (
-              <>
-                <Divider className="!my-3 !mx-0" />
-                <Descriptions column={1} size="small" colon={false}>
-                  <Descriptions.Item label={<Text type="secondary">Response Time</Text>}>
-                    {ticket.sla.priority.responseTime} {ticket.sla.priority.responseTime === 1 ? "hour" : "hours"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={<Text type="secondary">Resolution Time</Text>}>
-                    {ticket.sla.priority.resolutionTime} {ticket.sla.priority.resolutionTime === 1 ? "hour" : "hours"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={<Text type="secondary">Response</Text>}>
+          {/* SLA */}
+          {ticket.sla && (
+            <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
+              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// SLA</p>
+
+              {/* Big resolution % */}
+              <div className="flex items-end gap-2 mb-3">
+                <span className="font-bebas text-5xl leading-none" style={{ color: slaColor }}>
+                  {clamped}%
+                </span>
+                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] mb-1">resolution elapsed</span>
+              </div>
+
+              <SlaBar sla={ticket.sla} />
+
+              {/* Response / resolution status */}
+              <div className="flex gap-4 mt-2 mb-3">
+                {[
+                  ["Response",   !ticket.sla.status.isResponseOverdue],
+                  ["Resolution", !ticket.sla.status.isResolutionOverdue],
+                ].map(([label, ok]) => (
+                  <span key={label as string} className="font-mono-tech text-[10px]"
+                    style={{ color: ok ? "var(--acc-3)" : "var(--priority-critical)" }}
+                  >
+                    {ok ? "✓" : "✗"} {label as string}
+                  </span>
+                ))}
+              </div>
+
+              {/* SLA times */}
+              <div className="flex flex-col gap-2 mb-3">
+                <MetaRow label="Response SLA">
+                  <Tooltip title={`${ticket.sla.priority.responseTime}h window`}>
                     <DeadlineTag createdAt={ticket.createdAt} sla={ticket.sla} type="response" />
-                  </Descriptions.Item>
-                  <Descriptions.Item label={<Text type="secondary">Resolution</Text>}>
+                  </Tooltip>
+                </MetaRow>
+                <MetaRow label="Resolution SLA">
+                  <Tooltip title={`${ticket.sla.priority.resolutionTime}h window`}>
                     <DeadlineTag createdAt={ticket.createdAt} sla={ticket.sla} type="resolution" />
-                  </Descriptions.Item>
-                </Descriptions>
-                {(() => {
-                  const pct = ticket.sla.status.resolutionPercent ?? 0;
-                  const clamped = Math.min(pct, 100);
-                  const color = pct >= 100 ? "#FF2D6B" : pct >= 75 ? "#FFE500" : "#00F5FF";
-                  return (
-                    <div className="mt-2">
-                      <Text type="secondary" className="!text-[11px]">Resolution Progress</Text>
-                      <Tooltip title={`${pct}% of resolution time elapsed`}>
-                        <Progress
-                          percent={clamped}
-                          strokeColor={color}
-                          trailColor="rgba(255,255,255,0.1)"
-                          format={() => `${pct}%`}
-                          status={pct >= 100 ? "exception" : "active"}
-                          size="small"
-                        />
-                      </Tooltip>
-                    </div>
-                  );
-                })()}
-                {ticket.sla.pausedTime.length > 0 && (
-                  <div className="mt-3">
-                    <Text type="secondary" className="!text-[11px] block mb-1">Pause History</Text>
+                  </Tooltip>
+                </MetaRow>
+              </div>
+
+              {/* Pause indicator */}
+              {isPaused && (
+                <div className="px-3 py-2 border-l-2 border-[var(--acc-amber)] bg-[var(--bg-2)] mb-3">
+                  <p className="font-mono-tech text-[10px] text-[var(--acc-amber)] m-0">
+                    SLA PAUSED
+                    {ticket.sla.pausedTime?.length
+                      ? ` — ${ticket.sla.pausedTime[ticket.sla.pausedTime.length - 1].reason ?? "No reason"}`
+                      : ""}
+                  </p>
+                </div>
+              )}
+
+              {/* Pause history */}
+              {ticket.sla.pausedTime.length > 0 && (
+                <>
+                  <p className="font-bebas text-[10px] tracking-[.2em] text-[var(--acc-1)] mb-2">
+                    PAUSE HISTORY
+                  </p>
+                  <div className="flex flex-col gap-2">
                     {ticket.sla.pausedTime.map((p, i) => (
-                      <div key={i} className="mb-2 pl-2 border-l-2 border-[rgba(255,255,255,0.15)]">
+                      <div key={i} className="pl-2 border-l border-[var(--line-strong)]">
                         {p.reason && (
-                          <Tag color="orange" className="mb-1">{PENDING_REASON_LABELS[p.reason]}</Tag>
+                          <Tag color="warning" className="font-bebas! tracking-wider! mb-1">
+                            {PENDING_REASON_LABELS[p.reason]}
+                          </Tag>
                         )}
                         {p.description && (
-                          <Text className="!text-[11px] block text-[rgba(240,240,240,0.6)]">{p.description}</Text>
+                          <p className="font-mono-tech text-[10px] text-[var(--fg-dim)] m-0 mb-0.5">
+                            {p.description}
+                          </p>
                         )}
-                        <Text type="secondary" className="!text-[10px]">
-                          {dayjs(p.pausedTime).format("DD MMM YYYY HH:mm")}
-                          {p.resumeTime ? ` → ${dayjs(p.resumeTime).format("DD MMM YYYY HH:mm")}` : " → ongoing"}
-                        </Text>
+                        <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">
+                          {dayjs(p.pausedTime).format("DD MMM HH:mm")}
+                          {p.resumeTime ? ` → ${dayjs(p.resumeTime).format("HH:mm")}` : " → ongoing"}
+                        </p>
                       </div>
                     ))}
                   </div>
-                )}
-              </>
-            )}
-          </Card>
-        </Col>
-      </Row>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="font-mono-tech text-[9px] tracking-widest text-[var(--fg-faint)] uppercase w-20 flex-shrink-0 mt-0.5">
+        {label}
+      </span>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }

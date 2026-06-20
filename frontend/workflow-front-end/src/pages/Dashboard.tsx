@@ -1,8 +1,8 @@
 import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
-import { Spin, Table, Tag, Button, Dropdown, message, Input, Select, Progress } from "antd";
-import { MoreOutlined, DownloadOutlined, UserOutlined } from "@ant-design/icons";
+import { Spin, Table, Tag, Button, Dropdown, message, Input, Select, Segmented } from "antd";
+import { DownloadOutlined, UserOutlined, PauseCircleOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
@@ -19,33 +19,45 @@ import {
   ticketKeys,
 } from "../hooks/useTickets";
 import type { FilterTicketRequest } from "../api/ticketApi";
-import DeadlineTag from "../components/DeadlineTag.tsx";
+import dayjs from "dayjs";
+import SlaBar from "../components/dashboard/SlaBar";
+import PriorityBars from "../components/dashboard/PriorityBars";
+import InspectorDrawer from "../components/dashboard/InspectorDrawer";
+import KanbanBoard from "../components/dashboard/KanbanBoard";
+import SlaOverviewCard from "../components/stats/SlaOverviewCard";
+import TicketDistributionCard from "../components/stats/TicketDistributionCard";
+
+type Layout = "console" | "board" | "stream";
+
+const LAYOUT_LABEL: Record<Layout, string> = {
+  console: "// TICKET QUEUE",
+  board:   "// MY BOARD",
+  stream:  "// STREAM VIEW",
+};
 
 export default function Dashboard() {
   const navigate    = useNavigate();
   const qc          = useQueryClient();
   const token       = sessionStorage.getItem("access_token");
 
-  // ── URL state (reads only — all writes go through setSearchParams) ─────────
-  const [page]          = useUrlState("page",    0);
-  const [pageSize]      = useUrlState("size",    10);
-  const [summary]       = useUrlState("q",       "");
-  const [statusId]      = useUrlState<number | undefined>("status",   undefined);
-  const [priorityId]    = useUrlState<number | undefined>("priority", undefined);
-  const [assigneeSub]   = useUrlState("assignee", "");
-  const [sortBy]        = useUrlState<"resolutionPercent" | undefined>("sortBy",  undefined);
-  const [sortDir]       = useUrlState<"asc" | "desc" | undefined>("sortDir", undefined);
+  const [layout, setLayout]           = useState<Layout>("console");
+  const [inspectorId, setInspectorId] = useState<number | null>(null);
+
+  // ── URL state ──────────────────────────────────────────
+  const [page]        = useUrlState("page",    0);
+  const [pageSize]    = useUrlState("size",    10);
+  const [summary]     = useUrlState("q",       "");
+  const [statusId]    = useUrlState<number | undefined>("status",   undefined);
+  const [priorityId]  = useUrlState<number | undefined>("priority", undefined);
+  const [assigneeSub] = useUrlState("assignee", "");
+  const [sortBy]      = useUrlState<"resolutionPercent" | undefined>("sortBy",  undefined);
+  const [sortDir]     = useUrlState<"asc" | "desc" | undefined>("sortDir", undefined);
   const [, setSearchParams] = useSearchParams();
 
-  // Keep a ref so debounce callbacks always use the latest setSearchParams
-  // without having it as a dep (React Router recreates it on every URL change)
   const setSearchParamsRef = useRef(setSearchParams);
   useEffect(() => { setSearchParamsRef.current = setSearchParams; });
 
-  // ── Local input values — update immediately for responsive typing ─────────
   const [summaryInput, setSummaryInput] = useState(summary);
-
-  // ── Debounce summary → URL (1 s) + reset page ────────────────────────────
   useEffect(() => {
     const id = setTimeout(() => {
       setSearchParamsRef.current((prev) => {
@@ -59,12 +71,11 @@ export default function Dashboard() {
     return () => clearTimeout(id);
   }, [summaryInput]);
 
-  // ── Assignee autocomplete ─────────────────────────────────────────────────
+  // ── Assignee autocomplete ────────────────────────────
   const [userQuery,        setUserQuery]        = useState("");
   const [userOptions,      setUserOptions]      = useState<{ value: string; label: string }[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Populate display option when a sub is already in the URL (page reload / deep link)
   useEffect(() => {
     if (!assigneeSub) return;
     fetchUserBySub(assigneeSub).then((u: UserSummary | null) => {
@@ -73,7 +84,6 @@ export default function Dashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debounced search as user types
   useEffect(() => {
     if (!userQuery.trim()) { setUserOptions([]); return; }
     const id = setTimeout(async () => {
@@ -97,8 +107,8 @@ export default function Dashboard() {
     }, { replace: true });
   };
 
-  // ── Modal ────────────────────────────────────────────────────────────────
-const [isExporting,  setIsExporting]  = useState(false);
+  // ── Export ───────────────────────────────────────────
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -117,8 +127,7 @@ const [isExporting,  setIsExporting]  = useState(false);
     }
   };
 
-  // ── Build query params memo ───────────────────────────────────────────────
-  // Changing any of these values changes the queryKey → automatic refetch.
+  // ── Query params ─────────────────────────────────────
   const params = useMemo<FilterTicketRequest>(() => ({
     page,
     size: pageSize,
@@ -130,7 +139,7 @@ const [isExporting,  setIsExporting]  = useState(false);
     ...(sortDir != null && { sortDir }),
   }), [page, pageSize, summary, statusId, priorityId, assigneeSub, sortBy, sortDir]);
 
-  // ── Data queries ──────────────────────────────────────────────────────────
+  // ── Data ─────────────────────────────────────────────
   const { data: pageData, isFetching } = useTicketList(params);
   const { data: priorities = [] }      = usePriorities();
   const { data: statuses = [], isLoading: isStatusesLoading } = useStatuses();
@@ -138,50 +147,37 @@ const [isExporting,  setIsExporting]  = useState(false);
   const tickets = useMemo(() => pageData?.content ?? [], [pageData]);
   const total   = pageData?.totalElements ?? 0;
 
-  // ── Mutations ────────────────────────────────────────────────────────────
+  // ── Mutations ────────────────────────────────────────
   const pauseMutation  = usePauseTicket();
   const resumeMutation = useResumeTicket();
 
-  // Track which row is in an action-loading state for the dropdown button
   const [actionLoadingIds, setActionLoadingIds] = useState<Set<string | number>>(new Set());
 
   const handlePause = useCallback(async (id: string | number) => {
     setActionLoadingIds((prev) => new Set(prev).add(id));
-    try {
-      await pauseMutation.mutateAsync(id);
-    } catch {
-      message.error("Failed to pause ticket");
-    } finally {
-      setActionLoadingIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
-    }
+    try { await pauseMutation.mutateAsync(id); }
+    catch { message.error("Failed to pause ticket"); }
+    finally { setActionLoadingIds((prev) => { const n = new Set(prev); n.delete(id); return n; }); }
   }, [pauseMutation]);
 
   const handleResume = useCallback(async (id: string | number) => {
     setActionLoadingIds((prev) => new Set(prev).add(id));
-    try {
-      await resumeMutation.mutateAsync(id);
-    } catch {
-      message.error("Failed to resume ticket");
-    } finally {
-      setActionLoadingIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
-    }
+    try { await resumeMutation.mutateAsync(id); }
+    catch { message.error("Failed to resume ticket"); }
+    finally { setActionLoadingIds((prev) => { const n = new Set(prev); n.delete(id); return n; }); }
   }, [resumeMutation]);
 
-  // ── WebSocket — keep untouched; update cache on push ─────────────────────
-  const visibleIdsRef  = useRef<Set<string | number>>(new Set());
+  // ── WebSocket ─────────────────────────────────────────
+  const visibleIdsRef   = useRef<Set<string | number>>(new Set());
   const [refreshingIds, setRefreshingIds] = useState<Set<string | number>>(new Set());
 
-  // Track which ids are currently on screen so the WS handler can ignore others
-  useEffect(() => {
-    visibleIdsRef.current = new Set(tickets.map((t) => t.id));
-  }, [tickets]);
+  useEffect(() => { visibleIdsRef.current = new Set(tickets.map((t) => t.id)); }, [tickets]);
 
   const refreshRow = useCallback(async (id: string | number) => {
     if (!visibleIdsRef.current.has(id)) return;
     setRefreshingIds((prev) => new Set(prev).add(id));
     try {
       const updated = await fetchTicketById(id);
-      // Patch the single item inside the cached page without triggering a full refetch
       qc.setQueryData(
         ticketKeys.list(params),
         (old: typeof pageData) => {
@@ -201,7 +197,7 @@ const [isExporting,  setIsExporting]  = useState(false);
     return () => ws.close();
   }, [refreshRow, token]);
 
-  // ── Filter handlers ───────────────────────────────────────────────────────
+  // ── Filter handlers ───────────────────────────────────
   const handleStatusChange = (val: number | undefined) => {
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
@@ -226,211 +222,298 @@ const [isExporting,  setIsExporting]  = useState(false);
     setUserOptions([]);
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
-      p.delete("q");
-      p.delete("status");
-      p.delete("priority");
-      p.delete("assignee");
-      p.delete("sortBy");
-      p.delete("sortDir");
-      p.delete("page");
+      ["q","status","priority","assignee","sortBy","sortDir","page"].forEach((k) => p.delete(k));
       return p;
     }, { replace: true });
   };
 
-  // ── Table columns ─────────────────────────────────────────────────────────
+  // ── Table columns ─────────────────────────────────────
   const columns: ColumnsType<TicketSla> = [
-    { title: "ID", dataIndex: "id", width: 120 },
-    { title: "Summary", dataIndex: "summary", ellipsis: true, width: 220 },
     {
-      title: "Resolution %",
-      key: "resolutionPercent",
-      width: 160,
-      responsive: ["md"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
-      sorter: true,
-      sortOrder: sortBy === "resolutionPercent"
-        ? (sortDir === "asc" ? "ascend" : "descend")
-        : null,
-      render: (_: unknown, record: TicketSla) => {
-        const percent = record.sla?.status?.resolutionPercent;
-        const overdue = record.sla?.status?.isResolutionOverdue ?? false;
-        if (percent == null) return <span className="text-gray-400 text-xs">—</span>;
-        const clamped = Math.min(Math.round(percent), 100);
-        const strokeColor = overdue || percent >= 100 ? "#ff4d4f" : percent >= 80 ? "#faad14" : "#52c41a";
-        return (
-          <Progress
-            percent={clamped}
-            size="small"
-            strokeColor={strokeColor}
-            format={(p) => <span className="text-[11px]">{p}%</span>}
-          />
-        );
-      },
+      title: "ID",
+      key: "code",
+      width: 110,
+      render: (_, record) => (
+        <span className="font-mono-tech text-[11px] text-[var(--acc-1)]">
+          {record.project.code}-{String(record.id).padStart(4, "0")}
+        </span>
+      ),
+    },
+    {
+      title: "Summary",
+      dataIndex: "summary",
+      ellipsis: true,
+      width: 220,
+      render: (text: string, record) => (
+        <span className="flex items-center gap-1.5">
+          {record.sla?.isPaused && (
+            <PauseCircleOutlined
+              className="flex-shrink-0 text-[10px]"
+              style={{ color: "var(--acc-amber)" }}
+            />
+          )}
+          <span className="truncate">{text}</span>
+        </span>
+      ),
     },
     {
       title: "Status",
       dataIndex: ["status", "name"],
       width: 120,
-      render: (name: string, record) => <Tag color={record.status?.color}>{name}</Tag>,
+      render: (name: string, record) => (
+        <Tag color={record.status?.color} className="font-bebas! tracking-wider! text-xs!">
+          {name}
+        </Tag>
+      ),
     },
     {
-      title: "SLA",
-      width: 200,
-      responsive: ["lg"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
-      render: (_, record) => {
-        if (!record.sla) return <span className="text-gray-400 text-xs">—</span>;
-        return (
-          <div className="flex flex-col gap-1">
-            <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="response" />
-            <DeadlineTag createdAt={record.createdAt} sla={record.sla} type="resolution" />
-          </div>
-        );
-      },
+      title: "Resolution",
+      key: "resolutionPercent",
+      width: 130,
+      responsive: ["md"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
+      sorter: true,
+      sortOrder:
+        sortBy === "resolutionPercent"
+          ? (sortDir === "asc" ? "ascend" : "descend")
+          : null,
+      render: (_: unknown, record: TicketSla) => <SlaBar sla={record.sla} />,
     },
-    { title: "Priority", dataIndex: ["priority", "name"], width: 100 },
+    {
+      title: "Priority",
+      key: "priority",
+      width: 140,
+      responsive: ["lg"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
+      render: (_: unknown, record: TicketSla) => <PriorityBars priority={record.priority} />,
+    },
     {
       title: "Assignee",
       dataIndex: "assignee",
-      width: 140,
-      render: (assignee: TicketSla["assignee"]) => assignee?.name ?? "-",
+      width: 130,
+      render: (assignee: TicketSla["assignee"]) => (
+        <span className="font-mono-tech text-[11px] text-[var(--fg-dim)]">
+          {assignee?.name ?? "UNASSIGNED"}
+        </span>
+      ),
     },
     {
-      title: "Actions",
-      width: 100,
+      title: "Age",
+      key: "age",
+      width: 60,
+      responsive: ["xl"] as ("xs" | "sm" | "md" | "lg" | "xl" | "xxl")[],
+      render: (_: unknown, record: TicketSla) => {
+        const h = dayjs().diff(dayjs(record.createdAt), "hour");
+        return (
+          <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+            {h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`}
+          </span>
+        );
+      },
+    },
+    {
+      title: "",
+      width: 80,
       render: (_, record) => {
         const isPaused  = record.sla?.isPaused ?? false;
         const isLoading = actionLoadingIds.has(record.id);
         const menuItems: MenuProps["items"] = [
           ...(!isPaused ? [{
-            key: "pause", label: "Pause", disabled: isLoading,
+            key: "pause", label: "Pause SLA", disabled: isLoading,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); handlePause(record.id); },
           }] : []),
           ...(isPaused ? [{
-            key: "resume", label: "Resume", disabled: isLoading,
+            key: "resume", label: "Resume SLA", disabled: isLoading,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); handleResume(record.id); },
           }] : []),
+          {
+            key: "open", label: "Open ticket",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); navigate(`/dashboard/${record.id}`); },
+          },
         ];
         return (
-          <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
-            <Button
-              type="text"
-              icon={<MoreOutlined rotate={90} />}
-              loading={isLoading}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </Dropdown>
+          <div className="flex items-center gap-1">
+            {refreshingIds.has(record.id) && <Spin size="small" />}
+            <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
+              <Button
+                type="text"
+                size="small"
+                loading={isLoading}
+                onClick={(e) => e.stopPropagation()}
+                className="font-mono-tech text-[var(--fg-faint)] hover:text-[var(--acc-1)]"
+              >
+                ···
+              </Button>
+            </Dropdown>
+          </div>
         );
       },
     },
-    {
-      title: "", width: 40,
-      render: (_, record) => refreshingIds.has(record.id) ? <Spin size="small" /> : null,
-    },
   ];
+
+  // ── Filter bar (shared by console + stream) ───────────
+  const filterBar = (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <Input
+        placeholder="Search summary"
+        value={summaryInput}
+        onChange={(e) => setSummaryInput(e.target.value)}
+        allowClear
+        className="!w-[200px]"
+      />
+      <Select
+        placeholder="Status"
+        value={statusId}
+        onChange={handleStatusChange}
+        allowClear
+        loading={isStatusesLoading}
+        className="!w-[150px]"
+        options={(statuses as WorkflowStatus[]).map((s) => ({ value: s.id, label: s.name }))}
+      />
+      <Select
+        placeholder="Priority"
+        value={priorityId}
+        onChange={handlePriorityChange}
+        allowClear
+        className="!w-[140px]"
+        options={(priorities as Priority[]).map((p) => ({ value: p.id, label: p.name }))}
+      />
+      <Select
+        showSearch
+        allowClear
+        filterOption={false}
+        placeholder={<span><UserOutlined className="mr-1" />Assignee</span>}
+        value={assigneeSub || undefined}
+        onSearch={setUserQuery}
+        onChange={handleAssigneeChange}
+        onClear={() => handleAssigneeChange(undefined)}
+        options={userOptions}
+        loading={isSearchingUsers}
+        notFoundContent={isSearchingUsers ? <Spin size="small" /> : userQuery ? "No users found" : null}
+        className="!w-[200px]"
+      />
+      <Button onClick={handleReset}>Reset</Button>
+      <span className="font-mono-tech text-[11px] text-[var(--fg-faint)] self-center">
+        {total} tickets
+      </span>
+      <Button
+        icon={<DownloadOutlined />}
+        loading={isExporting}
+        onClick={handleExport}
+        className="neon-btn font-bebas! tracking-widest! ml-auto"
+      >
+        <span className="neon-btn-content">Export</span>
+      </Button>
+    </div>
+  );
+
+  // ── Ticket table (shared by console + stream) ─────────
+  const ticketTable = (
+    <Table<TicketSla>
+      columns={columns}
+      dataSource={tickets}
+      rowKey="id"
+      loading={isFetching}
+      size="small"
+      scroll={{ x: "max-content" }}
+      sticky={{ offsetHeader: 0 }}
+      onRow={(record) => ({
+        onClick: () => setInspectorId(record.id),
+        onMouseEnter: () => {
+          qc.prefetchQuery({
+            queryKey: ticketKeys.detail(record.id),
+            queryFn:  () => fetchTicketById(record.id),
+            staleTime: 30_000,
+          });
+        },
+        style: { cursor: "crosshair" },
+      })}
+      onChange={(pagination, _, sorter, extra) => {
+        setSearchParams((prev) => {
+          const p = new URLSearchParams(prev);
+          if (extra.action === "sort") {
+            const s = Array.isArray(sorter) ? sorter[0] : sorter;
+            if (s?.columnKey === "resolutionPercent" && s.order) {
+              p.set("sortBy",  JSON.stringify("resolutionPercent"));
+              p.set("sortDir", JSON.stringify(s.order === "ascend" ? "asc" : "desc"));
+            } else {
+              p.delete("sortBy");
+              p.delete("sortDir");
+            }
+            p.delete("page");
+          } else if (extra.action === "paginate") {
+            const newPage = (pagination.current ?? 1) - 1;
+            const newSize = pagination.pageSize ?? 10;
+            if (newPage === 0) p.delete("page"); else p.set("page", JSON.stringify(newPage));
+            if (newSize === 10) p.delete("size"); else p.set("size", JSON.stringify(newSize));
+          }
+          return p;
+        }, { replace: true });
+      }}
+      pagination={{
+        current: page + 1,
+        pageSize,
+        total,
+        showSizeChanger: true,
+        showTotal: (t) => `Total ${t} tickets`,
+      }}
+    />
+  );
 
   return (
     <>
-      <div className="flex justify-between items-center mb-5">
+      {/* Page header */}
+      <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="font-bebas text-3xl tracking-[0.15em] neon-text-yellow m-0">▸ DASHBOARD</h2>
-          <span className="font-mono-tech text-xs text-[rgba(240,240,240,0.3)] tracking-widest hidden sm:block">
-            // TICKET QUEUE
+          <h2 className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0">▸ TICKET QUEUE</h2>
+          <span className="font-mono-tech text-xs text-[var(--fg-faint)] tracking-widest hidden sm:block">
+            {LAYOUT_LABEL[layout]}
           </span>
         </div>
+        <Segmented<Layout>
+          options={[
+            { label: "Console", value: "console" },
+            { label: "Board",   value: "board" },
+            { label: "Stream",  value: "stream" },
+          ]}
+          value={layout}
+          onChange={setLayout}
+        />
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Input
-          placeholder="Search summary"
-          value={summaryInput}
-          onChange={(e) => setSummaryInput(e.target.value)}
-          allowClear
-          className="!w-[200px]"
-        />
-        <Select
-          placeholder="Status"
-          value={statusId}
-          onChange={handleStatusChange}
-          allowClear
-          loading={isStatusesLoading}
-          className="!w-[160px]"
-          options={(statuses as WorkflowStatus[]).map((status) => ({ value: status.id, label: status.name }))}
-        />
-        <Select
-          placeholder="Priority"
-          value={priorityId}
-          onChange={handlePriorityChange}
-          allowClear
-          className="!w-[160px]"
-          options={(priorities as Priority[]).map((p) => ({ value: p.id, label: p.name }))}
-        />
-        <Select
-          showSearch
-          allowClear
-          filterOption={false}
-          placeholder={<span><UserOutlined className="mr-1" />Assignee</span>}
-          value={assigneeSub || undefined}
-          onSearch={setUserQuery}
-          onChange={handleAssigneeChange}
-          onClear={() => handleAssigneeChange(undefined)}
-          options={userOptions}
-          loading={isSearchingUsers}
-          notFoundContent={isSearchingUsers ? <Spin size="small" /> : userQuery ? "No users found" : null}
-          className="!w-[220px]"
-        />
-        <Button onClick={handleReset}>Reset</Button>
-        <Button
-          icon={<DownloadOutlined />}
-          loading={isExporting}
-          onClick={handleExport}
-          className="neon-btn font-bebas! tracking-widest!"
-        >
-          <span className="neon-btn-content">Export</span>
-        </Button>
-      </div>
+      {/* Board view */}
+      {layout === "board" && (
+        <KanbanBoard onCardClick={setInspectorId} />
+      )}
 
-      <Table<TicketSla>
-        columns={columns}
-        dataSource={tickets}
-        rowKey="id"
-        loading={isFetching}
-        onRow={(record) => ({
-          onClick: () => navigate(`/dashboard/${record.id}`),
-          style: { cursor: "pointer" },
-        })}
-        onChange={(pagination, _, sorter, extra) => {
-          setSearchParams((prev) => {
-            const p = new URLSearchParams(prev);
-            if (extra.action === "sort") {
-              const s = Array.isArray(sorter) ? sorter[0] : sorter;
-              if (s?.columnKey === "resolutionPercent" && s.order) {
-                p.set("sortBy",  JSON.stringify("resolutionPercent"));
-                p.set("sortDir", JSON.stringify(s.order === "ascend" ? "asc" : "desc"));
-              } else {
-                p.delete("sortBy");
-                p.delete("sortDir");
-              }
-              p.delete("page");
-            } else if (extra.action === "paginate") {
-              const newPage = (pagination.current ?? 1) - 1;
-              const newSize = pagination.pageSize ?? 10;
-              if (newPage === 0) p.delete("page"); else p.set("page", JSON.stringify(newPage));
-              if (newSize === 10) p.delete("size"); else p.set("size", JSON.stringify(newSize));
-            }
-            return p;
-          }, { replace: true });
-        }}
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          showTotal: (t) => `Total ${t} tickets`,
-        }}
+      {/* Console view */}
+      {layout === "console" && (
+        <>
+          {filterBar}
+          {ticketTable}
+        </>
+      )}
+
+      {/* Stream view — table + insight rail */}
+      {layout === "stream" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1.7fr 0.9fr", gap: 14, alignItems: "start" }}>
+          <div>
+            {filterBar}
+            {ticketTable}
+          </div>
+          <div className="flex flex-col gap-4">
+            <SlaOverviewCard />
+            <TicketDistributionCard />
+          </div>
+        </div>
+      )}
+
+      {/* Inspector drawer */}
+      <InspectorDrawer
+        id={inspectorId}
+        onClose={() => setInspectorId(null)}
       />
-
     </>
   );
 }

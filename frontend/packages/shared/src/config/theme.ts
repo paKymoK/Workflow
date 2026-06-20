@@ -113,6 +113,19 @@ export const darkComponents = {
   Dropdown: { colorBgElevated: "#030E1E" },
   Form: { labelColor: "rgba(200,240,255,0.55)" },
   Tooltip: { colorBgSpotlight: "#030E1E", colorTextLightSolid: "#C8F0FF" },
+  Segmented: {
+    trackBg: "#030E1E",
+    itemSelectedBg: "rgba(0,207,255,0.12)",
+    itemSelectedColor: "#00CFFF",
+    itemColor: "rgba(200,240,255,0.45)",
+    itemHoverBg: "rgba(0,207,255,0.06)",
+    itemHoverColor: "#00CFFF",
+    itemActiveBg: "rgba(0,207,255,0.10)",
+  },
+  Drawer: {
+    colorBgElevated: "#04101F",
+    footerBorderTop: "1px solid rgba(0,207,255,0.14)",
+  },
 };
 
 export const lightComponents = {
@@ -193,4 +206,16 @@ export const lightComponents = {
   Dropdown: { colorBgElevated: "#F0FAFF" },
   Form: { labelColor: "rgba(10,37,64,0.65)" },
   Tooltip: { colorBgSpotlight: "#0A2540", colorTextLightSolid: "#E0F4FF" },
+  Segmented: {
+    trackBg: "#D6EEFF",
+    itemSelectedBg: "rgba(0,102,187,0.12)",
+    itemSelectedColor: "#0066BB",
+    itemColor: "rgba(10,37,64,0.55)",
+    itemHoverBg: "rgba(0,102,187,0.06)",
+    itemHoverColor: "#0066BB",
+    itemActiveBg: "rgba(0,102,187,0.10)",
+  },
+  Drawer: {
+    colorBgElevated: "#E7ECF2",
+  },
 };

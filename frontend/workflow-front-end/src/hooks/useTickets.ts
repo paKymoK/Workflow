@@ -178,6 +178,7 @@ export function useTransitionTicket() {
     }) => transitionTicket({ ticketId: Number(ticketId), currentStatusId, transitionName, pendingReason, pendingDescription }),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
+      qc.invalidateQueries({ queryKey: ticketKeys.lists() });
     },
   });
 }
