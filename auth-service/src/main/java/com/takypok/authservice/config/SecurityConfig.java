@@ -163,7 +163,12 @@ public class SecurityConfig {
                         "/logout",
                         "/v1/**",
                         "/actuator/**",
-                        "/admin/assets/**")
+                        "/admin/assets/**",
+                        "/*.svg",
+                        "/*.png",
+                        "/*.ico",
+                        "/*.js",
+                        "/*.css")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
