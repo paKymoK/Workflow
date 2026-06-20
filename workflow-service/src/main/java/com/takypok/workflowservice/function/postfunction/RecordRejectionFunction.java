@@ -10,18 +10,22 @@ import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import java.time.ZonedDateTime;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RecordRejectionFunction implements PostFunctionInterface {
 
   private final WebClient.Builder webClientBuilder;
+
+  public RecordRejectionFunction(
+      @Qualifier("lbWebClientBuilder") WebClient.Builder webClientBuilder) {
+    this.webClientBuilder = webClientBuilder;
+  }
 
   @Override
   public Mono<Ticket<TicketDetail>> run(
