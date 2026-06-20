@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useCallback, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Button, Spin, Typography, message, Modal, Form, Input, Select, Popconfirm,
@@ -148,9 +148,13 @@ function DetailPanel({
 
   useEffect(() => {
     if (!edge) return;
-    setName((edge.data?.transitionName as string) ?? (edge.label as string) ?? "");
-    setVals((edge.data?.validators    as string[]) ?? []);
-    setPostFns((edge.data?.postFunctions as string[]) ?? []);
+    const id = setTimeout(() => {
+      setName((edge.data?.transitionName as string) ?? (edge.label as string) ?? "");
+      setVals((edge.data?.validators    as string[]) ?? []);
+      setPostFns((edge.data?.postFunctions as string[]) ?? []);
+    }, 0);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edge?.id]);
 
   if (!edge) return null;
@@ -159,20 +163,17 @@ function DetailPanel({
 
   return (
     <div
-      className="absolute top-3 right-3 z-10 rounded-[10px] px-[18px] py-4 w-72 shadow-lg flex flex-col gap-3 border"
-      style={{ background: "var(--dark)", borderColor: "var(--border-subtle)" }}
+      className="absolute top-3 right-3 z-10 rounded-[10px] px-[18px] py-4 w-72 shadow-lg flex flex-col gap-3 border bg-[var(--dark)] border-[var(--border-subtle)]"
     >
       <div className="flex justify-between items-start">
         <div
-          className="font-mono text-[9px] tracking-[0.15em] uppercase"
-          style={{ color: "var(--neon-yellow)" }}
+          className="font-mono text-[9px] tracking-[0.15em] uppercase text-[var(--neon-yellow)]"
         >
           Transition
         </div>
         <button
           onClick={onClose}
-          className="bg-transparent border-none cursor-pointer text-lg leading-none p-0"
-          style={{ color: "var(--text-muted)" }}
+          className="bg-transparent border-none cursor-pointer text-lg leading-none p-0 text-[var(--text-muted)]"
         >
           ✕
         </button>
@@ -180,8 +181,7 @@ function DetailPanel({
 
       <div>
         <div
-          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1"
-          style={{ color: "var(--text-muted)" }}
+          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1 text-[var(--text-muted)]"
         >
           Name
         </div>
@@ -195,8 +195,7 @@ function DetailPanel({
 
       <div>
         <div
-          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1"
-          style={{ color: "var(--text-muted)" }}
+          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1 text-[var(--text-muted)]"
         >
           Validators
         </div>
@@ -209,14 +208,13 @@ function DetailPanel({
           placeholder="Add validators"
           options={availableValidators.map((v) => ({ label: v.name, value: v.value }))}
           optionRender={(opt) => (
-            <span className="font-mono text-[11px]" style={{ color: "var(--neon-yellow)" }}>
+            <span className="font-mono text-[11px] text-[var(--neon-yellow)]">
               {shortName(opt.value as string)}
             </span>
           )}
           tagRender={({ label, closable, onClose: onTagClose }) => (
             <span
-              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border"
-              style={{ color: "var(--neon-yellow)", background: "rgba(0,207,255,0.1)", borderColor: "var(--border-subtle)" }}
+              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border text-[var(--neon-yellow)] bg-[rgba(0,207,255,0.1)] border-[var(--border-subtle)]"
             >
               <span className="opacity-50 text-[9px]">V</span>{label}
               {closable && <span onClick={onTagClose} className="cursor-pointer opacity-50 hover:opacity-100">✕</span>}
@@ -227,8 +225,7 @@ function DetailPanel({
 
       <div>
         <div
-          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1"
-          style={{ color: "var(--text-muted)" }}
+          className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1 text-[var(--text-muted)]"
         >
           Post Functions
         </div>
@@ -241,14 +238,13 @@ function DetailPanel({
           placeholder="Add post functions"
           options={availablePostFunctions.map((f) => ({ label: f.name, value: f.value }))}
           optionRender={(opt) => (
-            <span className="font-mono text-[11px]" style={{ color: "var(--neon-cyan)" }}>
+            <span className="font-mono text-[11px] text-[var(--neon-cyan)]">
               {shortName(opt.value as string)}
             </span>
           )}
           tagRender={({ label, closable, onClose: onTagClose }) => (
             <span
-              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border"
-              style={{ color: "var(--neon-cyan)", background: "rgba(0,245,196,0.1)", borderColor: "rgba(0,245,196,0.25)" }}
+              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border text-[var(--neon-cyan)] bg-[rgba(0,245,196,0.1)] border-[rgba(0,245,196,0.25)]"
             >
               <span className="opacity-50 text-[9px]">F</span>{label}
               {closable && <span onClick={onTagClose} className="cursor-pointer opacity-50 hover:opacity-100">✕</span>}
@@ -258,8 +254,7 @@ function DetailPanel({
       </div>
 
       <div
-        className="flex justify-between items-center pt-1 border-t"
-        style={{ borderColor: "var(--border-subtle)" }}
+        className="flex justify-between items-center pt-1 border-t border-[var(--border-subtle)]"
       >
         <Popconfirm title="Remove this transition?" onConfirm={() => onDelete(edge.id)} okText="Remove" okButtonProps={{ danger: true }}>
           <Button size="small" danger type="text">Remove</Button>
@@ -313,7 +308,7 @@ export default function WorkflowDetail() {
     setSelectedEdge((sel) => (sel?.source === nodeId || sel?.target === nodeId) ? null : sel);
     setIsDirty(true);
   }, [setNodes, setEdges]);
-  onDeleteNodeRef.current = onDeleteNode;
+  useLayoutEffect(() => { onDeleteNodeRef.current = onDeleteNode; });
 
   // ── Initialise canvas when workflow loads ─────────────────────────────────
   useEffect(() => {
@@ -463,10 +458,9 @@ export default function WorkflowDetail() {
                 onClick={() => onAddStatus(s)}
                 className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 cursor-pointer bg-white text-left transition-colors"
               >
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ background: s.color }}
-                />
+                <svg className="w-2.5 h-2.5 shrink-0" viewBox="0 0 10 10">
+                  <circle cx="5" cy="5" r="5" fill={s.color} />
+                </svg>
                 <span className="text-sm font-medium text-gray-800">{s.name}</span>
                 <span className="text-xs text-gray-400 font-mono ml-auto">{s.group}</span>
               </button>

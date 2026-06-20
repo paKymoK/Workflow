@@ -17,12 +17,11 @@ interface KpiCardProps {
 function KpiCard({ eyebrow, value, accent, sparkData, sub }: KpiCardProps) {
   return (
     <div
-      className="relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden"
-      style={{ borderTop: `3px solid ${accent}` }}
+      className={`relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden [border-top:3px_solid_${accent}]`}
     >
       <div>
         <p className="font-mono-tech text-[9px] tracking-[.25em] text-[var(--fg-faint)] m-0 mb-1">{eyebrow}</p>
-        <p className="font-bebas text-4xl leading-none m-0" style={{ color: accent }}>
+        <p className={`font-bebas text-4xl leading-none m-0 text-[${accent}]`}>
           {value}
         </p>
         {sub && (
@@ -100,7 +99,7 @@ export default function KpiStrip({ refetchKey = 0 }: Props) {
     : 0;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+    <div className="grid grid-cols-4 gap-[14px]">
       <KpiCard
         eyebrow="TOTAL QUEUE"
         value={totalQueue}

@@ -45,7 +45,7 @@ export default function Home() {
       </div>
 
       {/* Row 2 — TicketDistribution (chart+table, needs ~60%) | SlaCompliance panel */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 14, alignItems: "start" }}>
+      <div className="grid [grid-template-columns:1.6fr_1fr] gap-[14px] items-start">
         <div className="min-w-0 overflow-hidden">
           <TicketDistributionCard refetchKey={refetchKey} />
         </div>
@@ -53,7 +53,7 @@ export default function Home() {
       </div>
 
       {/* Row 3 — AvgResolution (chart+table, needs ~60%) | LiveActivity feed */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 14, alignItems: "start" }}>
+      <div className="grid [grid-template-columns:1.6fr_1fr] gap-[14px] items-start">
         <div className="min-w-0 overflow-hidden">
           <AvgResolutionCard refetchKey={refetchKey} />
         </div>

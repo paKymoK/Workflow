@@ -15,6 +15,22 @@ const GROUPS = [
   { key: "DONE",        label: "DONE",         color: "var(--acc-3)" },
 ] as const;
 
+const COL_DRAG_CLASSES: Record<string, string> = {
+  "TODO":       "border-[var(--acc-1)] bg-[color-mix(in_oklab,var(--acc-1)_5%,transparent)]",
+  "PROCESSING": "border-[var(--acc-warn)] bg-[color-mix(in_oklab,var(--acc-warn)_5%,transparent)]",
+  "DONE":       "border-[var(--acc-3)] bg-[color-mix(in_oklab,var(--acc-3)_5%,transparent)]",
+};
+const COL_BORDER_TOP: Record<string, string> = {
+  "TODO":       "[border-top:2px_solid_var(--acc-1)]",
+  "PROCESSING": "[border-top:2px_solid_var(--acc-warn)]",
+  "DONE":       "[border-top:2px_solid_var(--acc-3)]",
+};
+const COL_TEXT: Record<string, string> = {
+  "TODO":       "text-[var(--acc-1)]",
+  "PROCESSING": "text-[var(--acc-warn)]",
+  "DONE":       "text-[var(--acc-3)]",
+};
+
 interface Props {
   onCardClick: (id: number) => void;
 }
@@ -33,7 +49,7 @@ export default function KanbanBoard({ onCardClick }: Props) {
   );
 
   const { data: pageData, isLoading } = useTicketList(kanbanParams, { enabled: !!mySub });
-  const tickets = pageData?.content ?? [];
+  const tickets = useMemo(() => pageData?.content ?? [], [pageData]);
 
   const columns = useMemo(
     () =>
@@ -116,11 +132,7 @@ export default function KanbanBoard({ onCardClick }: Props) {
       {columns.map((col) => (
         <div
           key={col.key}
-          className="flex flex-col border transition-colors"
-          style={{
-            borderColor: overGroup === col.key ? col.color : "var(--line)",
-            background: overGroup === col.key ? `color-mix(in oklab, ${col.color} 5%, transparent)` : "transparent",
-          }}
+          className={`flex flex-col border transition-colors ${overGroup === col.key ? COL_DRAG_CLASSES[col.key] : "border-[var(--line)] bg-transparent"}`}
           onDragOver={(e) => { e.preventDefault(); setOverGroup(col.key); }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverGroup(null);
@@ -129,10 +141,9 @@ export default function KanbanBoard({ onCardClick }: Props) {
         >
           {/* Column header */}
           <div
-            className="flex items-center justify-between px-3 py-2 border-b"
-            style={{ borderColor: "var(--line)", borderTop: `2px solid ${col.color}` }}
+            className={`flex items-center justify-between px-3 py-2 border-b border-[var(--line)] ${COL_BORDER_TOP[col.key]}`}
           >
-            <span className="font-bebas text-sm tracking-[.15em]" style={{ color: col.color }}>
+            <span className={`font-bebas text-sm tracking-[.15em] ${COL_TEXT[col.key]}`}>
               {col.label}
             </span>
             <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
@@ -187,13 +198,7 @@ function KanbanCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onClick}
-      className="border p-3 flex flex-col gap-2 cursor-crosshair select-none transition-all"
-      style={{
-        borderColor: "var(--line)",
-        background: "var(--bg-1)",
-        opacity: isDragging ? 0.4 : 1,
-        transform: isDragging ? "none" : undefined,
-      }}
+      className={`border border-[var(--line)] bg-[var(--bg-1)] p-3 flex flex-col gap-2 cursor-crosshair select-none transition-all ${isDragging ? "opacity-40" : "opacity-100"}`}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--line-strong)"; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.borderColor = "var(--line)"; }}
     >

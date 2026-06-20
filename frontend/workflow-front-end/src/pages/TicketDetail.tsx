@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Spin, Tag, Button, Alert,
-  Dropdown, App, Avatar, List, Divider, Tooltip, Select, Modal, Form, Input,
+  Spin, Tag, Button,
+  Dropdown, App, Avatar, List, Tooltip, Select, Modal, Form, Input,
 } from "antd";
 import {
   ArrowLeftOutlined, PauseCircleOutlined, PlayCircleOutlined,
@@ -25,9 +25,7 @@ import PriorityBars from "../components/dashboard/PriorityBars.tsx";
 import WorkflowStepper from "../components/ticket/WorkflowStepper";
 import Panel from "../components/ui/Panel";
 
-const GLOW_STYLE = {
-  textShadow: "0 0 calc(16px * var(--glow)) color-mix(in oklab, var(--acc-1) 60%, transparent)",
-};
+const GLOW_CLASS = "[text-shadow:0_0_calc(16px_*_var(--glow))_color-mix(in_oklab,var(--acc-1)_60%,transparent)]";
 
 export default function TicketDetail() {
   const { message } = App.useApp();
@@ -66,8 +64,9 @@ export default function TicketDetail() {
   const [pendingForm] = Form.useForm<{ reason: PendingReason; description?: string }>();
 
   useEffect(() => {
-    if (!userQuery.trim()) { setUserOptions([]); return; }
+    const delay = userQuery.trim() ? 400 : 0;
     const t = setTimeout(async () => {
+      if (!userQuery.trim()) { setUserOptions([]); return; }
       setIsSearchingUsers(true);
       try {
         const users = await fetchUsers(userQuery);
@@ -75,7 +74,7 @@ export default function TicketDetail() {
       } finally {
         setIsSearchingUsers(false);
       }
-    }, 400);
+    }, delay);
     return () => clearTimeout(t);
   }, [userQuery]);
 
@@ -294,7 +293,7 @@ export default function TicketDetail() {
             Back
           </Button>
           <span className="font-mono-tech text-[13px] text-[var(--acc-1)] flex-shrink-0">{ticketCode}</span>
-          <h2 className="font-bebas text-2xl tracking-[.1em] neon-text-acc m-0 truncate" style={GLOW_STYLE}>
+          <h2 className={`font-bebas text-2xl tracking-[.1em] neon-text-acc m-0 truncate ${GLOW_CLASS}`}>
             ▸ TICKET #{ticket.id}
           </h2>
         </div>
@@ -328,7 +327,7 @@ export default function TicketDetail() {
       )}
 
       {/* ── Two-column grid ───────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.7fr 0.9fr", gap: 16, alignItems: "start" }}>
+      <div className="grid [grid-template-columns:1.7fr_0.9fr] gap-4 items-start">
 
         {/* ── LEFT COLUMN ───────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
@@ -376,8 +375,7 @@ export default function TicketDetail() {
                         <List.Item.Meta
                           avatar={
                             <Avatar
-                              style={{ background: "var(--acc-2)", color: "var(--bg-0)" }}
-                              className="font-bebas!"
+                              className="font-bebas! bg-[var(--acc-2)] text-[var(--bg-0)]"
                             >
                               {comment.commenter.name.charAt(0).toUpperCase()}
                             </Avatar>
@@ -436,7 +434,7 @@ export default function TicketDetail() {
             </div>
 
             <div className="px-4 pb-4">
-              <Divider className="!mt-0 !mb-3" style={{ borderColor: "var(--line)" }} />
+              <div className="border-t border-[var(--line)] mt-0 mb-3" />
               {/* ⌘/Ctrl+↵ to submit */}
               <div
                 onKeyDown={(e) => {
@@ -469,7 +467,7 @@ export default function TicketDetail() {
         </div>
 
         {/* ── RIGHT COLUMN (sticky) ─────────────────────────────────────── */}
-        <div style={{ position: "sticky", top: 16 }} className="flex flex-col gap-4">
+        <div className="sticky top-4 flex flex-col gap-4">
 
           {/* Details */}
           <Panel title="DETAILS">
@@ -515,7 +513,7 @@ export default function TicketDetail() {
             <Panel title="SLA">
               {/* Big resolution % */}
               <div className="flex items-end gap-2 mb-3">
-                <span className="font-bebas text-5xl leading-none" style={{ color: slaColor }}>
+                <span className={`font-bebas text-5xl leading-none text-[${slaColor}]`}>
                   {clamped}%
                 </span>
                 <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] mb-1">resolution elapsed</span>
@@ -528,8 +526,7 @@ export default function TicketDetail() {
                   ["Response",   !ticket.sla.status.isResponseOverdue],
                   ["Resolution", !ticket.sla.status.isResolutionOverdue],
                 ].map(([label, ok]) => (
-                  <span key={label as string} className="font-mono-tech text-[10px]"
-                    style={{ color: ok ? "var(--acc-3)" : "var(--priority-critical)" }}
+                  <span key={label as string} className={`font-mono-tech text-[10px] text-[${ok ? "var(--acc-3)" : "var(--priority-critical)"}]`}
                   >
                     {ok ? "✓" : "✗"} {label as string}
                   </span>

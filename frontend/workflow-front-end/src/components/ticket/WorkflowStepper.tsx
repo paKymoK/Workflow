@@ -51,25 +51,21 @@ export default function WorkflowStepper({ statuses, currentStatusId, isDone }: P
           return (
             <div key={s.id} className="flex items-start flex-1 min-w-[78px]">
               {/* node + labels */}
-              <div className="flex flex-col items-center gap-2" style={{ width: 78, flexShrink: 0 }}>
+              {/* eslint-disable local/no-inline-styles */}
+              <div className="flex flex-col items-center gap-2 w-[78px] shrink-0">
                 <div
-                  className="flex items-center justify-center flex-shrink-0"
+                  className="flex items-center justify-center flex-shrink-0 w-[26px] h-[26px]"
                   style={{
-                    width: 26,
-                    height: 26,
                     border: `2px solid ${nodeColor}`,
                     background: current ? nodeColor : "transparent",
-                    boxShadow: current
-                      ? `0 0 calc(12px * var(--glow)) ${s.color}`
-                      : "none",
+                    boxShadow: current ? `0 0 calc(12px * var(--glow)) ${s.color}` : "none",
                   }}
                 >
                   {done ? (
-                    <span style={{ color: "var(--acc-3)", fontSize: 13, lineHeight: 1 }}>✓</span>
+                    <span className="text-[var(--acc-3)] text-[13px] leading-none">✓</span>
                   ) : (
                     <span
-                      className="font-bebas"
-                      style={{ fontSize: 13, color: current ? "var(--bg-0)" : nodeColor, lineHeight: 1 }}
+                      className={`font-bebas text-[13px] leading-none text-[${current ? "var(--bg-0)" : nodeColor}]`}
                     >
                       {i + 1}
                     </span>
@@ -79,6 +75,7 @@ export default function WorkflowStepper({ statuses, currentStatusId, isDone }: P
                   className="font-mono-tech text-[10px] tracking-[.04em] text-center whitespace-nowrap"
                   style={{ color: current ? s.color : "var(--fg-dim)" }}
                 >
+              {/* eslint-enable local/no-inline-styles */}
                   {s.name}
                 </span>
                 <span className="font-mono-tech text-[8px] tracking-[.1em] text-[var(--fg-faint)] whitespace-nowrap">
@@ -89,12 +86,7 @@ export default function WorkflowStepper({ statuses, currentStatusId, isDone }: P
               {/* connector — spans the gap, lights up once passed */}
               {i < statuses.length - 1 && (
                 <div
-                  className="flex-1 min-w-[18px]"
-                  style={{
-                    height: 2,
-                    marginTop: 12,
-                    background: i < currentIndex ? "var(--acc-3)" : "var(--line-strong)",
-                  }}
+                  className={`flex-1 min-w-[18px] h-[2px] mt-[12px] bg-[${i < currentIndex ? "var(--acc-3)" : "var(--line-strong)"}]`}
                 />
               )}
             </div>

@@ -18,11 +18,10 @@ export default function SlaBar({ sla }: { sla: TicketSla["sla"] }) {
     <div className="flex flex-col gap-1 min-w-[80px]">
       <div className="h-[5px] bg-[var(--bg-3)] w-full relative overflow-hidden">
         <div
-          className="absolute inset-y-0 left-0"
-          style={{ width: `${clamped}%`, background: color, transition: "width 0.3s" }}
+          className={`absolute inset-y-0 left-0 transition-[width] duration-300 w-[${clamped}%] bg-[${color}]`}
         />
       </div>
-      <span className="font-mono-tech text-[10px] leading-none" style={{ color }}>
+      <span className={`font-mono-tech text-[10px] leading-none text-[${color}]`}>
         {clamped}%{overdue ? " OVERDUE" : ""}
       </span>
     </div>

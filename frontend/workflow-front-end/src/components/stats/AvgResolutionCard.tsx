@@ -78,12 +78,7 @@ function CustomTooltip({ active, payload, isDark }: CustomTooltipProps) {
   const d = payload[0].payload as AvgResolutionByPriority;
   return (
     <div
-      className="rounded px-3 py-2 text-sm"
-      style={{
-        backgroundColor: isDark ? "#041428" : "#E8EAED",
-        border: `1px solid ${isDark ? "rgba(0,207,255,0.35)" : "rgba(0,102,187,0.35)"}`,
-        color: isDark ? "#C8F0FF" : "#0A2540",
-      }}
+      className={`rounded px-3 py-2 text-sm ${isDark ? "bg-[#041428] text-[#C8F0FF] [border:1px_solid_rgba(0,207,255,0.35)]" : "bg-[#E8EAED] text-[#0A2540] [border:1px_solid_rgba(0,102,187,0.35)]"}`}
     >
       <div className="font-semibold mb-1">{d.priorityName}</div>
       <div>
@@ -289,7 +284,7 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
             <BarChart
               data={resolutionData}
               margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
-              style={{ cursor: "pointer" }}
+              className="cursor-pointer"
             >
               <XAxis
                 dataKey="priorityName"
@@ -303,7 +298,7 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
               <Tooltip content={<CustomTooltip isDark={isDark} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
               <Legend
                 formatter={(value) => (
-                  <span style={{ color: isDark ? "rgba(240,240,240,0.7)" : "rgba(0,0,0,0.65)", fontSize: 12 }}>
+                  <span className={`text-[12px] ${isDark ? "text-[rgba(240,240,240,0.7)]" : "text-[rgba(0,0,0,0.65)]"}`}>
                     {value}
                   </span>
                 )}

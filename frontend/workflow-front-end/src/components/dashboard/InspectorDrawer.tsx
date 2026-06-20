@@ -115,10 +115,10 @@ export default function InspectorDrawer({ id, onClose }: Props) {
       styles={{ body: { padding: 0 }, wrapper: { boxShadow: "-8px 0 32px rgba(0,0,0,.5)" } }}
     >
       {/* Corner brackets */}
-      <span className="content-corner content-corner-tl" style={{ position: "absolute", top: 0, left: 0 }} />
-      <span className="content-corner content-corner-tr" style={{ position: "absolute", top: 0, right: 0 }} />
-      <span className="content-corner content-corner-bl" style={{ position: "absolute", bottom: 0, left: 0 }} />
-      <span className="content-corner content-corner-br" style={{ position: "absolute", bottom: 0, right: 0 }} />
+      <span className="content-corner content-corner-tl absolute top-0 left-0" />
+      <span className="content-corner content-corner-tr absolute top-0 right-0" />
+      <span className="content-corner content-corner-bl absolute bottom-0 left-0" />
+      <span className="content-corner content-corner-br absolute bottom-0 right-0" />
 
       {/* Header */}
       <div className="px-5 pt-5 pb-4 border-b border-[var(--line)]">
@@ -162,15 +162,13 @@ export default function InspectorDrawer({ id, onClose }: Props) {
               </p>
               <div className="flex items-end gap-3 mb-2">
                 <span
-                  className="font-bebas text-4xl leading-none"
-                  style={{
-                    color:
-                      (ticket.sla?.status.isResolutionOverdue)
-                        ? "var(--priority-critical)"
-                        : resolutionPct >= 80
-                        ? "var(--acc-amber)"
-                        : "var(--acc-1)",
-                  }}
+                  className={`font-bebas text-4xl leading-none text-[${
+                    ticket.sla?.status.isResolutionOverdue
+                      ? "var(--priority-critical)"
+                      : resolutionPct >= 80
+                      ? "var(--acc-amber)"
+                      : "var(--acc-1)"
+                  }]`}
                 >
                   {Math.min(100, Math.round(resolutionPct))}%
                 </span>
@@ -180,10 +178,10 @@ export default function InspectorDrawer({ id, onClose }: Props) {
               </div>
               <SlaBar sla={ticket.sla} />
               <div className="flex gap-4 mt-2">
-                <span className="font-mono-tech text-[10px]" style={{ color: responseOk ? "var(--acc-3)" : "var(--priority-critical)" }}>
+                <span className={`font-mono-tech text-[10px] text-[${responseOk ? "var(--acc-3)" : "var(--priority-critical)"}]`}>
                   {responseOk ? "✓" : "✗"} Response
                 </span>
-                <span className="font-mono-tech text-[10px]" style={{ color: resolutionOk ? "var(--acc-3)" : "var(--priority-critical)" }}>
+                <span className={`font-mono-tech text-[10px] text-[${resolutionOk ? "var(--acc-3)" : "var(--priority-critical)"}]`}>
                   {resolutionOk ? "✓" : "✗"} Resolution
                 </span>
               </div>

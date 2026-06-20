@@ -350,8 +350,7 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
                 onClick={handleLegendClick}
                 formatter={(value) => (
                   <span
-                    className="cursor-pointer"
-                    style={{ opacity: selectedApp === null || selectedApp === value ? 1 : 0.4 }}
+                    className={`cursor-pointer ${selectedApp === null || selectedApp === value ? "opacity-100" : "opacity-40"}`}
                   >
                     {value}
                   </span>

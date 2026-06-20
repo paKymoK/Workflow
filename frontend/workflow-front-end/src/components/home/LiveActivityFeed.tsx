@@ -49,8 +49,7 @@ export default function LiveActivityFeed() {
         <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">LIVE ACTIVITY</span>
         <span className="flex items-center gap-1.5">
           <span
-            className="w-1.5 h-1.5 rounded-full bg-[var(--acc-3)]"
-            style={{ boxShadow: "0 0 6px var(--acc-3)", animation: "blink 2s infinite" }}
+            className="w-1.5 h-1.5 rounded-full bg-[var(--acc-3)] [box-shadow:0_0_6px_var(--acc-3)] [animation:blink_2s_infinite]"
           />
           <span className="font-mono-tech text-[9px] text-[var(--acc-3)]">LIVE</span>
         </span>
@@ -66,8 +65,7 @@ export default function LiveActivityFeed() {
             <button
               key={evt.id}
               onClick={() => navigate(`/dashboard/${evt.ticketId}`)}
-              className="w-full flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)] hover:bg-[var(--bg-2)] text-left cursor-crosshair transition-colors fade-up"
-              style={{ animationDelay: `${i * 0.02}s` }}
+              className={`w-full flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)] hover:bg-[var(--bg-2)] text-left cursor-crosshair transition-colors fade-up [animation-delay:${i * 0.02}s]`}
             >
               <div className="flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-[var(--acc-1)] flex-shrink-0" />

@@ -24,16 +24,13 @@ import SlaBar from "../components/dashboard/SlaBar";
 import PriorityBars from "../components/dashboard/PriorityBars";
 import InspectorDrawer from "../components/dashboard/InspectorDrawer";
 import KanbanBoard from "../components/dashboard/KanbanBoard";
-import SlaOverviewCard from "../components/stats/SlaOverviewCard";
-import TicketDistributionCard from "../components/stats/TicketDistributionCard";
 import KpiStrip from "../components/home/KpiStrip";
 
-type Layout = "console" | "board" | "stream";
+type Layout = "console" | "board";
 
 const LAYOUT_LABEL: Record<Layout, string> = {
   console: "// TICKET QUEUE",
   board:   "// MY BOARD",
-  stream:  "// STREAM VIEW",
 };
 
 export default function Dashboard() {
@@ -86,8 +83,9 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!userQuery.trim()) { setUserOptions([]); return; }
+    const delay = userQuery.trim() ? 400 : 0;
     const id = setTimeout(async () => {
+      if (!userQuery.trim()) { setUserOptions([]); return; }
       setIsSearchingUsers(true);
       try {
         const users = await fetchUsers(userQuery);
@@ -95,7 +93,7 @@ export default function Dashboard() {
       } finally {
         setIsSearchingUsers(false);
       }
-    }, 400);
+    }, delay);
     return () => clearTimeout(id);
   }, [userQuery]);
 
@@ -249,8 +247,7 @@ export default function Dashboard() {
         <span className="flex items-center gap-1.5">
           {record.sla?.isPaused && (
             <PauseCircleOutlined
-              className="flex-shrink-0 text-[10px]"
-              style={{ color: "var(--acc-amber)" }}
+              className="flex-shrink-0 text-[10px] text-[var(--acc-amber)]"
             />
           )}
           <span className="truncate">{text}</span>
@@ -468,8 +465,7 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <h2
-            className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0"
-            style={{ textShadow: "0 0 calc(16px * var(--glow)) color-mix(in oklab, var(--acc-1) 60%, transparent)" }}
+            className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0 [text-shadow:0_0_calc(16px_*_var(--glow))_color-mix(in_oklab,var(--acc-1)_60%,transparent)]"
           >▸ TICKET QUEUE</h2>
           <span className="font-mono-tech text-xs text-[var(--fg-faint)] tracking-widest hidden sm:block">
             {LAYOUT_LABEL[layout]}
@@ -479,7 +475,6 @@ export default function Dashboard() {
           options={[
             { label: "Console", value: "console" },
             { label: "Board",   value: "board" },
-            { label: "Stream",  value: "stream" },
           ]}
           value={layout}
           onChange={setLayout}
@@ -497,34 +492,9 @@ export default function Dashboard() {
           <div className="mb-4">
             <KpiStrip />
           </div>
-          <div
-            className="grid gap-4 mb-4 min-w-0"
-            style={{ gridTemplateColumns: "1.1fr 1fr" }}
-          >
-            <div className="min-w-0 overflow-hidden">
-              <TicketDistributionCard />
-            </div>
-            <div className="min-w-0 overflow-hidden">
-              <SlaOverviewCard />
-            </div>
-          </div>
           {filterBar}
           {ticketTable}
         </>
-      )}
-
-      {/* Stream view — table + insight rail */}
-      {layout === "stream" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.7fr 0.9fr", gap: 14, alignItems: "start" }}>
-          <div>
-            {filterBar}
-            {ticketTable}
-          </div>
-          <div className="flex flex-col gap-4">
-            <SlaOverviewCard />
-            <TicketDistributionCard />
-          </div>
-        </div>
       )}
 
       {/* Inspector drawer */}

@@ -25,15 +25,15 @@ function SlaGauge({ label, inTime, inProgress, missed, total }: GaugeProps) {
         <span className="font-mono-tech text-[10px] tracking-widest text-[var(--fg-dim)]">
           {label}
         </span>
-        <span className="font-bebas text-xl leading-none" style={{ color: pctColor }}>
+        <span className={`font-bebas text-xl leading-none text-[${pctColor}]`}>
           {pct}%
         </span>
       </div>
       <div className="flex h-[6px] overflow-hidden">
-        <div style={{ width: `${safe}%`,   background: "var(--acc-3)",           transition: "width .4s ease" }} />
-        <div style={{ width: `${active}%`, background: "var(--acc-1)",           transition: "width .4s ease" }} />
-        <div style={{ width: `${bad}%`,    background: "var(--priority-critical)", transition: "width .4s ease" }} />
-        <div style={{ flex: 1,             background: "var(--bg-3)" }} />
+        <div className={`w-[${safe}%] bg-[var(--acc-3)] transition-[width] duration-[400ms] ease-linear`} />
+        <div className={`w-[${active}%] bg-[var(--acc-1)] transition-[width] duration-[400ms] ease-linear`} />
+        <div className={`w-[${bad}%] bg-[var(--priority-critical)] transition-[width] duration-[400ms] ease-linear`} />
+        <div className="flex-1 bg-[var(--bg-3)]" />
       </div>
       <div className="flex gap-3 mt-1.5">
         <span className="font-mono-tech text-[9px] text-[var(--acc-3)]">■ {inTime} IN-TIME</span>

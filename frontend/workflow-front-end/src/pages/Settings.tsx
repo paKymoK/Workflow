@@ -24,6 +24,20 @@ const SCHEMES: { key: AccentScheme; label: string; color: string }[] = [
   { key: "magenta",  label: "MAGENTA",  color: "#FF3D9A" },
 ];
 
+const SCHEME_ACTIVE_CLASSES: Record<string, string> = {
+  ice:      "border-[#00CFFF] text-[#00CFFF] bg-[color-mix(in_oklab,#00CFFF_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#00CFFF_30%,transparent)]",
+  amber:    "border-[#FF9E3D] text-[#FF9E3D] bg-[color-mix(in_oklab,#FF9E3D_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#FF9E3D_30%,transparent)]",
+  phosphor: "border-[#3DF58A] text-[#3DF58A] bg-[color-mix(in_oklab,#3DF58A_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#3DF58A_30%,transparent)]",
+  magenta:  "border-[#FF3D9A] text-[#FF3D9A] bg-[color-mix(in_oklab,#FF3D9A_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#FF3D9A_30%,transparent)]",
+};
+
+const SCHEME_SWATCH_CLASSES: Record<string, string> = {
+  ice:      "bg-[#00CFFF]",
+  amber:    "bg-[#FF9E3D]",
+  phosphor: "bg-[#3DF58A]",
+  magenta:  "bg-[#FF3D9A]",
+};
+
 const TABS_KEYS = ["workflow", "status", "priority", "project", "issue-type"] as const;
 type TabKey = typeof TABS_KEYS[number];
 
@@ -73,19 +87,9 @@ export default function Settings() {
                 key={s.key}
                 title={s.label}
                 onClick={() => setAccentScheme(s.key)}
-                className="flex items-center gap-1.5 px-3 py-1.5 border font-mono-tech text-[10px] tracking-wider transition-all cursor-crosshair"
-                style={{
-                  borderColor: active ? s.color : "var(--line)",
-                  color:       active ? s.color : "var(--fg-faint)",
-                  background:  active
-                    ? `color-mix(in oklab, ${s.color} 10%, transparent)`
-                    : "transparent",
-                  boxShadow: active
-                    ? `0 0 12px color-mix(in oklab, ${s.color} 30%, transparent)`
-                    : "none",
-                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 border font-mono-tech text-[10px] tracking-wider transition-all cursor-crosshair ${active ? SCHEME_ACTIVE_CLASSES[s.key] : "border-[var(--line)] text-[var(--fg-faint)] bg-transparent"}`}
               >
-                <span style={{ width: 8, height: 8, background: s.color, display: "inline-block", flexShrink: 0 }} />
+                <span className={`w-2 h-2 inline-block shrink-0 ${SCHEME_SWATCH_CLASSES[s.key]}`} />
                 {s.label}
               </button>
             );
@@ -94,7 +98,7 @@ export default function Settings() {
       </div>
 
       {/* Config card grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+      <div className="grid grid-cols-3 gap-3">
         {CARDS.map((card) => {
           const isTab = (TABS_KEYS as readonly string[]).includes(card.key);
           return (
