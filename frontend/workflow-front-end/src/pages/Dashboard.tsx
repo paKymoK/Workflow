@@ -1,8 +1,11 @@
 import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useUrlState } from "@state";
-import { Spin, Table, Tag, Button, Dropdown, message, Input, Select, Segmented } from "antd";
-import { DownloadOutlined, UserOutlined, PauseCircleOutlined } from "@ant-design/icons";
+import { Spin, Table, Button, Dropdown, message, Input, Select, Segmented } from "antd";
+import { DownloadOutlined, UserOutlined } from "@ant-design/icons";
+import { Icon } from "../components/ui/Icon";
+import { StatusChip } from "../components/ui/StatusChip";
+import { SquareAvatar } from "../components/ui/SquareAvatar";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
@@ -244,25 +247,18 @@ export default function Dashboard() {
       ellipsis: true,
       width: 220,
       render: (text: string, record) => (
-        <span className="flex items-center gap-1.5">
-          {record.sla?.isPaused && (
-            <PauseCircleOutlined
-              className="flex-shrink-0 text-[10px] text-[var(--acc-amber)]"
-            />
-          )}
+        <div className="flex items-center gap-1.5">
+          {record.sla?.isPaused && <Icon name="pause" size={11} className="shrink-0 text-[var(--acc-amber)]" />}
           <span className="truncate">{text}</span>
-        </span>
+        </div>
       ),
     },
     {
       title: "Status",
       dataIndex: ["status", "name"],
       width: 120,
-      render: (name: string, record) => (
-        <Tag color={record.status?.color} className="font-bebas! tracking-wider! text-xs!">
-          {name}
-        </Tag>
-      ),
+      render: (_name: string, record) =>
+        record.status ? <StatusChip color={record.status.color} name={record.status.name} small /> : "-",
     },
     {
       title: "Resolution",
@@ -287,11 +283,10 @@ export default function Dashboard() {
       title: "Assignee",
       dataIndex: "assignee",
       width: 130,
-      render: (assignee: TicketSla["assignee"]) => (
-        <span className="font-mono-tech text-[11px] text-[var(--fg-dim)]">
-          {assignee?.name ?? "UNASSIGNED"}
-        </span>
-      ),
+      render: (assignee: TicketSla["assignee"]) =>
+        assignee?.name
+          ? <div className="flex items-center gap-2"><SquareAvatar name={assignee.name} size={22} /><span>{assignee.name}</span></div>
+          : <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">UNASSIGNED</span>,
     },
     {
       title: "Age",

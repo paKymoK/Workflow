@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
-import { Card, Table, Button, Tag, Checkbox, Popover, Progress, Spin } from "antd";
+import { Card, Table, Button, Checkbox, Popover, Progress, Spin } from "antd";
 import { ArrowLeftOutlined, SettingOutlined } from "@ant-design/icons";
+import { Icon } from "../ui/Icon";
+import { StatusChip } from "../ui/StatusChip";
+import { SquareAvatar } from "../ui/SquareAvatar";
 import { DatePicker } from "antd";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend, ResponsiveContainer,
@@ -167,13 +170,19 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
       sorter: true, sortOrder: sortOrderFor("id"),
     },
     summary: {
-      title: "Summary", dataIndex: "summary", key: "summary", ellipsis: true, width: 200,
+      title: "Summary", key: "summary", ellipsis: true, width: 200,
       sorter: true, sortOrder: sortOrderFor("summary"),
+      render: (_, r) => (
+        <div className="flex items-center gap-1.5">
+          {r.sla?.isPaused && <Icon name="pause" size={11} className="shrink-0 text-[var(--acc-amber)]" />}
+          {r.summary}
+        </div>
+      ),
     },
     status: {
-      title: "Status", key: "status", width: 120,
+      title: "Status", key: "status", width: 130,
       sorter: true, sortOrder: sortOrderFor("status"),
-      render: (_, r) => <Tag color={r.status?.color}>{r.status?.name}</Tag>,
+      render: (_, r) => r.status ? <StatusChip color={r.status.color} name={r.status.name} small /> : "-",
     },
     issueType: {
       title: "Issue Type", key: "issueType", width: 130,
@@ -186,9 +195,11 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
       render: (_, r) => r.priority?.name ?? "-",
     },
     assignee: {
-      title: "Assignee", key: "assignee", width: 130,
+      title: "Assignee", key: "assignee", width: 160,
       sorter: true, sortOrder: sortOrderFor("assignee"),
-      render: (_, r) => r.assignee?.name ?? "-",
+      render: (_, r) => r.assignee?.name
+        ? <div className="flex items-center gap-2"><SquareAvatar name={r.assignee.name} size={22} /><span>{r.assignee.name}</span></div>
+        : "-",
     },
     slaPercent: {
       title: "SLA %", key: "slaPercent", width: 150,
@@ -241,8 +252,13 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
   );
 
   const cardTitle = selectedPriority !== null
-    ? <span>Avg Resolve Time — <span className="text-[#00F5FF]">{selectedPriority.priorityName}</span></span>
-    : "Average Ticket Resolve Time";
+    ? <span>Avg Resolve Time — <span className="text-[var(--acc-1)]">{selectedPriority.priorityName}</span></span>
+    : (
+      <span className="flex items-center gap-2">
+        <Icon name="clock" size={14} className="text-[var(--acc-1)] opacity-80" />
+        Average Ticket Resolve Time
+      </span>
+    );
 
   const cardExtra = (
     <div className="flex items-center gap-2">

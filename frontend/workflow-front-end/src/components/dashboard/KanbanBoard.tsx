@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { App, Spin, Tag } from "antd";
+import { App, Spin } from "antd";
+import { StatusChip } from "../ui/StatusChip";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@takypok/shared";
 import { useTicketList, useTransitionTicket, ticketKeys } from "../../hooks/useTickets";
@@ -204,12 +205,7 @@ function KanbanCard({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono-tech text-[11px] text-[var(--acc-1)]">{code}</span>
-        <Tag
-          color={ticket.status.color}
-          className="font-bebas! tracking-wider! text-[9px]! m-0! leading-none! px-1.5! py-0.5!"
-        >
-          {ticket.status.name}
-        </Tag>
+        <StatusChip color={ticket.status.color} name={ticket.status.name} small />
       </div>
       <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0 line-clamp-2 leading-snug">
         {ticket.summary}

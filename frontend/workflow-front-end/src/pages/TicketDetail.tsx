@@ -25,6 +25,7 @@ import SlaBar from "../components/dashboard/SlaBar.tsx";
 import PriorityBars from "../components/dashboard/PriorityBars.tsx";
 import WorkflowStepper from "../components/ticket/WorkflowStepper";
 import Panel from "../components/ui/Panel";
+import { StatusChip } from "../components/ui/StatusChip";
 
 const GLOW_CLASS = "[text-shadow:0_0_calc(16px_*_var(--glow))_color-mix(in_oklab,var(--acc-1)_60%,transparent)]";
 
@@ -300,9 +301,7 @@ export default function TicketDetail() {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {(refreshing || actionLoading) && <Spin size="small" />}
-          <Tag color={ticket.status.color} className="font-bebas! tracking-wider! text-xs!">
-            {ticket.status.name}
-          </Tag>
+          <StatusChip color={ticket.status.color} name={ticket.status.name} />
           {ticket.sla && (
             isPaused
               ? <Tag icon={<PauseCircleOutlined />} color="warning" className="font-bebas! tracking-wider!">PAUSED</Tag>

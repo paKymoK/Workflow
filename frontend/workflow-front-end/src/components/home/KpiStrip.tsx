@@ -17,10 +17,11 @@ interface KpiCardProps {
 
 function KpiCard({ eyebrow, value, accent, sparkData, sub }: KpiCardProps) {
   return (
-    <div
-      className="relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden"
-      style={dynamicStyle({ borderTop: `3px solid ${accent}` })}
-    >
+    <div className="relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden">
+      <div
+        className="absolute top-0 left-0 w-[3px] h-[26px]"
+        style={dynamicStyle({ background: accent })}
+      />
       <div>
         <p className="font-mono-tech text-[9px] tracking-[.25em] text-[var(--fg-faint)] m-0 mb-1">{eyebrow}</p>
         <p className="font-bebas text-4xl leading-none m-0" style={dynamicStyle({ color: accent })}>

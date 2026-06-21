@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { dynamicStyle } from "../../utils/dynamicStyle";
 import { Drawer, Tag, Button, Skeleton, App, Dropdown } from "antd";
+import { StatusChip } from "../ui/StatusChip";
 import {
   ArrowRightOutlined,
   PauseCircleOutlined,
@@ -134,9 +135,7 @@ export default function InspectorDrawer({ id, onClose }: Props) {
               >
                 {ticketCode}
               </button>
-              <Tag color={ticket.status.color} className="font-bebas! tracking-wider! text-xs!">
-                {ticket.status.name}
-              </Tag>
+              <StatusChip color={ticket.status.color} name={ticket.status.name} />
               {isPaused && (
                 <Tag color="var(--acc-amber)" className="font-bebas! tracking-wider! text-xs!">
                   PAUSED

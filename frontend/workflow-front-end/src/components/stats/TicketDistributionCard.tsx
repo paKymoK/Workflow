@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
-import { Card, Table, Checkbox, Button, Popover, Progress, Tag, Spin } from "antd";
+import { Card, Tabs, Table, Checkbox, Button, Popover, Progress, Tag, Spin } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
+import { Icon } from "../ui/Icon";
+import { StatusChip } from "../ui/StatusChip";
+import { SquareAvatar } from "../ui/SquareAvatar";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import type { ColumnsType } from "antd/es/table";
 import type { TicketSla } from "../../api/types.ts";
@@ -168,13 +171,19 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
       sorter: true, sortOrder: sortOrderFor("id"),
     },
     summary: {
-      title: "Summary", dataIndex: "summary", key: "summary", ellipsis: true, width: 200,
+      title: "Summary", key: "summary", ellipsis: true, width: 200,
       sorter: true, sortOrder: sortOrderFor("summary"),
+      render: (_, r) => (
+        <div className="flex items-center gap-1.5">
+          {r.sla?.isPaused && <Icon name="pause" size={11} className="shrink-0 text-[var(--acc-amber)]" />}
+          {r.summary}
+        </div>
+      ),
     },
     status: {
-      title: "Status", key: "status", width: 120,
+      title: "Status", key: "status", width: 130,
       sorter: true, sortOrder: sortOrderFor("status"),
-      render: (_, r) => <Tag color={r.status?.color}>{r.status?.name}</Tag>,
+      render: (_, r) => r.status ? <StatusChip color={r.status.color} name={r.status.name} small /> : "-",
     },
     issueType: {
       title: "Issue Type", key: "issueType", width: 130,
@@ -192,9 +201,11 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
       render: (_, r) => r.priority?.name ?? "-",
     },
     assignee: {
-      title: "Assignee", key: "assignee", width: 130,
+      title: "Assignee", key: "assignee", width: 160,
       sorter: true, sortOrder: sortOrderFor("assignee"),
-      render: (_, r) => r.assignee?.name ?? "-",
+      render: (_, r) => r.assignee?.name
+        ? <div className="flex items-center gap-2"><SquareAvatar name={r.assignee.name} size={22} /><span>{r.assignee.name}</span></div>
+        : "-",
     },
     slaPercent: {
       title: "SLA %", key: "slaPercent", width: 150,
@@ -246,14 +257,21 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
     </Popover>
   );
 
+  const cardTitle = (
+    <span className="flex items-center gap-2">
+      <Icon name="grid" size={14} className="text-[var(--acc-2)] opacity-80" />
+      Ticket Distribution
+    </span>
+  );
+
   return (
-    <Card
-      tabList={TAB_ITEMS}
-      activeTabKey={activeTab}
-      onTabChange={handleTabChange}
-      extra={colTogglePopover}
-      className="min-w-0"
-    >
+    <Card className="min-w-0" styles={{ body: { paddingTop: 0 } }} title={cardTitle}>
+      <Tabs
+        activeKey={activeTab}
+        onChange={handleTabChange}
+        tabBarExtraContent={colTogglePopover}
+        items={TAB_ITEMS.map((t) => ({ key: t.key, label: t.tab }))}
+      />
       <div className="flex gap-4 min-h-[420px]">
 
         {/* Left — donut chart */}

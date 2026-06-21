@@ -2,12 +2,12 @@ import { usePriorities } from "../../hooks/useTickets";
 import type { Priority } from "../../api/types";
 import { dynamicStyle } from "../../utils/dynamicStyle";
 
-const RANK_COLORS = [
-  "var(--priority-low)",
-  "var(--priority-medium)",
-  "var(--priority-high)",
-  "var(--priority-critical)",
-];
+const PRI_COLORS: Record<string, string> = {
+  Critical: "var(--acc-hot)",
+  High:     "var(--acc-amber)",
+  Medium:   "var(--acc-warn)",
+  Low:      "var(--acc-3)",
+};
 
 export default function PriorityBars({ priority }: { priority: Priority | undefined }) {
   const { data: priorities = [] } = usePriorities();
@@ -18,16 +18,16 @@ export default function PriorityBars({ priority }: { priority: Priority | undefi
   const idx = sorted.findIndex((p) => p.id === priority.id);
   // shortest responseTime = highest urgency = rank 4
   const rank = idx === -1 ? 1 : Math.min(4, Math.max(1, sorted.length - idx));
-  const color = RANK_COLORS[rank - 1];
+  const color = PRI_COLORS[priority.name] ?? "var(--acc-1)";
 
   return (
     <div className="flex items-end gap-[3px]" title={priority.name}>
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="w-[4px] shrink-0"
+          className="w-[3px] shrink-0"
           style={dynamicStyle({
-            height: 4 + i * 3,
+            height: 4 + i * 2.2,
             background: i <= rank ? color : "var(--bg-3)",
           })}
         />

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { dynamicStyle } from "../../utils/dynamicStyle";
 import { useSlaOverview } from "../../hooks/useStatistics";
+import { Icon } from "../ui/Icon";
 import dayjs from "dayjs";
 
 interface GaugeProps {
@@ -12,13 +13,12 @@ interface GaugeProps {
 }
 
 function SlaGauge({ label, inTime, inProgress, missed, total }: GaugeProps) {
-  const safe   = total > 0 ? (inTime / total) * 100 : 0;
-  const active = total > 0 ? (inProgress / total) * 100 : 0;
-  const bad    = total > 0 ? (missed / total) * 100 : 0;
-  const pct    = total > 0 ? Math.round((inTime / total) * 100) : 0;
-
-  const pctColor =
-    pct >= 80 ? "var(--acc-3)" : pct >= 60 ? "var(--acc-warn)" : "var(--priority-critical)";
+  const pct = total > 0 ? Math.round((inTime / total) * 100) : 0;
+  const segs = [
+    { v: inTime,     c: "var(--acc-3)"   },
+    { v: inProgress, c: "var(--acc-1)"   },
+    { v: missed,     c: "var(--acc-hot)" },
+  ] as const;
 
   return (
     <div className="mb-4 last:mb-0">
@@ -26,20 +26,28 @@ function SlaGauge({ label, inTime, inProgress, missed, total }: GaugeProps) {
         <span className="font-mono-tech text-[10px] tracking-widest text-[var(--fg-dim)]">
           {label}
         </span>
-        <span className="font-bebas text-xl leading-none" style={dynamicStyle({ color: pctColor })}>
+        <span className="font-bebas text-xl leading-none text-[var(--acc-3)]">
           {pct}%
         </span>
       </div>
-      <div className="flex h-[6px] overflow-hidden">
-        <div className="bg-[var(--acc-3)] transition-[width] duration-[400ms] ease-linear" style={dynamicStyle({ width: `${safe}%` })} />
-        <div className="bg-[var(--acc-1)] transition-[width] duration-[400ms] ease-linear" style={dynamicStyle({ width: `${active}%` })} />
-        <div className="bg-[var(--priority-critical)] transition-[width] duration-[400ms] ease-linear" style={dynamicStyle({ width: `${bad}%` })} />
-        <div className="flex-1 bg-[var(--bg-3)]" />
+      <div className="flex h-[9px] gap-[2px] bg-[var(--bg-3)]">
+        {segs.map((s, i) =>
+          s.v > 0 ? (
+            <div
+              key={i}
+              style={dynamicStyle({
+                flex: s.v,
+                background: s.c,
+                boxShadow: `0 0 calc(7px * var(--glow)) ${s.c}`,
+              })}
+            />
+          ) : null,
+        )}
       </div>
       <div className="flex gap-3 mt-1.5">
         <span className="font-mono-tech text-[9px] text-[var(--acc-3)]">■ {inTime} IN-TIME</span>
         <span className="font-mono-tech text-[9px] text-[var(--acc-1)]">■ {inProgress} ACTIVE</span>
-        <span className="font-mono-tech text-[9px] text-[var(--priority-critical)]">■ {missed} MISSED</span>
+        <span className="font-mono-tech text-[9px] text-[var(--acc-hot)]">■ {missed} MISSED</span>
       </div>
     </div>
   );
@@ -58,7 +66,10 @@ export default function SlaComplianceCard({ refetchKey = 0 }: Props) {
   return (
     <div className="h-full border border-[var(--line)] bg-[var(--bg-1)] p-4 flex flex-col">
       <div className="flex items-baseline justify-between mb-4">
-        <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">SLA COMPLIANCE</span>
+        <span className="flex items-center gap-2 font-bebas text-sm tracking-[.15em] text-[var(--fg)]">
+          <Icon name="bolt" size={13} className="text-[var(--acc-3)] opacity-80" />
+          SLA COMPLIANCE
+        </span>
         <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">LAST 7 DAYS</span>
       </div>
 

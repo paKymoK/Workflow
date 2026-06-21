@@ -44,15 +44,15 @@ export default function Home() {
         <ApplicationHealthCard refetchKey={refetchKey} />
       </div>
 
-      {/* Row 2 — TicketDistribution (chart+table, needs ~60%) | SlaCompliance panel */}
-      <div className="grid [grid-template-columns:1.6fr_1fr] gap-[14px] items-start">
-        <div className="min-w-0 overflow-hidden">
-          <TicketDistributionCard refetchKey={refetchKey} />
-        </div>
-        <SlaComplianceCard refetchKey={refetchKey} />
+      {/* Row 2 — SLA compliance, full width */}
+      <SlaComplianceCard refetchKey={refetchKey} />
+
+      {/* Row 3 — ticket distribution, full width */}
+      <div className="min-w-0 overflow-hidden">
+        <TicketDistributionCard refetchKey={refetchKey} />
       </div>
 
-      {/* Row 3 — AvgResolution (chart+table, needs ~60%) | LiveActivity feed */}
+      {/* Row 4 — avg resolution chart + live activity feed */}
       <div className="grid [grid-template-columns:1.6fr_1fr] gap-[14px] items-start">
         <div className="min-w-0 overflow-hidden">
           <AvgResolutionCard refetchKey={refetchKey} />
