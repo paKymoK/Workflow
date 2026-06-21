@@ -57,6 +57,8 @@ public class PostgresConfig {
     converters.add(new SlaReader(mapper));
     converters.add(new ApprovalRecordReader(mapper));
     converters.add(new ApprovalRecordWriter(mapper));
+    converters.add(new LinkedTicketReader(mapper));
+    converters.add(new LinkedTicketWriter(mapper));
     return R2dbcCustomConversions.of(PostgresDialect.INSTANCE, converters);
   }
 }
