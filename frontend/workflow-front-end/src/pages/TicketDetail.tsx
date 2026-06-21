@@ -19,6 +19,7 @@ import { useAuth } from "@takypok/shared";
 import { fetchUsers, type UserSummary } from "../api/ticketApi";
 import { type PendingReason, PENDING_REASON_LABELS } from "../api/types";
 import CommentContent from "../components/CommentContent.tsx";
+import { dynamicStyle } from "../utils/dynamicStyle";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
 import SlaBar from "../components/dashboard/SlaBar.tsx";
 import PriorityBars from "../components/dashboard/PriorityBars.tsx";
@@ -513,7 +514,7 @@ export default function TicketDetail() {
             <Panel title="SLA">
               {/* Big resolution % */}
               <div className="flex items-end gap-2 mb-3">
-                <span className={`font-bebas text-5xl leading-none text-[${slaColor}]`}>
+                <span className="font-bebas text-5xl leading-none" style={dynamicStyle({ color: slaColor })}>
                   {clamped}%
                 </span>
                 <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] mb-1">resolution elapsed</span>
@@ -526,8 +527,8 @@ export default function TicketDetail() {
                   ["Response",   !ticket.sla.status.isResponseOverdue],
                   ["Resolution", !ticket.sla.status.isResolutionOverdue],
                 ].map(([label, ok]) => (
-                  <span key={label as string} className={`font-mono-tech text-[10px] text-[${ok ? "var(--acc-3)" : "var(--priority-critical)"}]`}
-                  >
+                  <span key={label as string} className="font-mono-tech text-[10px]"
+                    style={dynamicStyle({ color: ok ? "var(--acc-3)" : "var(--priority-critical)" })}>
                     {ok ? "✓" : "✗"} {label as string}
                   </span>
                 ))}

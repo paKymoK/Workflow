@@ -17,12 +17,19 @@ const localPlugin = {
       create(context) {
         return {
           JSXAttribute(node) {
-            if (node.name.type === 'JSXIdentifier' && node.name.name === 'style') {
-              context.report({
-                node,
-                message: 'Inline styles are not allowed. Use Tailwind classes instead.',
-              })
-            }
+            if (node.name.type !== 'JSXIdentifier' || node.name.name !== 'style') return
+            // Allow style={dynamicStyle(...)} — runtime values Tailwind cannot generate as classes.
+            const val = node.value
+            if (
+              val?.type === 'JSXExpressionContainer' &&
+              val.expression.type === 'CallExpression' &&
+              val.expression.callee.type === 'Identifier' &&
+              val.expression.callee.name === 'dynamicStyle'
+            ) return
+            context.report({
+              node,
+              message: 'Inline styles are not allowed. Use Tailwind classes instead. For runtime-computed values use dynamicStyle() from utils/dynamicStyle.',
+            })
           },
         }
       },

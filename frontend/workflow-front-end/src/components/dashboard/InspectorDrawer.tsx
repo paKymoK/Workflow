@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { dynamicStyle } from "../../utils/dynamicStyle";
 import { Drawer, Tag, Button, Skeleton, App, Dropdown } from "antd";
 import {
   ArrowRightOutlined,
@@ -162,13 +163,14 @@ export default function InspectorDrawer({ id, onClose }: Props) {
               </p>
               <div className="flex items-end gap-3 mb-2">
                 <span
-                  className={`font-bebas text-4xl leading-none text-[${
-                    ticket.sla?.status.isResolutionOverdue
+                  className="font-bebas text-4xl leading-none"
+                  style={dynamicStyle({
+                    color: ticket.sla?.status.isResolutionOverdue
                       ? "var(--priority-critical)"
                       : resolutionPct >= 80
                       ? "var(--acc-amber)"
-                      : "var(--acc-1)"
-                  }]`}
+                      : "var(--acc-1)",
+                  })}
                 >
                   {Math.min(100, Math.round(resolutionPct))}%
                 </span>
@@ -178,10 +180,12 @@ export default function InspectorDrawer({ id, onClose }: Props) {
               </div>
               <SlaBar sla={ticket.sla} />
               <div className="flex gap-4 mt-2">
-                <span className={`font-mono-tech text-[10px] text-[${responseOk ? "var(--acc-3)" : "var(--priority-critical)"}]`}>
+                <span className="font-mono-tech text-[10px]"
+                  style={dynamicStyle({ color: responseOk ? "var(--acc-3)" : "var(--priority-critical)" })}>
                   {responseOk ? "✓" : "✗"} Response
                 </span>
-                <span className={`font-mono-tech text-[10px] text-[${resolutionOk ? "var(--acc-3)" : "var(--priority-critical)"}]`}>
+                <span className="font-mono-tech text-[10px]"
+                  style={dynamicStyle({ color: resolutionOk ? "var(--acc-3)" : "var(--priority-critical)" })}>
                   {resolutionOk ? "✓" : "✗"} Resolution
                 </span>
               </div>

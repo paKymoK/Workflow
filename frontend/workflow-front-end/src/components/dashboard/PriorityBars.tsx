@@ -1,5 +1,6 @@
 import { usePriorities } from "../../hooks/useTickets";
 import type { Priority } from "../../api/types";
+import { dynamicStyle } from "../../utils/dynamicStyle";
 
 const RANK_COLORS = [
   "var(--priority-low)",
@@ -24,10 +25,14 @@ export default function PriorityBars({ priority }: { priority: Priority | undefi
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className={`w-[4px] shrink-0 h-[${4 + i * 3}px] bg-[${i <= rank ? color : 'var(--bg-3)'}]`}
+          className="w-[4px] shrink-0"
+          style={dynamicStyle({
+            height: 4 + i * 3,
+            background: i <= rank ? color : "var(--bg-3)",
+          })}
         />
       ))}
-      <span className={`font-mono-tech text-[10px] ml-1.5 text-[${color}]`}>
+      <span className="font-mono-tech text-[10px] ml-1.5" style={dynamicStyle({ color })}>
         {priority.name.toUpperCase()}
       </span>
     </div>

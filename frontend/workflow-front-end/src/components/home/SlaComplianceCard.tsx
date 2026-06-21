@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { dynamicStyle } from "../../utils/dynamicStyle";
 import { useSlaOverview } from "../../hooks/useStatistics";
 import dayjs from "dayjs";
 
@@ -25,14 +26,14 @@ function SlaGauge({ label, inTime, inProgress, missed, total }: GaugeProps) {
         <span className="font-mono-tech text-[10px] tracking-widest text-[var(--fg-dim)]">
           {label}
         </span>
-        <span className={`font-bebas text-xl leading-none text-[${pctColor}]`}>
+        <span className="font-bebas text-xl leading-none" style={dynamicStyle({ color: pctColor })}>
           {pct}%
         </span>
       </div>
       <div className="flex h-[6px] overflow-hidden">
-        <div className={`w-[${safe}%] bg-[var(--acc-3)] transition-[width] duration-[400ms] ease-linear`} />
-        <div className={`w-[${active}%] bg-[var(--acc-1)] transition-[width] duration-[400ms] ease-linear`} />
-        <div className={`w-[${bad}%] bg-[var(--priority-critical)] transition-[width] duration-[400ms] ease-linear`} />
+        <div className="bg-[var(--acc-3)] transition-[width] duration-[400ms] ease-linear" style={dynamicStyle({ width: `${safe}%` })} />
+        <div className="bg-[var(--acc-1)] transition-[width] duration-[400ms] ease-linear" style={dynamicStyle({ width: `${active}%` })} />
+        <div className="bg-[var(--priority-critical)] transition-[width] duration-[400ms] ease-linear" style={dynamicStyle({ width: `${bad}%` })} />
         <div className="flex-1 bg-[var(--bg-3)]" />
       </div>
       <div className="flex gap-3 mt-1.5">

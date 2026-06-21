@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { dynamicStyle } from "../../utils/dynamicStyle";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import dayjs from "dayjs";
@@ -17,11 +18,12 @@ interface KpiCardProps {
 function KpiCard({ eyebrow, value, accent, sparkData, sub }: KpiCardProps) {
   return (
     <div
-      className={`relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden [border-top:3px_solid_${accent}]`}
+      className="relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden"
+      style={dynamicStyle({ borderTop: `3px solid ${accent}` })}
     >
       <div>
         <p className="font-mono-tech text-[9px] tracking-[.25em] text-[var(--fg-faint)] m-0 mb-1">{eyebrow}</p>
-        <p className={`font-bebas text-4xl leading-none m-0 text-[${accent}]`}>
+        <p className="font-bebas text-4xl leading-none m-0" style={dynamicStyle({ color: accent })}>
           {value}
         </p>
         {sub && (
@@ -100,24 +102,9 @@ export default function KpiStrip({ refetchKey = 0 }: Props) {
 
   return (
     <div className="grid grid-cols-4 gap-[14px]">
-      <KpiCard
-        eyebrow="TOTAL QUEUE"
-        value={totalQueue}
-        accent="var(--acc-1)"
-        sparkData={trend}
-      />
-      <KpiCard
-        eyebrow="CRITICAL NOW"
-        value={criticalCount}
-        accent="var(--priority-critical)"
-        sub={criticalPriority ? `≤ ${criticalPriority.responseTime}h SLA` : undefined}
-      />
-      <KpiCard
-        eyebrow="SLA BREACHED"
-        value={breached}
-        accent="var(--acc-hot)"
-        sparkData={trend}
-      />
+      <KpiCard eyebrow="TOTAL QUEUE"  value={totalQueue}            accent="var(--acc-1)"             sparkData={trend} />
+      <KpiCard eyebrow="CRITICAL NOW" value={criticalCount}         accent="var(--priority-critical)" sub={criticalPriority ? `≤ ${criticalPriority.responseTime}h SLA` : undefined} />
+      <KpiCard eyebrow="SLA BREACHED" value={breached}              accent="var(--acc-hot)"           sparkData={trend} />
       <KpiCard
         eyebrow="COMPLIANCE"
         value={`${compliancePct}%`}
