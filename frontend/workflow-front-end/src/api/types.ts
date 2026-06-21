@@ -63,11 +63,11 @@ export interface AttachmentRef {
   extension: string;
 }
 
-export type RelationType = "relates to" | "blocks" | "is blocked by" | "duplicates";
+export type LinkType = "RELATED" | "CAUSED_BY" | "DUPLICATES";
 
-export interface RelatedLink {
-  type: RelationType;
+export interface LinkedTicket {
   ticketId: number;
+  type: LinkType;
 }
 
 export interface InternalApplicationDetail {
@@ -78,7 +78,6 @@ export interface InternalApplicationDetail {
   region?: string;
   location?: string;
   phoneNumber?: string;
-  relatedLinks?: RelatedLink[];
 }
 
 export interface CreateTicketRequest {
@@ -87,6 +86,7 @@ export interface CreateTicketRequest {
   issueTypeId: number;
   priorityId: number;
   detail: InternalApplicationDetail | null;
+  linkedTickets?: LinkedTicket[];
 }
 
 export interface UploadFile {

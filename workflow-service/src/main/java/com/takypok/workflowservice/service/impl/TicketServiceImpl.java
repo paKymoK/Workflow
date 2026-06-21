@@ -13,7 +13,6 @@ import com.takypok.workflowservice.model.entity.PausedTime;
 import com.takypok.workflowservice.model.entity.custom.ListLinkedTickets;
 import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
-import com.takypok.workflowservice.model.enums.LinkType;
 import com.takypok.workflowservice.model.mapper.SlaMapper;
 import com.takypok.workflowservice.model.mapper.TicketMapper;
 import com.takypok.workflowservice.model.request.AssigneeUpdateRequest;
@@ -132,17 +131,10 @@ public class TicketServiceImpl implements TicketService {
                         Ticket<TicketDetail> ticket =
                             ticketMapper.mapToTicket(
                                 request, project, workflow, issueType, priority, user);
-                        if (request.getLinkedTicketIds() != null
-                            && !request.getLinkedTicketIds().isEmpty()) {
-                          LinkType type =
-                              request.getLinkedTicketType() != null
-                                  ? request.getLinkedTicketType()
-                                  : LinkType.RELATED;
-                          ListLinkedTickets links = new ListLinkedTickets();
-                          request
-                              .getLinkedTicketIds()
-                              .forEach(id -> links.add(new LinkedTicket(id, type)));
-                          ticket.setLinkedTickets(links);
+                        if (request.getLinkedTickets() != null
+                            && !request.getLinkedTickets().isEmpty()) {
+                          ticket.setLinkedTickets(
+                              new ListLinkedTickets(request.getLinkedTickets()));
                         }
                         return assigneeResolver
                             .resolve(request.getDetail(), project)

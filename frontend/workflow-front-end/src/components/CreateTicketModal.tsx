@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal, Form, Input, Select, Button, message } from "antd";
-import type { CreateTicketRequest, InternalApplicationDetail } from "../api/types";
+import type { CreateTicketRequest, InternalApplicationDetail, LinkedTicket } from "../api/types";
 import { PROJECT_CODE_INTERNAL } from "../api/types";
 import { useProjects, useIssueTypes, useApplications, useCreateTicket, usePriorities } from "../hooks/useTickets";
 import RichTextEditor from "./RichTextEditor";
@@ -47,6 +47,7 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
   const handleCreateTicket = async (values: Record<string, unknown>) => {
     try {
       const detail = values.detail as InternalApplicationDetail | undefined;
+      const rawLinks = values.linkedTickets as RelatedLinkEntry[] | undefined;
       const payload: CreateTicketRequest = {
         summary:     values.summary as string,
         projectId:   values.projectId as number,
@@ -55,11 +56,10 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
         detail: isInternalApplication && detail
           ? {
               ...detail,
-              phoneNumber:  detail.phoneNumber ? `${dialCode}${detail.phoneNumber}` : undefined,
-              relatedLinks: (detail.relatedLinks as RelatedLinkEntry[] | undefined)
-                ?.map(({ type, ticketId }) => ({ type, ticketId })),
+              phoneNumber: detail.phoneNumber ? `${dialCode}${detail.phoneNumber}` : undefined,
             }
           : null,
+        linkedTickets: rawLinks?.map(({ type, ticketId }): LinkedTicket => ({ type, ticketId })),
       };
       await createMutation.mutateAsync(payload);
       message.success("Ticket created successfully");
@@ -124,6 +124,10 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
             />
           </Form.Item>
 
+          <Form.Item label="Related Tickets" name="linkedTickets">
+            <RelatedLinksField />
+          </Form.Item>
+
           {isInternalApplication && (
             <>
               <Form.Item
@@ -179,10 +183,6 @@ export default function CreateTicketModal({ open, onClose, onSuccess }: CreateTi
                 }]}
               >
                 <RichTextEditor key={editorKey} placeholder="Describe the issue..." />
-              </Form.Item>
-
-              <Form.Item label="Related Tickets" name={["detail", "relatedLinks"]}>
-                <RelatedLinksField />
               </Form.Item>
 
               <Form.Item label="Attachments" name={["detail", "attachment"]}>
