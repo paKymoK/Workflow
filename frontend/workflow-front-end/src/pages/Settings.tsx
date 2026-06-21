@@ -1,15 +1,8 @@
-import { Tabs } from "antd";
-import {
-  ApartmentOutlined,
-  ClockCircleOutlined,
-  FlagOutlined,
-  ProjectOutlined,
-  TagOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
 import { useUrlState } from "@state";
 import { useTheme } from "@takypok/shared";
 import type { AccentScheme } from "@takypok/shared";
+import { Icon } from "../components/ui/Icon";
+import type { IconName } from "../components/ui/Icon";
 import WorkflowList from "../components/settings/WorkflowList";
 import StatusList from "../components/settings/StatusList";
 import PriorityList from "../components/settings/PriorityList";
@@ -17,21 +10,21 @@ import ProjectList from "../components/settings/ProjectList";
 import IssueTypeList from "../components/settings/IssueTypeList";
 import { useStatuses, useProjects, usePriorities, useAllIssueTypes } from "../hooks/useTickets";
 
-const SCHEMES: { key: AccentScheme; label: string; color: string }[] = [
-  { key: "ice",      label: "ICE",      color: "#00CFFF" },
-  { key: "amber",    label: "AMBER",    color: "#FF9E3D" },
-  { key: "phosphor", label: "PHOSPHOR", color: "#3DF58A" },
-  { key: "magenta",  label: "MAGENTA",  color: "#FF3D9A" },
+const SCHEMES: { key: AccentScheme; label: string }[] = [
+  { key: "ice",      label: "ICE"      },
+  { key: "amber",    label: "AMBER"    },
+  { key: "phosphor", label: "PHOSPHOR" },
+  { key: "magenta",  label: "MAGENTA"  },
 ];
 
-const SCHEME_ACTIVE_CLASSES: Record<string, string> = {
+const SCHEME_ACTIVE: Record<string, string> = {
   ice:      "border-[#00CFFF] text-[#00CFFF] bg-[color-mix(in_oklab,#00CFFF_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#00CFFF_30%,transparent)]",
   amber:    "border-[#FF9E3D] text-[#FF9E3D] bg-[color-mix(in_oklab,#FF9E3D_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#FF9E3D_30%,transparent)]",
   phosphor: "border-[#3DF58A] text-[#3DF58A] bg-[color-mix(in_oklab,#3DF58A_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#3DF58A_30%,transparent)]",
   magenta:  "border-[#FF3D9A] text-[#FF3D9A] bg-[color-mix(in_oklab,#FF3D9A_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#FF3D9A_30%,transparent)]",
 };
 
-const SCHEME_SWATCH_CLASSES: Record<string, string> = {
+const SCHEME_SWATCH: Record<string, string> = {
   ice:      "bg-[#00CFFF]",
   amber:    "bg-[#FF9E3D]",
   phosphor: "bg-[#3DF58A]",
@@ -41,31 +34,52 @@ const SCHEME_SWATCH_CLASSES: Record<string, string> = {
 const TABS_KEYS = ["workflow", "status", "priority", "project", "issue-type"] as const;
 type TabKey = typeof TABS_KEYS[number];
 
-const workflowTabs = [
-  { key: "workflow",   label: "Workflow",   children: <WorkflowList /> },
-  { key: "status",     label: "Status",     children: <StatusList /> },
-  { key: "priority",   label: "Priority",   children: <PriorityList /> },
-  { key: "project",    label: "Project",    children: <ProjectList /> },
-  { key: "issue-type", label: "Issue Type", children: <IssueTypeList /> },
+interface CardDef {
+  key: string;
+  icon: IconName;
+  label: string;
+  desc: string;
+}
+
+const CARD_DEFS: CardDef[] = [
+  { key: "workflow",   icon: "flow",   label: "WORKFLOWS",     desc: "Status graphs & transitions" },
+  { key: "status",     icon: "check",  label: "STATUSES",      desc: "Ticket lifecycle states"     },
+  { key: "priority",   icon: "bolt",   label: "PRIORITIES",    desc: "SLA response & resolution"   },
+  { key: "project",    icon: "pin",    label: "PROJECTS",      desc: "Project codes & names"       },
+  { key: "issue-type", icon: "filter", label: "ISSUE TYPES",   desc: "Ticket categories"           },
+  { key: "users",      icon: "user",   label: "USERS & ROLES", desc: "Managed in auth service"     },
 ];
 
+function SectionContent({ tabKey }: { tabKey: string }) {
+  switch (tabKey) {
+    case "workflow":   return <WorkflowList />;
+    case "status":     return <StatusList />;
+    case "priority":   return <PriorityList />;
+    case "project":    return <ProjectList />;
+    case "issue-type": return <IssueTypeList />;
+    default:           return null;
+  }
+}
+
 export default function Settings() {
-  const [wfTab, setWfTab]               = useUrlState("wfTab", "workflow");
-  const { accentScheme, setAccentScheme } = useTheme();
+  const [activeKey, setActiveKey]          = useUrlState("wfTab", "workflow");
+  const { accentScheme, setAccentScheme }  = useTheme();
 
   const { data: statuses   = [] } = useStatuses();
   const { data: projects   = [] } = useProjects();
   const { data: priorities = [] } = usePriorities();
   const { data: issueTypes = [] } = useAllIssueTypes();
 
-  const CARDS = [
-    { key: "workflow",   icon: <ApartmentOutlined />, label: "WORKFLOWS",    desc: "Status graphs & transitions",  count: null },
-    { key: "status",     icon: <ClockCircleOutlined />, label: "STATUSES",   desc: "Ticket lifecycle states",      count: statuses.length },
-    { key: "priority",   icon: <FlagOutlined />,      label: "PRIORITIES",  desc: "SLA response & resolution",    count: priorities.length },
-    { key: "project",    icon: <ProjectOutlined />,   label: "PROJECTS",    desc: "Project codes & names",        count: projects.length },
-    { key: "issue-type", icon: <TagOutlined />,       label: "ISSUE TYPES", desc: "Ticket categories",            count: issueTypes.length },
-    { key: "users",      icon: <TeamOutlined />,      label: "USERS & ROLES", desc: "Managed in auth service",    count: null },
-  ];
+  const counts: Record<string, number | null> = {
+    workflow:     null,
+    status:       statuses.length,
+    priority:     priorities.length,
+    project:      projects.length,
+    "issue-type": issueTypes.length,
+    users:        null,
+  };
+
+  const activeDef = CARD_DEFS.find((c) => c.key === activeKey)!;
 
   return (
     <div className="flex flex-col gap-5">
@@ -85,11 +99,12 @@ export default function Settings() {
             return (
               <button
                 key={s.key}
-                title={s.label}
                 onClick={() => setAccentScheme(s.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 border font-mono-tech text-[10px] tracking-wider transition-all cursor-crosshair ${active ? SCHEME_ACTIVE_CLASSES[s.key] : "border-[var(--line)] text-[var(--fg-faint)] bg-transparent"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 border font-mono-tech text-[10px] tracking-wider transition-all cursor-crosshair ${
+                  active ? SCHEME_ACTIVE[s.key] : "border-[var(--line)] text-[var(--fg-faint)] bg-transparent hover:border-[var(--line-strong)]"
+                }`}
               >
-                <span className={`w-2 h-2 inline-block shrink-0 ${SCHEME_SWATCH_CLASSES[s.key]}`} />
+                <span className={`w-2 h-2 inline-block shrink-0 ${SCHEME_SWATCH[s.key]}`} />
                 {s.label}
               </button>
             );
@@ -99,35 +114,74 @@ export default function Settings() {
 
       {/* Config card grid */}
       <div className="grid grid-cols-3 gap-3">
-        {CARDS.map((card) => {
-          const isTab = (TABS_KEYS as readonly string[]).includes(card.key);
+        {CARD_DEFS.map((card) => {
+          const isTab    = (TABS_KEYS as readonly string[]).includes(card.key);
+          const isActive = card.key === activeKey;
+          const count    = counts[card.key];
+
           return (
             <button
               key={card.key}
               disabled={!isTab}
-              onClick={() => { if (isTab) setWfTab(card.key as TabKey); }}
-              className="text-left p-4 border border-[var(--line)] bg-[var(--bg-1)] hover:border-[var(--acc-1)] hover:bg-[var(--bg-2)] transition-all cursor-crosshair group disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => { if (isTab) setActiveKey(card.key as TabKey); }}
+              className={`relative text-left p-4 border bg-[var(--bg-1)] transition-all overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed group ${
+                isActive
+                  ? "border-[var(--acc-1)] bg-[var(--bg-2)] cursor-default"
+                  : "border-[var(--line)] hover:border-[var(--line-strong)] hover:bg-[var(--bg-2)] cursor-crosshair"
+              }`}
             >
+              {/* Left accent bar on active */}
+              {isActive && (
+                <div className="absolute top-0 left-0 w-[3px] h-full bg-[var(--acc-1)] [box-shadow:2px_0_10px_var(--acc-1)]" />
+              )}
+
               <div className="flex items-start justify-between mb-2">
-                <span className="text-[var(--acc-1)] text-lg">{card.icon}</span>
-                {card.count !== null && (
-                  <span className="font-bebas text-2xl text-[var(--fg-dim)] leading-none">{card.count}</span>
+                <Icon
+                  name={card.icon}
+                  size={18}
+                  className={`transition-colors ${isActive ? "text-[var(--acc-1)]" : "text-[var(--fg-dim)] group-hover:text-[var(--fg)] group-disabled:group-hover:text-[var(--fg-dim)]"}`}
+                />
+                {count !== null && (
+                  <span className={`font-bebas text-2xl leading-none transition-colors ${isActive ? "text-[var(--acc-1)]" : "text-[var(--fg-dim)]"}`}>
+                    {count}
+                  </span>
                 )}
               </div>
-              <p className="font-bebas text-sm tracking-[.1em] text-[var(--fg)] m-0">{card.label}</p>
-              <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] m-0 mt-0.5">{card.desc}</p>
-              {isTab && (
-                <p className="font-bebas text-[10px] tracking-[.15em] text-[var(--acc-1)] m-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  MANAGE →
-                </p>
-              )}
+
+              <p className={`font-bebas text-sm tracking-[.1em] m-0 transition-colors ${isActive ? "text-[var(--acc-1)]" : "text-[var(--fg)]"}`}>
+                {card.label}
+              </p>
+              <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] m-0 mt-0.5">
+                {card.desc}
+              </p>
+
+              <p className={`font-bebas text-[10px] tracking-[.15em] m-0 mt-2 transition-all ${
+                isActive
+                  ? "text-[var(--acc-1)] opacity-50"
+                  : "text-[var(--acc-1)] opacity-0 group-hover:opacity-100"
+              }`}>
+                {isActive ? "▌ SELECTED" : isTab ? "MANAGE →" : ""}
+              </p>
             </button>
           );
         })}
       </div>
 
-      {/* Management tabs */}
-      <Tabs activeKey={wfTab} onChange={setWfTab} items={workflowTabs} />
+      {/* Content panel */}
+      <div className="border border-[var(--acc-1)] bg-[var(--bg-1)] [border-top:2px_solid_var(--acc-1)]">
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--line)] bg-[var(--bg-2)]">
+          <Icon name={activeDef.icon} size={13} className="text-[var(--acc-1)]" />
+          <span className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)]">
+            // {activeDef.label}
+          </span>
+          <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] ml-1">
+            {activeDef.desc}
+          </span>
+        </div>
+        <div className="p-4">
+          <SectionContent tabKey={activeKey} />
+        </div>
+      </div>
     </div>
   );
 }
