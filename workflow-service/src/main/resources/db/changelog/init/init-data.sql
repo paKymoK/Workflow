@@ -10,7 +10,13 @@ INSERT INTO
            (7,'Pending Approval','TODO',       '#6554C0', now(),'admin', now(), 'admin'),
            (8,'Approved',        'TODO',       '#00B8D9', now(),'admin', now(), 'admin'),
            (9,'Fulfilled',       'DONE',       '#36B37E', now(),'admin', now(), 'admin'),
-           (10,'Rejected',       'DONE',       '#FF5630', now(),'admin', now(), 'admin');
+           (10,'Rejected',       'DONE',       '#FF5630', now(),'admin', now(), 'admin'),
+           -- Problem management statuses
+           (11,'Identified',        'TODO',       '#808080', now(),'admin', now(), 'admin'),
+           (12,'Investigating',     'PROCESSING', '#0052CC', now(),'admin', now(), 'admin'),
+           (13,'Root Cause Found',  'PROCESSING', '#6554C0', now(),'admin', now(), 'admin'),
+           (14,'Known Error',       'PROCESSING', '#FF8B00', now(),'admin', now(), 'admin'),
+           (15,'Problem Resolved',  'DONE',       '#36B37E', now(),'admin', now(), 'admin');
 
 INSERT INTO
     priority (name, response_time, resolution_time, "created_at", "created_by", "modified_at", "modified_by")
@@ -277,6 +283,128 @@ VALUES ('Service Request', '[
   }
 ]', now(), 'admin', now(), 'admin');
 
+-- Problem management workflow (ITIL).
+-- Lifecycle: Identified -> Investigating -> Root Cause Found -> Known Error -> Problem Resolved -> Closed.
+-- No Reopen: if a resolved problem recurs it becomes a new Problem (ITIL best practice).
+-- SLA semantics:
+--   * TODO       (Identified)       : response clock running (loose target).
+--   * PROCESSING (Investigating)    : entering stamps responseTime.
+--   * PROCESSING (Root Cause Found) : RCA complete, resolution still in progress.
+--   * PROCESSING (Known Error)      : workaround documented; resolution clock may be
+--                                     paused if Pending via PauseSlaFunction (same mechanism).
+--   * DONE       (Problem Resolved) : entering stamps resolutionTime.
+--   * DONE       (Closed)           : post-PIR administrative close, no SLA effect.
+-- Known Error requires a workaroundNote (RequireWorkaroundNoteValidator) and optionally
+-- accepts linkedTicketIds + linkedTicketType to record CAUSED_BY/DUPLICATES/RELATED links
+-- into ticket.linked_tickets jsonb (RecordKnownErrorFunction).
+INSERT INTO workflow(
+     name, statuses, transitions, created_at, created_by, modified_at, modified_by)
+VALUES ('Problem', '[
+  {
+    "id": 11,
+    "name": "Identified",
+    "color": "#808080",
+    "group": "TODO"
+  },
+  {
+    "id": 12,
+    "name": "Investigating",
+    "color": "#0052CC",
+    "group": "PROCESSING"
+  },
+  {
+    "id": 13,
+    "name": "Root Cause Found",
+    "color": "#6554C0",
+    "group": "PROCESSING"
+  },
+  {
+    "id": 14,
+    "name": "Known Error",
+    "color": "#FF8B00",
+    "group": "PROCESSING"
+  },
+  {
+    "id": 15,
+    "name": "Problem Resolved",
+    "color": "#36B37E",
+    "group": "DONE"
+  },
+  {
+    "id": 5,
+    "name": "Closed",
+    "color": "#008000",
+    "group": "DONE"
+  }
+]', '[
+  {
+    "from": { "id": 11, "name": "Identified",      "color": "#808080", "group": "TODO" },
+    "to":   { "id": 12, "name": "Investigating",   "color": "#0052CC", "group": "PROCESSING" },
+    "name": "Start Investigation",
+    "validator": [],
+    "postFunctions": []
+  },
+  {
+    "from": { "id": 12, "name": "Investigating",   "color": "#0052CC", "group": "PROCESSING" },
+    "to":   { "id": 13, "name": "Root Cause Found","color": "#6554C0", "group": "PROCESSING" },
+    "name": "Confirm Root Cause",
+    "validator": [],
+    "postFunctions": []
+  },
+  {
+    "from": { "id": 13, "name": "Root Cause Found","color": "#6554C0", "group": "PROCESSING" },
+    "to":   { "id": 14, "name": "Known Error",     "color": "#FF8B00", "group": "PROCESSING" },
+    "name": "Mark As Known Error",
+    "validator": [
+      "com.takypok.workflowservice.function.validator.RequireWorkaroundNoteValidator"
+    ],
+    "postFunctions": [
+      "com.takypok.workflowservice.function.postfunction.RecordKnownErrorFunction"
+    ]
+  },
+  {
+    "from": { "id": 14, "name": "Known Error",     "color": "#FF8B00", "group": "PROCESSING" },
+    "to":   { "id": 3,  "name": "Pending",          "color": "#FF8B00", "group": "PROCESSING" },
+    "name": "Put On Hold",
+    "validator": [
+      "com.takypok.workflowservice.function.validator.RequirePendingReasonValidator"
+    ],
+    "postFunctions": [
+      "com.takypok.workflowservice.function.postfunction.PauseSlaFunction"
+    ]
+  },
+  {
+    "from": { "id": 3,  "name": "Pending",          "color": "#FF8B00", "group": "PROCESSING" },
+    "to":   { "id": 14, "name": "Known Error",       "color": "#FF8B00", "group": "PROCESSING" },
+    "name": "Resume",
+    "validator": [],
+    "postFunctions": [
+      "com.takypok.workflowservice.function.postfunction.ResumeSlaFunction"
+    ]
+  },
+  {
+    "from": { "id": 14, "name": "Known Error",      "color": "#FF8B00", "group": "PROCESSING" },
+    "to":   { "id": 15, "name": "Problem Resolved", "color": "#36B37E", "group": "DONE" },
+    "name": "Resolve",
+    "validator": [],
+    "postFunctions": []
+  },
+  {
+    "from": { "id": 13, "name": "Root Cause Found", "color": "#6554C0", "group": "PROCESSING" },
+    "to":   { "id": 15, "name": "Problem Resolved", "color": "#36B37E", "group": "DONE" },
+    "name": "Resolve",
+    "validator": [],
+    "postFunctions": []
+  },
+  {
+    "from": { "id": 15, "name": "Problem Resolved", "color": "#36B37E", "group": "DONE" },
+    "to":   { "id": 5,  "name": "Closed",            "color": "#008000", "group": "DONE" },
+    "name": "Close",
+    "validator": [],
+    "postFunctions": []
+  }
+]', now(), 'admin', now(), 'admin');
+
 INSERT INTO
     project (name, code, "created_at", "created_by", "modified_at", "modified_by")
 VALUES ('Internal Application', 'IA', now(), 'admin', now(), 'admin');
@@ -285,5 +413,5 @@ INSERT INTO
     issue_type (name, code, project_id, workflow_id, "created_at", "created_by", "modified_at", "modified_by")
 VALUES ('Incident',        'INCIDENT',        1, 1, now(), 'admin', now(), 'admin'),
        ('Service Request', 'SERVICE_REQUEST',  1, 2, now(), 'admin', now(), 'admin'),
-       ('Problem',         'PROBLEM',          1, 1, now(), 'admin', now(), 'admin'),
+       ('Problem',         'PROBLEM',          1, 3, now(), 'admin', now(), 'admin'),
        ('Change Request',  'CHANGE_REQUEST',   1, 1, now(), 'admin', now(), 'admin');

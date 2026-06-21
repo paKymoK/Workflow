@@ -1,8 +1,10 @@
 package com.takypok.workflowservice.model.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.takypok.workflowservice.model.entity.LinkedTicket;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.*;
 
 @Getter
@@ -16,4 +18,5 @@ public class CreateTicketRequest {
   @NotNull private Long projectId;
   @NotNull private Long priorityId;
   private JsonNode detail;
+  private List<LinkedTicket> linkedTickets;
 }

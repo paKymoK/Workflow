@@ -10,6 +10,7 @@ import com.takypok.workflowservice.function.postfunction.index.PostFunction;
 import com.takypok.workflowservice.function.validator.index.Validator;
 import com.takypok.workflowservice.model.entity.*;
 import com.takypok.workflowservice.model.entity.PausedTime;
+import com.takypok.workflowservice.model.entity.custom.ListLinkedTickets;
 import com.takypok.workflowservice.model.entity.custom.ListPausedTime;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
 import com.takypok.workflowservice.model.mapper.SlaMapper;
@@ -130,6 +131,11 @@ public class TicketServiceImpl implements TicketService {
                         Ticket<TicketDetail> ticket =
                             ticketMapper.mapToTicket(
                                 request, project, workflow, issueType, priority, user);
+                        if (request.getLinkedTickets() != null
+                            && !request.getLinkedTickets().isEmpty()) {
+                          ticket.setLinkedTickets(
+                              new ListLinkedTickets(request.getLinkedTickets()));
+                        }
                         return assigneeResolver
                             .resolve(request.getDetail(), project)
                             .doOnNext(ticket::setAssignee)

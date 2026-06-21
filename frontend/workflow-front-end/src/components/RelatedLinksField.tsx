@@ -2,17 +2,16 @@ import { useEffect, useState } from "react";
 import { Button, Select } from "antd";
 import { PlusOutlined, CloseOutlined } from "@ant-design/icons";
 import { useTicketList } from "../hooks/useTickets";
-import type { RelatedLink, RelationType } from "../api/types";
+import type { LinkedTicket, LinkType } from "../api/types";
 
-const RELATION_TYPES: { label: string; value: RelationType }[] = [
-  { label: "Relates to",    value: "relates to"    },
-  { label: "Blocks",        value: "blocks"        },
-  { label: "Is blocked by", value: "is blocked by" },
-  { label: "Duplicates",    value: "duplicates"    },
+const RELATION_TYPES: { label: string; value: LinkType }[] = [
+  { label: "Relates to", value: "RELATED"    },
+  { label: "Caused by",  value: "CAUSED_BY"  },
+  { label: "Duplicates", value: "DUPLICATES" },
 ];
 
 // Internal type that carries the summary for display only — stripped before API submission
-interface RelatedLinkEntry extends RelatedLink {
+interface RelatedLinkEntry extends LinkedTicket {
   ticketSummary: string;
 }
 
@@ -24,7 +23,7 @@ interface Props {
 export type { RelatedLinkEntry };
 
 export default function RelatedLinksField({ value = [], onChange }: Props) {
-  const [draftType,          setDraftType]          = useState<RelationType>("relates to");
+  const [draftType,          setDraftType]          = useState<LinkType>("RELATED");
   const [draftTicketId,      setDraftTicketId]      = useState<number | null>(null);
   const [draftTicketSummary, setDraftTicketSummary] = useState("");
   const [inputValue,         setInputValue]         = useState("");
