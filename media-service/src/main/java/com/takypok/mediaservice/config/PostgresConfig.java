@@ -1,8 +1,8 @@
 package com.takypok.mediaservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.takypok.mediaservice.config.postgres.UserReader;
-import com.takypok.mediaservice.config.postgres.UserWriter;
+import com.takypok.core.config.postgres.UserReader;
+import com.takypok.core.config.postgres.UserWriter;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

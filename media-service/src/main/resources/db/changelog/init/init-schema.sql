@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS upload_file
     name        character varying NOT NULL,
     extension   character varying NOT NULL,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id)
 );
 
@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS comment
     ticket_id   bigint  NOT NULL,
     is_edited   boolean NOT NULL DEFAULT false,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id)
 );
 

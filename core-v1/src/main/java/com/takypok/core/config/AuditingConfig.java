@@ -1,5 +1,7 @@
 package com.takypok.core.config;
 
+import com.takypok.core.model.authentication.User;
+import com.takypok.core.util.AuthenticationUtil;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -14,23 +16,29 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 public class AuditingConfig {
+
+  private static final User SYSTEM = new User("system", "System", null, null, null);
+
   @Bean
-  public ReactiveAuditorAware<String> auditorAware() {
+  public ReactiveAuditorAware<User> auditorAware() {
     return () ->
         ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .filter(Authentication::isAuthenticated)
-            .map(Authentication::getName)
-            .onErrorReturn("Anonymous")
-            .switchIfEmpty(
-                Mono.just("Anonymous")); // Handle cases where no authenticated user is found
+            .map(auth -> {
+              try {
+                User user = AuthenticationUtil.getUserInfo(auth);
+                return user != null ? user : SYSTEM;
+              } catch (Exception e) {
+                return SYSTEM;
+              }
+            })
+            .onErrorReturn(SYSTEM)
+            .switchIfEmpty(Mono.just(SYSTEM));
   }
 
   @Bean
   public DateTimeProvider auditingDateTimeProvider() {
-    return () ->
-        Optional.of(
-            ZonedDateTime.now(
-                ZoneId.systemDefault())); // Or a specific ZoneId like ZoneId.of("UTC")
+    return () -> Optional.of(ZonedDateTime.now(ZoneId.systemDefault()));
   }
 }

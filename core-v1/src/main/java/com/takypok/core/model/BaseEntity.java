@@ -1,6 +1,7 @@
 package com.takypok.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.takypok.core.model.authentication.User;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Setter
 public class BaseEntity implements Serializable {
   @JsonIgnore @CreatedDate private ZonedDateTime createdAt;
-  @JsonIgnore @CreatedBy private String createdBy;
+  @JsonIgnore @CreatedBy private User createdBy;
   @JsonIgnore @LastModifiedDate private ZonedDateTime modifiedAt;
-  @JsonIgnore @LastModifiedBy private String modifiedBy;
+  @JsonIgnore @LastModifiedBy private User modifiedBy;
 }

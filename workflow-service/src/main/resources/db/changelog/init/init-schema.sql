@@ -7,9 +7,9 @@ CREATE TABLE IF NOT EXISTS status
     "group"     character varying,
     color       character varying,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id),
     UNIQUE (name)
 );
@@ -21,9 +21,9 @@ CREATE TABLE IF NOT EXISTS priority
     response_time   integer           NOT NULL,
     resolution_time integer           NOT NULL,
     created_at      timestamp with time zone,
-    created_by      character varying,
+    created_by      jsonb,
     modified_at     timestamp with time zone,
-    modified_by     character varying,
+    modified_by     jsonb,
     PRIMARY KEY (id),
     UNIQUE (name)
 );
@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS sla
     priority    jsonb     NOT NULL,
     setting     jsonb     NOT NULL,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id),
     UNIQUE (ticket_id)
 );
@@ -61,9 +61,9 @@ CREATE TABLE IF NOT EXISTS ticket
     approvals      jsonb     NOT NULL DEFAULT '[]',
     linked_tickets jsonb     NOT NULL DEFAULT '[]',
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id)
 );
 
@@ -74,9 +74,9 @@ CREATE TABLE IF NOT EXISTS workflow
     statuses    jsonb             NOT NULL,
     transitions jsonb             NOT NULL,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id),
     UNIQUE (name)
 );
@@ -87,9 +87,9 @@ CREATE TABLE IF NOT EXISTS project
     name        character varying NOT NULL,
     code        character varying NOT NULL,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id),
     UNIQUE (code)
 );
@@ -102,9 +102,9 @@ CREATE TABLE IF NOT EXISTS issue_type
     project_id  integer           NOT NULL,
     workflow_id bigint            NOT NULL,
     created_at  timestamp with time zone,
-    created_by  character varying,
+    created_by  jsonb,
     modified_at timestamp with time zone,
-    modified_by character varying,
+    modified_by jsonb,
     PRIMARY KEY (id),
     UNIQUE (name, project_id),
     UNIQUE (code, project_id)

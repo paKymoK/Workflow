@@ -1,4 +1,4 @@
-package com.takypok.workflowservice.config.postgres;
+package com.takypok.core.config.postgres;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,7 @@ public class UserWriter implements Converter<User, Json> {
     try {
       return Json.of(objectMapper.writeValueAsBytes(source));
     } catch (JsonProcessingException e) {
-      log.error("Unable to convert TicketType: {}", e.getMessage(), e);
+      log.error("Unable to convert User: {}", e.getMessage(), e);
       throw new IllegalArgumentException(e);
     }
   }

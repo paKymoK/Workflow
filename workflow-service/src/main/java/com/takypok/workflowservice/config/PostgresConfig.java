@@ -1,6 +1,8 @@
 package com.takypok.workflowservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.takypok.core.config.postgres.UserReader;
+import com.takypok.core.config.postgres.UserWriter;
 import com.takypok.workflowservice.config.postgres.*;
 import io.r2dbc.spi.Option;
 import java.util.ArrayList;

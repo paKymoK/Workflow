@@ -1,4 +1,4 @@
-package com.takypok.mediaservice.config.postgres;
+package com.takypok.core.config.postgres;
 
 import static com.takypok.core.util.PostgresUtil.readTree;
 
