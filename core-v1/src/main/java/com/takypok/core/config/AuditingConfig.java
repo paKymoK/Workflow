@@ -25,14 +25,15 @@ public class AuditingConfig {
         ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .filter(Authentication::isAuthenticated)
-            .map(auth -> {
-              try {
-                User user = AuthenticationUtil.getUserInfo(auth);
-                return user != null ? user : SYSTEM;
-              } catch (Exception e) {
-                return SYSTEM;
-              }
-            })
+            .map(
+                auth -> {
+                  try {
+                    User user = AuthenticationUtil.getUserInfo(auth);
+                    return user != null ? user : SYSTEM;
+                  } catch (Exception e) {
+                    return SYSTEM;
+                  }
+                })
             .onErrorReturn(SYSTEM)
             .switchIfEmpty(Mono.just(SYSTEM));
   }

@@ -13,11 +13,11 @@ import { wsBaseUrl } from "@takypok/shared";
 import DeadlineTag from "../components/DeadlineTag.tsx";
 import RichTextEditor from "../components/RichTextEditor.tsx";
 import dayjs from "dayjs";
-import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket, useUpdateAssignee } from "../hooks/useTickets";
+import { useTicket, usePauseTicket, useResumeTicket, useTransitionTicket, useUpdateAssignee, useAuditLog } from "../hooks/useTickets";
 import { useComments, useCreateComment, useUpdateComment } from "../hooks/useComments";
 import { useAuth } from "@takypok/shared";
 import { fetchUsers, type UserSummary } from "../api/ticketApi";
-import { type PendingReason, PENDING_REASON_LABELS } from "../api/types";
+import { type PendingReason, PENDING_REASON_LABELS, type AuditLog, type AuditAction } from "../api/types";
 import CommentContent from "../components/CommentContent.tsx";
 import { dynamicStyle } from "../utils/dynamicStyle";
 import AttachmentUpload from "../components/AttachmentUpload.tsx";
@@ -45,6 +45,7 @@ export default function TicketDetail() {
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: ticket, isLoading, isFetching: refreshing, refetch } = useTicket(id);
   const { data: comments = [], isLoading: commentsLoading }          = useComments(id);
+  const { data: auditLogs = [], isLoading: auditLoading }            = useAuditLog(id);
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const pauseMutation      = usePauseTicket();
@@ -464,6 +465,48 @@ export default function TicketDetail() {
               </div>
             </div>
           </Panel>
+          {/* Audit log */}
+          <Panel title={`AUDIT LOG (${auditLogs.length})`} bodyClassName="p-0">
+            {auditLoading ? (
+              <div className="flex justify-center py-6"><Spin size="small" /></div>
+            ) : auditLogs.length === 0 ? (
+              <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] px-4 py-4 m-0">No audit entries yet.</p>
+            ) : (
+              <div className="flex flex-col">
+                {auditLogs.map((log, i) => (
+                  <div
+                    key={log.id}
+                    className={`flex items-start justify-between gap-3 px-4 py-2.5 ${i < auditLogs.length - 1 ? "border-b border-[var(--line)]" : ""}`}
+                  >
+                    <div className="flex items-start gap-2 min-w-0">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                        style={{ background: AUDIT_DOT_COLOR[log.action] }}
+                      />
+                      <div className="min-w-0">
+                        <span className="font-bebas text-[12px] tracking-[.12em] text-[var(--fg)]">
+                          {AUDIT_ACTION_LABEL[log.action]}
+                        </span>
+                        {auditDetail(log) && (
+                          <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] m-0 truncate">
+                            {auditDetail(log)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
+                      <span className="font-mono-tech text-[10px] text-[var(--fg-dim)]">
+                        {log.actor?.name ?? "System"}
+                      </span>
+                      <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                        {dayjs(log.createdAt).format("DD MMM, HH:mm")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
         </div>
 
         {/* ── RIGHT COLUMN (sticky) ─────────────────────────────────────── */}
@@ -590,6 +633,31 @@ export default function TicketDetail() {
       </div>
     </div>
   );
+}
+
+const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
+  TICKET_CREATED:   "Ticket Opened",
+  STATUS_CHANGED:   "Status Changed",
+  ASSIGNEE_CHANGED: "Assignee Changed",
+  SLA_PAUSED:       "SLA Paused",
+  SLA_RESUMED:      "SLA Resumed",
+};
+
+const AUDIT_DOT_COLOR: Record<AuditAction, string> = {
+  TICKET_CREATED:   "var(--acc-3)",
+  STATUS_CHANGED:   "var(--acc-1)",
+  ASSIGNEE_CHANGED: "var(--acc-2)",
+  SLA_PAUSED:       "var(--acc-amber)",
+  SLA_RESUMED:      "var(--acc-3)",
+};
+
+function auditDetail(log: AuditLog): string {
+  const p = log.payload;
+  if (log.action === "STATUS_CHANGED")
+    return `${p.from?.name ?? "?"} → ${p.to?.name ?? "?"}`;
+  if (log.action === "ASSIGNEE_CHANGED")
+    return `${p.from?.name ?? "Unassigned"} → ${p.to?.name ?? "Unassigned"}`;
+  return "";
 }
 
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {

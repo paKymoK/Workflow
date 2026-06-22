@@ -1,4 +1,4 @@
-import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, IssueTypeUpdateRequest, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest, TransitionRequest } from "./types.ts";
+import type {PageResponse, ResultMessage, TicketSla, Project, Priority, IssueType, IssueTypeUpdateRequest, CreateTicketRequest, Comment, UploadFile, StatisticItem, SlaOverviewStatistic, ApplicationTicketStatistic, ApplicationTrendPoint, AvgResolutionByPriority, TicketByIssueType, Workflow, WorkflowStatus, StatusCreateRequest, StatusUpdateRequest, PriorityCreateRequest, PriorityUpdateRequest, ProjectCreateRequest, ProjectUpdateRequest, FunctionResponse, WorkflowCreateRequest, TransitionRequest, AuditLog } from "./types.ts";
 import { api } from "@takypok/shared";
 
 export interface FilterTicketRequest {
@@ -393,6 +393,20 @@ export async function updateAssignee(ticketId: string | number, payload: { sub: 
         payload,
     );
     return data;
+}
+
+export async function fetchRecentAuditLog(): Promise<AuditLog[]> {
+    const { data } = await api.get<ResultMessage<AuditLog[]>>(
+        "/workflow-service/v1/ticket/audit",
+    );
+    return data.data;
+}
+
+export async function fetchAuditLog(ticketId: string | number): Promise<AuditLog[]> {
+    const { data } = await api.get<ResultMessage<AuditLog[]>>(
+        `/workflow-service/v1/ticket/${ticketId}/audit`,
+    );
+    return data.data;
 }
 
 export async function transitionTicket(payload: TransitionRequest) {

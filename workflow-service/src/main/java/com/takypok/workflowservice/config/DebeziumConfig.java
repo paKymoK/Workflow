@@ -1,13 +1,17 @@
 package com.takypok.workflowservice.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.takypok.workflowservice.model.debezium.AuditLogTracker;
 import com.takypok.workflowservice.model.debezium.ChangeData;
 import com.takypok.workflowservice.model.debezium.SlaTracker;
 import com.takypok.workflowservice.model.entity.SlaStatus;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.JsonByteArray;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -76,7 +80,7 @@ public class DebeziumConfig {
     props.setProperty("publication.autocreate.mode", "all_tables");
 
     props.setProperty("schema.include.list", "public");
-    props.setProperty("table.include.list", "public.sla");
+    props.setProperty("table.include.list", "public.sla,public.audit_log");
     props.setProperty("heartbeat.interval.ms", "30000");
 
     return DebeziumEngine.create(JsonByteArray.class).using(props);
@@ -101,6 +105,29 @@ public class DebeziumConfig {
   @ServiceActivator(inputChannel = "debeziumInputChannel")
   public void handler(Message<byte[]> message) {
     Object destination = message.getHeaders().get(DebeziumHeaders.DESTINATION);
+    log.debug("Debezium event — destination: {}", destination);
+
+    if ((prefix + ".public.audit_log").equals(destination)) {
+      log.info("audit_log CDC received — raw: {}", new String(message.getPayload()));
+      try {
+        ChangeData<AuditLogTracker> change =
+            mapper.readValue(message.getPayload(), new TypeReference<>() {});
+        AuditLogTracker after = change.getPayload().getAfter();
+        log.info("audit_log after: {}", after);
+        if (after != null) {
+          Map<String, Object> event = new HashMap<>();
+          event.put("ticketId", after.getTicket_id());
+          event.put("action", after.getAction());
+          event.put("actorName", extractActorName(after.getActor()));
+          String json = mapper.writeValueAsString(event);
+          log.info("Emitting to WebSocket sink: {}", json);
+          sink.tryEmitNext(json).orThrow();
+        }
+      } catch (Exception e) {
+        log.error("AuditLog Debezium convert error: ", e);
+      }
+    }
+
     if ((prefix + ".public.sla").equals(destination)) {
       try {
         ChangeData<SlaTracker> change =
@@ -121,6 +148,17 @@ public class DebeziumConfig {
       } catch (Exception e) {
         log.error("Sla Debezium convert error: ", e);
       }
+    }
+  }
+
+  private String extractActorName(String actorJson) {
+    if (actorJson == null) return null;
+    try {
+      JsonNode node = mapper.readTree(actorJson);
+      JsonNode name = node.get("name");
+      return name != null ? name.asText() : null;
+    } catch (Exception e) {
+      return null;
     }
   }
 

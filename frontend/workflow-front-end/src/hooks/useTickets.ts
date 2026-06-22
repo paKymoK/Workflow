@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
-  fetchTickets, fetchTicketById,
+  fetchTickets, fetchTicketById, fetchAuditLog,
   fetchPriorities, fetchStatuses, fetchProjects, fetchIssueTypes, fetchAllIssueTypes, fetchApplications,
   createTicket, pauseTicket, resumeTicket, transitionTicket, updateAssignee, updateIssueType,
   createStatus, updateStatus, deleteStatus,
@@ -24,6 +24,7 @@ export const ticketKeys = {
   issueTypes:      (projectId: number)        => ["issueTypes", projectId]             as const,
   allIssueTypes:   ()                         => ["allIssueTypes"]                     as const,
   applications:    ()                         => ["applications"]                      as const,
+  audit:           (id: string | number)      => ["tickets", "audit", id]              as const,
 };
 
 // ── Queries ──────────────────────────────────────────────────────────────────
@@ -93,6 +94,14 @@ export function useAllIssueTypes() {
   });
 }
 
+export function useAuditLog(id: string | number | undefined) {
+  return useQuery({
+    queryKey: ticketKeys.audit(id!),
+    queryFn:  () => fetchAuditLog(id!),
+    enabled:  !!id,
+  });
+}
+
 /** Available applications — static list from code, fetched once. */
 export function useApplications() {
   return useQuery({
@@ -122,6 +131,7 @@ export function usePauseTicket() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ticketKeys.lists() });
       qc.invalidateQueries({ queryKey: ticketKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: ticketKeys.audit(id) });
     },
   });
 }
@@ -133,6 +143,7 @@ export function useResumeTicket() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ticketKeys.lists() });
       qc.invalidateQueries({ queryKey: ticketKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: ticketKeys.audit(id) });
     },
   });
 }
@@ -145,6 +156,7 @@ export function useUpdateAssignee() {
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
       qc.invalidateQueries({ queryKey: ticketKeys.lists() });
+      qc.invalidateQueries({ queryKey: ticketKeys.audit(ticketId) });
     },
   });
 }
@@ -179,6 +191,7 @@ export function useTransitionTicket() {
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(ticketId) });
       qc.invalidateQueries({ queryKey: ticketKeys.lists() });
+      qc.invalidateQueries({ queryKey: ticketKeys.audit(ticketId) });
     },
   });
 }

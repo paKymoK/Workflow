@@ -222,6 +222,87 @@ EXECUTE FUNCTION ticket_event_trigger();
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
+-- ============================================================
+-- AUDIT LOG
+-- ============================================================
 
+CREATE TABLE IF NOT EXISTS audit_log
+(
+    id         bigserial   NOT NULL,
+    ticket_id  bigint      NOT NULL,
+    action     varchar     NOT NULL,
+    actor      jsonb,
+    payload    jsonb       NOT NULL DEFAULT '{}',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
 
+CREATE INDEX IF NOT EXISTS idx_audit_log_ticket_id ON audit_log (ticket_id, id DESC);
 
+-- Ticket audit: TICKET_CREATED, STATUS_CHANGED, ASSIGNEE_CHANGED
+CREATE OR REPLACE FUNCTION audit_ticket()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO audit_log (ticket_id, action, actor, payload)
+        VALUES (NEW.id, 'TICKET_CREATED', NEW.created_by,
+                jsonb_build_object(
+                        'summary', NEW.summary,
+                        'project', NEW.project,
+                        'issueType', NEW.issue_type,
+                        'priority', NEW.priority,
+                        'reporter', NEW.reporter
+                ));
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF OLD.status IS DISTINCT FROM NEW.status THEN
+            INSERT INTO audit_log (ticket_id, action, actor, payload)
+            VALUES (NEW.id, 'STATUS_CHANGED', NEW.modified_by,
+                    jsonb_build_object('from', OLD.status, 'to', NEW.status));
+        END IF;
+
+        IF OLD.assignee IS DISTINCT FROM NEW.assignee THEN
+            INSERT INTO audit_log (ticket_id, action, actor, payload)
+            VALUES (NEW.id, 'ASSIGNEE_CHANGED', NEW.modified_by,
+                    jsonb_build_object('from', OLD.assignee, 'to', NEW.assignee));
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER audit_ticket_trigger
+    AFTER INSERT OR UPDATE
+    ON ticket
+    FOR EACH ROW
+EXECUTE FUNCTION audit_ticket();
+
+-- SLA audit: SLA_PAUSED, SLA_RESUMED
+CREATE OR REPLACE FUNCTION audit_sla()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF OLD.is_paused = false AND NEW.is_paused = true THEN
+        INSERT INTO audit_log (ticket_id, action, actor, payload)
+        VALUES (NEW.ticket_id, 'SLA_PAUSED', NEW.modified_by, '{}');
+
+    ELSIF OLD.is_paused = true AND NEW.is_paused = false THEN
+        INSERT INTO audit_log (ticket_id, action, actor, payload)
+        VALUES (NEW.ticket_id, 'SLA_RESUMED', NEW.modified_by, '{}');
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER audit_sla_trigger
+    AFTER UPDATE OF is_paused
+    ON sla
+    FOR EACH ROW
+EXECUTE FUNCTION audit_sla();

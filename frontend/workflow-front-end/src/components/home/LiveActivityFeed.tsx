@@ -2,20 +2,52 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wsBaseUrl } from "@takypok/shared";
 import dayjs from "dayjs";
+import type { AuditAction } from "../../api/types";
+import { fetchRecentAuditLog } from "../../api/ticketApi";
 
 interface LiveEvent {
   id: string;
   ticketId: number;
-  label: string;
+  action: AuditAction;
+  actorName: string | null;
   ts: string;
 }
 
 const MAX_EVENTS = 20;
 
+const ACTION_LABEL: Record<AuditAction, string> = {
+  TICKET_CREATED:   "Ticket created",
+  STATUS_CHANGED:   "Status changed",
+  ASSIGNEE_CHANGED: "Assignee changed",
+  SLA_PAUSED:       "SLA paused",
+  SLA_RESUMED:      "SLA resumed",
+};
+
+const DOT_COLOR: Record<AuditAction, string> = {
+  TICKET_CREATED:   "bg-[var(--acc-1)]",
+  STATUS_CHANGED:   "bg-[var(--acc-2)]",
+  ASSIGNEE_CHANGED: "bg-[var(--acc-3)]",
+  SLA_PAUSED:       "bg-orange-400",
+  SLA_RESUMED:      "bg-emerald-400",
+};
+
 export default function LiveActivityFeed() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const connectedRef = useRef(false);
+
+  useEffect(() => {
+    fetchRecentAuditLog().then((logs) => {
+      const initial = logs.map((log) => ({
+        id:        `init-${log.id}`,
+        ticketId:  log.ticketId,
+        action:    log.action,
+        actorName: log.actor?.name ?? null,
+        ts:        dayjs(log.createdAt).format("HH:mm:ss"),
+      }));
+      setEvents(initial);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (connectedRef.current) return;
@@ -25,16 +57,24 @@ export default function LiveActivityFeed() {
     const ws = new WebSocket(`${wsBaseUrl}/workflow-service/web-socket/sla`);
     ws.onopen    = () => { ws.send(token ?? ""); };
     ws.onmessage = (e) => {
-      const raw = e.data;
-      const ticketId = Number(raw);
-      if (!ticketId || isNaN(ticketId)) return;
-      const evt: LiveEvent = {
-        id:       `${ticketId}-${Date.now()}`,
-        ticketId,
-        label:    `Ticket #${ticketId} SLA updated`,
-        ts:       dayjs().format("HH:mm:ss"),
-      };
-      setEvents((prev) => [evt, ...prev].slice(0, MAX_EVENTS));
+      console.debug("[LiveActivityFeed] WS message:", e.data);
+      try {
+        const parsed = JSON.parse(e.data);
+        if (!parsed.action || !parsed.ticketId) {
+          console.debug("[LiveActivityFeed] dropped — missing action/ticketId:", parsed);
+          return;
+        }
+        const evt: LiveEvent = {
+          id:        `${parsed.ticketId}-${Date.now()}`,
+          ticketId:  parsed.ticketId,
+          action:    parsed.action as AuditAction,
+          actorName: parsed.actorName ?? null,
+          ts:        dayjs().format("HH:mm:ss"),
+        };
+        setEvents((prev) => [evt, ...prev].slice(0, MAX_EVENTS));
+      } catch {
+        console.debug("[LiveActivityFeed] not JSON (SLA calc event), skipping:", e.data);
+      }
     };
 
     return () => {
@@ -67,9 +107,18 @@ export default function LiveActivityFeed() {
               onClick={() => navigate(`/dashboard/${evt.ticketId}`)}
               className={`w-full flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)] hover:bg-[var(--bg-2)] text-left cursor-crosshair transition-colors fade-up [animation-delay:${i * 0.02}s]`}
             >
-              <div className="flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-[var(--acc-1)] flex-shrink-0" />
-                <span className="font-mono-tech text-[11px] text-[var(--fg)]">{evt.label}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={`w-1 h-1 rounded-full flex-shrink-0 ${DOT_COLOR[evt.action]}`} />
+                <div className="min-w-0">
+                  <span className="block font-mono-tech text-[11px] text-[var(--fg)] truncate">
+                    #{evt.ticketId} — {ACTION_LABEL[evt.action]}
+                  </span>
+                  {evt.actorName && (
+                    <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)] truncate">
+                      by {evt.actorName}
+                    </span>
+                  )}
+                </div>
               </div>
               <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] flex-shrink-0 ml-2">
                 {evt.ts}

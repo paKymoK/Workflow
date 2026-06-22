@@ -1,40 +1,38 @@
 INSERT INTO
     status (id,name, "group", color, "created_at", "created_by", "modified_at", "modified_by")
-    VALUES (1,'To Do',           'TODO',       '#808080', now(),'admin', now(), 'admin'),
-           (2,'In Progress',     'PROCESSING', '#0052CC', now(),'admin', now(), 'admin'),
-           (3,'Pending',         'PROCESSING', '#FF8B00', now(),'admin', now(), 'admin'),
-           (4,'Resolved',        'DONE',       '#36B37E', now(),'admin', now(), 'admin'),
-           (5,'Closed',          'DONE',       '#008000', now(),'admin', now(), 'admin'),
+    VALUES (1,'To Do',           'TODO',       '#808080', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (2,'In Progress',     'PROCESSING', '#0052CC', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (3,'Pending',         'PROCESSING', '#FF8B00', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (4,'Resolved',        'DONE',       '#36B37E', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (5,'Closed',          'DONE',       '#008000', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
            -- Service Request statuses
-           (6,'Submitted',       'TODO',       '#808080', now(),'admin', now(), 'admin'),
-           (7,'Pending Approval','TODO',       '#6554C0', now(),'admin', now(), 'admin'),
-           (8,'Approved',        'TODO',       '#00B8D9', now(),'admin', now(), 'admin'),
-           (9,'Fulfilled',       'DONE',       '#36B37E', now(),'admin', now(), 'admin'),
-           (10,'Rejected',       'DONE',       '#FF5630', now(),'admin', now(), 'admin'),
+           (6,'Submitted',       'TODO',       '#808080', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (7,'Pending Approval','TODO',       '#6554C0', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (8,'Approved',        'TODO',       '#00B8D9', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (9,'Fulfilled',       'DONE',       '#36B37E', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (10,'Rejected',       'DONE',       '#FF5630', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
            -- Problem management statuses
-           (11,'Identified',        'TODO',       '#808080', now(),'admin', now(), 'admin'),
-           (12,'Investigating',     'PROCESSING', '#0052CC', now(),'admin', now(), 'admin'),
-           (13,'Root Cause Found',  'PROCESSING', '#6554C0', now(),'admin', now(), 'admin'),
-           (14,'Known Error',       'PROCESSING', '#FF8B00', now(),'admin', now(), 'admin'),
-           (15,'Problem Resolved',  'DONE',       '#36B37E', now(),'admin', now(), 'admin'),
+           (11,'Identified',        'TODO',       '#808080', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (12,'Investigating',     'PROCESSING', '#0052CC', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (13,'Root Cause Found',  'PROCESSING', '#6554C0', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (14,'Known Error',       'PROCESSING', '#FF8B00', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (15,'Problem Resolved',  'DONE',       '#36B37E', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
            -- Change Request statuses
-           (16,'Draft',              'TODO',       '#808080', now(),'admin', now(), 'admin'),
-           (17,'Submitted',          'TODO',       '#4C9AFF', now(),'admin', now(), 'admin'),
-           (18,'Under Assessment',   'TODO',       '#6554C0', now(),'admin', now(), 'admin'),
-           (19,'Pending Approval',   'TODO',       '#FF8B00', now(),'admin', now(), 'admin'),
-           (20,'Scheduled',          'TODO',       '#00B8D9', now(),'admin', now(), 'admin'),
-           (21,'Implementing',       'PROCESSING', '#0052CC', now(),'admin', now(), 'admin'),
-           (22,'Under Review (PIR)', 'PROCESSING', '#6554C0', now(),'admin', now(), 'admin'),
-           (23,'CR Closed',          'DONE',       '#008000', now(),'admin', now(), 'admin'),
-           (24,'CR Rejected',        'DONE',       '#FF5630', now(),'admin', now(), 'admin'),
-           (25,'Failed',             'DONE',       '#FF5630', now(),'admin', now(), 'admin'),
-           (26,'Rolled Back',        'DONE',       '#FF8B00', now(),'admin', now(), 'admin');
+           (16,'Draft',              'TODO',       '#808080', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (18,'Under Assessment',   'TODO',       '#6554C0', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (20,'Scheduled',          'TODO',       '#00B8D9', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (21,'Implementing',       'PROCESSING', '#0052CC', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (22,'Under Review (PIR)', 'PROCESSING', '#6554C0', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (23,'CR Closed',          'DONE',       '#008000', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (24,'CR Rejected',        'DONE',       '#FF5630', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (25,'Failed',             'DONE',       '#FF5630', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+           (26,'Rolled Back',        'DONE',       '#FF8B00', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 INSERT INTO
     priority (name, response_time, resolution_time, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Low', 1, 30, now(),'admin', now(), 'admin'),
-       ('Medium', 1, 12, now(),'admin', now(), 'admin'),
-       ('High', 1, 4, now(),'admin', now(), 'admin');
+VALUES ('Low', 1, 30, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('Medium', 1, 12, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('High', 1, 4, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 -- Incident management workflow (ITIL).
 -- Lifecycle: To Do -> In Progress -> (Pending) -> Resolved -> Closed (+ Reopen).
@@ -141,7 +139,7 @@ VALUES ('Incident', '[
     "validator": [],
     "postFunctions": []
   }
-]', now(), 'admin', now(), 'admin');
+]', now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 -- Service Request workflow (ITIL).
 -- Lifecycle: Submitted -> Pending Approval -> Approved -> In Progress -> (Pending) -> Fulfilled -> Closed (+ Reopen).
@@ -293,7 +291,7 @@ VALUES ('Service Request', '[
     "validator": [],
     "postFunctions": []
   }
-]', now(), 'admin', now(), 'admin');
+]', now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 -- Problem management workflow (ITIL).
 -- Lifecycle: Identified -> Investigating -> Root Cause Found -> Known Error -> Problem Resolved -> Closed.
@@ -415,7 +413,7 @@ VALUES ('Problem', '[
     "validator": [],
     "postFunctions": []
   }
-]', now(), 'admin', now(), 'admin');
+]', now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 -- Change Request workflow (ITIL).
 -- Lifecycle: Draft -> Submitted -> Under Assessment -> Pending Approval -> Scheduled
@@ -442,9 +440,9 @@ VALUES ('Change Request', '[
     "group": "TODO"
   },
   {
-    "id": 17,
+    "id": 6,
     "name": "Submitted",
-    "color": "#4C9AFF",
+    "color": "#808080",
     "group": "TODO"
   },
   {
@@ -454,9 +452,9 @@ VALUES ('Change Request', '[
     "group": "TODO"
   },
   {
-    "id": 19,
+    "id": 7,
     "name": "Pending Approval",
-    "color": "#FF8B00",
+    "color": "#6554C0",
     "group": "TODO"
   },
   {
@@ -504,13 +502,13 @@ VALUES ('Change Request', '[
 ]', '[
   {
     "from": { "id": 16, "name": "Draft",             "color": "#808080", "group": "TODO" },
-    "to":   { "id": 17, "name": "Submitted",          "color": "#4C9AFF", "group": "TODO" },
+    "to":   { "id": 6,  "name": "Submitted",          "color": "#808080", "group": "TODO" },
     "name": "Submit",
     "validator": [],
     "postFunctions": []
   },
   {
-    "from": { "id": 17, "name": "Submitted",          "color": "#4C9AFF", "group": "TODO" },
+    "from": { "id": 6,  "name": "Submitted",          "color": "#808080", "group": "TODO" },
     "to":   { "id": 18, "name": "Under Assessment",   "color": "#6554C0", "group": "TODO" },
     "name": "Start Assessment",
     "validator": [],
@@ -540,7 +538,7 @@ VALUES ('Change Request', '[
   },
   {
     "from": { "id": 18, "name": "Under Assessment",   "color": "#6554C0", "group": "TODO" },
-    "to":   { "id": 19, "name": "Pending Approval",   "color": "#FF8B00", "group": "TODO" },
+    "to":   { "id": 7,  "name": "Pending Approval",   "color": "#6554C0", "group": "TODO" },
     "name": "Approve",
     "validator": [],
     "postFunctions": [
@@ -548,7 +546,7 @@ VALUES ('Change Request', '[
     ]
   },
   {
-    "from": { "id": 19, "name": "Pending Approval",   "color": "#FF8B00", "group": "TODO" },
+    "from": { "id": 7,  "name": "Pending Approval",   "color": "#6554C0", "group": "TODO" },
     "to":   { "id": 20, "name": "Scheduled",           "color": "#00B8D9", "group": "TODO" },
     "name": "Schedule",
     "validator": [],
@@ -589,15 +587,15 @@ VALUES ('Change Request', '[
     "validator": [],
     "postFunctions": []
   }
-]', now(), 'admin', now(), 'admin');
+]', now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 INSERT INTO
     project (name, code, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Internal Application', 'IA', now(), 'admin', now(), 'admin');
+VALUES ('Internal Application', 'IA', now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 INSERT INTO
     issue_type (name, code, project_id, workflow_id, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Incident',        'INCIDENT',        1, 1, now(), 'admin', now(), 'admin'),
-       ('Service Request', 'SERVICE_REQUEST',  1, 2, now(), 'admin', now(), 'admin'),
-       ('Problem',         'PROBLEM',          1, 3, now(), 'admin', now(), 'admin'),
-       ('Change Request',  'CHANGE_REQUEST',   1, 4, now(), 'admin', now(), 'admin');
+VALUES ('Incident',        'INCIDENT',        1, 1, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('Service Request', 'SERVICE_REQUEST',  1, 2, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('Problem',         'PROBLEM',          1, 3, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('Change Request',  'CHANGE_REQUEST',   1, 4, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);

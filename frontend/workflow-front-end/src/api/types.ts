@@ -212,6 +212,28 @@ export interface SlaOverviewStatistic {
   total: number;
 }
 
+export type AuditAction =
+  | "TICKET_CREATED"
+  | "STATUS_CHANGED"
+  | "ASSIGNEE_CHANGED"
+  | "SLA_PAUSED"
+  | "SLA_RESUMED";
+
+export interface AuditActor {
+  sub: string;
+  name: string;
+  email: string | null;
+}
+
+export interface AuditLog {
+  id: number;
+  ticketId: number;
+  action: AuditAction;
+  actor: AuditActor | null;
+  payload: Record<string, any>;
+  createdAt: string;
+}
+
 export interface TicketByIssueType {
   name: string;
   [status: string]: string | number;

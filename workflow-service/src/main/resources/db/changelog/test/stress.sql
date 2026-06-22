@@ -107,9 +107,9 @@ WITH internal_users(u) AS (
                         -- FIX: real Incident workflow (id 1) instead of the fake 3-step stub
                         '{"id":1,"name":"Incident","statuses":[{"id":1,"name":"To Do","color":"#808080","group":"TODO"},{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},{"id":5,"name":"Closed","color":"#008000","group":"DONE"}],"transitions":[{"from":{"id":1,"name":"To Do","color":"#808080","group":"TODO"},"to":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"name":"Start Progress","validator":[],"postFunctions":[]},{"from":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"to":{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},"name":"Put On Hold","validator":["com.takypok.workflowservice.function.validator.RequirePendingReasonValidator"],"postFunctions":["com.takypok.workflowservice.function.postfunction.PauseSlaFunction"]},{"from":{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},"to":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"name":"Resume","validator":[],"postFunctions":["com.takypok.workflowservice.function.postfunction.ResumeSlaFunction"]},{"from":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"to":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"name":"Resolve","validator":[],"postFunctions":[]},{"from":{"id":3,"name":"Pending","color":"#FF8B00","group":"PROCESSING"},"to":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"name":"Resolve","validator":[],"postFunctions":["com.takypok.workflowservice.function.postfunction.ResumeSlaFunction"]},{"from":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"to":{"id":5,"name":"Closed","color":"#008000","group":"DONE"},"name":"Close","validator":[],"postFunctions":[]},{"from":{"id":4,"name":"Resolved","color":"#36B37E","group":"DONE"},"to":{"id":2,"name":"In Progress","color":"#0052CC","group":"PROCESSING"},"name":"Reopen","validator":[],"postFunctions":[]}]}'::jsonb,
                         created_at,
-                        reporter_json->>'sub',
+                        reporter_json,
                         now(),
-                        reporter_json->>'sub'
+                        reporter_json
                  FROM ticket_data RETURNING id, status, priority, created_at
      )
 INSERT
@@ -179,8 +179,8 @@ SELECT t.id,
                'timezone',   'Asia/Ho_Chi_Minh'
        ),
        now(),
-       'Anonymous',
+       '{"sub":"anonymous","name":"Anonymous","email":null}'::jsonb,
        now(),
-       'Anonymous'
+       '{"sub":"anonymous","name":"Anonymous","email":null}'::jsonb
 FROM ins_ticket t
 CROSS JOIN LATERAL (SELECT random() AS r_done_overdue) rd;

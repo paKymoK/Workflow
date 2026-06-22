@@ -46,6 +46,8 @@ public class PostgresConfig {
     converters.add(new TicketWorkflowWriter(mapper));
     converters.add(new UserReader(mapper));
     converters.add(new UserWriter(mapper));
+    converters.add(new JsonNodeReader(mapper));
+    converters.add(new JsonNodeWriter(mapper));
     converters.add(new PriorityReader(mapper));
     converters.add(new PriorityWriter(mapper));
     converters.add(new SlaPausedTimeReader(mapper));
