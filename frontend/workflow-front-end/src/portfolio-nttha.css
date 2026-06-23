@@ -1,0 +1,140 @@
+/* ── Fonts ───────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+/* ── Reset scoped to nttha root ──────────────────────────────────────── */
+.nth-root * { box-sizing: border-box; margin: 0; padding: 0; }
+.nth-root a  { text-decoration: none; }
+
+/* Override global body cursor for this page */
+.nth-root { cursor: auto !important; }
+.nth-root * { cursor: auto !important; }
+.nth-root a, .nth-root button { cursor: pointer !important; }
+
+/* ── Animations ──────────────────────────────────────────────────────── */
+@keyframes nth-fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes nth-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-18px) scale(1.04); }
+}
+@keyframes nth-bubble {
+  0%   { transform: translateY(0) scale(1); opacity: 0.6; }
+  80%  { opacity: 0.3; }
+  100% { transform: translateY(-60px) scale(0.8); opacity: 0; }
+}
+@keyframes nth-ripple {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ── Fade-up on scroll (IntersectionObserver) ────────────────────────── */
+.nth-fi {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.nth-fi.visible { opacity: 1; transform: none; }
+
+/* ── Nav ─────────────────────────────────────────────────────────────── */
+.nth-nav-link {
+  font-size: 14px; color: #4a7a96;
+  transition: color 0.2s; text-decoration: none;
+}
+.nth-nav-link:hover { color: #1a7ab5; }
+
+.nth-btn-contact {
+  font-size: 14px; font-weight: 500; color: #fff !important;
+  background: #1a7ab5; padding: 10px 24px; border-radius: 100px;
+  transition: background 0.2s; white-space: nowrap;
+}
+.nth-btn-contact:hover { background: #1565a0; }
+
+/* ── Hero buttons ────────────────────────────────────────────────────── */
+.nth-btn-primary {
+  font-size: 15px; font-weight: 500; padding: 16px 40px;
+  background: #1a7ab5; color: #fff !important; border-radius: 100px;
+  transition: background 0.2s, transform 0.2s; display: inline-block;
+}
+.nth-btn-primary:hover { background: #1565a0; transform: translateY(-2px); }
+
+.nth-btn-outline {
+  font-size: 15px; padding: 16px 40px;
+  border: 1.5px solid #7ec8e3; color: #0d2b3e !important; border-radius: 100px;
+  transition: border-color 0.2s, color 0.2s; display: inline-block;
+}
+.nth-btn-outline:hover { border-color: #1a7ab5; color: #1a7ab5 !important; }
+
+/* ── Skill card ──────────────────────────────────────────────────────── */
+.nth-skill-card {
+  background: #fff; border-radius: 20px; padding: 32px;
+  box-shadow: 0 2px 20px rgba(26,122,181,0.06);
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.nth-skill-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(26,122,181,0.12); }
+
+/* ── Project card ────────────────────────────────────────────────────── */
+.nth-proj-card {
+  background: #eef6fb; border-radius: 20px; padding: 32px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.nth-proj-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(26,122,181,0.12); }
+
+/* ── Contact link ────────────────────────────────────────────────────── */
+.nth-contact-link {
+  display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+  background: #eef6fb; border-radius: 16px; color: #0d2b3e !important;
+  font-size: 15px; transition: transform 0.2s, box-shadow 0.2s;
+}
+.nth-contact-link:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,122,181,0.11); }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .nth-skills-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .nth-nav-links     { display: none !important; }
+  .nth-nav           { padding: 0 20px !important; }
+
+  .nth-about-grid    { grid-template-columns: 1fr !important; gap: 48px !important; }
+  .nth-about-blob    { order: -1; }
+
+  /* projects: drop stagger, go single column */
+  .nth-projects-grid { flex-direction: column !important; }
+  .nth-projects-right { margin-top: 0 !important; }
+
+  .nth-hero          { padding: 100px 24px 60px !important; }
+  .nth-section       { padding: 80px 6% !important; }
+
+  /* section headings */
+  .nth-h2 { font-size: 34px !important; }
+
+  /* about blob: shrink */
+  .nth-about-blob > div { width: 260px !important; height: 260px !important; }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .nth-skills-grid   { grid-template-columns: 1fr !important; }
+  .nth-hero-btns     { flex-direction: column !important; align-items: stretch !important; }
+  .nth-btn-primary, .nth-btn-outline { text-align: center; width: 100%; }
+
+  .nth-stats         { gap: 20px !important; flex-wrap: wrap; }
+  .nth-stat-num      { font-size: 32px !important; }
+
+  .nth-section       { padding: 60px 5% !important; }
+  .nth-hero          { padding: 90px 16px 48px !important; }
+  .nth-footer        { padding: 36px 6% !important; }
+
+  .nth-h2            { font-size: 28px !important; }
+  .nth-hero-sub      { font-size: 16px !important; }
+
+  /* timeline: tighten */
+  .nth-timeline      { padding-left: 28px !important; }
+  .nth-tl-dot        { left: -22px !important; }
+}

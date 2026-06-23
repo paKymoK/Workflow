@@ -481,7 +481,7 @@ export default function TicketDetail() {
                     <div className="flex items-start gap-2 min-w-0">
                       <span
                         className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
-                        style={{ background: AUDIT_DOT_COLOR[log.action] }}
+                        style={dynamicStyle({ background: AUDIT_DOT_COLOR[log.action] })}
                       />
                       <div className="min-w-0">
                         <span className="font-bebas text-[12px] tracking-[.12em] text-[var(--fg)]">

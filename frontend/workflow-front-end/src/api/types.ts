@@ -230,7 +230,7 @@ export interface AuditLog {
   ticketId: number;
   action: AuditAction;
   actor: AuditActor | null;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   createdAt: string;
 }
 

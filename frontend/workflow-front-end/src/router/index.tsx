@@ -3,6 +3,7 @@ import { AuthProvider } from "@takypok/shared";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Login from "../pages/Login";
 import Portfolio from "../pages/Portfolio";
+import PortfolioNttha from "../pages/PortfolioNttha";
 import Home from "../pages/Home";
 import Dashboard from "../pages/Dashboard";
 import TicketDetail from "../pages/TicketDetail";
@@ -18,6 +19,7 @@ export default function AppRouter() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio/nttha" element={<PortfolioNttha />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/callback" element={<Callback />} />
           <Route element={<ProtectedRoute />}>
