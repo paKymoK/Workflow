@@ -44,7 +44,7 @@ const PROJECTS: Project[] = [
     techStack: ["React.js", "TypeScript", "Ant Design", "REST API", "Spring Boot"],
     responsibilities: [
       "Built and maintained the KPI tracking dashboard UI",
-      "Integrated REST APIs for real-time performance data",
+      "Integrated REST APIs for performance data",
       "Collaborated with backend team on API contract design",
       "Ensured responsive layouts for tablet and desktop",
     ],
@@ -103,28 +103,28 @@ const PROJECTS: Project[] = [
     problem: "The warehouse had no live visibility into bin states or robot positions, causing picking errors and manual reconciliation delays that cost ~2h per shift.",
     whatIBuilt: "An Eclipse RCP backend for inbound/outbound flow management and a D3.js real-time visualization layer showing live bin occupancy, robot positions, and exception queues. WebSocket bridge to the Autostore API.",
     result: "Picking error rate cut by 72%. Manual reconciliation eliminated. System processed 1,200+ transactions/day at peak without incident.",
-    techStack: ["Eclipse RCP", "Java", "D3.js", "Node.js", "WebSocket", "PostgreSQL"],
+    techStack: ["Eclipse RCP", "Java", "Node.js", "WebSocket", "PostgreSQL"],
     responsibilities: [
       "Backend: business logic and database management",
       "DB tuning and performance optimization",
       "Autostore third-party API integration",
-      "Real-time bin visualization with D3.js",
+      "Real-time bin visualization",
     ],
   },
 ];
 
 const TIMELINE: TlEntry[] = [
   {
-    id: "t1", company: "Co-well Asia", role: "Backend Developer",
+    id: "t1", company: "Co-well Asia", role: "Mobile Developer",
     dates: "JAN 2020 — MAY 2022",
-    desc: "First professional role — built and maintained the backend for a Warehouse Control System. Learned production DB tuning, real-time WebSocket protocols, and third-party API integration at scale.",
-    tags: ["Java"],
+    desc: "",
+    tags: ["Android", "Java", "React Native"],
     accentVar: A.orange,
   },
   {
     id: "t2", company: "CMC Global", role: "Full-Stack Developer",
     dates: "MAY 2022 — NOW",
-    desc: "Built two internal products from scratch: a Jira Server plugin for the finance team and a ticketing system replacing a spreadsheet-based support process. First time owning a full stack end-to-end.",
+    desc: "",    
     tags: ["Java", "Spring Boot", "React.js"],
     accentVar: A.cyan,
   },
@@ -437,11 +437,6 @@ export default function Portfolio() {
 
         {/* ── Hero ────────────────────────────────────── */}
         <section className="pf-hero">
-          <div className="pf-hero-eyebrow">
-            SYS://PORTFOLIO_v4.1 — INITIALIZED
-            <span style={{ animation: "pf-blink 1.2s step-end infinite", color: "var(--pf-cyan)" }}>_</span>
-          </div>
-
           <div className="pf-title-wrap">
             <h1 className="pf-hero-title">
               FULL-STACK<br />
