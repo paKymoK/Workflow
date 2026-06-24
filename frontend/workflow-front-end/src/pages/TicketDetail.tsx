@@ -652,7 +652,7 @@ const AUDIT_DOT_COLOR: Record<AuditAction, string> = {
 };
 
 function auditDetail(log: AuditLog): string {
-  const p = log.payload;
+  const p = log.payload as { from?: { name?: string } | null; to?: { name?: string } | null };
   if (log.action === "STATUS_CHANGED")
     return `${p.from?.name ?? "?"} → ${p.to?.name ?? "?"}`;
   if (log.action === "ASSIGNEE_CHANGED")
