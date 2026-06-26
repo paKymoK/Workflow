@@ -54,7 +54,7 @@ public class IngestionService {
 
   private final TokenTextSplitter splitter =
       TokenTextSplitter.builder()
-          .chunkSize(400)
+          .defaultChunkSize(400)
           .minChunkSizeChars(60)
           .minChunkLengthToEmbed(5)
           .maxNumChunks(10000)
