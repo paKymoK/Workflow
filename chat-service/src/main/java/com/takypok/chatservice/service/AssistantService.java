@@ -37,15 +37,18 @@ public class AssistantService {
                       .distinct()
                       .toList();
 
+              var prompt = chatClient.prompt().user(question);
+
               String raw =
-                  chatClient
-                      .prompt()
-                      .advisors(
-                          new QuestionAnswerAdvisor(
-                              vectorStore, SearchRequest.builder().query(question).topK(4).build()))
-                      .user(question)
-                      .call()
-                      .content();
+                  docs.isEmpty()
+                      ? prompt.call().content()
+                      : prompt
+                          .advisors(
+                              new QuestionAnswerAdvisor(
+                                  vectorStore,
+                                  SearchRequest.builder().query(question).topK(4).build()))
+                          .call()
+                          .content();
 
               return AnswerResponse.builder()
                   .answer(stripThinkingTokens(raw))
