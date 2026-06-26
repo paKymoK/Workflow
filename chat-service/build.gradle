@@ -6,12 +6,12 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 ext {
-    set('springAiVersion', '1.0.0-M6')
+    set('springAiVersion', '1.1.8')
     set('springCloudVersion', '2025.0.0')
 }
 
@@ -25,11 +25,10 @@ dependencyManagement {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
-    implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
-    implementation 'org.springframework.ai:spring-ai-qdrant-store-spring-boot-starter'
+    implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant'
     implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-
 }
 
 tasks.named('test') {
