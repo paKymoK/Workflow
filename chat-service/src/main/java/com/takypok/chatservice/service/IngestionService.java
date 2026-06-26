@@ -54,11 +54,11 @@ public class IngestionService {
 
   private final TokenTextSplitter splitter =
       TokenTextSplitter.builder()
-          .chunkSize(400)
-          .minChunkSizeChars(60)
-          .minChunkLengthToEmbed(5)
-          .maxNumChunks(10000)
-          .keepSeparator(true)
+          .withChunkSize(400)
+          .withMinChunkSizeChars(60)
+          .withMinChunkLengthToEmbed(5)
+          .withMaxNumChunks(10000)
+          .withKeepSeparator(true)
           .build();
 
   // ── Supported by Python ──────────────────────────────────────────────────

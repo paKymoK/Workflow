@@ -44,8 +44,7 @@ public class AssistantService {
                       ? prompt.call().content()
                       : prompt
                           .advisors(
-                              QuestionAnswerAdvisor.builder()
-                                  .vectorStore(vectorStore)
+                              QuestionAnswerAdvisor.builder(vectorStore)
                                   .searchRequest(
                                       SearchRequest.builder().query(question).topK(4).build())
                                   .build())

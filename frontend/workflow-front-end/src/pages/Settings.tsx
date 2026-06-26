@@ -8,6 +8,7 @@ import StatusList from "../components/settings/StatusList";
 import PriorityList from "../components/settings/PriorityList";
 import ProjectList from "../components/settings/ProjectList";
 import IssueTypeList from "../components/settings/IssueTypeList";
+import TeamOrg from "../components/settings/TeamOrg";
 import { useStatuses, useProjects, usePriorities, useAllIssueTypes } from "../hooks/useTickets";
 
 const SCHEMES: { key: AccentScheme; label: string }[] = [
@@ -31,7 +32,7 @@ const SCHEME_SWATCH: Record<string, string> = {
   magenta:  "bg-[#FF3D9A]",
 };
 
-const TABS_KEYS = ["workflow", "status", "priority", "project", "issue-type"] as const;
+const TABS_KEYS = ["workflow", "status", "priority", "project", "issue-type", "team-org"] as const;
 type TabKey = typeof TABS_KEYS[number];
 
 interface CardDef {
@@ -47,7 +48,7 @@ const CARD_DEFS: CardDef[] = [
   { key: "priority",   icon: "bolt",   label: "PRIORITIES",    desc: "SLA response & resolution"   },
   { key: "project",    icon: "pin",    label: "PROJECTS",      desc: "Project codes & names"       },
   { key: "issue-type", icon: "filter", label: "ISSUE TYPES",   desc: "Ticket categories"           },
-  { key: "users",      icon: "user",   label: "USERS & ROLES", desc: "Managed in auth service"     },
+  { key: "team-org",   icon: "user",   label: "TEAM ORG",      desc: "Application support structure" },
 ];
 
 function SectionContent({ tabKey }: { tabKey: string }) {
@@ -57,6 +58,7 @@ function SectionContent({ tabKey }: { tabKey: string }) {
     case "priority":   return <PriorityList />;
     case "project":    return <ProjectList />;
     case "issue-type": return <IssueTypeList />;
+    case "team-org":   return <TeamOrg />;
     default:           return null;
   }
 }
@@ -76,7 +78,7 @@ export default function Settings() {
     priority:     priorities.length,
     project:      projects.length,
     "issue-type": issueTypes.length,
-    users:        null,
+    "team-org":   null,
   };
 
   const activeDef = CARD_DEFS.find((c) => c.key === activeKey)!;
