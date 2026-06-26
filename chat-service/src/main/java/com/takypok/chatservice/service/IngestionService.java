@@ -52,7 +52,14 @@ public class IngestionService {
   @Value("${ingest.python.script:scripts/ingest.py}")
   private String pythonScript;
 
-  private final TokenTextSplitter splitter = new TokenTextSplitter(400, 60, 5, 10000, true);
+  private final TokenTextSplitter splitter =
+      TokenTextSplitter.builder()
+          .chunkSize(400)
+          .minChunkSizeChars(60)
+          .minChunkLengthToEmbed(5)
+          .maxNumChunks(10000)
+          .keepSeparator(true)
+          .build();
 
   // ── Supported by Python ──────────────────────────────────────────────────
   private static final Set<String> PYTHON_EXTENSIONS = Set.of(".docx", ".xlsx", ".pptx");
