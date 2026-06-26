@@ -4,7 +4,7 @@ import com.takypok.chatservice.model.AnswerResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -44,9 +44,11 @@ public class AssistantService {
                       ? prompt.call().content()
                       : prompt
                           .advisors(
-                              new QuestionAnswerAdvisor(
-                                  vectorStore,
-                                  SearchRequest.builder().query(question).topK(4).build()))
+                              QuestionAnswerAdvisor.builder()
+                                  .vectorStore(vectorStore)
+                                  .searchRequest(
+                                      SearchRequest.builder().query(question).topK(4).build())
+                                  .build())
                           .call()
                           .content();
 
