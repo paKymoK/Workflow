@@ -19,6 +19,11 @@ public class AssistantService {
   private final ChatClient chatClient;
   private final VectorStore vectorStore;
 
+  private String stripThinkingTokens(String response) {
+    if (response == null) return "";
+    return response.replaceAll("(?s)<think>.*?</think>", "").trim();
+  }
+
   public Mono<AnswerResponse> ask(String question) {
     return Mono.fromCallable(
             () -> {
@@ -32,7 +37,7 @@ public class AssistantService {
                       .distinct()
                       .toList();
 
-              String answer =
+              String raw =
                   chatClient
                       .prompt()
                       .advisors(
@@ -42,7 +47,10 @@ public class AssistantService {
                       .call()
                       .content();
 
-              return AnswerResponse.builder().answer(answer).sources(sources).build();
+              return AnswerResponse.builder()
+                  .answer(stripThinkingTokens(raw))
+                  .sources(sources)
+                  .build();
             })
         .subscribeOn(Schedulers.boundedElastic());
   }
