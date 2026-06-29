@@ -341,7 +341,7 @@ export default function TeamOrg() {
 
   const { data: ticketPage, isLoading: ticketsLoading } = useQuery({
     queryKey: ["team", "tickets"],
-    queryFn: () => fetchTickets({ page: 0, size: 500 }),
+    queryFn: () => fetchTickets({ page: 0, size: 100 }),
     staleTime: 30 * 1000,
   });
 

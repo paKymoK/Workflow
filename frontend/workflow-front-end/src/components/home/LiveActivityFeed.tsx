@@ -84,7 +84,7 @@ export default function LiveActivityFeed() {
   }, []);
 
   return (
-    <div className="h-full border border-[var(--line)] bg-[var(--bg-1)] flex flex-col">
+    <div className="h-full border border-[var(--line)] bg-[var(--bg-1)] flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
         <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">LIVE ACTIVITY</span>
         <span className="flex items-center gap-1.5">

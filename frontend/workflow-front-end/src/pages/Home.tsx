@@ -53,11 +53,13 @@ export default function Home() {
       </div>
 
       {/* Row 4 — avg resolution chart + live activity feed */}
-      <div className="grid [grid-template-columns:1.6fr_1fr] gap-[14px] items-start">
-        <div className="min-w-0 overflow-hidden">
+      <div className="grid [grid-template-columns:1.6fr_1fr] [grid-template-rows:560px] gap-[14px]">
+        <div className="min-w-0 overflow-y-auto">
           <AvgResolutionCard refetchKey={refetchKey} />
         </div>
-        <LiveActivityFeed />
+        <div className="min-w-0 h-full">
+          <LiveActivityFeed />
+        </div>
       </div>
     </div>
   );
