@@ -395,6 +395,18 @@ export async function updateAssignee(ticketId: string | number, payload: { sub: 
     return data;
 }
 
+export interface AssigneeLoad {
+    assigneeSub: string;
+    openCount: number;
+}
+
+export async function fetchAssigneeLoad(): Promise<AssigneeLoad[]> {
+    const { data } = await api.get<ResultMessage<AssigneeLoad[]>>(
+        "/workflow-service/v1/ticket/assignee-load",
+    );
+    return data.data ?? [];
+}
+
 export async function fetchRecentAuditLog(): Promise<AuditLog[]> {
     const { data } = await api.get<ResultMessage<AuditLog[]>>(
         "/workflow-service/v1/ticket/audit",

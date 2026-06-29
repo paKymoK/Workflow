@@ -14,11 +14,6 @@ objectClass: top
 objectClass: organizationalUnit
 ou: users
 
-dn: ou=groups,dc=mycompany,dc=local
-objectClass: top
-objectClass: organizationalUnit
-ou: groups
-
 # ── Users ────────────────────────────────────────────────────
 
 dn: cn=ndtu24,ou=users,dc=mycompany,dc=local
@@ -174,37 +169,3 @@ displayName: Tran Xuan Dat
 mail: txdat2@mycompany.local
 userPassword: 1
 
-# ── Groups ───────────────────────────────────────────────────
-
-dn: cn=l1-support,ou=groups,dc=mycompany,dc=local
-objectClass: groupOfNames
-cn: l1-support
-member: cn=btngoc2,ou=users,dc=mycompany,dc=local
-member: cn=nmngoc5,ou=users,dc=mycompany,dc=local
-member: cn=nttdung9,ou=users,dc=mycompany,dc=local
-member: cn=dvtuan4,ou=users,dc=mycompany,dc=local
-member: cn=ldduc,ou=users,dc=mycompany,dc=local
-member: cn=ndtoi,ou=users,dc=mycompany,dc=local
-member: cn=nmhoang6,ou=users,dc=mycompany,dc=local
-member: cn=ntnghia4,ou=users,dc=mycompany,dc=local
-member: cn=nvtuan16,ou=users,dc=mycompany,dc=local
-member: cn=nxmanh1,ou=users,dc=mycompany,dc=local
-member: cn=phanh5,ou=users,dc=mycompany,dc=local
-member: cn=ptduong1,ou=users,dc=mycompany,dc=local
-member: cn=txdat2,ou=users,dc=mycompany,dc=local
-
-dn: cn=l2-support,ou=groups,dc=mycompany,dc=local
-objectClass: groupOfNames
-cn: l2-support
-member: cn=nvtu3,ou=users,dc=mycompany,dc=local
-member: cn=natuan25,ou=users,dc=mycompany,dc=local
-
-dn: cn=l3-support,ou=groups,dc=mycompany,dc=local
-objectClass: groupOfNames
-cn: l3-support
-member: cn=tqthai,ou=users,dc=mycompany,dc=local
-
-dn: cn=service-manager,ou=groups,dc=mycompany,dc=local
-objectClass: groupOfNames
-cn: service-manager
-member: cn=ndtu24,ou=users,dc=mycompany,dc=local

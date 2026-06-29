@@ -19,6 +19,7 @@ import com.takypok.workflowservice.model.request.AssigneeUpdateRequest;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
+import com.takypok.workflowservice.model.response.AssigneeLoad;
 import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.repository.*;
 import com.takypok.workflowservice.security.Actor;
@@ -396,6 +397,11 @@ public class TicketServiceImpl implements TicketService {
                     latestTicket ->
                         postFunction.apply(s, latestTicket, currentUser, transition, request)))
         .flatMap(mono -> mono);
+  }
+
+  @Override
+  public Flux<AssigneeLoad> assigneeLoad() {
+    return ticketRepository.assigneeLoad();
   }
 
   private String normalize(String value) {

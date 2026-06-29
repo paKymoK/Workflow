@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@takypok/shared";
 import type { ResultMessage } from "../../api/types";
-import { fetchTickets } from "../../api/ticketApi";
+import { fetchAssigneeLoad } from "../../api/ticketApi";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,6 +15,19 @@ interface TeamUser {
   email:      string;
   title:      string;
   department: string;
+}
+
+interface GroupMember {
+  sub:   string;
+  name:  string;
+  email: string | null;
+}
+
+interface UserGroup {
+  id:          string;
+  name:        string;
+  description: string;
+  members:     GroupMember[];
 }
 
 interface Agent {
@@ -58,17 +71,12 @@ function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-function classifyUser(user: TeamUser): AgentLevel | "STAKEHOLDER" {
-  const t = user.title.toLowerCase();
-  if (t.includes("l1") || t.includes("frontline"))                                       return "L1";
-  if (t.includes("l2") || t.includes("specialist"))                                      return "L2";
-  if (t.includes("l3"))                                                                   return "L3";
-  if (t.includes("director") || t.includes("owner") || t.includes("sponsor") || t.includes("exec")) return "STAKEHOLDER";
-  const d = user.department.toLowerCase();
-  if (d.includes("engineering")) return "L3";
-  if (d.includes("specialist"))  return "L2";
-  return "L1";
-}
+const GROUP_LEVEL: Record<string, AgentLevel | "STAKEHOLDER"> = {
+  "grp-l1-support":      "L1",
+  "grp-l2-support":      "L2",
+  "grp-l3-support":      "L3",
+  "grp-service-manager": "STAKEHOLDER",
+};
 
 function computeStatus(open: number, max: number): AgentStatus {
   if (open === 0)          return "AWAY";
@@ -339,40 +347,62 @@ export default function TeamOrg() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const { data: ticketPage, isLoading: ticketsLoading } = useQuery({
-    queryKey: ["team", "tickets"],
-    queryFn: () => fetchTickets({ page: 0, size: 100 }),
+  const { data: groups = [], isLoading: groupsLoading } = useQuery({
+    queryKey: ["team", "groups"],
+    queryFn: async () => {
+      const { data } = await api.get<ResultMessage<UserGroup[]>>("/auth-service/v1/groups");
+      return data.data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const subToGroupId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const g of groups) {
+      for (const m of g.members) {
+        map.set(m.sub, g.id);
+      }
+    }
+    return map;
+  }, [groups]);
+
+  const { data: loadData = [], isLoading: ticketsLoading } = useQuery({
+    queryKey: ["team", "assignee-load"],
+    queryFn: fetchAssigneeLoad,
     staleTime: 30 * 1000,
   });
 
-  const ticketsByEmail = useMemo(() => {
+  const ticketsBySub = useMemo(() => {
     const map = new Map<string, number>();
-    for (const t of ticketPage?.content ?? []) {
-      if (!t.assignee || t.status.group === "DONE") continue;
-      const e = t.assignee.email;
-      map.set(e, (map.get(e) ?? 0) + 1);
+    for (const row of loadData) {
+      map.set(row.assigneeSub, row.openCount);
     }
     return map;
-  }, [ticketPage]);
+  }, [loadData]);
 
   const { agents, stakeholders } = useMemo(() => {
-    const agents: Agent[]           = [];
+    const agents: Agent[]             = [];
     const stakeholders: Stakeholder[] = [];
 
     for (const u of rawUsers) {
-      const role     = classifyUser(u);
+      const groupId = subToGroupId.get(u.sub);
+      if (!groupId) continue;
+
+      const role     = GROUP_LEVEL[groupId];
+      if (!role) continue;
+
       const initials = getInitials(u.name);
 
       if (role === "STAKEHOLDER") {
         stakeholders.push({
-          sub: u.sub, initials, name: u.name, title: u.title,
+          sub: u.sub, initials, name: u.name, title: u.title ?? "",
           department: (u.department || "N/A").toUpperCase(),
         });
       } else {
         const max  = LEVEL_CFG[role].maxTickets;
-        const open = ticketsByEmail.get(u.email) ?? 0;
+        const open = ticketsBySub.get(u.sub) ?? 0;
         agents.push({
-          sub: u.sub, initials, name: u.name, title: u.title,
+          sub: u.sub, initials, name: u.name, title: u.title ?? "",
           level: role, status: computeStatus(open, max),
           openTickets: open, maxTickets: max,
         });
@@ -380,7 +410,7 @@ export default function TeamOrg() {
     }
 
     return { agents, stakeholders };
-  }, [rawUsers, ticketsByEmail]);
+  }, [rawUsers, subToGroupId, ticketsBySub]);
 
   const byLevel = useMemo(() => ({
     L1: agents.filter((a) => a.level === "L1"),
@@ -391,7 +421,7 @@ export default function TeamOrg() {
   const totalOnline  = agents.filter((a) => a.status !== "AWAY").length;
   const totalMembers = agents.length + stakeholders.length;
 
-  if (usersLoading || ticketsLoading) {
+  if (usersLoading || groupsLoading || ticketsLoading) {
     return (
       <div className="flex items-center gap-2 py-8 font-mono-tech text-xs text-[var(--fg-faint)]">
         <span className="animate-pulse">▸</span> LOADING TEAM DATA...

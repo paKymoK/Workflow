@@ -14,6 +14,7 @@ import com.takypok.workflowservice.model.request.AssigneeUpdateRequest;
 import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
+import com.takypok.workflowservice.model.response.AssigneeLoad;
 import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.repository.AuditLogRepository;
 import com.takypok.workflowservice.security.Actor;
@@ -98,6 +99,11 @@ public class TicketController {
     return ticketService
         .transition(transitionRequest, getUserInfo(authentication))
         .map(ResultMessage::success);
+  }
+
+  @GetMapping("/assignee-load")
+  public Mono<ResultMessage<List<AssigneeLoad>>> getAssigneeLoad() {
+    return ticketService.assigneeLoad().collectList().map(ResultMessage::success);
   }
 
   @GetMapping("/audit")

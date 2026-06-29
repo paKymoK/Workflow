@@ -150,6 +150,18 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
 
   @Query(
       """
+                    SELECT
+                        assignee->>'sub' AS assignee_sub,
+                        COUNT(*)         AS open_count
+                    FROM ticket
+                    WHERE status->>'group' != 'DONE'
+                      AND assignee IS NOT NULL
+                    GROUP BY assignee->>'sub'
+                    """)
+  Flux<AssigneeLoad> assigneeLoad();
+
+  @Query(
+      """
             SELECT
                           issue_type->>'name' AS name,
                           COUNT(*) FILTER (WHERE status->>'group' = 'TODO')       AS "todo",

@@ -136,6 +136,16 @@ CREATE INDEX IF NOT EXISTS idx_sla_status_response_overdue ON sla ((status ->> '
 CREATE INDEX IF NOT EXISTS idx_sla_status_resolution_overdue ON sla ((status ->> 'isResolutionOverdue'));
 CREATE INDEX IF NOT EXISTS idx_sla_status_resolution_percent ON sla ((status ->> 'resolutionPercent'));
 
+CREATE INDEX IF NOT EXISTS idx_ticket_open_assignee_sub
+ON ticket ((assignee->>'sub'))
+WHERE status->>'group' != 'DONE'
+  AND assignee IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_sla_pending_overdue_check
+ON sla (ticket_id)
+WHERE (status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
+   OR (status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true';
+
 CREATE OR REPLACE FUNCTION validate_paused_time()
     RETURNS TRIGGER
     LANGUAGE plpgsql
