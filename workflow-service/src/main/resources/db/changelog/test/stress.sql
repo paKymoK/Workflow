@@ -10,26 +10,23 @@
 
 WITH internal_users(u) AS (
      VALUES
-       ('{"sub":"nvhung",  "name":"Nguyen Van Hung",    "email":"nvhung@mycompany.local"}'::jsonb),
-       ('{"sub":"ltphuong","name":"Le Thi Phuong",      "email":"ltphuong@mycompany.local"}'::jsonb),
-       ('{"sub":"pdhung",  "name":"Pham Duc Hung",      "email":"pdhung@mycompany.local"}'::jsonb),
-       ('{"sub":"hmlong",  "name":"Hoang Minh Long",    "email":"hmlong@mycompany.local"}'::jsonb),
-       ('{"sub":"tqthai",  "name":"Truong Quang Thai",  "email":"tqthai@mycompany.local"}'::jsonb),
-       ('{"sub":"nvbinh",  "name":"Nguyen Van Binh",    "email":"nvbinh@mycompany.local"}'::jsonb),
-       ('{"sub":"dqbao",   "name":"Dang Quoc Bao",      "email":"dqbao@mycompany.local"}'::jsonb),
-       ('{"sub":"vqhieu",  "name":"Vu Quang Hieu",      "email":"vqhieu@mycompany.local"}'::jsonb),
-       ('{"sub":"nttung",  "name":"Nguyen Thanh Tung",  "email":"nttung@mycompany.local"}'::jsonb),
-       ('{"sub":"dtnam",   "name":"Do Thanh Nam",        "email":"dtnam@mycompany.local"}'::jsonb),
-       ('{"sub":"nthuong", "name":"Nguyen Thi Huong",   "email":"nthuong@mycompany.local"}'::jsonb),
-       ('{"sub":"btlan",   "name":"Bui Thi Lan",         "email":"btlan@mycompany.local"}'::jsonb),
-       ('{"sub":"pthoa",   "name":"Phan Thi Hoa",        "email":"pthoa@mycompany.local"}'::jsonb),
-       ('{"sub":"ltmai",   "name":"Ly Thi Mai",           "email":"ltmai@mycompany.local"}'::jsonb),
-       ('{"sub":"mtngoc",  "name":"Mai Thi Ngoc",         "email":"mtngoc@mycompany.local"}'::jsonb),
-       ('{"sub":"ttthu",   "name":"Tran Thi Thu",         "email":"ttthu@mycompany.local"}'::jsonb),
-       ('{"sub":"dtyen",   "name":"Dinh Thi Yen",         "email":"dtyen@mycompany.local"}'::jsonb),
-       ('{"sub":"cvphuc",  "name":"Cao Van Phuc",         "email":"cvphuc@mycompany.local"}'::jsonb),
-       ('{"sub":"nvan",    "name":"Nguyen Van An",        "email":"nvan@mycompany.local"}'::jsonb),
-       ('{"sub":"tvduc",   "name":"Tran Van Duc",         "email":"tvduc@mycompany.local"}'::jsonb)
+       ('{"sub":"btngoc2",  "name":"Bui Thuy Ngoc",        "email":"btngoc2@mycompany.local"}'::jsonb),
+       ('{"sub":"nmngoc5",  "name":"Nguyen Minh Ngoc",     "email":"nmngoc5@mycompany.local"}'::jsonb),
+       ('{"sub":"nttdung9", "name":"Nguyen Thi Thuy Dung", "email":"nttdung9@mycompany.local"}'::jsonb),
+       ('{"sub":"dvtuan4",  "name":"Do Van Tuan",           "email":"dvtuan4@mycompany.local"}'::jsonb),
+       ('{"sub":"ldduc",    "name":"Le Dinh Duc",           "email":"ldduc@mycompany.local"}'::jsonb),
+       ('{"sub":"ndtoi",    "name":"Nguyen Dinh Toi",       "email":"ndtoi@mycompany.local"}'::jsonb),
+       ('{"sub":"nmhoang6", "name":"Nguyen Minh Hoang",    "email":"nmhoang6@mycompany.local"}'::jsonb),
+       ('{"sub":"ntnghia4", "name":"Nguyen Tuan Nghia",    "email":"ntnghia4@mycompany.local"}'::jsonb),
+       ('{"sub":"nvtuan16", "name":"Nguyen Vi Tuan",        "email":"nvtuan16@mycompany.local"}'::jsonb),
+       ('{"sub":"nxmanh1",  "name":"Nguyen Xuan Manh",     "email":"nxmanh1@mycompany.local"}'::jsonb),
+       ('{"sub":"phanh5",   "name":"Pham Hoang Anh",        "email":"phanh5@mycompany.local"}'::jsonb),
+       ('{"sub":"ptduong1", "name":"Pham Tung Duong",      "email":"ptduong1@mycompany.local"}'::jsonb),
+       ('{"sub":"txdat2",   "name":"Tran Xuan Dat",         "email":"txdat2@mycompany.local"}'::jsonb),
+       ('{"sub":"nvtu3",    "name":"Nguyen Van Tu",          "email":"nvtu3@mycompany.local"}'::jsonb),
+       ('{"sub":"natuan25", "name":"Nguyen Anh Tuan",       "email":"natuan25@mycompany.local"}'::jsonb),
+       ('{"sub":"tqthai",   "name":"Truong Quang Thai",     "email":"tqthai@mycompany.local"}'::jsonb),
+       ('{"sub":"ndtu24",   "name":"Nguyen Duc Tu",          "email":"ndtu24@mycompany.local"}'::jsonb)
 ),
      users_arr AS (SELECT array_agg(u) AS arr FROM internal_users),
      seed AS (SELECT gs                                                                    AS n,
@@ -72,8 +69,8 @@ WITH internal_users(u) AS (
                                 ELSE
                                     jsonb_build_object('id', 1, 'name', 'Incident',       'code', 'INCIDENT',       'projectId', 1, 'workflowId', 1)
                                 END AS issue_type_json,
-                            (SELECT arr FROM users_arr)[floor(r_reporter * 20)::int + 1] AS reporter_json,
-                            (SELECT arr FROM users_arr)[floor(r_assignee * 20)::int + 1] AS assignee_json,
+                            (SELECT arr FROM users_arr)[floor(r_reporter * 17)::int + 1] AS reporter_json,
+                            (SELECT arr FROM users_arr)[floor(r_assignee * 17)::int + 1] AS assignee_json,
                             CASE
                                 WHEN r_app < 0.55 THEN
                                     jsonb_build_object(

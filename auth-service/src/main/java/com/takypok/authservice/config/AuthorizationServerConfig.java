@@ -13,6 +13,7 @@ import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import javax.sql.DataSource;
@@ -184,6 +185,7 @@ public class AuthorizationServerConfig {
 
     upsertClient(registeredClientRepository, workflow);
     seedAdminRole(registeredClientRepository, clientRoleAssignmentRepository);
+    seedGroupRoles(registeredClientRepository, clientRoleAssignmentRepository);
     return registeredClientRepository;
   }
 
@@ -195,6 +197,31 @@ public class AuthorizationServerConfig {
       return;
     }
     repository.save(desiredClient);
+  }
+
+  private void seedGroupRoles(
+      JdbcRegisteredClientRepository repository,
+      ClientRoleAssignmentRepository clientRoleAssignmentRepository) {
+    RegisteredClient client = repository.findByClientId(WORKFLOW_CLIENT_ID);
+    if (client == null) return;
+    Map.of(
+            "grp-l1-support", "AGENT",
+            "grp-l2-support", "AGENT",
+            "grp-l3-support", "AGENT",
+            "grp-service-manager", "APPROVER")
+        .forEach(
+            (groupId, role) -> {
+              if (clientRoleAssignmentRepository.existsByRegisteredClientIdAndGroupIdAndProjectId(
+                  client.getId(), groupId, null)) return;
+              clientRoleAssignmentRepository.save(
+                  ClientRoleAssignment.builder()
+                      .id(UUID.randomUUID().toString())
+                      .registeredClientId(client.getId())
+                      .groupId(groupId)
+                      .projectId(null)
+                      .role(role)
+                      .build());
+            });
   }
 
   private void seedAdminRole(
