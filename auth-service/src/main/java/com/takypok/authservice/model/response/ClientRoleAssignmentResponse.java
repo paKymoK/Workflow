@@ -14,5 +14,9 @@ public class ClientRoleAssignmentResponse {
 
   private String subjectId;
   private String subjectName;
+
+  /** Null = applies to every project on the client. */
+  private String projectId;
+
   private String role;
 }

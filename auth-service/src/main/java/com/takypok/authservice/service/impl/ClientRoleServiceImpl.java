@@ -42,16 +42,16 @@ public class ClientRoleServiceImpl implements ClientRoleService {
     }
 
     if (isUser
-        && assignmentRepository.existsByRegisteredClientIdAndUserSub(
-            registeredClientId, request.getUserSub())) {
+        && assignmentRepository.existsByRegisteredClientIdAndUserSubAndProjectId(
+            registeredClientId, request.getUserSub(), request.getProjectId())) {
       throw new ApplicationException(
-          Message.Application.ERROR, "User already has a role on this client");
+          Message.Application.ERROR, "User already has a role on this project");
     }
     if (isGroup
-        && assignmentRepository.existsByRegisteredClientIdAndGroupId(
-            registeredClientId, request.getGroupId())) {
+        && assignmentRepository.existsByRegisteredClientIdAndGroupIdAndProjectId(
+            registeredClientId, request.getGroupId(), request.getProjectId())) {
       throw new ApplicationException(
-          Message.Application.ERROR, "Group already has a role on this client");
+          Message.Application.ERROR, "Group already has a role on this project");
     }
 
     ClientRoleAssignment assignment =
@@ -60,6 +60,7 @@ public class ClientRoleServiceImpl implements ClientRoleService {
             .registeredClientId(registeredClientId)
             .userSub(isUser ? request.getUserSub() : null)
             .groupId(isGroup ? request.getGroupId() : null)
+            .projectId(request.getProjectId())
             .role(request.getRole())
             .build();
 
@@ -96,6 +97,7 @@ public class ClientRoleServiceImpl implements ClientRoleService {
         .type(isUser ? "USER" : "GROUP")
         .subjectId(isUser ? a.getUserSub() : a.getGroupId())
         .subjectName(subjectName)
+        .projectId(a.getProjectId())
         .role(a.getRole())
         .build();
   }

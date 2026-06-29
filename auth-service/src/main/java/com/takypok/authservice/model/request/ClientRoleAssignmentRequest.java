@@ -18,5 +18,8 @@ public class ClientRoleAssignmentRequest {
   /** Set for group assignment; leave null for user assignment. */
   private String groupId;
 
+  /** Null = role applies to every project on the client (global within the client). */
+  private String projectId;
+
   @NotBlank private String role;
 }

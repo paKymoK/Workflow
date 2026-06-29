@@ -4,12 +4,14 @@ import static com.takypok.core.config.ConfigObjectMapper.objectMapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.takypok.core.Constants;
 import com.takypok.core.model.ResultMessage;
 import com.takypok.core.model.ResultStatus;
 import com.takypok.core.model.authentication.User;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -81,8 +83,16 @@ public class AuthenticationUtil {
 
   public static List<String> getRoles(Authentication authentication) {
     Jwt jwt = (Jwt) authentication.getPrincipal();
-    Object roles = jwt.getClaims().get("roles");
+    Object roles = jwt.getClaims().get(Constants.ROLES_CLAIM);
     if (roles == null) return Collections.emptyList();
     return objectMapper().convertValue(roles, new TypeReference<>() {});
+  }
+
+  /** Per-project roles: a map of projectId (as String) to the roles held on that project. */
+  public static Map<String, List<String>> getProjectRoles(Authentication authentication) {
+    Jwt jwt = (Jwt) authentication.getPrincipal();
+    Object projectRoles = jwt.getClaims().get(Constants.PROJECT_ROLES_CLAIM);
+    if (projectRoles == null) return Collections.emptyMap();
+    return objectMapper().convertValue(projectRoles, new TypeReference<>() {});
   }
 }

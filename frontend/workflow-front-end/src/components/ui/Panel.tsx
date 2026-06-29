@@ -27,7 +27,7 @@ export default function Panel({
   title,
   icon,
   right,
-  brackets = true,
+  brackets = false,
   className = "",
   bodyClassName = "p-4",
   children,

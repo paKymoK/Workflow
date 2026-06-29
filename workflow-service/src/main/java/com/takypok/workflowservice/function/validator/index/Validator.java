@@ -20,15 +20,19 @@ public class Validator {
   private final ApplicationContext applicationContext;
 
   public final Mono<Boolean> validate(
-      String clazzName,
+      String descriptor,
       Ticket<TicketDetail> ticket,
       User currentUser,
       Transition transition,
       TransitionRequest request) {
     try {
-      ValidatorInterface myInstance =
-          (ValidatorInterface) applicationContext.getBean(Class.forName(clazzName));
-      return myInstance.validate(ticket, currentUser, transition, request);
+      String className = className(descriptor);
+      String arg = arg(descriptor);
+      Object bean = applicationContext.getBean(Class.forName(className));
+      if (bean instanceof ParameterizedValidatorInterface parameterized) {
+        return parameterized.validate(ticket, currentUser, transition, request, arg);
+      }
+      return ((ValidatorInterface) bean).validate(ticket, currentUser, transition, request);
     } catch (ClassNotFoundException e) {
       return Mono.error(
           new ApplicationException(Message.Application.ERROR, "Validator not found !"));
@@ -39,16 +43,31 @@ public class Validator {
     }
   }
 
-  public final String getFailedMessage(String clazzName) {
+  public final String getFailedMessage(String descriptor) {
     try {
-      ValidatorInterface myInstance =
-          (ValidatorInterface) applicationContext.getBean(Class.forName(clazzName));
-      return myInstance.validateFailedMessage();
+      String className = className(descriptor);
+      String arg = arg(descriptor);
+      Object bean = applicationContext.getBean(Class.forName(className));
+      if (bean instanceof ParameterizedValidatorInterface parameterized) {
+        return parameterized.validateFailedMessage(arg);
+      }
+      return ((ValidatorInterface) bean).validateFailedMessage();
     } catch (ClassNotFoundException e) {
       throw new ApplicationException(Message.Application.ERROR, "Validator not found !");
     } catch (Exception e) {
       throw new ApplicationException(
           Message.Application.ERROR, "Validator not registered as a Spring bean !");
     }
+  }
+
+  /** A descriptor is {@code <fully-qualified-class-name>[#arg]}. */
+  private static String className(String descriptor) {
+    int idx = descriptor.indexOf('#');
+    return idx >= 0 ? descriptor.substring(0, idx) : descriptor;
+  }
+
+  private static String arg(String descriptor) {
+    int idx = descriptor.indexOf('#');
+    return idx >= 0 ? descriptor.substring(idx + 1) : null;
   }
 }

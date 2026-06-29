@@ -21,6 +21,8 @@ import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.repository.*;
+import com.takypok.workflowservice.security.Actor;
+import com.takypok.workflowservice.security.TicketAccessPolicy;
 import com.takypok.workflowservice.service.TicketService;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -49,9 +51,10 @@ public class TicketServiceImpl implements TicketService {
   private final SlaRepository slaRepository;
   private final ApplicationAssigneeResolver assigneeResolver;
   private final AuthServiceClient authServiceClient;
+  private final TicketAccessPolicy ticketAccessPolicy;
 
   @Override
-  public Mono<PageResponse<TicketSla>> get(FilterTicketRequest request) {
+  public Mono<PageResponse<TicketSla>> get(FilterTicketRequest request, Actor actor) {
     int page = request.getPage().intValue();
     int size = request.getSize().intValue();
     int offset = page * size;
@@ -62,6 +65,9 @@ public class TicketServiceImpl implements TicketService {
     Long issueTypeId = request.getIssueTypeId();
     Long projectId = request.getProjectId();
     String application = normalize(request.getApplication());
+    // Plain requesters only see the tickets they reported; staff see everything (subject to
+    // the request's own filters).
+    String reporterSub = actor.hasAnyElevatedRole() ? null : actor.sub();
     boolean sortByResolution = "resolutionPercent".equals(request.getSortBy());
     boolean sortAsc = "asc".equalsIgnoreCase(request.getSortDir());
     Flux<TicketSla> query =
@@ -74,6 +80,7 @@ public class TicketServiceImpl implements TicketService {
                 priorityId,
                 assigneeSub,
                 sortAsc,
+                reporterSub,
                 issueTypeId,
                 projectId,
                 application)
@@ -84,13 +91,21 @@ public class TicketServiceImpl implements TicketService {
                 statusId,
                 priorityId,
                 assigneeSub,
+                reporterSub,
                 issueTypeId,
                 projectId,
                 application);
     return Mono.zip(
             query.collectList(),
             ticketRepository.count(
-                summary, statusId, priorityId, assigneeSub, issueTypeId, projectId, application))
+                summary,
+                statusId,
+                priorityId,
+                assigneeSub,
+                reporterSub,
+                issueTypeId,
+                projectId,
+                application))
         .map(
             tuple -> {
               List<TicketSla> content = tuple.getT1();
@@ -317,23 +332,30 @@ public class TicketServiceImpl implements TicketService {
   }
 
   @Override
-  public Mono<Ticket<TicketDetail>> updateAssignee(Long id, AssigneeUpdateRequest request) {
-    return Mono.zip(
-            ticketRepository
-                .findById(id)
-                .switchIfEmpty(
-                    Mono.error(
-                        new ApplicationException(
-                            Message.Application.ERROR, "Ticket do not exist"))),
-            authServiceClient
-                .getUser(request.getSub())
-                .switchIfEmpty(
-                    Mono.error(
-                        new ApplicationException(Message.Application.ERROR, "User not found"))))
+  public Mono<Ticket<TicketDetail>> updateAssignee(
+      Long id, AssigneeUpdateRequest request, Actor actor) {
+    return ticketRepository
+        .findById(id)
+        .switchIfEmpty(
+            Mono.error(new ApplicationException(Message.Application.ERROR, "Ticket do not exist")))
         .flatMap(
-            tuple -> {
-              tuple.getT1().setAssignee(tuple.getT2());
-              return ticketRepository.save(tuple.getT1());
+            ticket -> {
+              if (!ticketAccessPolicy.canAssign(actor, ticket)) {
+                return Mono.error(
+                    new ApplicationException(
+                        Message.Application.ERROR,
+                        "You are not allowed to assign tickets on this project"));
+              }
+              return authServiceClient
+                  .getUser(request.getSub())
+                  .switchIfEmpty(
+                      Mono.error(
+                          new ApplicationException(Message.Application.ERROR, "User not found")))
+                  .flatMap(
+                      user -> {
+                        ticket.setAssignee(user);
+                        return ticketRepository.save(ticket);
+                      });
             });
   }
 

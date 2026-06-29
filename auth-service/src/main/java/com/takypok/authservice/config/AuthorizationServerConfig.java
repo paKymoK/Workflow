@@ -6,6 +6,8 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.takypok.authservice.config.auth.ProfileIncompleteFilter;
+import com.takypok.authservice.model.entity.ClientRoleAssignment;
+import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
 import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
@@ -70,6 +72,8 @@ public class AuthorizationServerConfig {
   private String issuerUri;
 
   private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
+  private static final String WORKFLOW_CLIENT_ID = "workflow-spa";
+  private static final String WORKFLOW_CLIENT_SECRET = "{noop}workflow-secret";
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -142,7 +146,8 @@ public class AuthorizationServerConfig {
   }
 
   @Bean
-  public JdbcRegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
+  public JdbcRegisteredClientRepository registeredClientRepository(
+      JdbcTemplate jdbcTemplate, ClientRoleAssignmentRepository clientRoleAssignmentRepository) {
     JdbcRegisteredClientRepository registeredClientRepository =
         new JdbcRegisteredClientRepository(jdbcTemplate);
 
@@ -155,8 +160,8 @@ public class AuthorizationServerConfig {
 
     RegisteredClient workflow =
         RegisteredClient.withId(UUID.randomUUID().toString())
-            .clientId("workflow-spa")
-            .clientSecret("{noop}workflow-secret")
+            .clientId(WORKFLOW_CLIENT_ID)
+            .clientSecret(WORKFLOW_CLIENT_SECRET)
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -177,34 +182,8 @@ public class AuthorizationServerConfig {
                     .build())
             .build();
 
-    RegisteredClient shop =
-        RegisteredClient.withId(UUID.randomUUID().toString())
-            .clientId("shop-spa")
-            .clientSecret("{noop}shop-secret")
-            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-            .tokenSettings(tokenSettings)
-            .redirectUri("http://localhost:3000/callback")
-            .redirectUri("http://localhost:3001/callback")
-            .redirectUri("https://workflow-92l5.vercel.app/callback")
-            .redirectUri("https://oauth.pstmn.io/v1/callback")
-            .postLogoutRedirectUri("http://localhost:3000/login")
-            .postLogoutRedirectUri("http://localhost:3001/login")
-            .postLogoutRedirectUri("https://workflow-92l5.vercel.app/login")
-            .scope(OidcScopes.OPENID)
-            .scope(OidcScopes.PROFILE)
-            .scope("offline_access")
-            .clientSettings(
-                ClientSettings.builder()
-                    .requireAuthorizationConsent(true)
-                    .requireProofKey(true)
-                    .build())
-            .build();
-
     upsertClient(registeredClientRepository, workflow);
-    upsertClient(registeredClientRepository, shop);
+    seedAdminRole(registeredClientRepository, clientRoleAssignmentRepository);
     return registeredClientRepository;
   }
 
@@ -216,6 +195,23 @@ public class AuthorizationServerConfig {
       return;
     }
     repository.save(desiredClient);
+  }
+
+  private void seedAdminRole(
+      JdbcRegisteredClientRepository repository,
+      ClientRoleAssignmentRepository clientRoleAssignmentRepository) {
+    RegisteredClient client = repository.findByClientId(WORKFLOW_CLIENT_ID);
+    if (client == null) return;
+    if (clientRoleAssignmentRepository.existsByRegisteredClientIdAndUserSubAndProjectId(
+        client.getId(), "admin", null)) return;
+    clientRoleAssignmentRepository.save(
+        ClientRoleAssignment.builder()
+            .id(UUID.randomUUID().toString())
+            .registeredClientId(client.getId())
+            .userSub("admin")
+            .projectId(null)
+            .role("ADMIN")
+            .build());
   }
 
   @Bean

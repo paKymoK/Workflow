@@ -28,6 +28,10 @@ public class ClientRoleAssignment {
   @Column(name = "group_id")
   private String groupId;
 
+  /** Null = the assignment applies to every project on the client (global within the client). */
+  @Column(name = "project_id")
+  private String projectId;
+
   @Column(nullable = false)
   private String role;
 }

@@ -10,10 +10,11 @@ import com.takypok.workflowservice.model.request.CreateTicketRequest;
 import com.takypok.workflowservice.model.request.FilterTicketRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
 import com.takypok.workflowservice.model.response.TicketSla;
+import com.takypok.workflowservice.security.Actor;
 import reactor.core.publisher.Mono;
 
 public interface TicketService {
-  Mono<PageResponse<TicketSla>> get(FilterTicketRequest request);
+  Mono<PageResponse<TicketSla>> get(FilterTicketRequest request, Actor actor);
 
   Mono<TicketSla> get(Long id);
 
@@ -25,5 +26,5 @@ public interface TicketService {
 
   Mono<Ticket<TicketDetail>> transition(TransitionRequest transitionRequest, User currentUser);
 
-  Mono<Ticket<TicketDetail>> updateAssignee(Long id, AssigneeUpdateRequest request);
+  Mono<Ticket<TicketDetail>> updateAssignee(Long id, AssigneeUpdateRequest request, Actor actor);
 }

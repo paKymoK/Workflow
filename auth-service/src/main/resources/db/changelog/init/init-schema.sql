@@ -113,6 +113,7 @@ CREATE TABLE client_role_assignment (
                                         registered_client_id VARCHAR(100) NOT NULL,
                                         user_sub             VARCHAR(50),
                                         group_id             VARCHAR(50),
+                                        project_id           VARCHAR(50),
                                         role                 VARCHAR(50)  NOT NULL,
                                         CONSTRAINT client_role_assignment_pkey PRIMARY KEY (id),
                                         CONSTRAINT cra_exactly_one CHECK (
@@ -125,8 +126,20 @@ CREATE TABLE client_role_assignment (
                                         CONSTRAINT fk_cra_group  FOREIGN KEY (group_id)             REFERENCES user_group(id)               ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX ux_cra_client_user  ON client_role_assignment(registered_client_id, user_sub)  WHERE user_sub  IS NOT NULL;
-CREATE UNIQUE INDEX ux_cra_client_group ON client_role_assignment(registered_client_id, group_id) WHERE group_id IS NOT NULL;
+CREATE TABLE client_session_policy (
+                                       registered_client_id VARCHAR(100) NOT NULL,
+                                       single_tab           BOOLEAN      NOT NULL DEFAULT FALSE,
+                                       fail_open            BOOLEAN      NOT NULL DEFAULT TRUE,
+                                       CONSTRAINT client_session_policy_pkey PRIMARY KEY (registered_client_id),
+                                       CONSTRAINT fk_csp_client FOREIGN KEY (registered_client_id)
+                                           REFERENCES oauth2_registered_client(id) ON DELETE CASCADE
+);
+
+-- Roles are project-scoped: one role per (client, user, project) / (client, group, project).
+-- COALESCE keeps the global (project_id IS NULL) row unique too, since Postgres treats NULLs
+-- as distinct in a plain unique index.
+CREATE UNIQUE INDEX ux_cra_client_user_project  ON client_role_assignment(registered_client_id, user_sub, COALESCE(project_id, ''))  WHERE user_sub  IS NOT NULL;
+CREATE UNIQUE INDEX ux_cra_client_group_project ON client_role_assignment(registered_client_id, group_id, COALESCE(project_id, '')) WHERE group_id IS NOT NULL;
 
 CREATE INDEX ix_ugm_user_sub           ON user_group_member(user_sub);
 CREATE INDEX ix_cra_client_user_sub    ON client_role_assignment(registered_client_id, user_sub);
@@ -134,5 +147,8 @@ CREATE INDEX ix_cra_client_group_id    ON client_role_assignment(registered_clie
 
 CREATE INDEX IF NOT EXISTS ix_userinfo_manager_sub ON userinfo (manager_sub);
 CREATE INDEX IF NOT EXISTS ix_userinfo_department ON userinfo (department);
+
+CREATE INDEX IF NOT EXISTS ix_oa_client_principal ON oauth2_authorization(registered_client_id, principal_name);
+CREATE INDEX IF NOT EXISTS ix_oa_access_token     ON oauth2_authorization USING HASH (access_token_value);
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

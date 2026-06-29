@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Spin, Tag, Button,
+  Spin, Tag, Button, Tabs,
   Dropdown, App, Avatar, List, Tooltip, Select, Modal, Form, Input,
 } from "antd";
 import {
@@ -354,158 +354,184 @@ export default function TicketDetail() {
             </Panel>
           )}
 
-          {/* Comments */}
-          <Panel
-            title={`COMMENTS (${comments.length})`}
-            bodyClassName="p-0"
-          >
-            <div className="px-4 pt-4">
-              {commentsLoading ? (
-                <div className="flex justify-center py-6"><Spin size="small" /></div>
-              ) : comments.length === 0 ? (
-                <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] mb-4">No comments yet.</p>
-              ) : (
-                <List
-                  dataSource={comments}
-                  rowKey="id"
-                  renderItem={(comment) => {
-                    const isOwner   = comment.commenter.sub === (user?.sub as string);
-                    const isEditing = editingCommentId === comment.id;
-                    return (
-                      <List.Item className="!items-start !py-3 !px-0">
-                        <List.Item.Meta
-                          avatar={
-                            <Avatar
-                              className="font-bebas! bg-[var(--acc-2)] text-[var(--bg-0)]"
-                            >
-                              {comment.commenter.name.charAt(0).toUpperCase()}
-                            </Avatar>
-                          }
-                          title={
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono-tech text-[12px] text-[var(--fg)]">
-                                {comment.commenter.name}
-                              </span>
-                              {comment.isEdited && comment.modifiedAt && (
-                                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
-                                  edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
-                                </span>
-                              )}
-                            </div>
-                          }
-                          description={
-                            isEditing ? (
-                              <div>
-                                <RichTextEditor
-                                  key={`edit-${comment.id}-${editKey}`}
-                                  editable={true}
-                                  content={comment.content}
-                                  onChange={(html: string) => { editHtmlRef.current = html; }}
-                                  placeholder="Edit your comment..."
-                                />
-                                <div className="flex gap-2 mt-2">
-                                  <Button size="small" type="primary" icon={<CheckOutlined />}
-                                    loading={editMutation.isPending}
-                                    onClick={() => handleSaveEdit(comment.id)}
-                                    className="font-bebas! tracking-wider!"
-                                  >Save</Button>
-                                  <Button size="small" icon={<CloseOutlined />}
-                                    onClick={handleCancelEdit}
-                                    className="font-bebas! tracking-wider!"
-                                  >Cancel</Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <CommentContent html={comment.content} />
-                            )
-                          }
-                        />
-                        {isOwner && !isEditing && (
-                          <Button
-                            type="text" size="small" icon={<EditOutlined />}
-                            onClick={() => handleStartEdit(comment.id, comment.content)}
-                            className="!text-[var(--fg-faint)] hover:!text-[var(--acc-1)] mt-1"
+          {/* Comments + Audit Log — tabbed */}
+          <Panel bodyClassName="p-0">
+            <Tabs
+              defaultActiveKey="comments"
+              tabBarStyle={{
+                margin: 0,
+                paddingLeft: 16,
+                paddingRight: 16,
+                borderBottom: "1px solid var(--line)",
+              }}
+              items={[
+                {
+                  key: "comments",
+                  label: (
+                    <span className="font-bebas tracking-[.14em] text-[15px]">
+                      COMMENTS ({comments.length})
+                    </span>
+                  ),
+                  children: (
+                    <div>
+                      <div className="px-4 pt-2">
+                        {commentsLoading ? (
+                          <div className="flex justify-center py-6"><Spin size="small" /></div>
+                        ) : comments.length === 0 ? (
+                          <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] mb-4">No comments yet.</p>
+                        ) : (
+                          <List
+                            dataSource={comments}
+                            rowKey="id"
+                            renderItem={(comment) => {
+                              const isOwner   = comment.commenter.sub === (user?.sub as string);
+                              const isEditing = editingCommentId === comment.id;
+                              return (
+                                <List.Item className="!items-start !py-3 !px-0">
+                                  <List.Item.Meta
+                                    avatar={
+                                      <Avatar className="font-bebas! bg-[var(--acc-2)] text-[var(--bg-0)]">
+                                        {comment.commenter.name.charAt(0).toUpperCase()}
+                                      </Avatar>
+                                    }
+                                    title={
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono-tech text-[12px] text-[var(--fg)]">
+                                          {comment.commenter.name}
+                                        </span>
+                                        {comment.isEdited && comment.modifiedAt && (
+                                          <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                            edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
+                                          </span>
+                                        )}
+                                      </div>
+                                    }
+                                    description={
+                                      isEditing ? (
+                                        <div>
+                                          <RichTextEditor
+                                            key={`edit-${comment.id}-${editKey}`}
+                                            editable={true}
+                                            content={comment.content}
+                                            onChange={(html: string) => { editHtmlRef.current = html; }}
+                                            placeholder="Edit your comment..."
+                                          />
+                                          <div className="flex gap-2 mt-2">
+                                            <Button size="small" type="primary" icon={<CheckOutlined />}
+                                              loading={editMutation.isPending}
+                                              onClick={() => handleSaveEdit(comment.id)}
+                                              className="font-bebas! tracking-wider!"
+                                            >Save</Button>
+                                            <Button size="small" icon={<CloseOutlined />}
+                                              onClick={handleCancelEdit}
+                                              className="font-bebas! tracking-wider!"
+                                            >Cancel</Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <CommentContent html={comment.content} />
+                                      )
+                                    }
+                                  />
+                                  {isOwner && !isEditing && (
+                                    <Button
+                                      type="text" size="small" icon={<EditOutlined />}
+                                      onClick={() => handleStartEdit(comment.id, comment.content)}
+                                      className="!text-[var(--fg-faint)] hover:!text-[var(--acc-1)] mt-1"
+                                    />
+                                  )}
+                                </List.Item>
+                              );
+                            }}
                           />
                         )}
-                      </List.Item>
-                    );
-                  }}
-                />
-              )}
-            </div>
+                      </div>
 
-            <div className="px-4 pb-4">
-              <div className="border-t border-[var(--line)] mt-0 mb-3" />
-              {/* ⌘/Ctrl+↵ to submit */}
-              <div
-                onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                    e.preventDefault();
-                    handleSubmitComment();
-                  }
-                }}
-              >
-                <RichTextEditor
-                  key={editorKey}
-                  editable={true}
-                  onChange={(html: string) => { commentHtmlRef.current = html; }}
-                  placeholder="Write a comment…  (⌘/Ctrl+↵ to submit)"
-                />
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">⌘/Ctrl+↵ to submit</span>
-                <Button
-                  type="primary" size="small" icon={<SendOutlined />}
-                  loading={commentSubmitting}
-                  onClick={handleSubmitComment}
-                  className="font-bebas! tracking-wider!"
-                >
-                  SUBMIT
-                </Button>
-              </div>
-            </div>
-          </Panel>
-          {/* Audit log */}
-          <Panel title={`AUDIT LOG (${auditLogs.length})`} bodyClassName="p-0">
-            {auditLoading ? (
-              <div className="flex justify-center py-6"><Spin size="small" /></div>
-            ) : auditLogs.length === 0 ? (
-              <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] px-4 py-4 m-0">No audit entries yet.</p>
-            ) : (
-              <div className="flex flex-col">
-                {auditLogs.map((log, i) => (
-                  <div
-                    key={log.id}
-                    className={`flex items-start justify-between gap-3 px-4 py-2.5 ${i < auditLogs.length - 1 ? "border-b border-[var(--line)]" : ""}`}
-                  >
-                    <div className="flex items-start gap-2 min-w-0">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
-                        style={dynamicStyle({ background: AUDIT_DOT_COLOR[log.action] })}
-                      />
-                      <div className="min-w-0">
-                        <span className="font-bebas text-[12px] tracking-[.12em] text-[var(--fg)]">
-                          {AUDIT_ACTION_LABEL[log.action]}
-                        </span>
-                        {auditDetail(log) && (
-                          <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] m-0 truncate">
-                            {auditDetail(log)}
-                          </p>
-                        )}
+                      <div className="px-4 pb-4">
+                        <div className="border-t border-[var(--line)] mt-0 mb-3" />
+                        <div
+                          onKeyDown={(e) => {
+                            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                              e.preventDefault();
+                              handleSubmitComment();
+                            }
+                          }}
+                        >
+                          <RichTextEditor
+                            key={editorKey}
+                            editable={true}
+                            onChange={(html: string) => { commentHtmlRef.current = html; }}
+                            placeholder="Write a comment…  (⌘/Ctrl+↵ to submit)"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">⌘/Ctrl+↵ to submit</span>
+                          <Button
+                            type="primary" size="small" icon={<SendOutlined />}
+                            loading={commentSubmitting}
+                            onClick={handleSubmitComment}
+                            className="font-bebas! tracking-wider!"
+                          >
+                            SUBMIT
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
-                      <span className="font-mono-tech text-[10px] text-[var(--fg-dim)]">
-                        {log.actor?.name ?? "System"}
-                      </span>
-                      <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
-                        {dayjs(log.createdAt).format("DD MMM, HH:mm")}
-                      </span>
+                  ),
+                },
+                {
+                  key: "audit",
+                  label: (
+                    <span className="font-bebas tracking-[.14em] text-[15px]">
+                      AUDIT LOG ({auditLogs.length})
+                    </span>
+                  ),
+                  children: (
+                    <div className="pb-2">
+                      {auditLoading ? (
+                        <div className="flex justify-center py-6"><Spin size="small" /></div>
+                      ) : auditLogs.length === 0 ? (
+                        <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] px-4 py-4 m-0">No audit entries yet.</p>
+                      ) : (
+                        <div className="flex flex-col">
+                          {auditLogs.map((log, i) => (
+                            <div
+                              key={log.id}
+                              className={`flex items-start justify-between gap-3 px-4 py-2.5 ${i < auditLogs.length - 1 ? "border-b border-[var(--line)]" : ""}`}
+                            >
+                              <div className="flex items-start gap-2 min-w-0">
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                                  style={dynamicStyle({ background: AUDIT_DOT_COLOR[log.action] })}
+                                />
+                                <div className="min-w-0">
+                                  <span className="font-bebas text-[12px] tracking-[.12em] text-[var(--fg)]">
+                                    {AUDIT_ACTION_LABEL[log.action]}
+                                  </span>
+                                  {auditDetail(log) && (
+                                    <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] m-0 truncate">
+                                      {auditDetail(log)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
+                                <span className="font-mono-tech text-[10px] text-[var(--fg-dim)]">
+                                  {log.actor?.name ?? "System"}
+                                </span>
+                                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                  {dayjs(log.createdAt).format("DD MMM, HH:mm")}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ),
+                },
+              ]}
+            />
           </Panel>
         </div>
 

@@ -1,6 +1,7 @@
 package com.takypok.authservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.takypok.authservice.model.entity.ClientRoleAssignment;
 import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
@@ -40,11 +41,29 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
       context.getClaims().claim("domain", domain);
     }
 
-    // Resolve all roles for this user on the requesting client (UNION of direct + group roles)
+    // Resolve all role assignments for this user on the requesting client (direct + group).
+    // Split them into global roles (no project) and per-project roles so the resource service
+    // can enforce project-scoped access without a round-trip.
     String clientId = context.getRegisteredClient().getId();
-    List<String> roles = clientRoleAssignmentRepository.findRolesForUserOnClient(clientId, subject);
-    if (!roles.isEmpty()) {
-      context.getClaims().claim("roles", roles);
+    List<ClientRoleAssignment> assignments =
+        clientRoleAssignmentRepository.findAssignmentsForUserOnClient(clientId, subject);
+
+    Set<String> globalRoles = new LinkedHashSet<>();
+    Map<String, Set<String>> projectRoles = new LinkedHashMap<>();
+    for (ClientRoleAssignment a : assignments) {
+      if (a.getProjectId() == null) {
+        globalRoles.add(a.getRole());
+      } else {
+        projectRoles.computeIfAbsent(a.getProjectId(), k -> new LinkedHashSet<>()).add(a.getRole());
+      }
+    }
+    if (!globalRoles.isEmpty()) {
+      context.getClaims().claim(Constants.ROLES_CLAIM, new ArrayList<>(globalRoles));
+    }
+    if (!projectRoles.isEmpty()) {
+      Map<String, List<String>> claim = new LinkedHashMap<>();
+      projectRoles.forEach((k, v) -> claim.put(k, new ArrayList<>(v)));
+      context.getClaims().claim(Constants.PROJECT_ROLES_CLAIM, claim);
     }
 
     // Embed per-client session policy as an opaque claim — only present for single-tab clients

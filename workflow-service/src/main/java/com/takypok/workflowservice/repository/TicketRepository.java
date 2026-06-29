@@ -31,6 +31,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
                       AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
+                      AND (:reporterSub IS NULL OR t.reporter->>'sub' = :reporterSub)
                       AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
                       AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
                       AND (:application IS NULL OR t.detail->>'application' = :application)
@@ -44,6 +45,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       Long statusId,
       Long priorityId,
       String assigneeSub,
+      String reporterSub,
       Long issueTypeId,
       Long projectId,
       String application);
@@ -56,6 +58,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
                       AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
+                      AND (:reporterSub IS NULL OR t.reporter->>'sub' = :reporterSub)
                       AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
                       AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
                       AND (:application IS NULL OR t.detail->>'application' = :application)
@@ -65,6 +68,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       Long statusId,
       Long priorityId,
       String assigneeSub,
+      String reporterSub,
       Long issueTypeId,
       Long projectId,
       String application);
@@ -89,6 +93,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
                       AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
                       AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)
                       AND (:assigneeSub IS NULL OR t.assignee->>'sub' = :assigneeSub)
+                      AND (:reporterSub IS NULL OR t.reporter->>'sub' = :reporterSub)
                       AND (:issueTypeId IS NULL OR (t.issue_type->>'id')::bigint = :issueTypeId)
                       AND (:projectId IS NULL OR (t.project->>'id')::bigint = :projectId)
                       AND (:application IS NULL OR t.detail->>'application' = :application)
@@ -105,6 +110,7 @@ public interface TicketRepository<T extends TicketDetail> extends R2dbcRepositor
       Long priorityId,
       String assigneeSub,
       boolean asc,
+      String reporterSub,
       Long issueTypeId,
       Long projectId,
       String application);

@@ -13,9 +13,11 @@ public interface ClientRoleAssignmentRepository
 
   List<ClientRoleAssignment> findByRegisteredClientId(String registeredClientId);
 
-  boolean existsByRegisteredClientIdAndUserSub(String registeredClientId, String userSub);
+  boolean existsByRegisteredClientIdAndUserSubAndProjectId(
+      String registeredClientId, String userSub, String projectId);
 
-  boolean existsByRegisteredClientIdAndGroupId(String registeredClientId, String groupId);
+  boolean existsByRegisteredClientIdAndGroupIdAndProjectId(
+      String registeredClientId, String groupId, String projectId);
 
   /**
    * Resolves all roles for a user on a specific client — direct assignment UNION group assignments.
@@ -33,5 +35,23 @@ public interface ClientRoleAssignmentRepository
         )
       """)
   List<String> findRolesForUserOnClient(
+      @Param("clientId") String clientId, @Param("userSub") String userSub);
+
+  /**
+   * All assignments (direct + via group membership) for a user on a client, including project
+   * scope. Used at token issuance to split roles into global vs per-project claims.
+   */
+  @Query(
+      """
+      SELECT a FROM ClientRoleAssignment a
+      WHERE a.registeredClientId = :clientId
+        AND (
+          a.userSub = :userSub
+          OR a.groupId IN (
+            SELECT m.groupId FROM UserGroupMember m WHERE m.userSub = :userSub
+          )
+        )
+      """)
+  List<ClientRoleAssignment> findAssignmentsForUserOnClient(
       @Param("clientId") String clientId, @Param("userSub") String userSub);
 }

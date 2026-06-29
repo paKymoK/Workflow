@@ -21,3 +21,34 @@ databaseChangeLog:
               ON sla (ticket_id)
               WHERE (status ->> 'isResponseOverdue') IS DISTINCT FROM 'true'
                  OR (status ->> 'isResolutionOverdue') IS DISTINCT FROM 'true';
+
+  - changeSet:
+      id: gate-service-request-approval-with-role
+      author: system
+      comment: >
+        Require the APPROVER role on the project to run the Approve/Reject transitions of the
+        Service Request workflow. Done as config: appends RoleValidator#APPROVER to those
+        transitions' validator lists. Idempotent.
+      changes:
+        - sql:
+            sql: >
+              UPDATE workflow w
+              SET transitions = (
+                SELECT jsonb_agg(
+                  CASE
+                    WHEN elem->>'name' IN ('Approve', 'Reject')
+                         AND NOT (COALESCE(elem->'validator', '[]'::jsonb)
+                                  @> '["com.takypok.workflowservice.function.validator.RoleValidator#APPROVER"]'::jsonb)
+                    THEN jsonb_set(
+                           elem,
+                           '{validator}',
+                           COALESCE(elem->'validator', '[]'::jsonb)
+                             || '["com.takypok.workflowservice.function.validator.RoleValidator#APPROVER"]'::jsonb
+                         )
+                    ELSE elem
+                  END
+                  ORDER BY ord
+                )
+                FROM jsonb_array_elements(w.transitions) WITH ORDINALITY AS t(elem, ord)
+              )
+              WHERE w.name = 'Service Request';

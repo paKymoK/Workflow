@@ -36,7 +36,13 @@ public class ProfileIncompleteFilter extends OncePerRequestFilter {
 
     Userinfo userinfo = userInfoRepository.getBySub(auth.getName());
     if (userinfo != null && isIncomplete(userinfo)) {
-      requestCache.saveRequest(request, response);
+      // Preserve the original target (e.g. /oauth2/authorize saved by the login entry point).
+      // Never overwrite an existing saved request — otherwise sub-resource requests issued by
+      // the profile page (favicon, scripts) would clobber it and break the post-completion
+      // redirect.
+      if (requestCache.getRequest(request, response) == null) {
+        requestCache.saveRequest(request, response);
+      }
       response.sendRedirect(request.getContextPath() + "/profile/complete");
       return;
     }
@@ -49,11 +55,21 @@ public class ProfileIncompleteFilter extends OncePerRequestFilter {
     String path = request.getRequestURI();
     return path.startsWith("/profile/complete")
         || path.startsWith("/assets/")
+        || path.startsWith("/admin/assets/")
         || path.startsWith("/login")
         || path.startsWith("/logout")
         || path.startsWith("/oauth2/consent")
         || path.startsWith("/error")
-        || path.startsWith("/actuator/");
+        || path.startsWith("/actuator/")
+        || isStaticResource(path);
+  }
+
+  private boolean isStaticResource(String path) {
+    return path.endsWith(".svg")
+        || path.endsWith(".png")
+        || path.endsWith(".ico")
+        || path.endsWith(".js")
+        || path.endsWith(".css");
   }
 
   private boolean isIncomplete(Userinfo userinfo) {
