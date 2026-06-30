@@ -1,7 +1,7 @@
 import { createContext, useEffect, type ReactNode } from "react";
 import { useState } from "react";
 
-export type AccentScheme = "ice" | "amber" | "phosphor" | "magenta";
+export type AccentScheme = "ice" | "amber" | "phosphor" | "magenta" | "default";
 
 export interface ThemeContextType {
   isDark: boolean;

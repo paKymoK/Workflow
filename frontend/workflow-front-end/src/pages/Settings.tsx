@@ -16,6 +16,7 @@ const SCHEMES: { key: AccentScheme; label: string }[] = [
   { key: "amber",    label: "AMBER"    },
   { key: "phosphor", label: "PHOSPHOR" },
   { key: "magenta",  label: "MAGENTA"  },
+  { key: "default",  label: "DEFAULT"  },
 ];
 
 const SCHEME_ACTIVE: Record<string, string> = {
@@ -23,6 +24,7 @@ const SCHEME_ACTIVE: Record<string, string> = {
   amber:    "border-[#FF9E3D] text-[#FF9E3D] bg-[color-mix(in_oklab,#FF9E3D_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#FF9E3D_30%,transparent)]",
   phosphor: "border-[#3DF58A] text-[#3DF58A] bg-[color-mix(in_oklab,#3DF58A_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#3DF58A_30%,transparent)]",
   magenta:  "border-[#FF3D9A] text-[#FF3D9A] bg-[color-mix(in_oklab,#FF3D9A_10%,transparent)] shadow-[0_0_12px_color-mix(in_oklab,#FF3D9A_30%,transparent)]",
+  default:  "border-[#1677ff] text-[#1677ff] bg-[color-mix(in_oklab,#1677ff_10%,transparent)]",
 };
 
 const SCHEME_SWATCH: Record<string, string> = {
@@ -30,6 +32,7 @@ const SCHEME_SWATCH: Record<string, string> = {
   amber:    "bg-[#FF9E3D]",
   phosphor: "bg-[#3DF58A]",
   magenta:  "bg-[#FF3D9A]",
+  default:  "bg-[#1677ff]",
 };
 
 const TABS_KEYS = ["workflow", "status", "priority", "project", "issue-type", "team-org"] as const;
