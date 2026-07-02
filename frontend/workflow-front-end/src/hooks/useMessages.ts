@@ -11,9 +11,9 @@ import {
 } from "../api/messagesApi";
 import type { CreateConversationRequest, SendMessageRequest } from "../api/types";
 
-// Polled for now (short interval); replaced by WebSocket-driven invalidation once
-// the live chat-service WS channel is wired into the frontend.
-const CONVERSATIONS_POLL_MS = 15_000;
+// Live updates now arrive via useChatSocket (see AppLayout); this is just a safety-net
+// poll in case a WS event is missed or the socket is momentarily disconnected.
+const CONVERSATIONS_POLL_MS = 60_000;
 
 export const messagesKeys = {
   conversations: ["conversations"] as const,

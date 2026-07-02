@@ -4,6 +4,7 @@ import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import ChatWidget from "./ChatWidget";
 import CreateTicketModal from "./CreateTicketModal";
+import { useChatSocket } from "../hooks/useChatSocket";
 import { BubbleBackground, useTheme, useFont, useAuth, api } from "@takypok/shared";
 import {
   MenuFoldOutlined,
@@ -46,6 +47,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { isCustomFont, toggleFont } = useFont();
+
+  useChatSocket();
 
   // Open ticket count for TopBar badge
   const { data: countData } = useQuery({

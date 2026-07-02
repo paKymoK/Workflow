@@ -1,9 +1,11 @@
 package com.takypok.chatservice.chat.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.takypok.chatservice.chat.model.Attachment;
 import com.takypok.chatservice.chat.model.MessageType;
 import com.takypok.core.model.IdEntity;
 import com.takypok.core.model.authentication.User;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
@@ -30,4 +32,11 @@ public class Message extends IdEntity {
   private MessageType messageType = MessageType.TEXT;
 
   private List<Attachment> attachments;
+
+  // BaseEntity.createdAt is @JsonIgnore by default; clients need it to render timestamps.
+  @Override
+  @JsonProperty("createdAt")
+  public ZonedDateTime getCreatedAt() {
+    return super.getCreatedAt();
+  }
 }

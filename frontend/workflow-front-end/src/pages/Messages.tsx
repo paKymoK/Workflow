@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AutoComplete, Badge, Button, Empty, Input, Modal, Spin } from "antd";
 import { PlusOutlined, SendOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -39,6 +39,11 @@ export default function Messages() {
   const { mutate: send, isPending: sending } = useSendMessage(selectedId ?? "");
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   function openConversation(id: string) {
     setSelectedId(id);
@@ -184,6 +189,7 @@ export default function Messages() {
                   );
                 })
               )}
+              <div ref={bottomRef} />
             </div>
 
             <div className="flex gap-2 px-4 py-3 border-t border-[var(--line)]">
