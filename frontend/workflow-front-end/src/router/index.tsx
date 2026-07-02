@@ -5,6 +5,7 @@ import Login from "../pages/Login";
 import Portfolio from "../pages/Portfolio";
 import PortfolioNttha from "../pages/PortfolioNttha";
 import Home from "../pages/Home";
+import Messages from "../pages/Messages";
 import Dashboard from "../pages/Dashboard";
 import TicketDetail from "../pages/TicketDetail";
 import Callback from "../pages/Callback";
@@ -24,6 +25,7 @@ export default function AppRouter() {
           <Route path="/callback" element={<Callback />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/:id" element={<TicketDetail />} />
 <Route path="/settings" element={<Settings />} />

@@ -225,6 +225,61 @@ export interface AuditActor {
   email: string | null;
 }
 
+export type ConversationType = "DIRECT" | "GROUP";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "MIXED";
+export type MessageAttachmentType = "IMAGE" | "VIDEO";
+export type MessageAttachmentStatus = "PROCESSING" | "READY" | "FAILED";
+
+export interface MessageAttachment {
+  type: MessageAttachmentType;
+  mediaAssetId: string;
+  url: string | null;
+  status: MessageAttachmentStatus;
+}
+
+export interface ChatSender {
+  sub: string;
+  name: string;
+  email?: string;
+}
+
+export interface Conversation {
+  id: string;
+  type: ConversationType;
+  name: string | null;
+}
+
+export interface ChatMessage {
+  id: number;
+  conversationId: string;
+  sender: ChatSender;
+  content: string | null;
+  messageType: MessageType;
+  attachments: MessageAttachment[] | null;
+  createdAt: string;
+}
+
+export interface ConversationSummary {
+  id: string;
+  type: ConversationType;
+  name: string | null;
+  participantSubs: string[];
+  lastMessage: ChatMessage | null;
+  unreadCount: number;
+}
+
+export interface CreateConversationRequest {
+  type: ConversationType;
+  name?: string;
+  participantSubs: string[];
+}
+
+export interface SendMessageRequest {
+  content: string;
+  messageType?: MessageType;
+  attachments?: MessageAttachment[];
+}
+
 export interface AuditLog {
   id: number;
   ticketId: number;

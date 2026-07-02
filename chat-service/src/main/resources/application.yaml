@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: chat-service
+  main:
+    web-application-type: reactive
+  config:
+    import:
+      - 'classpath:config/liquibase.yml'
+      - 'classpath:config/r2dbc.yml'
+      - 'classpath:config/oauth2.yml'
+      - 'classpath:management.yml'
   ai:
     ollama:
       base-url: http://localhost:11434

@@ -4,12 +4,14 @@ import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import ChatWidget from "./ChatWidget";
 import CreateTicketModal from "./CreateTicketModal";
+import { useChatSocket } from "../hooks/useChatSocket";
 import { BubbleBackground, useTheme, useFont, useAuth, api } from "@takypok/shared";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HomeOutlined,
   DashboardOutlined,
+  MessageOutlined,
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
@@ -25,6 +27,7 @@ const { Header, Sider, Content } = Layout;
 const ROUTE_LABELS: Record<string, string> = {
   "/": "// OVERVIEW",
   "/dashboard": "// DASHBOARD",
+  "/messages": "// MESSAGES",
   "/settings": "// SETTINGS",
 };
 
@@ -44,6 +47,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { isCustomFont, toggleFont } = useFont();
+
+  useChatSocket();
 
   // Open ticket count for TopBar badge
   const { data: countData } = useQuery({
@@ -130,6 +135,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const siderMenuItems = [
     { key: "/",          icon: <HomeOutlined />,      label: "Home" },
     { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+    { key: "/messages",  icon: <MessageOutlined />,   label: "Messages" },
     { key: "/settings",  icon: <SettingOutlined />,   label: "Settings" },
   ];
 

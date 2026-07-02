@@ -37,6 +37,7 @@ public class AuthenticationConfig {
                 exchanges
                     .pathMatchers(
                         "/workflow-service/web-socket/**",
+                        "/chat-service/web-socket/**",
                         "/media-service/images/**",
                         "/media-service/v1/videos/**",
                         "/swagger-ui.html",
