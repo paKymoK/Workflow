@@ -54,7 +54,7 @@ const MentionList = forwardRef<MentionListHandle, Props>(({ items, command }, re
           }}
         >
           <span className="text-sm font-medium leading-tight">{item.name}</span>
-          <span className="text-xs text-gray-400 leading-tight">{item.email}</span>
+          <span className="text-xs text-[var(--fg-faint)] leading-tight">{item.email}</span>
         </button>
       ))}
     </div>

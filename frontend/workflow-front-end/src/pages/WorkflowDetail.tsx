@@ -85,7 +85,7 @@ function StateNode({ data, id }: NodeProps) {
         {onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(id); }}
-            className="absolute top-1 right-1.5 text-gray-300 hover:text-red-400 bg-transparent border-none cursor-pointer text-[11px] leading-none p-0 transition-colors"
+            className="absolute top-1 right-1.5 text-gray-500 hover:text-red-400 bg-transparent border-none cursor-pointer text-[11px] leading-none p-0 transition-colors"
           >
             ✕
           </button>
@@ -449,7 +449,7 @@ export default function WorkflowDetail() {
         footer={null}
       >
         {addableStatuses.length === 0 ? (
-          <p className="text-gray-400 text-sm">All statuses are already in this workflow.</p>
+          <p className="text-[var(--fg-dim)] text-sm">All statuses are already in this workflow.</p>
         ) : (
           <div className="flex flex-col gap-2 mt-2">
             {addableStatuses.map((s) => (
@@ -461,8 +461,8 @@ export default function WorkflowDetail() {
                 <svg className="w-2.5 h-2.5 shrink-0" viewBox="0 0 10 10">
                   <circle cx="5" cy="5" r="5" fill={s.color} />
                 </svg>
-                <span className="text-sm font-medium text-gray-800">{s.name}</span>
-                <span className="text-xs text-gray-400 font-mono ml-auto">{s.group}</span>
+                <span className="text-sm font-medium text-[var(--fg)]">{s.name}</span>
+                <span className="text-xs text-[var(--fg-faint)] font-mono ml-auto">{s.group}</span>
               </button>
             ))}
           </div>

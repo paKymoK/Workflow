@@ -163,7 +163,7 @@ export default function SlaOverviewCard({ refetchKey = 0 }: Props) {
       sorter: true, sortOrder: sortOrderFor("slaPercent"),
       render: (_, r) => {
         const p = r.sla?.status?.resolutionPercent;
-        if (p == null) return <span className="text-gray-400 text-xs">—</span>;
+        if (p == null) return <span className="text-[var(--fg-faint)] text-xs">—</span>;
         const overdue = r.sla?.status?.isResolutionOverdue ?? false;
         const clamped = Math.min(Math.round(p), 100);
         const stroke  = overdue || p >= 100 ? "#ff4d4f" : p >= 80 ? "#faad14" : "#52c41a";
@@ -223,7 +223,7 @@ export default function SlaOverviewCard({ refetchKey = 0 }: Props) {
               <Spin />
             </div>
           ) : !data || data.total === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[380px] text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-full min-h-[380px] text-[var(--fg-dim)] text-sm">
               No data
             </div>
           ) : (

@@ -49,8 +49,8 @@ const summaryColumns: ColumnsType<AvgResolutionByPriority> = [
     key: "avgResponseHours",
     render: (v: number | null) =>
       v != null
-        ? <span className="font-semibold text-[#FFE500]">{v.toFixed(1)}h</span>
-        : <span className="text-gray-400 text-xs">—</span>,
+        ? <span className="font-semibold" style={{ color: "var(--acc-warn)" }}>{v.toFixed(1)}h</span>
+        : <span className="text-[var(--fg-faint)] text-xs">—</span>,
   },
   {
     title: "Avg Resolution Time",
@@ -58,8 +58,8 @@ const summaryColumns: ColumnsType<AvgResolutionByPriority> = [
     key: "avgHours",
     render: (v: number | null) =>
       v != null
-        ? <span className="font-semibold text-[#00F5FF]">{v.toFixed(1)}h</span>
-        : <span className="text-gray-400 text-xs">—</span>,
+        ? <span className="font-semibold" style={{ color: "var(--acc-1)" }}>{v.toFixed(1)}h</span>
+        : <span className="text-[var(--fg-faint)] text-xs">—</span>,
   },
   {
     title: "Total Tickets",
@@ -86,13 +86,13 @@ function CustomTooltip({ active, payload, isDark }: CustomTooltipProps) {
       <div className="font-semibold mb-1">{d.priorityName}</div>
       <div>
         Response:{" "}
-        <span className="text-[#FFE500] font-semibold">
+        <span className="font-semibold" style={{ color: isDark ? "#FFE500" : "var(--acc-warn)" }}>
           {d.avgResponseHours != null ? `${d.avgResponseHours.toFixed(2)}h` : "—"}
         </span>
       </div>
       <div>
         Resolution:{" "}
-        <span className="text-[#00F5FF] font-semibold">
+        <span className="font-semibold" style={{ color: isDark ? "#00F5FF" : "var(--acc-1)" }}>
           {d.avgHours != null ? `${d.avgHours.toFixed(2)}h` : "—"}
         </span>
       </div>
@@ -206,7 +206,7 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
       sorter: true, sortOrder: sortOrderFor("slaPercent"),
       render: (_, r) => {
         const p = r.sla?.status?.resolutionPercent;
-        if (p == null) return <span className="text-gray-400 text-xs">—</span>;
+        if (p == null) return <span className="text-[var(--fg-faint)] text-xs">—</span>;
         const overdue = r.sla?.status?.isResolutionOverdue ?? false;
         const clamped = Math.min(Math.round(p), 100);
         const stroke  = overdue || p >= 100 ? "#ff4d4f" : p >= 80 ? "#faad14" : "#52c41a";
@@ -292,7 +292,7 @@ export default function AvgResolutionCard({ refetchKey = 0 }: Props) {
             <Spin />
           </div>
         ) : !resolutionData?.length ? (
-          <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
+          <div className="flex items-center justify-center min-h-[300px] text-[var(--fg-dim)] text-sm">
             No resolved tickets in this period
           </div>
         ) : (

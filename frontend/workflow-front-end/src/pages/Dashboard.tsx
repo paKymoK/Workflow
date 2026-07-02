@@ -410,7 +410,7 @@ export default function Dashboard() {
       loading={isFetching}
       size="middle"
       scroll={{ x: "max-content" }}
-      sticky={{ offsetHeader: 0 }}
+
       onRow={(record) => ({
         onClick: () => setInspectorId(record.id),
         onMouseEnter: () => {

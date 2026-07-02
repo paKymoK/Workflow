@@ -7,15 +7,41 @@ import { fetchTickets } from "../../api/ticketApi";
 import { usePriorities } from "../../hooks/useTickets";
 import { useSlaOverview, useTicketByApplicationTrend } from "../../hooks/useStatistics";
 
+interface Delta {
+  value: number;
+  unit: "%" | "count";
+}
+
 interface KpiCardProps {
   eyebrow: string;
   value: string | number;
   accent: string;
   sparkData?: { date: string; count: number }[];
   sub?: string;
+  delta?: Delta | null;
+  /** When true, a higher value is bad (e.g. SLA breached). Flips the color logic. */
+  invertDelta?: boolean;
 }
 
-function KpiCard({ eyebrow, value, accent, sparkData, sub }: KpiCardProps) {
+function DeltaBadge({ delta, invert }: { delta: Delta; invert?: boolean }) {
+  const up = delta.value >= 0;
+  const good = invert ? !up : up;
+  const color = good ? "var(--acc-3)" : "var(--acc-hot)";
+  const arrow = up ? "▲" : "▼";
+  const label = delta.unit === "%"
+    ? `${Math.abs(delta.value)}%`
+    : `${Math.abs(delta.value)}`;
+  return (
+    <span
+      className="font-mono-tech text-[9px] tracking-[.05em] flex-shrink-0"
+      style={dynamicStyle({ color })}
+    >
+      {arrow} {label}
+    </span>
+  );
+}
+
+function KpiCard({ eyebrow, value, accent, sparkData, sub, delta, invertDelta }: KpiCardProps) {
   return (
     <div className="relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden">
       <div
@@ -23,12 +49,15 @@ function KpiCard({ eyebrow, value, accent, sparkData, sub }: KpiCardProps) {
         style={dynamicStyle({ background: accent })}
       />
       <div>
-        <p className="font-mono-tech text-[9px] tracking-[.25em] text-[var(--fg-faint)] m-0 mb-1">{eyebrow}</p>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <p className="font-mono-tech text-[9px] tracking-[.25em] text-[var(--fg-dim)] m-0">{eyebrow}</p>
+          {delta != null && <DeltaBadge delta={delta} invert={invertDelta} />}
+        </div>
         <p className="font-bebas text-4xl leading-none m-0" style={dynamicStyle({ color: accent })}>
           {value}
         </p>
         {sub && (
-          <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0 mt-1">{sub}</p>
+          <p className="font-mono-tech text-[9px] text-[var(--fg-dim)] m-0 mt-1">{sub}</p>
         )}
       </div>
       {sparkData && sparkData.length > 1 && (
@@ -51,13 +80,27 @@ function KpiCard({ eyebrow, value, accent, sparkData, sub }: KpiCardProps) {
   );
 }
 
+function pctDelta(cur: number, prev: number): Delta | null {
+  if (prev === 0) return cur > 0 ? { value: 100, unit: "%" } : null;
+  return { value: Math.round(((cur - prev) / prev) * 100), unit: "%" };
+}
+
+function countDelta(cur: number, prev: number): Delta | null {
+  const diff = cur - prev;
+  return diff !== 0 ? { value: diff, unit: "count" } : null;
+}
+
 interface Props {
   refetchKey?: number;
 }
 
 export default function KpiStrip({ refetchKey = 0 }: Props) {
+  // Current period: last 7 days
   const todayStr  = useMemo(() => dayjs().endOf("day").toISOString(), []);
   const weekAgo   = useMemo(() => dayjs().subtract(6, "day").startOf("day").toISOString(), []);
+  // Previous period: 7–14 days ago
+  const twoWeeksAgo = useMemo(() => dayjs().subtract(13, "day").startOf("day").toISOString(), []);
+  const weekAgoEnd  = useMemo(() => dayjs().subtract(7, "day").endOf("day").toISOString(), []);
 
   const { data: allTickets } = useQuery({
     queryKey: ["kpi", "open", refetchKey],
@@ -79,8 +122,13 @@ export default function KpiStrip({ refetchKey = 0 }: Props) {
     staleTime: 30_000,
   });
 
-  const { data: sla } = useSlaOverview(weekAgo, todayStr, refetchKey);
+  // Current-period data
+  const { data: sla }      = useSlaOverview(weekAgo, todayStr, refetchKey);
   const { data: trendRaw = [] } = useTicketByApplicationTrend(weekAgo, todayStr, refetchKey);
+
+  // Previous-period data (for deltas)
+  const { data: slaPrev }       = useSlaOverview(twoWeeksAgo, weekAgoEnd, refetchKey);
+  const { data: trendRawPrev = [] } = useTicketByApplicationTrend(twoWeeksAgo, weekAgoEnd, refetchKey);
 
   const trend = useMemo(() => {
     const byDate = new Map<string, number>();
@@ -93,6 +141,7 @@ export default function KpiStrip({ refetchKey = 0 }: Props) {
       .map(([date, count]) => ({ date, count }));
   }, [trendRaw]);
 
+  // Current metrics
   const totalQueue    = allTickets?.totalElements ?? 0;
   const criticalCount = criticalTickets?.totalElements ?? 0;
   const breached      = (sla?.resolutionMissed ?? 0) + (sla?.responseMissed ?? 0);
@@ -101,16 +150,58 @@ export default function KpiStrip({ refetchKey = 0 }: Props) {
     ? Math.round(((sla?.resolutionDoneInTime ?? 0) + (sla?.responseDoneInTime ?? 0)) / (total * 2) * 100)
     : 0;
 
+  // Previous-period metrics
+  const trendCurTotal  = trendRaw.reduce((s, pt) => s + pt.count, 0);
+  const trendPrevTotal = trendRawPrev.reduce((s, pt) => s + pt.count, 0);
+
+  const breachedPrev      = (slaPrev?.resolutionMissed ?? 0) + (slaPrev?.responseMissed ?? 0);
+  const totalPrev         = slaPrev?.total ?? 0;
+  const compliancePrevPct = totalPrev > 0
+    ? Math.round(((slaPrev?.resolutionDoneInTime ?? 0) + (slaPrev?.responseDoneInTime ?? 0)) / (totalPrev * 2) * 100)
+    : 0;
+
+  // Deltas
+  const queueDelta      = pctDelta(trendCurTotal, trendPrevTotal);
+  const breachedDelta   = countDelta(breached, breachedPrev);
+  const complianceDelta = compliancePrevPct > 0
+    ? { value: compliancePct - compliancePrevPct, unit: "%" as const }
+    : null;
+
+  const complianceAccent = compliancePct >= 80
+    ? "var(--acc-3)"
+    : compliancePct >= 60
+      ? "var(--acc-warn)"
+      : "var(--priority-critical)";
+
   return (
     <div className="grid grid-cols-4 gap-[14px]">
-      <KpiCard eyebrow="TOTAL QUEUE"  value={totalQueue}            accent="var(--acc-1)"             sparkData={trend} />
-      <KpiCard eyebrow="CRITICAL NOW" value={criticalCount}         accent="var(--priority-critical)" sub={criticalPriority ? `≤ ${criticalPriority.responseTime}h SLA` : undefined} />
-      <KpiCard eyebrow="SLA BREACHED" value={breached}              accent="var(--acc-hot)"           sparkData={trend} />
+      <KpiCard
+        eyebrow="TOTAL QUEUE"
+        value={totalQueue}
+        accent="var(--acc-1)"
+        sparkData={trend}
+        delta={queueDelta}
+      />
+      <KpiCard
+        eyebrow="CRITICAL NOW"
+        value={criticalCount}
+        accent="var(--priority-critical)"
+        sub={criticalPriority ? `≤ ${criticalPriority.responseTime}h SLA` : undefined}
+      />
+      <KpiCard
+        eyebrow="SLA BREACHED"
+        value={breached}
+        accent="var(--acc-hot)"
+        sparkData={trend}
+        delta={breachedDelta}
+        invertDelta
+      />
       <KpiCard
         eyebrow="COMPLIANCE"
         value={`${compliancePct}%`}
-        accent={compliancePct >= 80 ? "var(--acc-3)" : compliancePct >= 60 ? "var(--acc-warn)" : "var(--priority-critical)"}
+        accent={complianceAccent}
         sub={total > 0 ? `${total} tickets in range` : undefined}
+        delta={complianceDelta}
       />
     </div>
   );

@@ -52,7 +52,7 @@ export default function VideoPlayer({ videoId }: Props) {
       />
       {levels.length > 1 && (
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-gray-500">Quality:</span>
+          <span className="text-xs text-[var(--fg-dim)]">Quality:</span>
           <Select
             size="small"
             value={currentLevel}

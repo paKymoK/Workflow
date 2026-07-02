@@ -66,7 +66,7 @@ export default function WorkflowList() {
               <Tag color={t.from.color}>{t.from.name}</Tag>
               {"→"}
               <Tag color={t.to.color} className="!ml-1">{t.to.name}</Tag>
-              <span className="text-gray-400 text-xs ml-1">({t.name})</span>
+              <span className="text-[var(--fg-faint)] text-xs ml-1">({t.name})</span>
             </span>
           ))}
         </div>
@@ -120,7 +120,7 @@ export default function WorkflowList() {
                 label: (
                   <span className="flex items-center gap-1.5">
                     <Tag color={s.color} className="!m-0">{s.name}</Tag>
-                    <span className="text-gray-400 text-xs">
+                    <span className="text-[var(--fg-faint)] text-xs">
                       {groupOptions.find((g) => g.value === s.group)?.label}
                     </span>
                   </span>

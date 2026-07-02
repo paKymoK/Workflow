@@ -209,7 +209,7 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
       sorter: true, sortOrder: sortOrderFor("slaPercent"),
       render: (_, r) => {
         const p = r.sla?.status?.resolutionPercent;
-        if (p == null) return <span className="text-gray-400 text-xs">—</span>;
+        if (p == null) return <span className="text-[var(--fg-faint)] text-xs">—</span>;
         const overdue = r.sla?.status?.isResolutionOverdue ?? false;
         const clamped = Math.min(Math.round(p), 100);
         const stroke  = overdue || p >= 100 ? "#ff4d4f" : p >= 80 ? "#faad14" : "#52c41a";
@@ -266,11 +266,11 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
         </span>
       ),
     },
-    { title: "Open",         dataIndex: "open",        key: "open",        width: 70,  render: (v: number) => <span className="text-[#FF2D6B] font-semibold">{v}</span> },
-    { title: "In Progress",  dataIndex: "inProgress",  key: "inProgress",  width: 90,  render: (v: number) => <span className="text-[#FFE500] font-semibold">{v}</span> },
-    { title: "Done",         dataIndex: "done",        key: "done",        width: 70,  render: (v: number) => <span className="text-[#00F5FF] font-semibold">{v}</span> },
+    { title: "Open",         dataIndex: "open",        key: "open",        width: 70,  render: (v: number) => <span className="text-[var(--acc-hot)] font-semibold">{v}</span> },
+    { title: "In Progress",  dataIndex: "inProgress",  key: "inProgress",  width: 90,  render: (v: number) => <span className="text-[var(--acc-warn)] font-semibold">{v}</span> },
+    { title: "Done",         dataIndex: "done",        key: "done",        width: 70,  render: (v: number) => <span className="text-[var(--acc-3)] font-semibold">{v}</span> },
     { title: "Total",        dataIndex: "total",       key: "total",       width: 70  },
-    { title: "SLA Breached", dataIndex: "slaBreached", key: "slaBreached", width: 100, render: (v: number) => v > 0 ? <Tag color="red">{v}</Tag> : <span className="text-gray-400">0</span> },
+    { title: "SLA Breached", dataIndex: "slaBreached", key: "slaBreached", width: 100, render: (v: number) => v > 0 ? <Tag color="red">{v}</Tag> : <span className="text-[var(--fg-faint)]">0</span> },
   ];
 
   const cardTitle = selectedApp !== null
@@ -347,7 +347,7 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
             <Spin />
           </div>
         ) : !chartData.length ? (
-          <div className="flex items-center justify-center min-h-[300px] text-gray-400 text-sm">
+          <div className="flex items-center justify-center min-h-[300px] text-[var(--fg-dim)] text-sm">
             No data
           </div>
         ) : (

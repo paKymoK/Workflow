@@ -6,7 +6,7 @@ function VideoEmbedNodeView({ node }: ReactNodeViewProps) {
   const fileName = node.attrs.fileName as string | null;
   return (
     <NodeViewWrapper>
-      <div className="flex items-center gap-2 px-3 py-2 my-1 rounded border border-gray-300 bg-gray-50 select-none text-sm text-gray-600">
+      <div className="flex items-center gap-2 px-3 py-2 my-1 rounded border border-[var(--line)] bg-[var(--bg-2)] select-none text-sm text-[var(--fg-dim)]">
         🎬 {fileName || "Video"} — ready
       </div>
     </NodeViewWrapper>
