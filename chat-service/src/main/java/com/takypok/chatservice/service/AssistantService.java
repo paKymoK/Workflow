@@ -8,12 +8,14 @@ import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvi
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "ai.rag.enabled", havingValue = "true", matchIfMissing = false)
 public class AssistantService {
 
   private final ChatClient chatClient;

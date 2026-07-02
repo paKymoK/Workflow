@@ -18,6 +18,7 @@ import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -26,6 +27,7 @@ import reactor.core.scheduler.Schedulers;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "ai.rag.enabled", havingValue = "true", matchIfMissing = false)
 public class IngestionService {
 
   private final VectorStore vectorStore;

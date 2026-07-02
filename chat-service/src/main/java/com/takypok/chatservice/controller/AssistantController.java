@@ -6,6 +6,7 @@ import com.takypok.chatservice.model.QuestionRequest;
 import com.takypok.chatservice.service.AssistantService;
 import com.takypok.chatservice.service.IngestionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/assist")
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "ai.rag.enabled", havingValue = "true", matchIfMissing = false)
 public class AssistantController {
 
   private final AssistantService assistantService;

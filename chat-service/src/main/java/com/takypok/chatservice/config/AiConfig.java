@@ -2,10 +2,12 @@ package com.takypok.chatservice.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnProperty(name = "ai.rag.enabled", havingValue = "true", matchIfMissing = false)
 public class AiConfig {
   private static final String SYSTEM_PROMPT =
       """
