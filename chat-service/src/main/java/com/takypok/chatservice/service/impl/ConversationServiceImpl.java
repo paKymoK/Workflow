@@ -19,6 +19,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,13 +109,15 @@ public class ConversationServiceImpl implements ConversationService {
             .findByConversationId(conversationId)
             .map(ConversationParticipant::getParticipantSub)
             .collectList();
-    Mono<Message> lastMessageMono =
-        messageRepository.findFirstByConversationIdOrderByIdDesc(conversationId);
+    Mono<Optional<Message>> lastMessageMono =
+        messageRepository
+            .findFirstByConversationIdOrderByIdDesc(conversationId)
+            .map(Optional::of)
+            .defaultIfEmpty(Optional.empty());
     Mono<Long> unreadCountMono =
         messageRepository.countByConversationIdAndCreatedAtAfter(conversationId, since);
 
-    return Mono.zip(
-            conversationMono, subsMono, lastMessageMono.defaultIfEmpty(null), unreadCountMono)
+    return Mono.zip(conversationMono, subsMono, lastMessageMono, unreadCountMono)
         .map(
             tuple ->
                 new ConversationSummaryResponse(
@@ -122,7 +125,7 @@ public class ConversationServiceImpl implements ConversationService {
                     tuple.getT1().getType(),
                     tuple.getT1().getName(),
                     tuple.getT2(),
-                    tuple.getT3(),
+                    tuple.getT3().orElse(null),
                     tuple.getT4()));
   }
 

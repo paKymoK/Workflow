@@ -30,6 +30,7 @@ export default function Messages() {
   const [search, setSearch] = useState("");
   const [options, setOptions] = useState<UserSummary[]>([]);
   const [picked, setPicked] = useState<UserSummary | null>(null);
+  const optionsRef = useRef<UserSummary[]>([]);
 
   const { data: conversations = [], isLoading } = useConversations();
   const { mutate: createConversation, isPending: creating } = useCreateConversation();
@@ -52,12 +53,16 @@ export default function Messages() {
 
   async function handleSearch(query: string) {
     setSearch(query);
+    setPicked(null);
     if (!query.trim()) {
+      optionsRef.current = [];
       setOptions([]);
       return;
     }
     const results = await fetchUsers(query, 8);
-    setOptions(results.filter((u) => u.sub !== mySub));
+    const filtered = results.filter((u) => u.sub !== mySub);
+    optionsRef.current = filtered;
+    setOptions(filtered);
   }
 
   function handleCreate() {
@@ -222,7 +227,7 @@ export default function Messages() {
       <Modal
         title="New message"
         open={newOpen}
-        onCancel={() => setNewOpen(false)}
+        onCancel={() => { setNewOpen(false); setPicked(null); setSearch(""); setOptions([]); optionsRef.current = []; }}
         onOk={handleCreate}
         okButtonProps={{ disabled: !picked, loading: creating }}
         destroyOnClose
@@ -232,7 +237,13 @@ export default function Messages() {
           value={search}
           options={options.map((u) => ({ value: u.sub, label: `${u.name} (${u.email})` }))}
           onSearch={handleSearch}
-          onSelect={(value) => setPicked(options.find((u) => u.sub === value) ?? null)}
+          onSelect={(value) => {
+              const user = optionsRef.current.find((u) => u.sub === value);
+              if (user) {
+                setPicked(user);
+                setSearch(`${user.name} (${user.email})`);
+              }
+            }}
           placeholder="Search a colleague..."
         />
       </Modal>
