@@ -10,6 +10,7 @@ import {
   MenuUnfoldOutlined,
   HomeOutlined,
   DashboardOutlined,
+  MessageOutlined,
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
@@ -25,6 +26,7 @@ const { Header, Sider, Content } = Layout;
 const ROUTE_LABELS: Record<string, string> = {
   "/": "// OVERVIEW",
   "/dashboard": "// DASHBOARD",
+  "/messages": "// MESSAGES",
   "/settings": "// SETTINGS",
 };
 
@@ -130,6 +132,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const siderMenuItems = [
     { key: "/",          icon: <HomeOutlined />,      label: "Home" },
     { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+    { key: "/messages",  icon: <MessageOutlined />,   label: "Messages" },
     { key: "/settings",  icon: <SettingOutlined />,   label: "Settings" },
   ];
 
