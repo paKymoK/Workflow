@@ -58,6 +58,12 @@ spring:
                 - Path=/media-service/**
               filters:
                 - RewritePath=/media-service/(?<segment>.*), /${segment}
+            - id: chat-websocket
+              uri: lb:ws://chat-service
+              predicates:
+                - Path=/chat-service/web-socket/**
+              filters:
+                - RewritePath=/chat-service/(?<segment>.*), /${segment}
             - id: chatbot
               uri: lb://chat-service
               predicates:
