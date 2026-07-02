@@ -20,7 +20,8 @@ public class JobController {
 
   @GetMapping("/{jobId}")
   public Mono<ResponseEntity<JobStatusResponse>> getStatus(@PathVariable String jobId) {
-    return Mono.justOrEmpty(transcodeJobService.getJob(jobId))
+    return transcodeJobService
+        .getJob(jobId)
         .map(job -> ResponseEntity.ok(toResponse(job)))
         .defaultIfEmpty(ResponseEntity.notFound().build());
   }

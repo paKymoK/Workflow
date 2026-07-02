@@ -3,11 +3,13 @@ package com.takypok.mediaservice.controller;
 import com.takypok.mediaservice.service.VideoStorageService;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,12 @@ public class VideoStreamController {
   private static final MediaType HLS_MIME =
       MediaType.parseMediaType("application/vnd.apple.mpegurl");
   private static final MediaType TS_MIME = MediaType.parseMediaType("video/MP2T");
+
+  // These are VOD playlists/segments (-hls_playlist_type vod) written once by the transcode
+  // job and never modified again, so a long, immutable cache is safe — repeat views (very
+  // common when scrolling back through chat history) previously re-read from disk every time.
+  private static final CacheControl HLS_CACHE_CONTROL =
+      CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable();
 
   private final VideoStorageService storageService;
 
@@ -66,6 +74,7 @@ public class VideoStreamController {
     return Mono.just(
         ResponseEntity.ok()
             .contentType(HLS_MIME)
+            .cacheControl(HLS_CACHE_CONTROL)
             .header(HttpHeaders.ACCEPT_RANGES, "bytes")
             .body((Resource) resource));
   }
@@ -89,6 +98,7 @@ public class VideoStreamController {
       }
       return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
           .contentType(TS_MIME)
+          .cacheControl(HLS_CACHE_CONTROL)
           .header(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + total)
           .header(HttpHeaders.ACCEPT_RANGES, "bytes")
           .body(bytes);
@@ -96,6 +106,7 @@ public class VideoStreamController {
 
     return ResponseEntity.ok()
         .contentType(TS_MIME)
+        .cacheControl(HLS_CACHE_CONTROL)
         .header(HttpHeaders.ACCEPT_RANGES, "bytes")
         .body(resource.getContentAsByteArray());
   }

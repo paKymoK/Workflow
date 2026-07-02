@@ -40,6 +40,11 @@ ffmpeg:
   cache-dir: ~/.cache/media-service/ffmpeg
   download-timeout-seconds: 120
 
+media:
+  transcode:
+    max-concurrent-jobs: ${TRANSCODE_MAX_CONCURRENT:2}
+    queue-capacity: ${TRANSCODE_QUEUE_CAPACITY:50}
+
 logging:
   config: classpath:log4j2-spring.xml
   level:

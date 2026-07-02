@@ -1,7 +1,9 @@
 package com.takypok.mediaservice.config;
 
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
@@ -14,6 +16,12 @@ public class WebConfig implements WebFluxConfigurer {
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
     String imagesLocation = "file:" + storageProperties.getImagesDir() + "/";
-    registry.addResourceHandler("/images/**").addResourceLocations(imagesLocation);
+    // Uploaded images are content-addressed by a generated UUID id and never modified
+    // in place, so a long, immutable cache is safe — every repeat view in a chat feed
+    // (scrolling back through history) previously re-read the file from disk every time.
+    registry
+        .addResourceHandler("/images/**")
+        .addResourceLocations(imagesLocation)
+        .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable());
   }
 }
