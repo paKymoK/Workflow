@@ -63,41 +63,20 @@ public class TranscodeJobService {
   }
 
   private Mono<Void> markProcessing(String jobId) {
-    return jobRepository
-        .findById(jobId)
-        .flatMap(
-            job -> {
-              job.setStatus(JobStatus.PROCESSING);
-              job.setStartedAt(Instant.now());
-              return jobRepository.save(job);
-            })
-        .then();
+    return jobRepository.markProcessing(jobId, Instant.now()).then();
   }
 
   private Mono<Void> markDone(String jobId, String videoId) {
     return jobRepository
-        .findById(jobId)
-        .flatMap(
-            job -> {
-              job.setStatus(JobStatus.DONE);
-              job.setCompletedAt(Instant.now());
-              return jobRepository.save(job);
-            })
-        .doOnNext(job -> log.info("Job {} completed for video {}", jobId, videoId))
+        .markDone(jobId, Instant.now())
+        .doOnNext(count -> log.info("Job {} completed for video {}", jobId, videoId))
         .then();
   }
 
   private Mono<Void> markFailed(String jobId, String message) {
     return jobRepository
-        .findById(jobId)
-        .flatMap(
-            job -> {
-              job.setStatus(JobStatus.FAILED);
-              job.setErrorMessage(message);
-              job.setCompletedAt(Instant.now());
-              return jobRepository.save(job);
-            })
-        .doOnNext(job -> log.error("Job {} failed: {}", jobId, message))
+        .markFailed(jobId, message, Instant.now())
+        .doOnNext(count -> log.error("Job {} failed: {}", jobId, message))
         .then();
   }
 }
