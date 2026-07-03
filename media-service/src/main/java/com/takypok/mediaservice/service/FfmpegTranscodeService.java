@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.scheduler.Scheduler;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +27,7 @@ public class FfmpegTranscodeService {
 
   private final FfmpegResolver ffmpegResolver;
   private final VideoStorageService storageService;
+  private final Scheduler transcodeScheduler;
 
   /** Transcodes the video and returns only the quality rows that were actually produced. */
   public Mono<List<String[]>> transcode(String videoId) {
@@ -49,7 +50,10 @@ public class FfmpegTranscodeService {
               runProcess(videoId, cmd);
               return applicable;
             })
-        .subscribeOn(Schedulers.boundedElastic());
+        // Bounded pool (see TranscodeSchedulerConfig) instead of Schedulers.boundedElastic() —
+        // this is what actually enforces the concurrent-transcode cap, since this is where the
+        // real FFmpeg process runs.
+        .subscribeOn(transcodeScheduler);
   }
 
   private int probeHeight(String videoId) throws Exception {

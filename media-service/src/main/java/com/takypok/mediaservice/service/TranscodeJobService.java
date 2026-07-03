@@ -3,16 +3,14 @@ package com.takypok.mediaservice.service;
 import com.takypok.mediaservice.model.JobResponse;
 import com.takypok.mediaservice.model.JobStatus;
 import com.takypok.mediaservice.model.VideoJob;
+import com.takypok.mediaservice.repository.VideoJobRepository;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +20,7 @@ public class TranscodeJobService {
   private final VideoUploadService uploadService;
   private final FfmpegTranscodeService transcodeService;
   private final HlsPackagerService hlsPackagerService;
-  private final VideoStorageService storageService;
-
-  private final ConcurrentHashMap<String, VideoJob> jobs = new ConcurrentHashMap<>();
+  private final VideoJobRepository jobRepository;
 
   public Mono<JobResponse> submitUpload(FilePart filePart) {
     String videoId = UUID.randomUUID().toString();
@@ -37,46 +33,71 @@ public class TranscodeJobService {
             .status(JobStatus.QUEUED)
             .createdAt(Instant.now())
             .build();
-    jobs.put(jobId, job);
 
-    // Stream file to disk first, then fire async transcode
-    return uploadService
-        .save(filePart.content(), videoId)
-        .doOnSuccess(ignored -> startTranscode(job))
+    // Persist QUEUED before touching disk so a poll immediately after this returns
+    // never 404s even if the transcode hasn't been picked up by a worker yet.
+    return jobRepository
+        .save(job)
+        .then(uploadService.save(filePart.content(), videoId))
+        .doOnSuccess(ignored -> startTranscode(jobId, videoId))
         .thenReturn(
             new JobResponse(
                 videoId, jobId, JobStatus.QUEUED, "Upload received, transcoding queued"));
   }
 
-  public Optional<VideoJob> getJob(String jobId) {
-    return Optional.ofNullable(jobs.get(jobId));
+  public Mono<VideoJob> getJob(String jobId) {
+    return jobRepository.findById(jobId);
   }
 
   public Mono<Void> removeJobsForVideo(String videoId) {
-    return Mono.fromRunnable(() -> jobs.values().removeIf(j -> videoId.equals(j.getVideoId())));
+    return jobRepository.deleteByVideoId(videoId);
   }
 
-  private void startTranscode(VideoJob job) {
-    job.setStatus(JobStatus.PROCESSING);
-    job.setStartedAt(Instant.now());
+  private void startTranscode(String jobId, String videoId) {
+    markProcessing(jobId)
+        .then(transcodeService.transcode(videoId))
+        .flatMap(qualities -> hlsPackagerService.writeMasterPlaylist(videoId, qualities))
+        .then(markDone(jobId, videoId))
+        .onErrorResume(e -> markFailed(jobId, e.getMessage()))
+        .subscribe();
+  }
 
-    transcodeService
-        .transcode(job.getVideoId())
-        .flatMap(qualities -> hlsPackagerService.writeMasterPlaylist(job.getVideoId(), qualities))
-        .doOnSuccess(
-            v -> {
+  private Mono<Void> markProcessing(String jobId) {
+    return jobRepository
+        .findById(jobId)
+        .flatMap(
+            job -> {
+              job.setStatus(JobStatus.PROCESSING);
+              job.setStartedAt(Instant.now());
+              return jobRepository.save(job);
+            })
+        .then();
+  }
+
+  private Mono<Void> markDone(String jobId, String videoId) {
+    return jobRepository
+        .findById(jobId)
+        .flatMap(
+            job -> {
               job.setStatus(JobStatus.DONE);
               job.setCompletedAt(Instant.now());
-              log.info("Job {} completed for video {}", job.getJobId(), job.getVideoId());
+              return jobRepository.save(job);
             })
-        .doOnError(
-            e -> {
+        .doOnNext(job -> log.info("Job {} completed for video {}", jobId, videoId))
+        .then();
+  }
+
+  private Mono<Void> markFailed(String jobId, String message) {
+    return jobRepository
+        .findById(jobId)
+        .flatMap(
+            job -> {
               job.setStatus(JobStatus.FAILED);
-              job.setErrorMessage(e.getMessage());
+              job.setErrorMessage(message);
               job.setCompletedAt(Instant.now());
-              log.error("Job {} failed: {}", job.getJobId(), e.getMessage());
+              return jobRepository.save(job);
             })
-        .subscribeOn(Schedulers.boundedElastic())
-        .subscribe();
+        .doOnNext(job -> log.error("Job {} failed: {}", jobId, message))
+        .then();
   }
 }

@@ -1,10 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { Avatar, AutoComplete, Badge, Button, Empty, Input, Modal, Spin } from "antd";
-import { PlusOutlined, SendOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
+import { Avatar, AutoComplete, Badge, Button, Empty, Input, message as antMessage, Modal, Spin } from "antd";
+import {
+  PaperClipOutlined,
+  PlusOutlined,
+  SendOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuth } from "@takypok/shared";
-import { fetchUsers, type UserSummary } from "../api/ticketApi";
-import type { ConversationSummary } from "../api/types";
+import { fetchUsers, getFileUrl, uploadFile, uploadVideo, type UserSummary } from "../api/ticketApi";
+import type { ConversationSummary, MessageAttachment, MessageType } from "../api/types";
+import { resizeImageForUpload } from "../utils/imageResize";
+import { waitForVideoReady } from "../utils/videoJob";
+import LazyVideoAttachment from "../components/LazyVideoAttachment";
+import MessageComposerAttachments, {
+  type PendingAttachment,
+} from "../components/MessageComposerAttachments";
 import {
   useConversationMessages,
   useConversations,
@@ -19,12 +31,22 @@ function conversationLabel(conversation: ConversationSummary, mySub?: string) {
   return other ?? "Direct message";
 }
 
+function deriveMessageType(hasContent: boolean, attachments: MessageAttachment[]): MessageType {
+  if (attachments.length === 0) return "TEXT";
+  const hasImage = attachments.some((a) => a.type === "IMAGE");
+  const hasVideo = attachments.some((a) => a.type === "VIDEO");
+  if (hasContent || (hasImage && hasVideo)) return "MIXED";
+  return hasImage ? "IMAGE" : "VIDEO";
+}
+
 export default function Messages() {
   const { user } = useAuth();
   const mySub = user?.sub as string | undefined;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newOpen, setNewOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -48,7 +70,60 @@ export default function Messages() {
 
   function openConversation(id: string) {
     setSelectedId(id);
+    setDraft("");
+    setPendingAttachments([]);
     markRead(id);
+  }
+
+  function updatePendingAttachment(key: string, patch: Partial<PendingAttachment>) {
+    setPendingAttachments((prev) => prev.map((p) => (p.key === key ? { ...p, ...patch } : p)));
+  }
+
+  function removePendingAttachment(key: string) {
+    setPendingAttachments((prev) => prev.filter((p) => p.key !== key));
+  }
+
+  async function handleAttachFiles(files: FileList | null) {
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      const key = `${Date.now()}-${Math.random()}`;
+      const isVideo = file.type.startsWith("video/");
+      setPendingAttachments((prev) => [
+        ...prev,
+        { key, name: file.name, kind: isVideo ? "video" : "image", status: "uploading" },
+      ]);
+
+      try {
+        if (isVideo) {
+          const job = await uploadVideo(file);
+          updatePendingAttachment(key, { status: "processing" });
+          const finalStatus = await waitForVideoReady(job.jobId);
+          if (finalStatus.status !== "DONE") {
+            throw new Error(finalStatus.errorMessage ?? "Video processing failed");
+          }
+          updatePendingAttachment(key, {
+            status: "ready",
+            attachment: { type: "VIDEO", mediaAssetId: job.videoId, url: null, status: "READY" },
+          });
+        } else {
+          const resized = await resizeImageForUpload(file);
+          const uploaded = await uploadFile(resized);
+          updatePendingAttachment(key, {
+            status: "ready",
+            attachment: {
+              type: "IMAGE",
+              mediaAssetId: uploaded.id,
+              url: getFileUrl(uploaded.id, uploaded.extension),
+              status: "READY",
+            },
+          });
+        }
+      } catch {
+        updatePendingAttachment(key, { status: "failed" });
+        antMessage.error(`Failed to attach ${file.name}`);
+      }
+    }
   }
 
   async function handleSearch(query: string) {
@@ -81,11 +156,25 @@ export default function Messages() {
     );
   }
 
+  const hasPendingUploads = pendingAttachments.some(
+    (p) => p.status === "uploading" || p.status === "processing",
+  );
+  const readyAttachments = pendingAttachments
+    .filter((p) => p.status === "ready" && p.attachment)
+    .map((p) => p.attachment as MessageAttachment);
+  const canSend =
+    !hasPendingUploads && (draft.trim().length > 0 || readyAttachments.length > 0);
+
   function handleSend() {
+    if (!selectedId || !canSend) return;
     const content = draft.trim();
-    if (!content || !selectedId) return;
     setDraft("");
-    send({ content, messageType: "TEXT" });
+    setPendingAttachments([]);
+    send({
+      content,
+      messageType: deriveMessageType(content.length > 0, readyAttachments),
+      attachments: readyAttachments.length > 0 ? readyAttachments : undefined,
+    });
   }
 
   return (
@@ -185,7 +274,26 @@ export default function Messages() {
                         {!mine && (
                           <div className="text-[9px] opacity-70 mb-0.5">{msg.sender.name}</div>
                         )}
-                        <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                        {msg.content && (
+                          <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                        )}
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="mt-1.5 flex flex-col gap-1.5">
+                            {msg.attachments.map((att, i) =>
+                              att.type === "IMAGE" ? (
+                                <img
+                                  key={i}
+                                  src={att.url ?? undefined}
+                                  alt="attachment"
+                                  loading="lazy"
+                                  className="max-w-[220px] max-h-[220px] rounded object-cover"
+                                />
+                              ) : (
+                                <LazyVideoAttachment key={i} attachment={att} />
+                              ),
+                            )}
+                          </div>
+                        )}
                         <div className="text-[8px] opacity-60 mt-1 text-right">
                           {dayjs(msg.createdAt).format("HH:mm")}
                         </div>
@@ -197,7 +305,29 @@ export default function Messages() {
               <div ref={bottomRef} />
             </div>
 
+            <MessageComposerAttachments
+              items={pendingAttachments}
+              onRemove={removePendingAttachment}
+            />
+
             <div className="flex gap-2 px-4 py-3 border-t border-[var(--line)]">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  handleAttachFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                type="text"
+                icon={<PaperClipOutlined />}
+                onClick={() => fileInputRef.current?.click()}
+                className="!text-[var(--fg-faint)] self-end"
+              />
               <Input.TextArea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -216,7 +346,8 @@ export default function Messages() {
                 icon={<SendOutlined />}
                 onClick={handleSend}
                 loading={sending}
-                disabled={!draft.trim()}
+                disabled={!canSend}
+                className="self-end"
               />
             </div>
           </>
