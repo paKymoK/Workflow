@@ -231,7 +231,7 @@ public class ConversationServiceImpl implements ConversationService {
         .map(ConversationParticipant::getParticipantSub)
         .collectList()
         .subscribe(
-            subs -> sessionRegistry.broadcast(subs, new ChatEvent(type, payload)),
+            subs -> sessionRegistry.publish(subs, new ChatEvent(type, payload)),
             error ->
                 log.error(
                     "Failed to broadcast chat event {}: {}", type, error.getMessage(), error));

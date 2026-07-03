@@ -74,7 +74,7 @@ public class MessageServiceImpl implements MessageService {
         .collectList()
         .subscribe(
             subs ->
-                sessionRegistry.broadcast(
+                sessionRegistry.publish(
                     subs,
                     new ChatEvent(
                         ChatEvent.ChatEventType.MESSAGE_CREATED,
