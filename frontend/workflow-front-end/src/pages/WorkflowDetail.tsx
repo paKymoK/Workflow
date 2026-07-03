@@ -214,7 +214,7 @@ function DetailPanel({
           )}
           tagRender={({ label, closable, onClose: onTagClose }) => (
             <span
-              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border text-[var(--neon-yellow)] bg-[rgba(0,207,255,0.1)] border-[var(--border-subtle)]"
+              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border text-[var(--neon-yellow)] bg-[color-mix(in_oklab,var(--neon-yellow)_10%,transparent)] border-[var(--border-subtle)]"
             >
               <span className="opacity-50 text-[9px]">V</span>{label}
               {closable && <span onClick={onTagClose} className="cursor-pointer opacity-50 hover:opacity-100">✕</span>}
@@ -244,7 +244,7 @@ function DetailPanel({
           )}
           tagRender={({ label, closable, onClose: onTagClose }) => (
             <span
-              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border text-[var(--neon-cyan)] bg-[rgba(0,245,196,0.1)] border-[rgba(0,245,196,0.25)]"
+              className="font-mono text-[10px] rounded px-1.5 py-px mr-1 flex items-center gap-1 border text-[var(--neon-cyan)] bg-[color-mix(in_oklab,var(--neon-cyan)_10%,transparent)] border-[color-mix(in_oklab,var(--neon-cyan)_25%,transparent)]"
             >
               <span className="opacity-50 text-[9px]">F</span>{label}
               {closable && <span onClick={onTagClose} className="cursor-pointer opacity-50 hover:opacity-100">✕</span>}

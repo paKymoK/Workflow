@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS priority
     name            character varying NOT NULL,
     response_time   integer           NOT NULL,
     resolution_time integer           NOT NULL,
+    level           integer           NOT NULL CHECK (level BETWEEN 1 AND 4),
     created_at      timestamp with time zone,
     created_by      jsonb,
     modified_at     timestamp with time zone,

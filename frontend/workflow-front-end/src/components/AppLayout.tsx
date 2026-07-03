@@ -45,8 +45,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, accentScheme, toggleTheme } = useTheme();
   const { isCustomFont, toggleFont } = useFont();
+
+  const shellTheme = isDark ? "dark" : "light";
 
   useChatSocket();
 
@@ -151,7 +153,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <App>
-      <BubbleBackground />
+      {accentScheme !== "default" && <BubbleBackground />}
 
       <Layout className="h-screen">
         {/* ── Sidebar ───────────────────────────────────── */}
@@ -159,7 +161,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           trigger={null}
           collapsible
           collapsed={collapsed}
-          theme={isDark ? "dark" : "light"}
+          theme={shellTheme}
           className="neon-sider-border overflow-hidden flex flex-col"
         >
           {/* Brand */}
@@ -176,7 +178,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
           {/* Navigation */}
           <Menu
-            theme={isDark ? "dark" : "light"}
+            theme={shellTheme}
             mode="inline"
             selectedKeys={[location.pathname]}
             items={siderMenuItems}
@@ -220,14 +222,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               >
                 <span className="neon-btn-content">Create</span>
               </Button>
-              <Button
-                type="text"
-                onClick={toggleFont}
-                title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
-                className="!text-[var(--acc-1)] hover:!bg-[var(--bg-2)] !font-bold !text-sm !tracking-wider !h-9 !w-9"
-              >
-                Aa
-              </Button>
+              {accentScheme !== "default" && (
+                <Button
+                  type="text"
+                  onClick={toggleFont}
+                  title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
+                  className="!text-[var(--acc-1)] hover:!bg-[var(--bg-2)] !font-bold !text-sm !tracking-wider !h-9 !w-9"
+                >
+                  Aa
+                </Button>
+              )}
               <Button
                 type="text"
                 icon={isDark ? <SunOutlined /> : <MoonOutlined />}

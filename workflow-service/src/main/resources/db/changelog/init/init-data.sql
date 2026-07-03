@@ -29,10 +29,11 @@ INSERT INTO
            (26,'Rolled Back',        'DONE',       '#FF8B00', now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 INSERT INTO
-    priority (name, response_time, resolution_time, "created_at", "created_by", "modified_at", "modified_by")
-VALUES ('Low', 1, 30, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
-       ('Medium', 1, 12, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
-       ('High', 1, 4, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
+    priority (name, response_time, resolution_time, level, "created_at", "created_by", "modified_at", "modified_by")
+VALUES ('Low', 1, 30, 1, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('Medium', 1, 12, 2, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('High', 1, 4, 3, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb),
+       ('Critical', 1, 2, 4, now(),'{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb, now(), '{"sub":"admin","name":"Admin","email":"admin@gmail.com"}'::jsonb);
 
 -- Incident management workflow (ITIL).
 -- Lifecycle: To Do -> In Progress -> (Pending) -> Resolved -> Closed (+ Reopen).

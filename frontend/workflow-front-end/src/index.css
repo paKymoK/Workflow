@@ -255,6 +255,220 @@ body {
 .scheme-phosphor { --acc-1: #3DF58A; --acc-2: #00C2A8; --acc-3: #C6FF4D; --acc-warn: #C6FF4D; }
 .scheme-magenta  { --acc-1: #FF3D9A; --acc-2: #7B5BFF; --acc-3: #00E0FF; --acc-warn: #FF8AD1; }
 
+/* ═══════════════════════════════════════════════════════
+   SCHEME: DEFAULT — plain Ant Design look
+   Colors are split by [data-theme] since default now follows
+   the light/dark toggle like every other scheme (it just
+   renders plain AntD instead of the neon terminal look).
+   The [data-theme="x"].scheme-default compound selector is
+   naturally more specific than the base [data-theme="x"]
+   rules, so source order doesn't matter here.
+   ═══════════════════════════════════════════════════════ */
+.scheme-default {
+  --acc-1: #1677ff;
+  --acc-2: #722ed1;
+  --acc-3: #52c41a;
+  --acc-warn: #faad14;
+  --acc-hot:  #ff4d4f;
+  --acc-amber: #fa8c16;
+  --grid-color: transparent;
+  --glow: 0;
+
+  --status-open: #1677ff;
+  --status-triaged: #13a8a8;
+  --status-in-progress: #faad14;
+  --status-pending: #fa8c16;
+  --status-in-review: #722ed1;
+  --status-resolved: #52c41a;
+  --status-closed: #8c8c8c;
+
+  --priority-critical: #ff4d4f;
+  --priority-high: #fa8c16;
+  --priority-medium: #faad14;
+  --priority-low: #52c41a;
+
+  cursor: default;
+}
+
+[data-theme="light"].scheme-default {
+  --neon-yellow: #1677ff;
+  --neon-pink:   #722ed1;
+  --neon-cyan:   #52c41a;
+  --black:  #f0f2f5;
+  --dark:   #ffffff;
+  --darker: #fafafa;
+  --white:  #000000d9;
+  --text-muted:    rgba(0,0,0,0.45);
+  --border-subtle: rgba(5,5,5,0.10);
+
+  --bg-0: #f0f2f5;
+  --bg-1: #ffffff;
+  --bg-2: #fafafa;
+  --bg-3: #ffffff;
+  --line: rgba(5, 5, 5, .10);
+  --line-strong: rgba(5, 5, 5, .18);
+  --fg: rgba(0, 0, 0, .88);
+  --fg-dim: rgba(0, 0, 0, .65);
+  --fg-faint: rgba(0, 0, 0, .45);
+}
+
+[data-theme="dark"].scheme-default {
+  --neon-yellow: #1677ff;
+  --neon-pink:   #722ed1;
+  --neon-cyan:   #52c41a;
+  --black:  #000000;
+  --dark:   #141414;
+  --darker: #1f1f1f;
+  --white:  rgba(255,255,255,.85);
+  --text-muted:    rgba(255,255,255,0.45);
+  --border-subtle: rgba(255,255,255,0.12);
+
+  --bg-0: #000000;
+  --bg-1: #141414;
+  --bg-2: #1f1f1f;
+  --bg-3: #262626;
+  --line: rgba(255, 255, 255, .12);
+  --line-strong: rgba(255, 255, 255, .24);
+  --fg: rgba(255, 255, 255, .85);
+  --fg-dim: rgba(255, 255, 255, .65);
+  --fg-faint: rgba(255, 255, 255, .45);
+}
+
+.scheme-default body { cursor: default; }
+.scheme-default .cursor-crosshair { cursor: pointer !important; }
+
+/* Plain sans font, no letter-spacing games */
+.scheme-default body,
+.scheme-default .font-bebas,
+.scheme-default .font-mono-tech,
+.scheme-default .font-barlow,
+.scheme-default .ant-card .ant-card-head-title,
+.scheme-default .ant-table-thead > tr > th,
+.scheme-default .ant-tabs .ant-tabs-tab,
+.scheme-default .ant-segmented,
+.scheme-default .ant-steps .ant-steps-item-title,
+.scheme-default .ant-typography h1,
+.scheme-default .ant-typography h2,
+.scheme-default .ant-typography h3,
+.scheme-default .ant-typography h4,
+.scheme-default .ant-typography h5,
+.scheme-default .ant-descriptions .ant-descriptions-item-label,
+.scheme-default .neon-input {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  letter-spacing: normal !important;
+}
+.scheme-default .ant-card .ant-card-head-title { color: inherit !important; font-size: 15px !important; }
+.scheme-default .ant-table-thead > tr > th,
+.scheme-default .ant-tabs .ant-tabs-tab { font-size: 14px !important; }
+
+/* No neon glow / grid / scanlines / hard corners */
+.scheme-default .bg-neon-grid { background-image: none !important; }
+.scheme-default .scanlines-overlay { display: none !important; }
+.scheme-default .neon-glow-yellow,
+.scheme-default .neon-glow-pink,
+.scheme-default .neon-glow-cyan,
+.scheme-default .neon-glow-acc { box-shadow: none !important; }
+.scheme-default .neon-btn:hover { box-shadow: none !important; }
+.scheme-default .login-slash-accent { display: none !important; }
+.scheme-default .content-corner,
+.scheme-default .corner-tl,
+.scheme-default .corner-tr,
+.scheme-default .corner-bl,
+.scheme-default .corner-br { display: none !important; }
+.scheme-default .glitch-anim { animation: none !important; }
+
+/* Rounded corners instead of the sharp terminal look */
+.scheme-default .ant-segmented,
+.scheme-default .ant-segmented .ant-segmented-item,
+.scheme-default .ant-segmented .ant-segmented-thumb,
+.scheme-default .ant-menu .ant-menu-item,
+.scheme-default .react-flow__controls {
+  border-radius: 6px !important;
+}
+
+/* Plain inputs */
+[data-theme="light"].scheme-default .neon-input {
+  background: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+  color: rgba(0,0,0,0.88) !important;
+  letter-spacing: normal;
+}
+[data-theme="light"].scheme-default .neon-input::placeholder { color: rgba(0,0,0,0.25) !important; }
+[data-theme="light"].scheme-default .neon-input:focus {
+  border-color: #1677ff !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(22,119,255,0.1) !important;
+}
+[data-theme="dark"].scheme-default .neon-input {
+  background: #141414 !important;
+  border: 1px solid #424242 !important;
+  color: rgba(255,255,255,0.85) !important;
+  letter-spacing: normal;
+}
+[data-theme="dark"].scheme-default .neon-input::placeholder { color: rgba(255,255,255,0.25) !important; }
+[data-theme="dark"].scheme-default .neon-input:focus {
+  border-color: #1677ff !important;
+  background: #141414 !important;
+  box-shadow: 0 0 0 2px rgba(22,119,255,0.15) !important;
+}
+
+/* Table row backgrounds (hardcoded per data-theme, need a plain override) */
+[data-theme="light"].scheme-default .ant-table-wrapper .ant-table-tbody > tr > td { background: #ffffff !important; }
+[data-theme="light"].scheme-default .ant-table-wrapper .ant-table-tbody > tr:hover > td { background: #fafafa !important; }
+[data-theme="dark"].scheme-default .ant-table-wrapper .ant-table-tbody > tr > td { background: #141414 !important; }
+[data-theme="dark"].scheme-default .ant-table-wrapper .ant-table-tbody > tr:hover > td { background: #1f1f1f !important; }
+
+/* ReactFlow workflow canvas — hardcoded cyan literals, not var-driven */
+[data-theme="light"].scheme-default .react-flow__background { background: #fafafa !important; }
+[data-theme="light"].scheme-default .react-flow__controls {
+  background: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+[data-theme="light"].scheme-default .react-flow__controls-button {
+  background: #ffffff !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  color: rgba(0,0,0,0.65) !important;
+  fill: rgba(0,0,0,0.65) !important;
+}
+[data-theme="light"].scheme-default .react-flow__controls-button:hover { background: #fafafa !important; }
+[data-theme="light"].scheme-default .react-flow__controls-button svg { fill: rgba(0,0,0,0.65) !important; }
+[data-theme="light"].scheme-default .react-flow__edge-path { stroke: #b1b1b7 !important; }
+[data-theme="light"].scheme-default .react-flow__selection {
+  background: rgba(22,119,255,0.05) !important;
+  border: 1px solid #1677ff !important;
+}
+[data-theme="light"].scheme-default .react-flow__minimap {
+  background: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+[data-theme="dark"].scheme-default .react-flow__background { background: #000000 !important; }
+[data-theme="dark"].scheme-default .react-flow__controls {
+  background: #141414 !important;
+  border: 1px solid #424242 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
+}
+[data-theme="dark"].scheme-default .react-flow__controls-button {
+  background: #141414 !important;
+  border-bottom: 1px solid #303030 !important;
+  color: rgba(255,255,255,0.65) !important;
+  fill: rgba(255,255,255,0.65) !important;
+}
+[data-theme="dark"].scheme-default .react-flow__controls-button:hover { background: #1f1f1f !important; }
+[data-theme="dark"].scheme-default .react-flow__controls-button svg { fill: rgba(255,255,255,0.65) !important; }
+[data-theme="dark"].scheme-default .react-flow__edge-path { stroke: #424242 !important; }
+[data-theme="dark"].scheme-default .react-flow__selection {
+  background: rgba(22,119,255,0.1) !important;
+  border: 1px solid #1677ff !important;
+}
+[data-theme="dark"].scheme-default .react-flow__minimap {
+  background: #141414 !important;
+  border: 1px solid #424242 !important;
+}
+
+.scheme-default .react-flow__edge.selected .react-flow__edge-path { stroke: #1677ff !important; }
+
 /* ── Glow / accent utilities ─────────────────────────── */
 .neon-text-acc { color: var(--acc-1) !important; }
 .neon-glow-acc {

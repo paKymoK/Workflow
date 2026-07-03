@@ -39,6 +39,7 @@ public class PriorityServiceImpl implements PriorityService {
     priority.setName(request.getName());
     priority.setResponseTime(request.getResponseTime());
     priority.setResolutionTime(request.getResolutionTime());
+    priority.setLevel(request.getLevel());
     return priorityRepository.save(priority);
   }
 
@@ -50,6 +51,7 @@ public class PriorityServiceImpl implements PriorityService {
               priority.setName(request.getName());
               priority.setResponseTime(request.getResponseTime());
               priority.setResolutionTime(request.getResolutionTime());
+              priority.setLevel(request.getLevel());
               return priorityRepository.save(priority);
             });
   }

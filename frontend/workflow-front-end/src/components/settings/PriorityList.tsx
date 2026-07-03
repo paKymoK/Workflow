@@ -46,6 +46,7 @@ export default function PriorityList() {
     { title: "Name", dataIndex: "name" },
     { title: "Response Time", dataIndex: "responseTime", width: 160 },
     { title: "Resolution Time", dataIndex: "resolutionTime", width: 160 },
+    { title: "Level", dataIndex: "level", width: 100 },
     {
       title: "Action",
       width: 180,
@@ -82,6 +83,9 @@ export default function PriorityList() {
           </Form.Item>
           <Form.Item name="resolutionTime" label="Resolution Time" rules={[{ required: true }]}>
             <InputNumber className="w-full" min={1} />
+          </Form.Item>
+          <Form.Item name="level" label="Level (bars 1-4)" rules={[{ required: true }]}>
+            <InputNumber className="w-full" min={1} max={4} />
           </Form.Item>
         </Form>
       </Modal>

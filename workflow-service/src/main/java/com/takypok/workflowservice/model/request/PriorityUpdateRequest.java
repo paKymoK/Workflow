@@ -13,4 +13,5 @@ public class PriorityUpdateRequest {
   @NotNull private String name;
   @NotNull private Long responseTime;
   @NotNull private Long resolutionTime;
+  @NotNull private Integer level;
 }

@@ -1,4 +1,3 @@
-import { usePriorities } from "../../hooks/useTickets";
 import type { Priority } from "../../api/types";
 import { dynamicStyle } from "../../utils/dynamicStyle";
 
@@ -10,14 +9,9 @@ const PRI_COLORS: Record<string, string> = {
 };
 
 export default function PriorityBars({ priority }: { priority: Priority | undefined }) {
-  const { data: priorities = [] } = usePriorities();
-
   if (!priority) return <span className="text-[var(--fg-faint)] text-xs">—</span>;
 
-  const sorted = [...priorities].sort((a, b) => a.responseTime - b.responseTime);
-  const idx = sorted.findIndex((p) => p.id === priority.id);
-  // shortest responseTime = highest urgency = rank 4
-  const rank = idx === -1 ? 1 : Math.min(4, Math.max(1, sorted.length - idx));
+  const rank = Math.min(4, Math.max(1, priority.level));
   const color = PRI_COLORS[priority.name] ?? "var(--acc-1)";
 
   return (

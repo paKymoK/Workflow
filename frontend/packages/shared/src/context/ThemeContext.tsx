@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem("accentScheme", accentScheme);
     const el = document.documentElement;
-    el.classList.remove("scheme-amber", "scheme-phosphor", "scheme-magenta");
+    el.classList.remove("scheme-amber", "scheme-phosphor", "scheme-magenta", "scheme-default");
     if (accentScheme !== "ice") el.classList.add(`scheme-${accentScheme}`);
   }, [accentScheme]);
 

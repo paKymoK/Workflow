@@ -13,7 +13,14 @@ function ThemedApp() {
     <ConfigProvider
       theme={
         isDefaultAntd
-          ? { algorithm: theme.defaultAlgorithm }
+          ? {
+              algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+              components: {
+                Layout: isDark
+                  ? { headerBg: "#141414", siderBg: "#141414", bodyBg: "#000000" }
+                  : { headerBg: "#ffffff", siderBg: "#ffffff", bodyBg: "#f0f2f5" },
+              },
+            }
           : {
               algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
               token: isDark ? darkTokens(fontFamily) : lightTokens(fontFamily),

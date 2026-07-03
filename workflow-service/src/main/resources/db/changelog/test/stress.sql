@@ -54,11 +54,13 @@ WITH internal_users(u) AS (
                                 END AS status_json,
                             CASE
                                 WHEN r_priority < 0.50 THEN
-                                    jsonb_build_object('id', 1, 'name', 'Low',    'responseTime', 1, 'resolutionTime', 30)
-                                WHEN r_priority < 0.85 THEN
-                                    jsonb_build_object('id', 2, 'name', 'Medium', 'responseTime', 1, 'resolutionTime', 12)
+                                    jsonb_build_object('id', 1, 'name', 'Low',      'responseTime', 1, 'resolutionTime', 30, 'level', 1)
+                                WHEN r_priority < 0.80 THEN
+                                    jsonb_build_object('id', 2, 'name', 'Medium',   'responseTime', 1, 'resolutionTime', 12, 'level', 2)
+                                WHEN r_priority < 0.95 THEN
+                                    jsonb_build_object('id', 3, 'name', 'High',     'responseTime', 1, 'resolutionTime',  4, 'level', 3)
                                 ELSE
-                                    jsonb_build_object('id', 3, 'name', 'High',   'responseTime', 1, 'resolutionTime',  4)
+                                    jsonb_build_object('id', 4, 'name', 'Critical', 'responseTime', 1, 'resolutionTime',  2, 'level', 4)
                                 END AS priority_json,
                             -- FIX: ids, names, codes and workflowId now match the real issue_type table
                             CASE
@@ -130,9 +132,10 @@ SELECT t.id,
                        'resolution',          'TODO',
                        'responseTime',        t.created_at + (random() * (
                            CASE t.priority->>'name'
-                               WHEN 'High'   THEN interval '1 hour'
-                               WHEN 'Medium' THEN interval '3 hours'
-                               ELSE               interval '8 hours'
+                               WHEN 'Critical' THEN interval '30 minutes'
+                               WHEN 'High'     THEN interval '1 hour'
+                               WHEN 'Medium'   THEN interval '3 hours'
+                               ELSE                 interval '8 hours'
                            END)),
                        'resolutionTime',      NULL,
                        'resolutionPercent',   floor(30 + random() * 60)::int,
@@ -145,15 +148,17 @@ SELECT t.id,
                        'resolution',          'DONE',
                        'responseTime',        t.created_at + (random() * (
                            CASE t.priority->>'name'
-                               WHEN 'High'   THEN interval '1 hour'
-                               WHEN 'Medium' THEN interval '3 hours'
-                               ELSE               interval '8 hours'
+                               WHEN 'Critical' THEN interval '30 minutes'
+                               WHEN 'High'     THEN interval '1 hour'
+                               WHEN 'Medium'   THEN interval '3 hours'
+                               ELSE                 interval '8 hours'
                            END)),
                        'resolutionTime',      t.created_at + (
                            CASE t.priority->>'name'
-                               WHEN 'High'   THEN interval '1 hour'   + random() * interval '7 hours'
-                               WHEN 'Medium' THEN interval '4 hours'  + random() * interval '20 hours'
-                               ELSE               interval '12 hours' + random() * interval '60 hours'
+                               WHEN 'Critical' THEN interval '30 minutes' + random() * interval '90 minutes'
+                               WHEN 'High'     THEN interval '1 hour'     + random() * interval '7 hours'
+                               WHEN 'Medium'   THEN interval '4 hours'    + random() * interval '20 hours'
+                               ELSE                 interval '12 hours'   + random() * interval '60 hours'
                            END),
                        -- FIX: overdue tickets get percent > 100 (110–149) so the value signals breach
                        'resolutionPercent',   CASE WHEN rd.r_done_overdue < 0.15

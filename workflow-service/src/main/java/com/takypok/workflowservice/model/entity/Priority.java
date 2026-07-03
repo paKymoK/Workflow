@@ -14,4 +14,5 @@ public class Priority extends IdEntity {
   private String name;
   private Long responseTime;
   private Long resolutionTime;
+  private Integer level;
 }

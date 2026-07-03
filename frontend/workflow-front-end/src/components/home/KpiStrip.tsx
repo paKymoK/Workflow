@@ -111,7 +111,7 @@ export default function KpiStrip({ refetchKey = 0 }: Props) {
   const { data: priorities = [] } = usePriorities();
 
   const criticalPriority = useMemo(
-    () => [...priorities].sort((a, b) => a.responseTime - b.responseTime)[0],
+    () => [...priorities].sort((a, b) => b.level - a.level)[0],
     [priorities],
   );
 
