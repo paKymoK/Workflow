@@ -1,4 +1,5 @@
 import axios from "axios";
+import { sha256 } from "@noble/hashes/sha256";
 
 export const AUTH_SERVER = import.meta.env.VITE_AUTH_SERVER as string;
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
@@ -12,13 +13,25 @@ export function generateCodeVerifier(): string {
   return base64UrlEncode(array);
 }
 
+// crypto.subtle only exists in secure contexts (HTTPS, or localhost/127.0.0.1) — it's
+// undefined when the app is served over plain HTTP from a non-localhost origin, e.g.
+// opening the dev server by LAN IP from another machine, or an internal deployment
+// without TLS. crypto.getRandomValues has no such restriction, which is why only the
+// SHA-256 step needs a fallback.
+async function sha256Digest(data: Uint8Array): Promise<Uint8Array> {
+  if (crypto.subtle) {
+    return new Uint8Array(await crypto.subtle.digest("SHA-256", data as BufferSource));
+  }
+  return sha256(data);
+}
+
 export async function generateCodeChallenge(
   verifier: string
 ): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(verifier);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return base64UrlEncode(new Uint8Array(digest));
+  const digest = await sha256Digest(data);
+  return base64UrlEncode(digest);
 }
 
 export function generateState(): string {
