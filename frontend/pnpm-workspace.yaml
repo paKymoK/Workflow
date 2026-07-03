@@ -2,3 +2,5 @@ packages:
   - "packages/*"
   - "workflow-front-end"
   - "iam-front-end"
+allowBuilds:
+  esbuild: set this to true or false
