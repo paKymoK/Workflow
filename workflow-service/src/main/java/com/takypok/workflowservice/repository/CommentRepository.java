@@ -1,10 +1,10 @@
-package com.takypok.mediaservice.repository;
+package com.takypok.workflowservice.repository;
 
-import com.takypok.mediaservice.model.entity.Comment;
+import com.takypok.workflowservice.model.entity.Comment;
 import java.util.UUID;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import reactor.core.publisher.Flux;
 
 public interface CommentRepository extends R2dbcRepository<Comment, UUID> {
-  Flux<Comment> findByTicketId(Long ticketId);
+  Flux<Comment> findByTicketIdOrderByCreatedAtDesc(Long ticketId);
 }

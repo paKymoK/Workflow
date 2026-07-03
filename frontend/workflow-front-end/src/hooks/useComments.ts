@@ -30,8 +30,8 @@ export function useCreateComment() {
 export function useUpdateComment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, content }: { id: string; content: string }) =>
-      updateComment(id, content),
+    mutationFn: ({ ticketId, id, content }: { ticketId: string | number; id: string; content: string }) =>
+      updateComment(ticketId, id, content),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: commentKeys.list(data.ticketId) });
     },

@@ -155,14 +155,14 @@ export default function TicketDetail() {
     const hasMedia = html.includes('data-type="video-embed"') || html.includes("<img");
     if (!hasText && !hasMedia) return;
     try {
-      await editMutation.mutateAsync({ id: commentId, content: html });
+      await editMutation.mutateAsync({ ticketId: id!, id: commentId, content: html });
       message.success("Comment updated");
       setEditingCommentId(null);
       editHtmlRef.current = "";
     } catch {
       message.error("Failed to update comment");
     }
-  }, [editMutation, message]);
+  }, [id, editMutation, message]);
 
   const handleSubmitComment = useCallback(async () => {
     const html = commentHtmlRef.current;

@@ -1,8 +1,8 @@
-package com.takypok.mediaservice.model.mapper;
+package com.takypok.workflowservice.model.mapper;
 
 import com.takypok.core.model.authentication.User;
-import com.takypok.mediaservice.model.entity.Comment;
-import com.takypok.mediaservice.model.request.CommentRequest;
+import com.takypok.workflowservice.model.entity.Comment;
+import com.takypok.workflowservice.model.request.CommentRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -10,5 +10,5 @@ import org.mapstruct.Mapping;
 public abstract class CommentMapper {
   @Mapping(target = "id", expression = "java(null)")
   @Mapping(target = "mentionedSubs", ignore = true)
-  public abstract Comment mapToEntity(CommentRequest request, User commenter);
+  public abstract Comment mapToEntity(CommentRequest request, Long ticketId, User commenter);
 }

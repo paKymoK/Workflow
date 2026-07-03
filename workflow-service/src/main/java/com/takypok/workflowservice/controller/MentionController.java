@@ -1,7 +1,8 @@
-package com.takypok.mediaservice.controller;
+package com.takypok.workflowservice.controller;
 
+import com.takypok.core.model.ResultMessage;
 import com.takypok.core.model.UserSummary;
-import com.takypok.mediaservice.client.UserClient;
+import com.takypok.workflowservice.client.AuthServiceClient;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RequestMapping("/v1/mention")
 public class MentionController {
-  private final UserClient userClient;
+  private final AuthServiceClient authServiceClient;
 
   @GetMapping("/search")
-  public Mono<List<UserSummary>> search(@RequestParam @NotBlank String q) {
-    return userClient.searchUsers(q);
+  public Mono<ResultMessage<List<UserSummary>>> search(@RequestParam @NotBlank String q) {
+    return authServiceClient.searchUsers(q).map(ResultMessage::success);
   }
 }

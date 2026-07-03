@@ -195,26 +195,26 @@ export function getFileUrl(id: string, extension: string) {
 }
 
 export async function fetchComments(ticketId: string | number) {
-    const { data } = await api.get<Comment[]>(
-        `/media-service/v1/comment/${ticketId}`,
+    const { data } = await api.get<ResultMessage<Comment[]>>(
+        `/workflow-service/v1/ticket/${ticketId}/comment`,
     );
-    return data;
+    return data.data;
 }
 
 export async function createComment(ticketId: string | number, content: string) {
-    const { data } = await api.post<ResultMessage<void>>(
-        "/media-service/v1/comment",
-        { ticketId, content },
-    );
-    return data;
-}
-
-export async function updateComment(id: string, content: string) {
-    const { data } = await api.put<Comment>(
-        `/media-service/v1/comment/${id}`,
+    const { data } = await api.post<ResultMessage<Comment>>(
+        `/workflow-service/v1/ticket/${ticketId}/comment`,
         { content },
     );
-    return data;
+    return data.data;
+}
+
+export async function updateComment(ticketId: string | number, id: string, content: string) {
+    const { data } = await api.put<ResultMessage<Comment>>(
+        `/workflow-service/v1/ticket/${ticketId}/comment/${id}`,
+        { content },
+    );
+    return data.data;
 }
 
 export interface UserSummary {
@@ -224,8 +224,8 @@ export interface UserSummary {
 }
 
 export async function searchMentions(q: string): Promise<UserSummary[]> {
-    const { data } = await api.get<UserSummary[]>("/media-service/v1/mention/search", { params: { q } });
-    return data;
+    const { data } = await api.get<ResultMessage<UserSummary[]>>("/workflow-service/v1/mention/search", { params: { q } });
+    return data.data;
 }
 
 export async function fetchUsers(q: string, size = 10): Promise<UserSummary[]> {

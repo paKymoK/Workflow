@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/init/add-comment-mentions.sql
   - include:
       file: db/changelog/init/add-video-job.sql
+  - include:
+      file: db/changelog/init/drop-comment.sql

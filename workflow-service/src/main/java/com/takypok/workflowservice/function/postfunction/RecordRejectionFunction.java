@@ -7,25 +7,21 @@ import com.takypok.workflowservice.model.entity.Ticket;
 import com.takypok.workflowservice.model.entity.Transition;
 import com.takypok.workflowservice.model.entity.custom.ListApprovalRecord;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.model.request.CommentRequest;
 import com.takypok.workflowservice.model.request.TransitionRequest;
+import com.takypok.workflowservice.service.CommentService;
 import java.time.ZonedDateTime;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class RecordRejectionFunction implements PostFunctionInterface {
 
-  private final WebClient.Builder webClientBuilder;
-
-  public RecordRejectionFunction(
-      @Qualifier("lbWebClientBuilder") WebClient.Builder webClientBuilder) {
-    this.webClientBuilder = webClientBuilder;
-  }
+  private final CommentService commentService;
 
   @Override
   public Mono<Ticket<TicketDetail>> run(
@@ -46,23 +42,18 @@ public class RecordRejectionFunction implements PostFunctionInterface {
       return Mono.just(ticket);
     }
 
-    String content = "[REJECTED] " + note;
-    return webClientBuilder
-        .build()
-        .post()
-        .uri("http://media-service/v1/comment")
-        .bodyValue(Map.of("ticketId", ticket.getId(), "content", content))
-        .retrieve()
-        .bodyToMono(Void.class)
+    CommentRequest commentRequest = new CommentRequest();
+    commentRequest.setContent("[REJECTED] " + note);
+    return commentService
+        .comment(ticket.getId(), commentRequest, currentUser)
         .onErrorResume(
             ex -> {
               log.warn(
-                  "media-service unavailable — rejection comment not posted for ticket {}. "
-                      + "Notify the submitter manually. Error: {}",
+                  "Failed to record rejection comment for ticket {}: {}",
                   ticket.getId(),
                   ex.getMessage());
-              ticket.setMediaServiceWarning(
-                  "Comment service unavailable — notify the submitter manually.");
+              ticket.setCommentWarning(
+                  "Comment could not be recorded — notify the submitter manually.");
               return Mono.empty();
             })
         .thenReturn(ticket);

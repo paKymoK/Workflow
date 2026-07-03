@@ -1,4 +1,4 @@
-package com.takypok.mediaservice.model.entity;
+package com.takypok.workflowservice.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.takypok.core.model.BaseEntity;

@@ -25,10 +25,6 @@ management:
     health:
       show-details: always
 
-auth:
-  service:
-    url: http://auth-service
-
 storage:
   base-dir: ./uploads
   images-dir: ./uploads/images

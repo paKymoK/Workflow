@@ -28,5 +28,5 @@ public class Ticket<T extends TicketDetail> extends IdEntity {
   private ListApprovalRecord approvals;
   private ListLinkedTickets linkedTickets;
 
-  @Transient private String mediaServiceWarning;
+  @Transient private String commentWarning;
 }

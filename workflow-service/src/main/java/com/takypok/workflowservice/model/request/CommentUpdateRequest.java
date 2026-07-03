@@ -1,4 +1,4 @@
-package com.takypok.mediaservice.model.request;
+package com.takypok.workflowservice.model.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

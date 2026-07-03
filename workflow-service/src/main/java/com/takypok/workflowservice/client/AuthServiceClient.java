@@ -1,7 +1,10 @@
 package com.takypok.workflowservice.client;
 
+import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.ResultMessage;
+import com.takypok.core.model.UserSummary;
 import com.takypok.core.model.authentication.User;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -31,5 +34,14 @@ public class AuthServiceClient {
               log.warn("Failed to fetch user '{}' from auth-service: {}", sub, e.getMessage());
               return Mono.empty();
             });
+  }
+
+  public Mono<List<UserSummary>> searchUsers(String q) {
+    return webClient
+        .get()
+        .uri("lb://auth-service/v1/users?q={q}&size=10", q)
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<ResultMessage<PageResponse<UserSummary>>>() {})
+        .map(r -> r.getData().getContent());
   }
 }

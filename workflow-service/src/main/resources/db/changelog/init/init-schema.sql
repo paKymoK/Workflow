@@ -250,6 +250,23 @@ CREATE TABLE IF NOT EXISTS audit_log
 
 CREATE INDEX IF NOT EXISTS idx_audit_log_ticket_id ON audit_log (ticket_id, id DESC);
 
+CREATE TABLE IF NOT EXISTS comment
+(
+    id             uuid    NOT NULL DEFAULT uuid_generate_v4(),
+    ticket_id      bigint  NOT NULL REFERENCES ticket (id) ON DELETE CASCADE,
+    commenter      jsonb   NOT NULL,
+    content        text    NOT NULL,
+    is_edited      boolean NOT NULL DEFAULT false,
+    mentioned_subs text[]           DEFAULT '{}',
+    created_at     timestamp with time zone,
+    created_by     jsonb,
+    modified_at    timestamp with time zone,
+    modified_by    jsonb,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_comment_ticket_id ON comment (ticket_id, created_at DESC);
+
 -- Ticket audit: TICKET_CREATED, STATUS_CHANGED, ASSIGNEE_CHANGED
 CREATE OR REPLACE FUNCTION audit_ticket()
     RETURNS TRIGGER
