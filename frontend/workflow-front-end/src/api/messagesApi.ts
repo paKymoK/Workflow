@@ -5,6 +5,7 @@ import type {
   ConversationListResponse,
   ConversationSummary,
   CreateConversationRequest,
+  PresenceStatus,
   SendMessageRequest,
 } from "./types";
 
@@ -49,6 +50,20 @@ export async function removeConversationMember(
 
 export async function markConversationRead(conversationId: string): Promise<void> {
   await api.post(`/chat-service/chat/conversations/${conversationId}/read`);
+}
+
+export async function notifyTyping(conversationId: string): Promise<void> {
+  await api.post(`/chat-service/chat/conversations/${conversationId}/typing`);
+}
+
+export async function fetchPresence(subs: string[]): Promise<Record<string, PresenceStatus>> {
+  if (subs.length === 0) return {};
+  // Comma-joined rather than a repeated-key array param — Spring binds a single
+  // comma-separated value to List<String> just fine, no axios array-serialization quirks.
+  const { data } = await api.get<Record<string, PresenceStatus>>("/chat-service/chat/presence", {
+    params: { subs: subs.join(",") },
+  });
+  return data;
 }
 
 export async function fetchMessages(

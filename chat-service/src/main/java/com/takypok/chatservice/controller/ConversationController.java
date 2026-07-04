@@ -67,4 +67,9 @@ public class ConversationController {
   public Mono<Void> markRead(@PathVariable UUID id, Authentication authentication) {
     return conversationService.markRead(id, getUserInfo(authentication).getSub());
   }
+
+  @PostMapping("/{id}/typing")
+  public Mono<Void> typing(@PathVariable UUID id, Authentication authentication) {
+    return conversationService.notifyTyping(id, getUserInfo(authentication));
+  }
 }

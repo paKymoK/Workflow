@@ -36,4 +36,9 @@ public class ConversationParticipant {
   // are monotonic within a conversation, timestamps across instances aren't guaranteed to be.
   @Column("last_read_message_id")
   private Long lastReadMessageId;
+
+  // Advances on send (if this participant is online per PresenceService) or on their next
+  // REST message-list fetch (reconnect catch-up) — whichever happens first.
+  @Column("delivered_through_message_id")
+  private Long deliveredThroughMessageId;
 }

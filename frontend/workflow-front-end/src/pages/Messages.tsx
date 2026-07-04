@@ -11,7 +11,7 @@ import {
 import dayjs from "dayjs";
 import { useAuth } from "@takypok/shared";
 import { fetchUsers, getFileUrl, uploadFile, uploadVideo, type UserSummary } from "../api/ticketApi";
-import type { ConversationSummary, MessageAttachment, MessageType } from "../api/types";
+import type { ChatMessage, ConversationSummary, MessageAttachment, MessageType } from "../api/types";
 import { dynamicStyle } from "../utils/dynamicStyle";
 import { resizeImageForUpload } from "../utils/imageResize";
 import { waitForVideoReady } from "../utils/videoJob";
@@ -25,12 +25,35 @@ import {
   useCreateConversation,
   useMarkConversationRead,
   useSendMessage,
+  usePresenceMap,
+  useSendTyping,
+  useSyncPresence,
+  useTypingUsers,
 } from "../hooks/useMessages";
 
 function conversationLabel(conversation: ConversationSummary, mySub?: string) {
   if (conversation.type === "GROUP") return conversation.name ?? "Group";
   const other = conversation.participantSubs.find((sub) => sub !== mySub);
   return other ?? "Direct message";
+}
+
+// Presence is only unambiguous for 1:1 conversations — a GROUP has no single "the other
+// person" to show a dot for, so those are left undecorated for now.
+function directPeerSub(conversation: ConversationSummary, mySub?: string): string | null {
+  if (conversation.type !== "DIRECT") return null;
+  return conversation.participantSubs.find((sub) => sub !== mySub) ?? null;
+}
+
+// Same DIRECT-only scoping as presence — a GROUP has no single peer watermark these ticks
+// could reflect, so ticks are only ever shown for 1:1 conversations.
+function receiptLabel(message: ChatMessage, conversation: ConversationSummary | null): string | null {
+  if (!conversation || conversation.type !== "DIRECT") return null;
+  const { peerReadThroughMessageId, peerDeliveredThroughMessageId } = conversation;
+  if (peerReadThroughMessageId != null && message.id <= peerReadThroughMessageId) return "Read";
+  if (peerDeliveredThroughMessageId != null && message.id <= peerDeliveredThroughMessageId) {
+    return "Delivered";
+  }
+  return "Sent";
 }
 
 function deriveMessageType(hasContent: boolean, attachments: MessageAttachment[]): MessageType {
@@ -59,6 +82,16 @@ export default function Messages() {
   const { data: conversations = [], isLoading } = useConversations();
   const { mutate: createConversation, isPending: creating } = useCreateConversation();
   const { mutate: markRead } = useMarkConversationRead();
+
+  const allParticipantSubs = useMemo(
+    () =>
+      Array.from(
+        new Set(conversations.flatMap((c) => c.participantSubs).filter((sub) => sub !== mySub)),
+      ),
+    [conversations, mySub],
+  );
+  useSyncPresence(allParticipantSubs);
+  const presenceBySub = usePresenceMap();
   const {
     data: messagePages,
     isLoading: loadingMessages,
@@ -67,8 +100,27 @@ export default function Messages() {
     isFetchingNextPage,
   } = useConversationMessages(selectedId);
   const { mutate: send, isPending: sending } = useSendMessage(selectedId ?? "");
+  const sendTyping = useSendTyping(selectedId);
+  const typingUsers = useTypingUsers(selectedId);
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
+  const selectedPeerSub = selected ? directPeerSub(selected, mySub) : null;
+  const selectedPeerStatus = selectedPeerSub ? presenceBySub[selectedPeerSub] : undefined;
+  const presenceLabel = selectedPeerSub
+    ? selectedPeerStatus?.online
+      ? "Online"
+      : selectedPeerStatus?.lastSeenAt
+        ? `Last seen ${dayjs(selectedPeerStatus.lastSeenAt).format("HH:mm")}`
+        : "Offline"
+    : null;
+
+  const typingLabel = useMemo(() => {
+    const names = Object.values(typingUsers);
+    if (names.length === 0) return null;
+    if (names.length === 1) return `${names[0]} is typing…`;
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`;
+    return "Several people are typing…";
+  }, [typingUsers]);
 
   // Pages arrive newest-first (each page itself newest->oldest), so concatenating them
   // is already fully sorted descending; reverse once for oldest-first chat rendering.
@@ -262,7 +314,10 @@ export default function Messages() {
               </p>
             </div>
           ) : (
-            conversations.map((conversation) => (
+            conversations.map((conversation) => {
+              const peerSub = directPeerSub(conversation, mySub);
+              const peerOnline = peerSub ? (presenceBySub[peerSub]?.online ?? false) : false;
+              return (
               <button
                 key={conversation.id}
                 onClick={() => openConversation(conversation.id)}
@@ -270,10 +325,19 @@ export default function Messages() {
                   conversation.id === selectedId ? "bg-[var(--bg-2)]" : ""
                 }`}
               >
-                <Avatar
-                  icon={conversation.type === "GROUP" ? <TeamOutlined /> : <UserOutlined />}
-                  className="!bg-[var(--acc-1)] !text-[var(--bg-0)] flex-shrink-0"
-                />
+                <div className="relative flex-shrink-0">
+                  <Avatar
+                    icon={conversation.type === "GROUP" ? <TeamOutlined /> : <UserOutlined />}
+                    className="!bg-[var(--acc-1)] !text-[var(--bg-0)]"
+                  />
+                  {peerSub && (
+                    <span
+                      className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-1)] ${
+                        peerOnline ? "bg-emerald-400" : "bg-[var(--fg-faint)]"
+                      }`}
+                    />
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono-tech text-[11px] text-[var(--fg)] truncate">
@@ -288,7 +352,8 @@ export default function Messages() {
                   </span>
                 </div>
               </button>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -311,6 +376,11 @@ export default function Messages() {
               <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">
                 {conversationLabel(selected, mySub)}
               </span>
+              {presenceLabel && (
+                <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                  {presenceLabel}
+                </span>
+              )}
             </div>
 
             <div ref={scrollParentRef} onScroll={handleThreadScroll} className="flex-1 overflow-y-auto p-4">
@@ -373,6 +443,9 @@ export default function Messages() {
                               )}
                               <div className="text-[8px] opacity-60 mt-1 text-right">
                                 {dayjs(msg.createdAt).format("HH:mm")}
+                                {mine && receiptLabel(msg, selected) && (
+                                  <span className="ml-1">{receiptLabel(msg, selected)}</span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -388,6 +461,14 @@ export default function Messages() {
               items={pendingAttachments}
               onRemove={removePendingAttachment}
             />
+
+            {typingLabel && (
+              <div className="px-4 pt-1">
+                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] italic">
+                  {typingLabel}
+                </span>
+              </div>
+            )}
 
             <div className="flex gap-2 px-4 py-3 border-t border-[var(--line)]">
               <input
@@ -409,7 +490,10 @@ export default function Messages() {
               />
               <Input.TextArea
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  if (e.target.value.trim()) sendTyping();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();

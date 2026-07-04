@@ -268,6 +268,15 @@ export interface ConversationSummary {
   participantSubs: string[];
   lastMessage: ChatMessage | null;
   unreadCount: number;
+  // Only populated for DIRECT — a GROUP has no single "the other participant" these
+  // watermarks could unambiguously refer to.
+  peerReadThroughMessageId: number | null;
+  peerDeliveredThroughMessageId: number | null;
+}
+
+export interface PresenceStatus {
+  online: boolean;
+  lastSeenAt: string | null;
 }
 
 export interface ConversationListResponse {

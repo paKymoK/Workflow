@@ -5,6 +5,9 @@ public record ChatEvent(ChatEventType type, Object payload) {
     MESSAGE_CREATED,
     PARTICIPANT_ADDED,
     PARTICIPANT_REMOVED,
-    CONVERSATION_RENAMED
+    CONVERSATION_RENAMED,
+    TYPING,
+    PRESENCE_CHANGED,
+    RECEIPT_UPDATED
   }
 }

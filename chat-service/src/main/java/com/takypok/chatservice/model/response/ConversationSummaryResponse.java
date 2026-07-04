@@ -20,4 +20,9 @@ public class ConversationSummaryResponse {
   private List<String> participantSubs;
   private Message lastMessage;
   private long unreadCount;
+
+  // Read/delivery ticks are only unambiguous for a DIRECT conversation (a GROUP has no single
+  // "the other participant") — null for GROUP, populated for DIRECT.
+  private Long peerReadThroughMessageId;
+  private Long peerDeliveredThroughMessageId;
 }

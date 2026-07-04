@@ -2,13 +2,16 @@ import { useEffect } from "react";
 import { useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 import { wsBaseUrl, useAuth } from "@takypok/shared";
 import { messagesKeys } from "./useMessages";
-import type { ChatMessage } from "../api/types";
+import type { ChatMessage, PresenceStatus } from "../api/types";
 
 type ChatEventType =
   | "MESSAGE_CREATED"
   | "PARTICIPANT_ADDED"
   | "PARTICIPANT_REMOVED"
-  | "CONVERSATION_RENAMED";
+  | "CONVERSATION_RENAMED"
+  | "TYPING"
+  | "PRESENCE_CHANGED"
+  | "RECEIPT_UPDATED";
 
 interface ChatEvent {
   type: ChatEventType;
@@ -16,6 +19,10 @@ interface ChatEvent {
 }
 
 const MAX_BACKOFF_MS = 15_000;
+// The server only tells us "X is typing right now", never "X stopped" — so each event
+// (re)starts a timer that clears that one sub's entry if no follow-up arrives in time.
+const TYPING_TTL_MS = 3_000;
+const typingClearTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /**
  * Single app-wide connection to chat-service's WebSocket, mounted once in AppLayout so
@@ -73,8 +80,49 @@ export function useChatSocket() {
 }
 
 function handleEvent(qc: QueryClient, event: ChatEvent) {
+  // Not conversation-scoped — a sub's online status matters to every conversation they're
+  // in, not just one — so this is handled before the conversationId guard below.
+  if (event.type === "PRESENCE_CHANGED") {
+    const sub = event.payload.sub as string | undefined;
+    const online = event.payload.online as boolean | undefined;
+    if (!sub || online === undefined) return;
+    qc.setQueryData<Record<string, PresenceStatus>>(messagesKeys.presence, (existing) => ({
+      ...existing,
+      [sub]: { online, lastSeenAt: online ? null : new Date().toISOString() },
+    }));
+    return;
+  }
+
   const conversationId = event.payload.conversationId as string | undefined;
   if (!conversationId) return;
+
+  if (event.type === "TYPING") {
+    const sub = event.payload.sub as string | undefined;
+    if (!sub) return;
+    const name = (event.payload.name as string | undefined) ?? sub;
+    const typingKey = messagesKeys.typing(conversationId);
+
+    qc.setQueryData<Record<string, string>>(typingKey, (existing) => ({
+      ...existing,
+      [sub]: name,
+    }));
+
+    const timerId = `${conversationId}:${sub}`;
+    clearTimeout(typingClearTimers.get(timerId));
+    typingClearTimers.set(
+      timerId,
+      setTimeout(() => {
+        typingClearTimers.delete(timerId);
+        qc.setQueryData<Record<string, string>>(typingKey, (existing) => {
+          if (!existing || !(sub in existing)) return existing;
+          const rest = { ...existing };
+          delete rest[sub];
+          return rest;
+        });
+      }, TYPING_TTL_MS),
+    );
+    return; // ephemeral — doesn't touch the conversations list
+  }
 
   if (event.type === "MESSAGE_CREATED") {
     const message = event.payload.message as ChatMessage;

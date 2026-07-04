@@ -1,6 +1,7 @@
 package com.takypok.chatservice.websocket;
 
 import com.takypok.chatservice.service.ChatSessionRegistry;
+import com.takypok.chatservice.service.PresenceService;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
   private String jwkSetUri;
 
   private final ChatSessionRegistry sessionRegistry;
+  private final PresenceService presenceService;
 
   @NonNull
   @Override
@@ -53,6 +55,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                   }
                   authenticatedSub.set(sub);
                   sessionRegistry.register(sub, sink);
+                  presenceService.markOnline(sub, session.getId()).subscribe();
                   log.info("Chat WS session {} authenticated as {}", session.getId(), sub);
                 })
             .then();
@@ -67,6 +70,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                   String sub = authenticatedSub.get();
                   if (sub != null) {
                     sessionRegistry.unregister(sub, sink);
+                    presenceService.markOffline(sub, session.getId()).subscribe();
                   }
                 })
             .then();

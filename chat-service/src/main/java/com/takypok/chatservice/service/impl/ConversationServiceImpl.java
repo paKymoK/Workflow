@@ -135,12 +135,10 @@ public class ConversationServiceImpl implements ConversationService {
             .filter(java.util.Objects::nonNull)
             .toList();
 
-    Mono<Map<UUID, Collection<String>>> subsByConversation =
+    Mono<Map<UUID, Collection<ConversationParticipant>>> participantsByConversation =
         participantRepository
             .findByConversationIdIn(conversationIds)
-            .collectMultimap(
-                ConversationParticipant::getConversationId,
-                ConversationParticipant::getParticipantSub);
+            .collectMultimap(ConversationParticipant::getConversationId, p -> p);
 
     Mono<Map<Long, Message>> lastMessagesById =
         lastMessageIds.isEmpty()
@@ -149,26 +147,47 @@ public class ConversationServiceImpl implements ConversationService {
 
     Mono<Map<UUID, Long>> unreadByConversation = countUnread(callerSub, conversationIds);
 
-    return Mono.zip(subsByConversation, lastMessagesById, unreadByConversation)
+    return Mono.zip(participantsByConversation, lastMessagesById, unreadByConversation)
         .map(
             tuple -> {
-              Map<UUID, Collection<String>> subs = tuple.getT1();
+              Map<UUID, Collection<ConversationParticipant>> participants = tuple.getT1();
               Map<Long, Message> lastMessages = tuple.getT2();
               Map<UUID, Long> unread = tuple.getT3();
 
               List<ConversationSummaryResponse> items =
                   page.stream()
                       .map(
-                          c ->
-                              new ConversationSummaryResponse(
-                                  c.getId(),
-                                  c.getType(),
-                                  c.getName(),
-                                  List.copyOf(subs.getOrDefault(c.getId(), List.of())),
-                                  c.getLastMessageId() == null
-                                      ? null
-                                      : lastMessages.get(c.getLastMessageId()),
-                                  unread.getOrDefault(c.getId(), 0L)))
+                          c -> {
+                            Collection<ConversationParticipant> parts =
+                                participants.getOrDefault(c.getId(), List.of());
+                            List<String> subs =
+                                parts.stream()
+                                    .map(ConversationParticipant::getParticipantSub)
+                                    .distinct()
+                                    .toList();
+
+                            // Read/delivery ticks are only unambiguous for a DIRECT
+                            // conversation — there's exactly one "other participant".
+                            ConversationParticipant peer =
+                                c.getType() == ConversationType.DIRECT
+                                    ? parts.stream()
+                                        .filter(p -> !p.getParticipantSub().equals(callerSub))
+                                        .findFirst()
+                                        .orElse(null)
+                                    : null;
+
+                            return new ConversationSummaryResponse(
+                                c.getId(),
+                                c.getType(),
+                                c.getName(),
+                                subs,
+                                c.getLastMessageId() == null
+                                    ? null
+                                    : lastMessages.get(c.getLastMessageId()),
+                                unread.getOrDefault(c.getId(), 0L),
+                                peer == null ? null : peer.getLastReadMessageId(),
+                                peer == null ? null : peer.getDeliveredThroughMessageId());
+                          })
                       .toList();
 
               Conversation last = page.get(page.size() - 1);
@@ -269,11 +288,47 @@ public class ConversationServiceImpl implements ConversationService {
             tuple -> {
               ConversationParticipant participant = tuple.getT1();
               Conversation conversation = tuple.getT2();
+              Long through = conversation.getLastMessageId();
               participant.setLastReadAt(ZonedDateTime.now());
-              participant.setLastReadMessageId(conversation.getLastMessageId());
-              return participantRepository.save(participant);
+              participant.setLastReadMessageId(through);
+              // Having read it implies having received it — keep the two watermarks
+              // consistent instead of leaving delivered behind read.
+              participant.setDeliveredThroughMessageId(through);
+              return participantRepository.save(participant).thenReturn(through);
+            })
+        .doOnSuccess(
+            through -> {
+              if (through != null) {
+                notifyParticipants(
+                    conversationId,
+                    ChatEvent.ChatEventType.RECEIPT_UPDATED,
+                    Map.of(
+                        "conversationId", conversationId,
+                        "sub", callerSub,
+                        "readThroughMessageId", through,
+                        "deliveredThroughMessageId", through),
+                    callerSub);
+              }
             })
         .then();
+  }
+
+  @Override
+  public Mono<Void> notifyTyping(UUID conversationId, User caller) {
+    return assertParticipant(conversationId, caller.getSub())
+        .doOnSuccess(
+            v ->
+                notifyParticipants(
+                    conversationId,
+                    ChatEvent.ChatEventType.TYPING,
+                    Map.of(
+                        "conversationId",
+                        conversationId,
+                        "sub",
+                        caller.getSub(),
+                        "name",
+                        caller.getName()),
+                    caller.getSub()));
   }
 
   @Override
@@ -300,9 +355,15 @@ public class ConversationServiceImpl implements ConversationService {
 
   private void notifyParticipants(
       UUID conversationId, ChatEvent.ChatEventType type, Object payload) {
+    notifyParticipants(conversationId, type, payload, null);
+  }
+
+  private void notifyParticipants(
+      UUID conversationId, ChatEvent.ChatEventType type, Object payload, String excludeSub) {
     participantRepository
         .findByConversationId(conversationId)
         .map(ConversationParticipant::getParticipantSub)
+        .filter(sub -> !sub.equals(excludeSub))
         .collectList()
         .subscribe(
             subs -> sessionRegistry.publish(subs, new ChatEvent(type, payload)),

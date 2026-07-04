@@ -24,6 +24,9 @@ public interface ConversationService {
 
   Mono<Void> markRead(UUID conversationId, String callerSub);
 
+  /** Ephemeral — fans out over WS only, nothing persisted. */
+  Mono<Void> notifyTyping(UUID conversationId, User caller);
+
   /** Errors with {@link IllegalStateException} when {@code sub} is not in the conversation. */
   Mono<Void> assertParticipant(UUID conversationId, String sub);
 }

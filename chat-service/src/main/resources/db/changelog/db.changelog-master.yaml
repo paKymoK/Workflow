@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/init/init-schema.sql
   - include:
       file: db/changelog/v2/add-conversation-activity-tracking.sql
+  - include:
+      file: db/changelog/v3/add-user-presence.sql
+  - include:
+      file: db/changelog/v4/add-delivered-through-message-id.sql

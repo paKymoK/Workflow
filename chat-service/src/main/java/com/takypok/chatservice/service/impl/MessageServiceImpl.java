@@ -10,6 +10,7 @@ import com.takypok.chatservice.repository.MessageRepository;
 import com.takypok.chatservice.service.ChatSessionRegistry;
 import com.takypok.chatservice.service.ConversationService;
 import com.takypok.chatservice.service.MessageService;
+import com.takypok.chatservice.service.PresenceService;
 import com.takypok.core.model.authentication.User;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -31,6 +33,7 @@ public class MessageServiceImpl implements MessageService {
   private final ConversationParticipantRepository participantRepository;
   private final ConversationService conversationService;
   private final ChatSessionRegistry sessionRegistry;
+  private final PresenceService presenceService;
 
   @Override
   public Mono<Message> sendMessage(UUID conversationId, SendMessageRequest request, User sender) {
@@ -52,7 +55,11 @@ public class MessageServiceImpl implements MessageService {
                 conversationRepository
                     .updateLastMessage(conversationId, message.getId(), message.getCreatedAt())
                     .thenReturn(message))
-        .doOnSuccess(this::broadcastMessage);
+        .doOnSuccess(
+            message -> {
+              broadcastMessage(message);
+              markDeliveredForOnlineRecipients(conversationId, sender.getSub(), message.getId());
+            });
   }
 
   @Override
@@ -71,7 +78,8 @@ public class MessageServiceImpl implements MessageService {
                                 conversationId, pageRequest)
                             : messageRepository.findByConversationIdAndIdLessThanOrderByIdDesc(
                                 conversationId, beforeId, pageRequest))
-                        .collectList()));
+                        .collectList()))
+        .doOnSuccess(messages -> markDeliveredOnFetch(conversationId, callerSub));
   }
 
   private void broadcastMessage(Message message) {
@@ -87,5 +95,79 @@ public class MessageServiceImpl implements MessageService {
                         ChatEvent.ChatEventType.MESSAGE_CREATED,
                         Map.of("conversationId", message.getConversationId(), "message", message))),
             error -> log.error("Failed to broadcast new message: {}", error.getMessage(), error));
+  }
+
+  /**
+   * Recipients who are online right now get marked delivered immediately; anyone offline catches up
+   * via {@link #markDeliveredOnFetch} the next time they load the thread.
+   */
+  private void markDeliveredForOnlineRecipients(
+      UUID conversationId, String senderSub, Long messageId) {
+    participantRepository
+        .findByConversationId(conversationId)
+        .map(ConversationParticipant::getParticipantSub)
+        .filter(sub -> !sub.equals(senderSub))
+        .collectList()
+        .flatMap(presenceService::onlineSubsOf)
+        .flatMapMany(Flux::fromIterable)
+        .flatMap(
+            sub ->
+                participantRepository
+                    .bumpDeliveredThrough(conversationId, sub, messageId)
+                    .doOnSuccess(
+                        count ->
+                            broadcastToOthers(
+                                conversationId,
+                                sub,
+                                Map.of(
+                                    "conversationId", conversationId,
+                                    "sub", sub,
+                                    "deliveredThroughMessageId", messageId))))
+        .subscribe(
+            v -> {},
+            error -> log.error("Failed to mark delivered on send: {}", error.getMessage(), error));
+  }
+
+  private void markDeliveredOnFetch(UUID conversationId, String callerSub) {
+    conversationRepository
+        .findById(conversationId)
+        .flatMap(
+            conversation -> {
+              Long through = conversation.getLastMessageId();
+              if (through == null) {
+                return Mono.empty();
+              }
+              return participantRepository
+                  .bumpDeliveredThrough(conversationId, callerSub, through)
+                  .doOnSuccess(
+                      count ->
+                          broadcastToOthers(
+                              conversationId,
+                              callerSub,
+                              Map.of(
+                                  "conversationId", conversationId,
+                                  "sub", callerSub,
+                                  "deliveredThroughMessageId", through)));
+            })
+        .subscribe(
+            v -> {},
+            error -> log.error("Failed to mark delivered on fetch: {}", error.getMessage(), error));
+  }
+
+  private void broadcastToOthers(UUID conversationId, String excludeSub, Object payload) {
+    participantRepository
+        .findByConversationId(conversationId)
+        .map(ConversationParticipant::getParticipantSub)
+        .filter(sub -> !sub.equals(excludeSub))
+        .collectList()
+        .subscribe(
+            subs -> {
+              if (!subs.isEmpty()) {
+                sessionRegistry.publish(
+                    subs, new ChatEvent(ChatEvent.ChatEventType.RECEIPT_UPDATED, payload));
+              }
+            },
+            error ->
+                log.error("Failed to broadcast receipt update: {}", error.getMessage(), error));
   }
 }
