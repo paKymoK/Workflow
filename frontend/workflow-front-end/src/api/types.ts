@@ -33,12 +33,14 @@ export interface Priority {
   name: string;
   responseTime: number;
   resolutionTime: number;
+  level: number;
 }
 
 export interface PriorityCreateRequest {
   name: string;
   responseTime: number;
   resolutionTime: number;
+  level: number;
 }
 
 export interface PriorityUpdateRequest extends PriorityCreateRequest {
@@ -268,6 +270,13 @@ export interface ConversationSummary {
   unreadCount: number;
 }
 
+export interface ConversationListResponse {
+  items: ConversationSummary[];
+  hasMore: boolean;
+  nextBefore: string | null;
+  nextBeforeId: string | null;
+}
+
 export interface CreateConversationRequest {
   type: ConversationType;
   name?: string;
@@ -304,6 +313,7 @@ export interface TicketSla {
     name: string;
     responseTime: number;
     resolutionTime: number;
+    level: number;
   };
   status: WorkflowStatus;
   summary: string;
@@ -338,6 +348,7 @@ export interface TicketSla {
       name: string;
       responseTime: number;
       resolutionTime: number;
+      level: number;
     };
     setting: {
       timezone: string;

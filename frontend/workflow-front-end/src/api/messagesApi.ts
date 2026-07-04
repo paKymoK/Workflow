@@ -2,14 +2,15 @@ import { api } from "@takypok/shared";
 import type {
   ChatMessage,
   Conversation,
+  ConversationListResponse,
   ConversationSummary,
   CreateConversationRequest,
   SendMessageRequest,
 } from "./types";
 
 export async function fetchConversations(): Promise<ConversationSummary[]> {
-  const { data } = await api.get<ConversationSummary[]>("/chat-service/chat/conversations");
-  return data;
+  const { data } = await api.get<ConversationListResponse>("/chat-service/chat/conversations");
+  return data.items;
 }
 
 export async function createConversation(

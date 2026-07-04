@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addConversationMembers,
   createConversation,
@@ -14,6 +14,7 @@ import type { CreateConversationRequest, SendMessageRequest } from "../api/types
 // Live updates now arrive via useChatSocket (see AppLayout); this is just a safety-net
 // poll in case a WS event is missed or the socket is momentarily disconnected.
 const CONVERSATIONS_POLL_MS = 60_000;
+const MESSAGES_PAGE_SIZE = 50;
 
 export const messagesKeys = {
   conversations: ["conversations"] as const,
@@ -61,11 +62,17 @@ export function useRemoveConversationMember(conversationId: string) {
   });
 }
 
+/** Newest-first pages; a page's cursor is the id of its own oldest (last) message,
+ * matching the backend's `findByConversationIdAndIdLessThanOrderByIdDesc` pagination. */
 export function useConversationMessages(conversationId: string | null) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: messagesKeys.thread(conversationId ?? ""),
-    queryFn: () => fetchMessages(conversationId as string),
+    queryFn: ({ pageParam }) =>
+      fetchMessages(conversationId as string, pageParam, MESSAGES_PAGE_SIZE),
     enabled: !!conversationId,
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.length < MESSAGES_PAGE_SIZE ? undefined : lastPage[lastPage.length - 1].id,
   });
 }
 
@@ -74,7 +81,8 @@ export function useSendMessage(conversationId: string) {
   return useMutation({
     mutationFn: (payload: SendMessageRequest) => sendMessage(conversationId, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: messagesKeys.thread(conversationId) });
+      // Thread cache is kept in sync by the MESSAGE_CREATED WS echo (see useChatSocket) —
+      // invalidating it here too would refetch every already-loaded page on each send.
       qc.invalidateQueries({ queryKey: messagesKeys.conversations });
     },
   });

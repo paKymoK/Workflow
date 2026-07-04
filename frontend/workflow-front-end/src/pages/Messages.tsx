@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Avatar, AutoComplete, Badge, Button, Empty, Input, message as antMessage, Modal, Spin } from "antd";
 import {
   PaperClipOutlined,
@@ -11,6 +12,7 @@ import dayjs from "dayjs";
 import { useAuth } from "@takypok/shared";
 import { fetchUsers, getFileUrl, uploadFile, uploadVideo, type UserSummary } from "../api/ticketApi";
 import type { ConversationSummary, MessageAttachment, MessageType } from "../api/types";
+import { dynamicStyle } from "../utils/dynamicStyle";
 import { resizeImageForUpload } from "../utils/imageResize";
 import { waitForVideoReady } from "../utils/videoJob";
 import LazyVideoAttachment from "../components/LazyVideoAttachment";
@@ -57,16 +59,73 @@ export default function Messages() {
   const { data: conversations = [], isLoading } = useConversations();
   const { mutate: createConversation, isPending: creating } = useCreateConversation();
   const { mutate: markRead } = useMarkConversationRead();
-  const { data: messages = [], isLoading: loadingMessages } =
-    useConversationMessages(selectedId);
+  const {
+    data: messagePages,
+    isLoading: loadingMessages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useConversationMessages(selectedId);
   const { mutate: send, isPending: sending } = useSendMessage(selectedId ?? "");
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
-  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Pages arrive newest-first (each page itself newest->oldest), so concatenating them
+  // is already fully sorted descending; reverse once for oldest-first chat rendering.
+  const messages = useMemo(
+    () => (messagePages ? messagePages.pages.flat().reverse() : []),
+    [messagePages],
+  );
+
+  const scrollParentRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => 68,
+    overscan: 8,
+    getItemKey: (index) => messages[index].id,
+  });
+
+  // Auto-scroll to bottom on conversation switch and when a new (newest) message arrives —
+  // but not when older pages get prepended, which is handled separately below.
+  const newestMessageId = messages.length ? messages[messages.length - 1].id : null;
+  const prevNewestMessageIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    prevNewestMessageIdRef.current = null;
+  }, [selectedId]);
+
+  useLayoutEffect(() => {
+    if (newestMessageId === null || newestMessageId === prevNewestMessageIdRef.current) return;
+    prevNewestMessageIdRef.current = newestMessageId;
+    rowVirtualizer.scrollToIndex(messages.length - 1, { align: "end" });
+  }, [newestMessageId, messages.length, rowVirtualizer]);
+
+  useEffect(() => {
+    if (!selectedId || newestMessageId === null) return;
+    markRead(selectedId);
+  }, [selectedId, newestMessageId, markRead]);
+
+  // Keep the viewport anchored on the message the user was looking at when an older
+  // page loads in above it, instead of letting the prepend shove the view around.
+  const prevScrollHeightRef = useRef<number | null>(null);
+  const pageCount = messagePages?.pages.length ?? 0;
+
+  useLayoutEffect(() => {
+    const el = scrollParentRef.current;
+    if (!el || prevScrollHeightRef.current === null) return;
+    el.scrollTop += el.scrollHeight - prevScrollHeightRef.current;
+    prevScrollHeightRef.current = null;
+  }, [pageCount]);
+
+  function handleThreadScroll() {
+    const el = scrollParentRef.current;
+    if (!el || !hasNextPage || isFetchingNextPage) return;
+    if (el.scrollTop < 200) {
+      prevScrollHeightRef.current = el.scrollHeight;
+      fetchNextPage();
+    }
+  }
 
   function openConversation(id: string) {
     setSelectedId(id);
@@ -254,55 +313,75 @@ export default function Messages() {
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+            <div ref={scrollParentRef} onScroll={handleThreadScroll} className="flex-1 overflow-y-auto p-4">
               {loadingMessages ? (
                 <div className="flex justify-center py-8">
                   <Spin />
                 </div>
               ) : (
-                [...messages].reverse().map((msg) => {
-                  const mine = msg.sender.sub === mySub;
-                  return (
-                    <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={`max-w-[70%] px-3 py-2 font-mono-tech text-xs ${
-                          mine
-                            ? "bg-[var(--acc-1)] text-[var(--bg-0)]"
-                            : "bg-[var(--bg-2)] text-[var(--fg)]"
-                        }`}
-                      >
-                        {!mine && (
-                          <div className="text-[9px] opacity-70 mb-0.5">{msg.sender.name}</div>
-                        )}
-                        {msg.content && (
-                          <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                        )}
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <div className="mt-1.5 flex flex-col gap-1.5">
-                            {msg.attachments.map((att, i) =>
-                              att.type === "IMAGE" ? (
-                                <img
-                                  key={i}
-                                  src={att.url ?? undefined}
-                                  alt="attachment"
-                                  loading="lazy"
-                                  className="max-w-[220px] max-h-[220px] rounded object-cover"
-                                />
-                              ) : (
-                                <LazyVideoAttachment key={i} attachment={att} />
-                              ),
-                            )}
-                          </div>
-                        )}
-                        <div className="text-[8px] opacity-60 mt-1 text-right">
-                          {dayjs(msg.createdAt).format("HH:mm")}
-                        </div>
-                      </div>
+                <>
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-2">
+                      <Spin size="small" />
                     </div>
-                  );
-                })
+                  )}
+                  <div
+                    className="relative"
+                    style={dynamicStyle({ height: rowVirtualizer.getTotalSize() })}
+                  >
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const msg = messages[virtualRow.index];
+                      const mine = msg.sender.sub === mySub;
+                      return (
+                        <div
+                          key={virtualRow.key}
+                          data-index={virtualRow.index}
+                          ref={rowVirtualizer.measureElement}
+                          className="absolute top-0 left-0 w-full pb-2"
+                          style={dynamicStyle({ transform: `translateY(${virtualRow.start}px)` })}
+                        >
+                          <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                            <div
+                              className={`max-w-[70%] px-3 py-2 font-mono-tech text-xs ${
+                                mine
+                                  ? "bg-[var(--acc-1)] text-[var(--bg-0)]"
+                                  : "bg-[var(--bg-2)] text-[var(--fg)]"
+                              }`}
+                            >
+                              {!mine && (
+                                <div className="text-[9px] opacity-70 mb-0.5">{msg.sender.name}</div>
+                              )}
+                              {msg.content && (
+                                <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                              )}
+                              {msg.attachments && msg.attachments.length > 0 && (
+                                <div className="mt-1.5 flex flex-col gap-1.5">
+                                  {msg.attachments.map((att, i) =>
+                                    att.type === "IMAGE" ? (
+                                      <img
+                                        key={i}
+                                        src={att.url ?? undefined}
+                                        alt="attachment"
+                                        loading="lazy"
+                                        className="max-w-[220px] max-h-[220px] rounded object-cover"
+                                      />
+                                    ) : (
+                                      <LazyVideoAttachment key={i} attachment={att} />
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                              <div className="text-[8px] opacity-60 mt-1 text-right">
+                                {dayjs(msg.createdAt).format("HH:mm")}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
-              <div ref={bottomRef} />
             </div>
 
             <MessageComposerAttachments

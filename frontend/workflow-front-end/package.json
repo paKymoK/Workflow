@@ -15,6 +15,7 @@
     "@ant-design/icons": "^5.6.0",
     "@takypok/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-virtual": "^3.14.5",
     "@tiptap/core": "^3.23.1",
     "@tiptap/extension-image": "^3.23.1",
     "@tiptap/extension-link": "^3.23.1",

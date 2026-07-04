@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 import { wsBaseUrl, useAuth } from "@takypok/shared";
 import { messagesKeys } from "./useMessages";
 import type { ChatMessage } from "../api/types";
@@ -78,11 +78,15 @@ function handleEvent(qc: QueryClient, event: ChatEvent) {
 
   if (event.type === "MESSAGE_CREATED") {
     const message = event.payload.message as ChatMessage;
-    qc.setQueryData<ChatMessage[]>(messagesKeys.thread(conversationId), (existing) => {
-      if (!existing) return existing;
-      if (existing.some((m) => m.id === message.id)) return existing;
-      return [message, ...existing];
-    });
+    qc.setQueryData<InfiniteData<ChatMessage[], number | undefined>>(
+      messagesKeys.thread(conversationId),
+      (existing) => {
+        if (!existing) return existing;
+        const [firstPage, ...restPages] = existing.pages;
+        if (firstPage.some((m) => m.id === message.id)) return existing;
+        return { ...existing, pages: [[message, ...firstPage], ...restPages] };
+      },
+    );
   }
 
   // Covers unread counts / last-message preview (MESSAGE_CREATED) as well as membership
