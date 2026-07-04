@@ -4,3 +4,5 @@ packages:
   - "iam-front-end"
 allowBuilds:
   esbuild: set this to true or false
+onlyBuiltDependencies:
+  - esbuild
