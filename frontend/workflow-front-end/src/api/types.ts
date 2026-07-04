@@ -251,6 +251,13 @@ export interface Conversation {
   name: string | null;
 }
 
+export interface ReactionSummary {
+  emoji: string;
+  // Full list of reactor subs, not just a count — "mine" depends on the viewer, so each
+  // client works that out itself by checking whether its own sub is in this list.
+  subs: string[];
+}
+
 export interface ChatMessage {
   id: number;
   conversationId: string;
@@ -259,6 +266,7 @@ export interface ChatMessage {
   messageType: MessageType;
   attachments: MessageAttachment[] | null;
   createdAt: string;
+  reactions: ReactionSummary[];
 }
 
 export interface ConversationSummary {

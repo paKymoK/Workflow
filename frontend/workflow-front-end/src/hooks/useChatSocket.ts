@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 import { wsBaseUrl, useAuth } from "@takypok/shared";
 import { messagesKeys } from "./useMessages";
-import type { ChatMessage, PresenceStatus } from "../api/types";
+import type { ChatMessage, PresenceStatus, ReactionSummary } from "../api/types";
 
 type ChatEventType =
   | "MESSAGE_CREATED"
@@ -11,7 +11,8 @@ type ChatEventType =
   | "CONVERSATION_RENAMED"
   | "TYPING"
   | "PRESENCE_CHANGED"
-  | "RECEIPT_UPDATED";
+  | "RECEIPT_UPDATED"
+  | "REACTION_UPDATED";
 
 interface ChatEvent {
   type: ChatEventType;
@@ -122,6 +123,25 @@ function handleEvent(qc: QueryClient, event: ChatEvent) {
       }, TYPING_TTL_MS),
     );
     return; // ephemeral — doesn't touch the conversations list
+  }
+
+  if (event.type === "REACTION_UPDATED") {
+    const messageId = event.payload.messageId as number | undefined;
+    const reactions = event.payload.reactions as ReactionSummary[] | undefined;
+    if (messageId === undefined || !reactions) return;
+    qc.setQueryData<InfiniteData<ChatMessage[], number | undefined>>(
+      messagesKeys.thread(conversationId),
+      (existing) => {
+        if (!existing) return existing;
+        return {
+          ...existing,
+          pages: existing.pages.map((page) =>
+            page.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+          ),
+        };
+      },
+    );
+    return; // doesn't affect the conversations list
   }
 
   if (event.type === "MESSAGE_CREATED") {

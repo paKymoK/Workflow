@@ -90,6 +90,29 @@ export async function fetchMessages(
   return data;
 }
 
+export async function searchMessages(
+  conversationId: string,
+  query: string,
+  limit = 50,
+): Promise<ChatMessage[]> {
+  const { data } = await api.get<ChatMessage[]>(
+    `/chat-service/chat/conversations/${conversationId}/messages/search`,
+    { params: { q: query, limit } },
+  );
+  return data;
+}
+
+export async function toggleReaction(
+  conversationId: string,
+  messageId: number,
+  emoji: string,
+): Promise<void> {
+  await api.post(
+    `/chat-service/chat/conversations/${conversationId}/messages/${messageId}/reactions`,
+    { emoji },
+  );
+}
+
 export async function sendMessage(
   conversationId: string,
   payload: SendMessageRequest,

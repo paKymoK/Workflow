@@ -8,6 +8,7 @@ public record ChatEvent(ChatEventType type, Object payload) {
     CONVERSATION_RENAMED,
     TYPING,
     PRESENCE_CHANGED,
-    RECEIPT_UPDATED
+    RECEIPT_UPDATED,
+    REACTION_UPDATED
   }
 }

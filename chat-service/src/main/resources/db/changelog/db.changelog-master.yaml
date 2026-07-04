@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/v4/add-delivered-through-message-id.sql
   - include:
       file: db/changelog/v5/add-channel-privacy.sql
+  - include:
+      file: db/changelog/v6/add-message-search.sql
+  - include:
+      file: db/changelog/v7/add-message-reactions.sql

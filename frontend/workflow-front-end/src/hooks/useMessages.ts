@@ -12,7 +12,9 @@ import {
   notifyTyping,
   removeConversationMember,
   renameConversation,
+  searchMessages,
   sendMessage,
+  toggleReaction,
 } from "../api/messagesApi";
 import { fetchUserBySub } from "../api/ticketApi";
 import type { CreateConversationRequest, PresenceStatus, SendMessageRequest } from "../api/types";
@@ -34,6 +36,8 @@ export const messagesKeys = {
   // Global, not per-conversation — presence isn't scoped to a single conversation.
   presence: ["presence"] as const,
   publicChannels: (search: string) => ["publicChannels", search] as const,
+  search: (conversationId: string, query: string) =>
+    ["conversations", conversationId, "search", query] as const,
   // Global, sub -> resolved display name — same "shared cache, seeded + read separately"
   // trick as presence.
   participantNames: ["participantNames"] as const,
@@ -94,6 +98,16 @@ export function useConversationMessages(conversationId: string | null) {
   });
 }
 
+/** Full-history search within one conversation, backed by Postgres full-text search — not
+ * limited to whatever pages happen to be loaded. Caller should debounce `query`. */
+export function useMessageSearch(conversationId: string | null, query: string) {
+  return useQuery({
+    queryKey: messagesKeys.search(conversationId ?? "", query),
+    queryFn: () => searchMessages(conversationId as string, query),
+    enabled: !!conversationId && query.trim().length > 0,
+  });
+}
+
 export function useSendMessage(conversationId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -103,6 +117,15 @@ export function useSendMessage(conversationId: string) {
       // invalidating it here too would refetch every already-loaded page on each send.
       qc.invalidateQueries({ queryKey: messagesKeys.conversations });
     },
+  });
+}
+
+/** No optimistic update — the REACTION_UPDATED WS echo (see useChatSocket) confirms the
+ * toggle for everyone, including the actor, the same way the rest of this page works. */
+export function useToggleReaction(conversationId: string) {
+  return useMutation({
+    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
+      toggleReaction(conversationId, messageId, emoji),
   });
 }
 

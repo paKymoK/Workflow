@@ -9,6 +9,7 @@ import {
   Input,
   message as antMessage,
   Modal,
+  Popover,
   Spin,
   Switch,
   Tabs,
@@ -47,14 +48,18 @@ import {
   useCreateConversation,
   useJoinChannel,
   useMarkConversationRead,
+  useMessageSearch,
   useParticipantNamesMap,
   useSendMessage,
   usePresenceMap,
   useSendTyping,
   useSyncParticipantNames,
   useSyncPresence,
+  useToggleReaction,
   useTypingUsers,
 } from "../hooks/useMessages";
+
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 function conversationLabel(
   conversation: ConversationSummary,
@@ -185,6 +190,7 @@ export default function Messages() {
   const [channelPrivate, setChannelPrivate] = useState(true);
   const [channelSearch, setChannelSearch] = useState("");
   const [messageSearch, setMessageSearch] = useState("");
+  const [debouncedMessageSearch, setDebouncedMessageSearch] = useState("");
   const [sidebarSearch, setSidebarSearch] = useState("");
   // Messenger-style: react/reply icons and the receipt line are hidden until hovered
   // (desktop) or tapped (this tracks the one tapped-open, mobile) — except the receipt
@@ -253,6 +259,7 @@ export default function Messages() {
     isFetchingNextPage,
   } = useConversationMessages(selectedId);
   const { mutate: send, isPending: sending } = useSendMessage(selectedId ?? "");
+  const { mutate: toggleReaction } = useToggleReaction(selectedId ?? "");
   const sendTyping = useSendTyping(selectedId);
   const typingUsers = useTypingUsers(selectedId);
 
@@ -282,17 +289,28 @@ export default function Messages() {
     [messagePages],
   );
 
-  // Interim search — filters only what's already loaded in this thread. Real cross-history
-  // search (backend full-text, all conversations) is a separate, not-yet-built feature; this
-  // is a lightweight stand-in scoped to the currently open thread.
+  // Debounced so every keystroke doesn't hit the search endpoint.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMessageSearch(messageSearch.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [messageSearch]);
+
+  const { data: searchResults, isFetching: searching } = useMessageSearch(
+    selectedId,
+    debouncedMessageSearch,
+  );
+
+  // Backend full-text search over the conversation's entire history (not just loaded
+  // pages) — results come back newest-first, matching `messages`' own raw order before the
+  // reverse above, so the same reversal gets them into oldest-first render order.
   const visibleMessages = useMemo(() => {
-    const q = messageSearch.trim().toLowerCase();
-    if (!q) return messages;
-    return messages.filter((m) => m.content?.toLowerCase().includes(q));
-  }, [messages, messageSearch]);
+    if (!debouncedMessageSearch) return messages;
+    return searchResults ? [...searchResults].reverse() : [];
+  }, [messages, debouncedMessageSearch, searchResults]);
 
   useEffect(() => {
     setMessageSearch("");
+    setDebouncedMessageSearch("");
     setRevealedMessageId(null);
   }, [selectedId]);
 
@@ -318,9 +336,9 @@ export default function Messages() {
   useLayoutEffect(() => {
     if (newestMessageId === null || newestMessageId === prevNewestMessageIdRef.current) return;
     prevNewestMessageIdRef.current = newestMessageId;
-    if (messageSearch.trim()) return;
+    if (debouncedMessageSearch) return;
     rowVirtualizer.scrollToIndex(visibleMessages.length - 1, { align: "end" });
-  }, [newestMessageId, visibleMessages.length, rowVirtualizer, messageSearch]);
+  }, [newestMessageId, visibleMessages.length, rowVirtualizer, debouncedMessageSearch]);
 
   useEffect(() => {
     if (!selectedId || newestMessageId === null) return;
@@ -340,6 +358,7 @@ export default function Messages() {
   }, [pageCount]);
 
   function handleThreadScroll() {
+    if (debouncedMessageSearch) return; // paginating the live thread while viewing search hits doesn't apply
     const el = scrollParentRef.current;
     if (!el || !hasNextPage || isFetchingNextPage) return;
     if (el.scrollTop < 200) {
@@ -613,19 +632,19 @@ export default function Messages() {
             </div>
 
             <div ref={scrollParentRef} onScroll={handleThreadScroll} className="flex-1 overflow-y-auto p-4">
-              {loadingMessages ? (
+              {loadingMessages || (debouncedMessageSearch && searching) ? (
                 <div className="flex justify-center py-8">
                   <Spin />
                 </div>
-              ) : messageSearch.trim() && visibleMessages.length === 0 ? (
+              ) : debouncedMessageSearch && visibleMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
-                    No messages match “{messageSearch.trim()}” in what's loaded so far
+                    No messages match “{debouncedMessageSearch}”
                   </p>
                 </div>
               ) : (
                 <>
-                  {isFetchingNextPage && (
+                  {isFetchingNextPage && !debouncedMessageSearch && (
                     <div className="flex justify-center py-2">
                       <Spin size="small" />
                     </div>
@@ -641,12 +660,18 @@ export default function Messages() {
                       const isLastMessage = msg.id === newestMessageId;
                       const isRevealed = revealedMessageId === msg.id;
                       const receiptRevealed = isLastMessage || isRevealed;
+                      // Messenger-style clustering: avatar + name/time header show once per
+                      // consecutive run from the same sender, not on every bubble.
+                      const prevMsg = visibleMessages[virtualRow.index - 1];
+                      const nextMsg = visibleMessages[virtualRow.index + 1];
+                      const startOfGroup = !prevMsg || prevMsg.sender.sub !== msg.sender.sub;
+                      const endOfGroup = !nextMsg || nextMsg.sender.sub !== msg.sender.sub;
                       return (
                         <div
                           key={virtualRow.key}
                           data-index={virtualRow.index}
                           ref={rowVirtualizer.measureElement}
-                          className="absolute top-0 left-0 w-full pb-2"
+                          className={`absolute top-0 left-0 w-full ${endOfGroup ? "pb-2" : "pb-0.5"}`}
                           style={dynamicStyle({ transform: `translateY(${virtualRow.start}px)` })}
                         >
                           <div
@@ -655,31 +680,37 @@ export default function Messages() {
                               setRevealedMessageId((prev) => (prev === msg.id ? null : msg.id))
                             }
                           >
-                            <Avatar
-                              size={26}
-                              className={`flex-shrink-0 !text-[10px] !font-semibold !text-[var(--bg-0)] ${
-                                mine ? "!bg-[var(--acc-2)]" : "!bg-[var(--acc-1)]"
-                              }`}
-                            >
-                              {msg.sender.name.trim().charAt(0).toUpperCase() || "?"}
-                            </Avatar>
+                            {endOfGroup ? (
+                              <Avatar
+                                size={26}
+                                className={`flex-shrink-0 !text-[10px] !font-semibold !text-[var(--bg-0)] ${
+                                  mine ? "!bg-[var(--acc-2)]" : "!bg-[var(--acc-1)]"
+                                }`}
+                              >
+                                {msg.sender.name.trim().charAt(0).toUpperCase() || "?"}
+                              </Avatar>
+                            ) : (
+                              <div className="w-[26px] flex-shrink-0" />
+                            )}
                             <div
                               className={`max-w-[70%] flex flex-col ${mine ? "items-end" : "items-start"}`}
                             >
-                              <div
-                                className={`flex items-baseline gap-1.5 mb-0.5 ${
-                                  mine ? "flex-row-reverse" : "flex-row"
-                                }`}
-                              >
-                                {!mine && (
-                                  <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
-                                    {msg.sender.name}
+                              {startOfGroup && (
+                                <div
+                                  className={`flex items-baseline gap-1.5 mb-0.5 ${
+                                    mine ? "flex-row-reverse" : "flex-row"
+                                  }`}
+                                >
+                                  {!mine && (
+                                    <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                                      {msg.sender.name}
+                                    </span>
+                                  )}
+                                  <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                    {dayjs(msg.createdAt).format("HH:mm")}
                                   </span>
-                                )}
-                                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
-                                  {dayjs(msg.createdAt).format("HH:mm")}
-                                </span>
-                              </div>
+                                </div>
+                              )}
                               <div
                                 className={`px-3 py-2 font-mono-tech text-xs ${
                                   mine
@@ -708,22 +739,72 @@ export default function Messages() {
                                   </div>
                                 )}
                               </div>
-                              <div
-                                className={`flex items-center gap-2 mt-1 transition-opacity ${
-                                  mine ? "flex-row-reverse" : "flex-row"
-                                } ${isRevealed ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    notifyComingSoon("Reactions");
-                                  }}
-                                  title="React (coming soon)"
-                                  className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
+                              {msg.reactions.length > 0 && (
+                                <div
+                                  className={`flex flex-wrap gap-1 mt-1 ${
+                                    mine ? "flex-row-reverse" : "flex-row"
+                                  }`}
                                 >
-                                  <SmileOutlined className="text-[11px]" />
-                                </button>
+                                  {msg.reactions.map((r) => {
+                                    const mineReacted = !!mySub && r.subs.includes(mySub);
+                                    return (
+                                      <button
+                                        key={r.emoji}
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleReaction({ messageId: msg.id, emoji: r.emoji });
+                                        }}
+                                        className={`text-[11px] px-1.5 py-0.5 border cursor-pointer ${
+                                          mineReacted
+                                            ? "border-[var(--acc-1)] text-[var(--acc-1)] bg-[color-mix(in_oklab,var(--acc-1)_15%,transparent)]"
+                                            : "border-[var(--line)] text-[var(--fg-dim)]"
+                                        }`}
+                                      >
+                                        {r.emoji} {r.subs.length}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              <div
+                                className={`flex items-center gap-2 overflow-hidden transition-all ${
+                                  mine ? "flex-row-reverse" : "flex-row"
+                                } ${
+                                  isRevealed
+                                    ? "h-4 opacity-100 mt-1"
+                                    : "h-0 opacity-0 mt-0 group-hover:h-4 group-hover:opacity-100 group-hover:mt-1"
+                                }`}
+                              >
+                                <Popover
+                                  trigger="click"
+                                  content={
+                                    <div className="flex gap-2">
+                                      {REACTION_EMOJIS.map((emoji) => (
+                                        <button
+                                          key={emoji}
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleReaction({ messageId: msg.id, emoji });
+                                          }}
+                                          className="text-base hover:scale-110 transition-transform cursor-pointer"
+                                        >
+                                          {emoji}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  }
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="React"
+                                    className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
+                                  >
+                                    <SmileOutlined className="text-[11px]" />
+                                  </button>
+                                </Popover>
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -738,8 +819,10 @@ export default function Messages() {
                               </div>
                               {receipt && (
                                 <div
-                                  className={`text-[8px] mt-0.5 transition-opacity ${
-                                    receiptRevealed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                  className={`text-[8px] overflow-hidden transition-all ${
+                                    receiptRevealed
+                                      ? "h-3 opacity-100 mt-0.5"
+                                      : "h-0 opacity-0 mt-0 group-hover:h-3 group-hover:opacity-100 group-hover:mt-0.5"
                                   } ${receipt.read ? "text-[var(--acc-1)]" : "text-[var(--fg-faint)]"}`}
                                 >
                                   {receipt.label}

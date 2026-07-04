@@ -2,19 +2,28 @@ package com.takypok.chatservice.service.impl;
 
 import com.takypok.chatservice.model.entity.ConversationParticipant;
 import com.takypok.chatservice.model.entity.Message;
+import com.takypok.chatservice.model.entity.MessageReaction;
 import com.takypok.chatservice.model.event.ChatEvent;
 import com.takypok.chatservice.model.request.SendMessageRequest;
+import com.takypok.chatservice.model.response.MessageResponse;
+import com.takypok.chatservice.model.response.ReactionSummary;
 import com.takypok.chatservice.repository.ConversationParticipantRepository;
 import com.takypok.chatservice.repository.ConversationRepository;
+import com.takypok.chatservice.repository.MessageReactionRepository;
 import com.takypok.chatservice.repository.MessageRepository;
 import com.takypok.chatservice.service.ChatSessionRegistry;
 import com.takypok.chatservice.service.ConversationService;
 import com.takypok.chatservice.service.MessageService;
 import com.takypok.chatservice.service.PresenceService;
 import com.takypok.core.model.authentication.User;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -27,8 +36,10 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class MessageServiceImpl implements MessageService {
   private static final int MAX_PAGE_SIZE = 100;
+  private static final Pattern NON_WORD = Pattern.compile("[^\\p{L}\\p{N}]+");
 
   private final MessageRepository messageRepository;
+  private final MessageReactionRepository reactionRepository;
   private final ConversationRepository conversationRepository;
   private final ConversationParticipantRepository participantRepository;
   private final ConversationService conversationService;
@@ -36,7 +47,8 @@ public class MessageServiceImpl implements MessageService {
   private final PresenceService presenceService;
 
   @Override
-  public Mono<Message> sendMessage(UUID conversationId, SendMessageRequest request, User sender) {
+  public Mono<MessageResponse> sendMessage(
+      UUID conversationId, SendMessageRequest request, User sender) {
     return conversationService
         .assertParticipant(conversationId, sender.getSub())
         .then(
@@ -55,15 +67,17 @@ public class MessageServiceImpl implements MessageService {
                 conversationRepository
                     .updateLastMessage(conversationId, message.getId(), message.getCreatedAt())
                     .thenReturn(message))
+        .map(message -> new MessageResponse(message, List.of()))
         .doOnSuccess(
-            message -> {
-              broadcastMessage(message);
-              markDeliveredForOnlineRecipients(conversationId, sender.getSub(), message.getId());
+            response -> {
+              broadcastMessage(response);
+              markDeliveredForOnlineRecipients(
+                  conversationId, sender.getSub(), response.getMessage().getId());
             });
   }
 
   @Override
-  public Mono<List<Message>> listMessages(
+  public Mono<List<MessageResponse>> listMessages(
       UUID conversationId, Long beforeId, int size, String callerSub) {
     int pageSize = Math.min(size <= 0 ? 50 : size, MAX_PAGE_SIZE);
     PageRequest pageRequest = PageRequest.of(0, pageSize);
@@ -79,10 +93,126 @@ public class MessageServiceImpl implements MessageService {
                             : messageRepository.findByConversationIdAndIdLessThanOrderByIdDesc(
                                 conversationId, beforeId, pageRequest))
                         .collectList()))
+        .flatMap(this::enrichWithReactions)
         .doOnSuccess(messages -> markDeliveredOnFetch(conversationId, callerSub));
   }
 
-  private void broadcastMessage(Message message) {
+  @Override
+  public Mono<List<MessageResponse>> searchMessages(
+      UUID conversationId, String query, int limit, String callerSub) {
+    String tsQuery = buildPrefixQuery(query);
+    if (tsQuery.isBlank()) {
+      return Mono.just(List.of());
+    }
+    int cappedLimit = Math.min(limit <= 0 ? 50 : limit, MAX_PAGE_SIZE);
+
+    return conversationService
+        .assertParticipant(conversationId, callerSub)
+        .then(
+            Mono.defer(
+                () ->
+                    messageRepository
+                        .searchInConversation(conversationId, tsQuery, cappedLimit)
+                        .collectList()))
+        .flatMap(this::enrichWithReactions);
+  }
+
+  @Override
+  public Mono<Void> toggleReaction(
+      UUID conversationId, Long messageId, String emoji, String callerSub) {
+    return conversationService
+        .assertParticipant(conversationId, callerSub)
+        .then(
+            reactionRepository.existsByMessageIdAndParticipantSubAndEmoji(
+                messageId, callerSub, emoji))
+        .flatMap(
+            exists ->
+                exists
+                    ? reactionRepository.deleteByMessageIdAndParticipantSubAndEmoji(
+                        messageId, callerSub, emoji)
+                    : reactionRepository.save(newReaction(messageId, callerSub, emoji)).then())
+        .then(Mono.defer(() -> broadcastReactionUpdate(conversationId, messageId)));
+  }
+
+  private MessageReaction newReaction(Long messageId, String sub, String emoji) {
+    MessageReaction reaction = new MessageReaction();
+    reaction.setMessageId(messageId);
+    reaction.setParticipantSub(sub);
+    reaction.setEmoji(emoji);
+    reaction.setCreatedAt(ZonedDateTime.now());
+    return reaction;
+  }
+
+  private Mono<Void> broadcastReactionUpdate(UUID conversationId, Long messageId) {
+    return reactionRepository
+        .findByMessageIdIn(List.of(messageId))
+        .collectList()
+        .map(this::aggregate)
+        .doOnSuccess(
+            reactions ->
+                broadcastToOthers(
+                    conversationId,
+                    null,
+                    ChatEvent.ChatEventType.REACTION_UPDATED,
+                    Map.of(
+                        "conversationId", conversationId,
+                        "messageId", messageId,
+                        "reactions", reactions)))
+        .then();
+  }
+
+  private Mono<List<MessageResponse>> enrichWithReactions(List<Message> messages) {
+    if (messages.isEmpty()) {
+      return Mono.just(List.of());
+    }
+    List<Long> ids = messages.stream().map(Message::getId).toList();
+    return reactionRepository
+        .findByMessageIdIn(ids)
+        .collectMultimap(MessageReaction::getMessageId, r -> r)
+        .map(
+            byMessage ->
+                messages.stream()
+                    .map(m -> new MessageResponse(m, aggregate(byMessage.get(m.getId()))))
+                    .toList());
+  }
+
+  private List<ReactionSummary> aggregate(Collection<MessageReaction> reactions) {
+    if (reactions == null || reactions.isEmpty()) {
+      return List.of();
+    }
+    return reactions.stream()
+        .collect(
+            Collectors.groupingBy(
+                MessageReaction::getEmoji,
+                Collectors.mapping(MessageReaction::getParticipantSub, Collectors.toList())))
+        .entrySet()
+        .stream()
+        .map(e -> new ReactionSummary(e.getKey(), e.getValue()))
+        .toList();
+  }
+
+  /**
+   * Turns free-typed search-box text into a Postgres prefix-match tsquery expression, e.g. {@code
+   * "verif auto"} -> {@code "verif:* & auto:*"}, so partial words match (plain
+   * to_tsquery/websearch_to_tsquery only match whole lexemes). Each token is stripped down to
+   * letters/digits before appending {@code :*}, since to_tsquery's own syntax characters (&, |, !,
+   * (, ), :) in raw user input would otherwise throw a parse error — this is also why
+   * quoted-phrase/"-exclude"/"or" search-box syntax isn't supported here, unlike
+   * websearch_to_tsquery.
+   */
+  private String buildPrefixQuery(String query) {
+    if (query == null || query.isBlank()) {
+      return "";
+    }
+    return Arrays.stream(query.trim().split("\\s+"))
+        .map(token -> NON_WORD.matcher(token).replaceAll(""))
+        .filter(token -> !token.isBlank())
+        .map(token -> token + ":*")
+        .collect(Collectors.joining(" & "));
+  }
+
+  private void broadcastMessage(MessageResponse response) {
+    Message message = response.getMessage();
     participantRepository
         .findByConversationId(message.getConversationId())
         .map(ConversationParticipant::getParticipantSub)
@@ -93,7 +223,8 @@ public class MessageServiceImpl implements MessageService {
                     subs,
                     new ChatEvent(
                         ChatEvent.ChatEventType.MESSAGE_CREATED,
-                        Map.of("conversationId", message.getConversationId(), "message", message))),
+                        Map.of(
+                            "conversationId", message.getConversationId(), "message", response))),
             error -> log.error("Failed to broadcast new message: {}", error.getMessage(), error));
   }
 
@@ -119,6 +250,7 @@ public class MessageServiceImpl implements MessageService {
                             broadcastToOthers(
                                 conversationId,
                                 sub,
+                                ChatEvent.ChatEventType.RECEIPT_UPDATED,
                                 Map.of(
                                     "conversationId", conversationId,
                                     "sub", sub,
@@ -144,6 +276,7 @@ public class MessageServiceImpl implements MessageService {
                           broadcastToOthers(
                               conversationId,
                               callerSub,
+                              ChatEvent.ChatEventType.RECEIPT_UPDATED,
                               Map.of(
                                   "conversationId", conversationId,
                                   "sub", callerSub,
@@ -154,7 +287,8 @@ public class MessageServiceImpl implements MessageService {
             error -> log.error("Failed to mark delivered on fetch: {}", error.getMessage(), error));
   }
 
-  private void broadcastToOthers(UUID conversationId, String excludeSub, Object payload) {
+  private void broadcastToOthers(
+      UUID conversationId, String excludeSub, ChatEvent.ChatEventType type, Object payload) {
     participantRepository
         .findByConversationId(conversationId)
         .map(ConversationParticipant::getParticipantSub)
@@ -163,11 +297,9 @@ public class MessageServiceImpl implements MessageService {
         .subscribe(
             subs -> {
               if (!subs.isEmpty()) {
-                sessionRegistry.publish(
-                    subs, new ChatEvent(ChatEvent.ChatEventType.RECEIPT_UPDATED, payload));
+                sessionRegistry.publish(subs, new ChatEvent(type, payload));
               }
             },
-            error ->
-                log.error("Failed to broadcast receipt update: {}", error.getMessage(), error));
+            error -> log.error("Failed to broadcast {}: {}", type, error.getMessage(), error));
   }
 }
