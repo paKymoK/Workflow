@@ -7,6 +7,11 @@ services:
     deploy:
       resources:
         limits:
+          # TODO(prod split): this 2048M is for LOCAL dev only, where one container hosts all 5
+          # service databases. Once each service gets its own dedicated instance (plan: 4 cores /
+          # 8GB each), raise this to match — e.g. memory: 8192M — and update postgresql.conf's
+          # shared_buffers/effective_cache_size together with it (see TODOs in that file). Don't
+          # raise one without the other or Postgres will either OOM or under-use the box.
           memory: 2048M
     container_name: postgres
     environment:

@@ -4,6 +4,9 @@ eureka:
       defaultZone: ${EUREKA_URI:http://127.0.0.1:8761/eureka}
 server:
   port: 8080
+gateway:
+  reactor:
+    io-worker-count: ${GATEWAY_IO_WORKER_COUNT:}
 spring:
   main:
     web-application-type: reactive
@@ -33,6 +36,11 @@ spring:
             connect-timeout: 10000
             response-timeout: 60s
             compression: false
+            pool:
+              type: FIXED
+              max-connections: ${GATEWAY_POOL_MAX_CONNECTIONS:2000}
+              max-idle-time: 30s
+              acquire-timeout: 10000
           routes:
             - id: workflow-websocket
               uri: lb:ws://workflow-service

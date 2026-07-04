@@ -6,12 +6,13 @@ import com.takypok.chatservice.model.entity.Conversation;
 import com.takypok.chatservice.model.request.AddParticipantsRequest;
 import com.takypok.chatservice.model.request.CreateConversationRequest;
 import com.takypok.chatservice.model.request.RenameConversationRequest;
-import com.takypok.chatservice.model.response.ConversationSummaryResponse;
+import com.takypok.chatservice.model.response.ConversationListResponse;
 import com.takypok.chatservice.service.ConversationService;
 import jakarta.validation.Valid;
-import java.util.List;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -29,8 +30,14 @@ public class ConversationController {
   }
 
   @GetMapping
-  public Mono<List<ConversationSummaryResponse>> list(Authentication authentication) {
-    return conversationService.listMyConversations(getUserInfo(authentication).getSub());
+  public Mono<ConversationListResponse> list(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          ZonedDateTime before,
+      @RequestParam(required = false) UUID beforeId,
+      @RequestParam(defaultValue = "50") int size,
+      Authentication authentication) {
+    return conversationService.listMyConversations(
+        getUserInfo(authentication).getSub(), before, beforeId, size);
   }
 
   @PatchMapping("/{id}")

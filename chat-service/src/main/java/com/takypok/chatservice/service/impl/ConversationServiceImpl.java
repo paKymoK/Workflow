@@ -7,6 +7,7 @@ import com.takypok.chatservice.model.entity.ConversationParticipant;
 import com.takypok.chatservice.model.entity.Message;
 import com.takypok.chatservice.model.event.ChatEvent;
 import com.takypok.chatservice.model.request.CreateConversationRequest;
+import com.takypok.chatservice.model.response.ConversationListResponse;
 import com.takypok.chatservice.model.response.ConversationSummaryResponse;
 import com.takypok.chatservice.repository.ConversationParticipantRepository;
 import com.takypok.chatservice.repository.ConversationRepository;
@@ -14,15 +15,16 @@ import com.takypok.chatservice.repository.MessageRepository;
 import com.takypok.chatservice.service.ChatSessionRegistry;
 import com.takypok.chatservice.service.ConversationService;
 import com.takypok.core.model.authentication.User;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,13 +33,25 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Slf4j
 public class ConversationServiceImpl implements ConversationService {
-  private static final ZonedDateTime EPOCH =
-      ZonedDateTime.ofInstant(java.time.Instant.EPOCH, ZoneOffset.UTC);
+  private static final int DEFAULT_PAGE_SIZE = 50;
+  private static final int MAX_PAGE_SIZE = 100;
+
+  private static final String UNREAD_COUNT_SQL =
+      """
+      SELECT m.conversation_id AS conversation_id, COUNT(*) AS unread_count
+      FROM message m
+      JOIN conversation_participant cp
+        ON cp.conversation_id = m.conversation_id AND cp.participant_sub = :sub
+      WHERE m.conversation_id = ANY(:conversationIds)
+        AND m.id > COALESCE(cp.last_read_message_id, 0)
+      GROUP BY m.conversation_id
+      """;
 
   private final ConversationRepository conversationRepository;
   private final ConversationParticipantRepository participantRepository;
   private final MessageRepository messageRepository;
   private final ChatSessionRegistry sessionRegistry;
+  private final DatabaseClient databaseClient;
 
   @Override
   public Mono<Conversation> createConversation(CreateConversationRequest request, User caller) {
@@ -91,42 +105,92 @@ public class ConversationServiceImpl implements ConversationService {
   }
 
   @Override
-  public Mono<List<ConversationSummaryResponse>> listMyConversations(String callerSub) {
-    return participantRepository
-        .findByParticipantSub(callerSub)
-        .flatMap(this::buildSummary)
-        .collectList();
+  public Mono<ConversationListResponse> listMyConversations(
+      String callerSub, ZonedDateTime before, UUID beforeId, int size) {
+    int pageSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
+    int fetchSize = pageSize + 1; // one extra row so we know whether there's a next page
+
+    Flux<Conversation> pageFlux =
+        before == null || beforeId == null
+            ? conversationRepository.findPageForParticipant(callerSub, fetchSize)
+            : conversationRepository.findPageForParticipantBefore(
+                callerSub, before, beforeId, fetchSize);
+
+    return pageFlux.collectList().flatMap(fetched -> buildPage(fetched, callerSub, pageSize));
   }
 
-  private Mono<ConversationSummaryResponse> buildSummary(ConversationParticipant myParticipant) {
-    UUID conversationId = myParticipant.getConversationId();
-    ZonedDateTime since =
-        myParticipant.getLastReadAt() != null ? myParticipant.getLastReadAt() : EPOCH;
+  private Mono<ConversationListResponse> buildPage(
+      List<Conversation> fetched, String callerSub, int pageSize) {
+    boolean hasMore = fetched.size() > pageSize;
+    List<Conversation> page = hasMore ? fetched.subList(0, pageSize) : fetched;
 
-    Mono<Conversation> conversationMono = conversationRepository.findById(conversationId);
-    Mono<List<String>> subsMono =
+    if (page.isEmpty()) {
+      return Mono.just(new ConversationListResponse(List.of(), false, null, null));
+    }
+
+    List<UUID> conversationIds = page.stream().map(Conversation::getId).toList();
+    List<Long> lastMessageIds =
+        page.stream()
+            .map(Conversation::getLastMessageId)
+            .filter(java.util.Objects::nonNull)
+            .toList();
+
+    Mono<Map<UUID, Collection<String>>> subsByConversation =
         participantRepository
-            .findByConversationId(conversationId)
-            .map(ConversationParticipant::getParticipantSub)
-            .collectList();
-    Mono<Optional<Message>> lastMessageMono =
-        messageRepository
-            .findFirstByConversationIdOrderByIdDesc(conversationId)
-            .map(Optional::of)
-            .defaultIfEmpty(Optional.empty());
-    Mono<Long> unreadCountMono =
-        messageRepository.countByConversationIdAndCreatedAtAfter(conversationId, since);
+            .findByConversationIdIn(conversationIds)
+            .collectMultimap(
+                ConversationParticipant::getConversationId,
+                ConversationParticipant::getParticipantSub);
 
-    return Mono.zip(conversationMono, subsMono, lastMessageMono, unreadCountMono)
+    Mono<Map<Long, Message>> lastMessagesById =
+        lastMessageIds.isEmpty()
+            ? Mono.just(Map.of())
+            : messageRepository.findByIdIn(lastMessageIds).collectMap(Message::getId);
+
+    Mono<Map<UUID, Long>> unreadByConversation = countUnread(callerSub, conversationIds);
+
+    return Mono.zip(subsByConversation, lastMessagesById, unreadByConversation)
         .map(
-            tuple ->
-                new ConversationSummaryResponse(
-                    conversationId,
-                    tuple.getT1().getType(),
-                    tuple.getT1().getName(),
-                    tuple.getT2(),
-                    tuple.getT3().orElse(null),
-                    tuple.getT4()));
+            tuple -> {
+              Map<UUID, Collection<String>> subs = tuple.getT1();
+              Map<Long, Message> lastMessages = tuple.getT2();
+              Map<UUID, Long> unread = tuple.getT3();
+
+              List<ConversationSummaryResponse> items =
+                  page.stream()
+                      .map(
+                          c ->
+                              new ConversationSummaryResponse(
+                                  c.getId(),
+                                  c.getType(),
+                                  c.getName(),
+                                  List.copyOf(subs.getOrDefault(c.getId(), List.of())),
+                                  c.getLastMessageId() == null
+                                      ? null
+                                      : lastMessages.get(c.getLastMessageId()),
+                                  unread.getOrDefault(c.getId(), 0L)))
+                      .toList();
+
+              Conversation last = page.get(page.size() - 1);
+              ZonedDateTime nextBefore =
+                  last.getLastMessageAt() != null ? last.getLastMessageAt() : last.getCreatedAt();
+
+              return new ConversationListResponse(
+                  items, hasMore, hasMore ? nextBefore : null, hasMore ? last.getId() : null);
+            });
+  }
+
+  private Mono<Map<UUID, Long>> countUnread(String callerSub, List<UUID> conversationIds) {
+    return databaseClient
+        .sql(UNREAD_COUNT_SQL)
+        .bind("sub", callerSub)
+        .bind("conversationIds", conversationIds.toArray(new UUID[0]))
+        .map(
+            row ->
+                new AbstractMap.SimpleEntry<>(
+                    row.get("conversation_id", UUID.class), row.get("unread_count", Long.class)))
+        .all()
+        .collectMap(Map.Entry::getKey, Map.Entry::getValue);
   }
 
   @Override
@@ -190,13 +254,23 @@ public class ConversationServiceImpl implements ConversationService {
 
   @Override
   public Mono<Void> markRead(UUID conversationId, String callerSub) {
-    return participantRepository
-        .findByConversationIdAndParticipantSub(conversationId, callerSub)
-        .switchIfEmpty(
-            Mono.error(new IllegalStateException("Not a participant of this conversation")))
+    Mono<ConversationParticipant> participantMono =
+        participantRepository
+            .findByConversationIdAndParticipantSub(conversationId, callerSub)
+            .switchIfEmpty(
+                Mono.error(new IllegalStateException("Not a participant of this conversation")));
+    Mono<Conversation> conversationMono =
+        conversationRepository
+            .findById(conversationId)
+            .switchIfEmpty(Mono.error(new IllegalStateException("Conversation not found")));
+
+    return Mono.zip(participantMono, conversationMono)
         .flatMap(
-            participant -> {
+            tuple -> {
+              ConversationParticipant participant = tuple.getT1();
+              Conversation conversation = tuple.getT2();
               participant.setLastReadAt(ZonedDateTime.now());
+              participant.setLastReadMessageId(conversation.getLastMessageId());
               return participantRepository.save(participant);
             })
         .then();

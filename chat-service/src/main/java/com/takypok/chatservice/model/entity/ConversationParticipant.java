@@ -30,4 +30,10 @@ public class ConversationParticipant {
 
   @Column("last_read_at")
   private ZonedDateTime lastReadAt;
+
+  // The unread count compares message.id against this instead of created_at against last_read_at,
+  // so it can reuse the existing (conversation_id, id) index instead of needing a new one — ids
+  // are monotonic within a conversation, timestamps across instances aren't guaranteed to be.
+  @Column("last_read_message_id")
+  private Long lastReadMessageId;
 }

@@ -1,6 +1,7 @@
 package com.takypok.chatservice.repository;
 
 import com.takypok.chatservice.model.entity.ConversationParticipant;
+import java.util.Collection;
 import java.util.UUID;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import reactor.core.publisher.Flux;
@@ -10,6 +11,8 @@ public interface ConversationParticipantRepository
     extends R2dbcRepository<ConversationParticipant, UUID> {
 
   Flux<ConversationParticipant> findByConversationId(UUID conversationId);
+
+  Flux<ConversationParticipant> findByConversationIdIn(Collection<UUID> conversationIds);
 
   Mono<ConversationParticipant> findByConversationIdAndParticipantSub(
       UUID conversationId, String participantSub);

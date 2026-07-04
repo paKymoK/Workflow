@@ -5,6 +5,7 @@ import com.takypok.chatservice.model.entity.Message;
 import com.takypok.chatservice.model.event.ChatEvent;
 import com.takypok.chatservice.model.request.SendMessageRequest;
 import com.takypok.chatservice.repository.ConversationParticipantRepository;
+import com.takypok.chatservice.repository.ConversationRepository;
 import com.takypok.chatservice.repository.MessageRepository;
 import com.takypok.chatservice.service.ChatSessionRegistry;
 import com.takypok.chatservice.service.ConversationService;
@@ -26,6 +27,7 @@ public class MessageServiceImpl implements MessageService {
   private static final int MAX_PAGE_SIZE = 100;
 
   private final MessageRepository messageRepository;
+  private final ConversationRepository conversationRepository;
   private final ConversationParticipantRepository participantRepository;
   private final ConversationService conversationService;
   private final ChatSessionRegistry sessionRegistry;
@@ -45,6 +47,11 @@ public class MessageServiceImpl implements MessageService {
                   message.setAttachments(request.getAttachments());
                   return messageRepository.save(message);
                 }))
+        .flatMap(
+            message ->
+                conversationRepository
+                    .updateLastMessage(conversationId, message.getId(), message.getCreatedAt())
+                    .thenReturn(message))
         .doOnSuccess(this::broadcastMessage);
   }
 

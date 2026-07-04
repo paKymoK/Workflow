@@ -2,8 +2,9 @@ package com.takypok.chatservice.service;
 
 import com.takypok.chatservice.model.entity.Conversation;
 import com.takypok.chatservice.model.request.CreateConversationRequest;
-import com.takypok.chatservice.model.response.ConversationSummaryResponse;
+import com.takypok.chatservice.model.response.ConversationListResponse;
 import com.takypok.core.model.authentication.User;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import reactor.core.publisher.Mono;
@@ -12,7 +13,8 @@ public interface ConversationService {
 
   Mono<Conversation> createConversation(CreateConversationRequest request, User caller);
 
-  Mono<List<ConversationSummaryResponse>> listMyConversations(String callerSub);
+  Mono<ConversationListResponse> listMyConversations(
+      String callerSub, ZonedDateTime before, UUID beforeId, int size);
 
   Mono<Conversation> rename(UUID conversationId, String name, String callerSub);
 
