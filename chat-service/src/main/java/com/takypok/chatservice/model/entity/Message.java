@@ -33,6 +33,11 @@ public class Message extends IdEntity {
 
   private List<Attachment> attachments;
 
+  // Null for a top-level message; set for a thread reply. Not nested further — a reply's own
+  // replies aren't supported, matching Slack's flat (non-nested) thread model.
+  @Column("parent_message_id")
+  private Long parentMessageId;
+
   // BaseEntity.createdAt is @JsonIgnore by default; clients need it to render timestamps.
   @Override
   @JsonProperty("createdAt")

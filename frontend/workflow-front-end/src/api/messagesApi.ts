@@ -102,6 +102,16 @@ export async function searchMessages(
   return data;
 }
 
+export async function fetchReplies(
+  conversationId: string,
+  parentMessageId: number,
+): Promise<ChatMessage[]> {
+  const { data } = await api.get<ChatMessage[]>(
+    `/chat-service/chat/conversations/${conversationId}/messages/${parentMessageId}/replies`,
+  );
+  return data;
+}
+
 export async function toggleReaction(
   conversationId: string,
   messageId: number,

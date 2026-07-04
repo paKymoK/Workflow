@@ -146,15 +146,42 @@ function handleEvent(qc: QueryClient, event: ChatEvent) {
 
   if (event.type === "MESSAGE_CREATED") {
     const message = event.payload.message as ChatMessage;
-    qc.setQueryData<InfiniteData<ChatMessage[], number | undefined>>(
-      messagesKeys.thread(conversationId),
-      (existing) => {
-        if (!existing) return existing;
-        const [firstPage, ...restPages] = existing.pages;
-        if (firstPage.some((m) => m.id === message.id)) return existing;
-        return { ...existing, pages: [[message, ...firstPage], ...restPages] };
-      },
-    );
+
+    if (message.parentMessageId !== null) {
+      // A reply — goes into the thread panel's own cache (only if that panel has been
+      // opened at least once; otherwise there's nothing to append to, and the next open
+      // fetches fresh via REST anyway), not the main thread's live message list.
+      const parentId = message.parentMessageId;
+      qc.setQueryData<ChatMessage[]>(messagesKeys.replies(parentId), (existing) => {
+        if (!existing || existing.some((m) => m.id === message.id)) return existing;
+        return [...existing, message];
+      });
+      // The parent's "💬 N replies" line lives in the main thread cache, though.
+      qc.setQueryData<InfiniteData<ChatMessage[], number | undefined>>(
+        messagesKeys.thread(conversationId),
+        (existing) => {
+          if (!existing) return existing;
+          return {
+            ...existing,
+            pages: existing.pages.map((page) =>
+              page.map((m) =>
+                m.id === parentId ? { ...m, replyCount: m.replyCount + 1 } : m,
+              ),
+            ),
+          };
+        },
+      );
+    } else {
+      qc.setQueryData<InfiniteData<ChatMessage[], number | undefined>>(
+        messagesKeys.thread(conversationId),
+        (existing) => {
+          if (!existing) return existing;
+          const [firstPage, ...restPages] = existing.pages;
+          if (firstPage.some((m) => m.id === message.id)) return existing;
+          return { ...existing, pages: [[message, ...firstPage], ...restPages] };
+        },
+      );
+    }
   }
 
   // Covers unread counts / last-message preview (MESSAGE_CREATED) as well as membership

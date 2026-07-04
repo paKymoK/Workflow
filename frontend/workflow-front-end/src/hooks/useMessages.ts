@@ -7,6 +7,7 @@ import {
   fetchConversations,
   fetchMessages,
   fetchPresence,
+  fetchReplies,
   joinChannel,
   markConversationRead,
   notifyTyping,
@@ -38,6 +39,7 @@ export const messagesKeys = {
   publicChannels: (search: string) => ["publicChannels", search] as const,
   search: (conversationId: string, query: string) =>
     ["conversations", conversationId, "search", query] as const,
+  replies: (parentMessageId: number) => ["conversations", "thread-replies", parentMessageId] as const,
   // Global, sub -> resolved display name — same "shared cache, seeded + read separately"
   // trick as presence.
   participantNames: ["participantNames"] as const,
@@ -254,6 +256,17 @@ export function useSyncParticipantNames(subs: string[]) {
       cancelled = true;
     };
   }, [dedupedKey, qc]);
+}
+
+/** Oldest-first replies to one top-level message, for the thread side panel. Live updates
+ * (new replies while the panel is open) arrive via the MESSAGE_CREATED WS echo — see
+ * useChatSocket, which appends into this same cache entry when parentMessageId is set. */
+export function useThreadReplies(conversationId: string | null, parentMessageId: number | null) {
+  return useQuery({
+    queryKey: messagesKeys.replies(parentMessageId ?? -1),
+    queryFn: () => fetchReplies(conversationId as string, parentMessageId as number),
+    enabled: !!conversationId && parentMessageId !== null,
+  });
 }
 
 export function useJoinChannel() {

@@ -57,4 +57,13 @@ public class MessageController {
     return messageService.toggleReaction(
         conversationId, messageId, request.getEmoji(), getUserInfo(authentication).getSub());
   }
+
+  @GetMapping("/{messageId}/replies")
+  public Mono<List<MessageResponse>> replies(
+      @PathVariable UUID conversationId,
+      @PathVariable Long messageId,
+      Authentication authentication) {
+    return messageService.fetchReplies(
+        conversationId, messageId, getUserInfo(authentication).getSub());
+  }
 }

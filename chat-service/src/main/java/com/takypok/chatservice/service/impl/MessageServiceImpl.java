@@ -17,6 +17,7 @@ import com.takypok.chatservice.service.MessageService;
 import com.takypok.chatservice.service.PresenceService;
 import com.takypok.core.model.authentication.User;
 import java.time.ZonedDateTime;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -38,6 +40,14 @@ public class MessageServiceImpl implements MessageService {
   private static final int MAX_PAGE_SIZE = 100;
   private static final Pattern NON_WORD = Pattern.compile("[^\\p{L}\\p{N}]+");
 
+  private static final String REPLY_COUNT_SQL =
+      """
+      SELECT parent_message_id, COUNT(*) AS reply_count
+      FROM message
+      WHERE parent_message_id = ANY(:parentIds)
+      GROUP BY parent_message_id
+      """;
+
   private final MessageRepository messageRepository;
   private final MessageReactionRepository reactionRepository;
   private final ConversationRepository conversationRepository;
@@ -45,6 +55,7 @@ public class MessageServiceImpl implements MessageService {
   private final ConversationService conversationService;
   private final ChatSessionRegistry sessionRegistry;
   private final PresenceService presenceService;
+  private final DatabaseClient databaseClient;
 
   @Override
   public Mono<MessageResponse> sendMessage(
@@ -60,6 +71,7 @@ public class MessageServiceImpl implements MessageService {
                   message.setContent(request.getContent());
                   message.setMessageType(request.getMessageType());
                   message.setAttachments(request.getAttachments());
+                  message.setParentMessageId(request.getParentMessageId());
                   return messageRepository.save(message);
                 }))
         .flatMap(
@@ -67,7 +79,7 @@ public class MessageServiceImpl implements MessageService {
                 conversationRepository
                     .updateLastMessage(conversationId, message.getId(), message.getCreatedAt())
                     .thenReturn(message))
-        .map(message -> new MessageResponse(message, List.of()))
+        .map(message -> new MessageResponse(message, List.of(), 0L))
         .doOnSuccess(
             response -> {
               broadcastMessage(response);
@@ -88,12 +100,14 @@ public class MessageServiceImpl implements MessageService {
             Mono.defer(
                 () ->
                     (beforeId == null
-                            ? messageRepository.findByConversationIdOrderByIdDesc(
-                                conversationId, pageRequest)
-                            : messageRepository.findByConversationIdAndIdLessThanOrderByIdDesc(
-                                conversationId, beforeId, pageRequest))
+                            ? messageRepository
+                                .findByConversationIdAndParentMessageIdIsNullOrderByIdDesc(
+                                    conversationId, pageRequest)
+                            : messageRepository
+                                .findByConversationIdAndParentMessageIdIsNullAndIdLessThanOrderByIdDesc(
+                                    conversationId, beforeId, pageRequest))
                         .collectList()))
-        .flatMap(this::enrichWithReactions)
+        .flatMap(this::enrichMessages)
         .doOnSuccess(messages -> markDeliveredOnFetch(conversationId, callerSub));
   }
 
@@ -114,7 +128,7 @@ public class MessageServiceImpl implements MessageService {
                     messageRepository
                         .searchInConversation(conversationId, tsQuery, cappedLimit)
                         .collectList()))
-        .flatMap(this::enrichWithReactions);
+        .flatMap(this::enrichMessages);
   }
 
   @Override
@@ -132,6 +146,24 @@ public class MessageServiceImpl implements MessageService {
                         messageId, callerSub, emoji)
                     : reactionRepository.save(newReaction(messageId, callerSub, emoji)).then())
         .then(Mono.defer(() -> broadcastReactionUpdate(conversationId, messageId)));
+  }
+
+  @Override
+  public Mono<List<MessageResponse>> fetchReplies(
+      UUID conversationId, Long parentMessageId, String callerSub) {
+    return conversationService
+        .assertParticipant(conversationId, callerSub)
+        .then(
+            Mono.defer(
+                () ->
+                    messageRepository
+                        .findByConversationIdAndParentMessageIdOrderByIdAsc(
+                            conversationId, parentMessageId)
+                        .collectList()))
+        // Replies don't themselves have reactions/reply-counts enriched yet — keep scope to
+        // what the thread panel actually shows for now (reactions on replies is a natural
+        // follow-up, not included here).
+        .map(replies -> replies.stream().map(m -> new MessageResponse(m, List.of(), 0L)).toList());
   }
 
   private MessageReaction newReaction(Long messageId, String sub, String emoji) {
@@ -161,19 +193,44 @@ public class MessageServiceImpl implements MessageService {
         .then();
   }
 
-  private Mono<List<MessageResponse>> enrichWithReactions(List<Message> messages) {
+  private Mono<List<MessageResponse>> enrichMessages(List<Message> messages) {
     if (messages.isEmpty()) {
       return Mono.just(List.of());
     }
     List<Long> ids = messages.stream().map(Message::getId).toList();
-    return reactionRepository
-        .findByMessageIdIn(ids)
-        .collectMultimap(MessageReaction::getMessageId, r -> r)
+
+    Mono<Map<Long, Collection<MessageReaction>>> reactionsByMessage =
+        reactionRepository
+            .findByMessageIdIn(ids)
+            .collectMultimap(MessageReaction::getMessageId, r -> r);
+    Mono<Map<Long, Long>> replyCountsByMessage = countReplies(ids);
+
+    return Mono.zip(reactionsByMessage, replyCountsByMessage)
         .map(
-            byMessage ->
+            tuple ->
                 messages.stream()
-                    .map(m -> new MessageResponse(m, aggregate(byMessage.get(m.getId()))))
+                    .map(
+                        m ->
+                            new MessageResponse(
+                                m,
+                                aggregate(tuple.getT1().get(m.getId())),
+                                tuple.getT2().getOrDefault(m.getId(), 0L)))
                     .toList());
+  }
+
+  private Mono<Map<Long, Long>> countReplies(List<Long> parentIds) {
+    if (parentIds.isEmpty()) {
+      return Mono.just(Map.of());
+    }
+    return databaseClient
+        .sql(REPLY_COUNT_SQL)
+        .bind("parentIds", parentIds.toArray(new Long[0]))
+        .map(
+            row ->
+                new AbstractMap.SimpleEntry<>(
+                    row.get("parent_message_id", Long.class), row.get("reply_count", Long.class)))
+        .all()
+        .collectMap(Map.Entry::getKey, Map.Entry::getValue);
   }
 
   private List<ReactionSummary> aggregate(Collection<MessageReaction> reactions) {

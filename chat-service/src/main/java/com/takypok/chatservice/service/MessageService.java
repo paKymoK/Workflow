@@ -20,4 +20,8 @@ public interface MessageService {
 
   /** Adds the reaction if callerSub hasn't used that emoji on this message yet, else removes it. */
   Mono<Void> toggleReaction(UUID conversationId, Long messageId, String emoji, String callerSub);
+
+  /** Oldest-first replies to one top-level message. */
+  Mono<List<MessageResponse>> fetchReplies(
+      UUID conversationId, Long parentMessageId, String callerSub);
 }

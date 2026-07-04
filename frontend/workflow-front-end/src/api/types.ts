@@ -267,6 +267,11 @@ export interface ChatMessage {
   attachments: MessageAttachment[] | null;
   createdAt: string;
   reactions: ReactionSummary[];
+  // Null for a top-level message; set when this message is itself a reply (not shown in the
+  // main thread, only inside the opened thread panel).
+  parentMessageId: number | null;
+  // Always 0 for a reply itself — no nested threads.
+  replyCount: number;
 }
 
 export interface ConversationSummary {
@@ -315,6 +320,8 @@ export interface SendMessageRequest {
   content: string;
   messageType?: MessageType;
   attachments?: MessageAttachment[];
+  // Set to reply within a thread instead of posting a new top-level message.
+  parentMessageId?: number;
 }
 
 export interface AuditLog {

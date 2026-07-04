@@ -41,6 +41,8 @@ import LazyVideoAttachment from "../components/LazyVideoAttachment";
 import MessageComposerAttachments, {
   type PendingAttachment,
 } from "../components/MessageComposerAttachments";
+import MessageContent from "../components/MessageContent";
+import RichTextEditor from "../components/RichTextEditor";
 import {
   useBrowsePublicChannels,
   useConversationMessages,
@@ -55,6 +57,7 @@ import {
   useSendTyping,
   useSyncParticipantNames,
   useSyncPresence,
+  useThreadReplies,
   useToggleReaction,
   useTypingUsers,
 } from "../hooks/useMessages";
@@ -96,11 +99,9 @@ function receiptStatus(
   return { label: "✓ Sent", read: false };
 }
 
-// Reactions and threaded replies aren't built yet (separate roadmap items) — these are
-// honest placeholders, not fake-working stand-ins, since a reaction/reply that looked like
-// it worked but didn't persist or reach the other participant would be actively misleading.
-function notifyComingSoon(feature: string) {
-  antMessage.info(`${feature} — coming soon`);
+// Tiptap's "empty" state is "<p></p>", not "" — strip tags to check for actual text.
+function isHtmlEmpty(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").trim().length === 0;
 }
 
 function deriveMessageType(hasContent: boolean, attachments: MessageAttachment[]): MessageType {
@@ -196,6 +197,17 @@ export default function Messages() {
   // (desktop) or tapped (this tracks the one tapped-open, mobile) — except the receipt
   // line, which always shows on the last message regardless.
   const [revealedMessageId, setRevealedMessageId] = useState<number | null>(null);
+  const [threadParentId, setThreadParentId] = useState<number | null>(null);
+  const [threadDraft, setThreadDraft] = useState("");
+  // RichTextEditor/Tiptap only uses `content` as the *initial* value — changing the prop
+  // after mount doesn't clear what's visibly typed. Bumping these forces a remount (fresh
+  // editor instance) whenever a send should visibly reset the composer.
+  const [composerResetKey, setComposerResetKey] = useState(0);
+  const [replyResetKey, setReplyResetKey] = useState(0);
+  // Teams-style: plain-looking box by default, "Aa" reveals the formatting toolbar. Same
+  // editor instance throughout, so toggling never loses what's already typed.
+  const [richOpen, setRichOpen] = useState(false);
+  const [replyRichOpen, setReplyRichOpen] = useState(false);
 
   const { data: conversations = [], isLoading } = useConversations();
   const { mutate: createConversation, isPending: creating } = useCreateConversation();
@@ -262,6 +274,10 @@ export default function Messages() {
   const { mutate: toggleReaction } = useToggleReaction(selectedId ?? "");
   const sendTyping = useSendTyping(selectedId);
   const typingUsers = useTypingUsers(selectedId);
+  const { data: threadReplies = [], isLoading: loadingReplies } = useThreadReplies(
+    selectedId,
+    threadParentId,
+  );
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
   const selectedPeerSub = selected ? directPeerSub(selected, mySub) : null;
@@ -288,6 +304,9 @@ export default function Messages() {
     () => (messagePages ? messagePages.pages.flat().reverse() : []),
     [messagePages],
   );
+  const threadParentMessage = threadParentId
+    ? (messages.find((m) => m.id === threadParentId) ?? null)
+    : null;
 
   // Debounced so every keystroke doesn't hit the search endpoint.
   useEffect(() => {
@@ -312,7 +331,18 @@ export default function Messages() {
     setMessageSearch("");
     setDebouncedMessageSearch("");
     setRevealedMessageId(null);
+    setThreadParentId(null);
+    setThreadDraft("");
+    setRichOpen(false);
+    setReplyRichOpen(false);
   }, [selectedId]);
+
+  // Also reset when switching which thread is open (without necessarily switching
+  // conversation) — otherwise a stale draft from the previous thread would carry over.
+  useEffect(() => {
+    setThreadDraft("");
+    setReplyRichOpen(false);
+  }, [threadParentId]);
 
   const scrollParentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
@@ -498,18 +528,27 @@ export default function Messages() {
     .filter((p) => p.status === "ready" && p.attachment)
     .map((p) => p.attachment as MessageAttachment);
   const canSend =
-    !hasPendingUploads && (draft.trim().length > 0 || readyAttachments.length > 0);
+    !hasPendingUploads && (!isHtmlEmpty(draft) || readyAttachments.length > 0);
 
   function handleSend() {
     if (!selectedId || !canSend) return;
-    const content = draft.trim();
+    const content = draft;
     setDraft("");
     setPendingAttachments([]);
+    setComposerResetKey((k) => k + 1);
     send({
       content,
-      messageType: deriveMessageType(content.length > 0, readyAttachments),
+      messageType: deriveMessageType(!isHtmlEmpty(content), readyAttachments),
       attachments: readyAttachments.length > 0 ? readyAttachments : undefined,
     });
+  }
+
+  function handleSendReply() {
+    if (!selectedId || !threadParentId || isHtmlEmpty(threadDraft)) return;
+    const content = threadDraft;
+    setThreadDraft("");
+    setReplyResetKey((k) => k + 1);
+    send({ content, messageType: "TEXT", parentMessageId: threadParentId });
   }
 
   return (
@@ -718,9 +757,7 @@ export default function Messages() {
                                     : "bg-[var(--bg-2)] text-[var(--fg)]"
                                 }`}
                               >
-                                {msg.content && (
-                                  <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                                )}
+                                {msg.content && <MessageContent html={msg.content} />}
                                 {msg.attachments && msg.attachments.length > 0 && (
                                   <div className="mt-1.5 flex flex-col gap-1.5">
                                     {msg.attachments.map((att, i) =>
@@ -809,14 +846,26 @@ export default function Messages() {
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    notifyComingSoon("Threaded replies");
+                                    setThreadParentId(msg.id);
                                   }}
-                                  title="Reply in thread (coming soon)"
+                                  title="Reply in thread"
                                   className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
                                 >
                                   <MessageOutlined className="text-[11px]" />
                                 </button>
                               </div>
+                              {msg.replyCount > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setThreadParentId(msg.id);
+                                  }}
+                                  className="text-[10px] mt-1 text-[var(--acc-1)] hover:underline cursor-pointer"
+                                >
+                                  💬 {msg.replyCount} {msg.replyCount === 1 ? "reply" : "replies"}
+                                </button>
+                              )}
                               {receipt && (
                                 <div
                                   className={`text-[8px] overflow-hidden transition-all ${
@@ -851,54 +900,154 @@ export default function Messages() {
               </div>
             )}
 
-            <div className="px-4 py-3 border-t border-[var(--line)]">
-              <div className="flex items-end gap-1.5 border border-[var(--line)] bg-[var(--bg-2)] px-2 py-1.5">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*"
-                  multiple
-                  hidden
-                  onChange={(e) => {
-                    handleAttachFiles(e.target.files);
-                    e.target.value = "";
-                  }}
-                />
-                <Button
-                  type="text"
-                  icon={<PaperClipOutlined />}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="!text-[var(--fg-faint)]"
-                />
-                <Input.TextArea
-                  value={draft}
-                  onChange={(e) => {
-                    setDraft(e.target.value);
-                    if (e.target.value.trim()) sendTyping();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  autoSize={{ minRows: 1, maxRows: 4 }}
-                  placeholder="Type a message..."
-                  variant="borderless"
-                  className="font-mono-tech !flex-1 !text-xs !resize-none !bg-transparent !shadow-none"
-                />
+            <div className="px-4 py-3 border-t border-[var(--line)] flex flex-col gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  handleAttachFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <RichTextEditor
+                key={`composer-${selectedId}-${composerResetKey}`}
+                content={draft}
+                onChange={(html) => {
+                  setDraft(html);
+                  if (!isHtmlEmpty(html)) sendTyping();
+                }}
+                onEnterSubmit={handleSend}
+                showAttachments={false}
+                showToolbar={richOpen}
+                placeholder="Type a message..."
+              />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="text"
+                    icon={<PaperClipOutlined />}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="!text-[var(--fg-faint)]"
+                  />
+                  <Button
+                    type={richOpen ? "primary" : "text"}
+                    onClick={() => setRichOpen((o) => !o)}
+                    title="Formatting"
+                    className={richOpen ? "" : "!text-[var(--fg-faint)]"}
+                  >
+                    Aa
+                  </Button>
+                </div>
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
                   onClick={handleSend}
                   loading={sending}
                   disabled={!canSend}
-                />
+                >
+                  Send
+                </Button>
               </div>
             </div>
           </>
         )}
       </div>
+
+      {/* Thread panel */}
+      {threadParentId && (
+        <div className="w-80 flex-shrink-0 border border-[var(--line)] bg-[var(--bg-1)] flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
+            <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">THREAD</span>
+            <button
+              type="button"
+              onClick={() => setThreadParentId(null)}
+              className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer text-sm"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            {threadParentMessage && (
+              <div className="pb-3 border-b border-[var(--line)]">
+                <div className="flex items-baseline gap-1.5 mb-1">
+                  <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                    {threadParentMessage.sender.name}
+                  </span>
+                  <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                    {dayjs(threadParentMessage.createdAt).format("HH:mm")}
+                  </span>
+                </div>
+                {threadParentMessage.content && (
+                  <MessageContent html={threadParentMessage.content} />
+                )}
+              </div>
+            )}
+            {loadingReplies ? (
+              <div className="flex justify-center py-4">
+                <Spin size="small" />
+              </div>
+            ) : (
+              threadReplies.map((reply) => (
+                <div key={reply.id} className="flex gap-2">
+                  <Avatar
+                    size={22}
+                    className="flex-shrink-0 !text-[9px] !font-semibold !text-[var(--bg-0)] !bg-[var(--acc-1)]"
+                  >
+                    {reply.sender.name.trim().charAt(0).toUpperCase() || "?"}
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                        {reply.sender.name}
+                      </span>
+                      <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                        {dayjs(reply.createdAt).format("HH:mm")}
+                      </span>
+                    </div>
+                    {reply.content && <MessageContent html={reply.content} />}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="px-4 py-3 border-t border-[var(--line)] flex flex-col gap-2">
+            <RichTextEditor
+              key={`reply-${threadParentId}-${replyResetKey}`}
+              content={threadDraft}
+              onChange={(html) => {
+                setThreadDraft(html);
+                if (!isHtmlEmpty(html)) sendTyping();
+              }}
+              onEnterSubmit={handleSendReply}
+              showAttachments={false}
+              showToolbar={replyRichOpen}
+              placeholder="Reply in thread..."
+            />
+            <div className="flex items-center justify-between">
+              <Button
+                type={replyRichOpen ? "primary" : "text"}
+                onClick={() => setReplyRichOpen((o) => !o)}
+                title="Formatting"
+                className={replyRichOpen ? "" : "!text-[var(--fg-faint)]"}
+              >
+                Aa
+              </Button>
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleSendReply}
+                loading={sending}
+                disabled={isHtmlEmpty(threadDraft)}
+              >
+                Send
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New conversation / channel modal */}
       <Modal

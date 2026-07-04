@@ -32,6 +32,17 @@ interface RichTextEditorProps {
     editable?: boolean;
     onChange?: (html: string) => void;
     placeholder?: string;
+    // Defaults true so existing callers (ticket comments) are unaffected. Chat passes false
+    // since it already has its own structured image/video attachment pipeline — a second,
+    // inline-HTML-embedded upload path here would just be a confusing duplicate of it.
+    showAttachments?: boolean;
+    // Optional Enter-to-submit (Shift+Enter still inserts a newline) — undefined means
+    // Enter behaves as a normal editor (new paragraph), matching today's ticket-comment usage.
+    onEnterSubmit?: () => void;
+    // Defaults true (today's always-visible toolbar, unaffected for ticket comments). Pass
+    // false to collapse down to a compact plain-looking box — same editor instance and HTML
+    // content the whole time, so toggling this from the outside never loses what's typed.
+    showToolbar?: boolean;
 }
 
 function RichTextEditor({
@@ -39,6 +50,9 @@ function RichTextEditor({
     editable = true,
     onChange,
     placeholder = "Write something...",
+    showAttachments = true,
+    onEnterSubmit,
+    showToolbar = true,
 }: RichTextEditorProps) {
     const fileInputRef  = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +118,16 @@ function RichTextEditor({
         onUpdate({ editor }) {
             onChange?.(editor.getHTML());
         },
+        editorProps: {
+            handleKeyDown(_view, event) {
+                if (onEnterSubmit && event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    onEnterSubmit();
+                    return true;
+                }
+                return false;
+            },
+        },
     });
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,7 +180,7 @@ function RichTextEditor({
 
     return (
         <div className={`rich-text-editor border rounded ${editable ? "border-[var(--border-subtle)]" : "border-transparent"}`}>
-            {editable && (
+            {editable && showToolbar && (
                 <div className="flex flex-wrap items-center gap-1 px-2 py-1 border-b border-[var(--border-subtle)] bg-[var(--darker)] rounded-t">
                     <Button
                         size="small"
@@ -204,43 +228,47 @@ function RichTextEditor({
                         disabled={!editor.can().redo()}
                         onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().redo().run(); }}
                     />
-                    <Divider type="vertical" className="!my-0 !mx-0.5" />
-                    <Tooltip title="Attach file or image">
-                        <Button
-                            size="small"
-                            type="text"
-                            icon={uploading ? <Spin size="small" /> : <PaperClipOutlined />}
-                            disabled={uploading}
-                            onMouseDown={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Attach video">
-                        <Button
-                            size="small"
-                            type="text"
-                            icon={uploadingVideo ? <Spin size="small" /> : <VideoCameraOutlined />}
-                            disabled={uploadingVideo}
-                            onMouseDown={(e) => { e.preventDefault(); videoInputRef.current?.click(); }}
-                        />
-                    </Tooltip>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        className="!hidden"
-                        onChange={handleFileChange}
-                    />
-                    <input
-                        ref={videoInputRef}
-                        type="file"
-                        accept={VIDEO_TYPES.join(",")}
-                        className="!hidden"
-                        onChange={handleVideoChange}
-                    />
+                    {showAttachments && (
+                        <>
+                            <Divider type="vertical" className="!my-0 !mx-0.5" />
+                            <Tooltip title="Attach file or image">
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    icon={uploading ? <Spin size="small" /> : <PaperClipOutlined />}
+                                    disabled={uploading}
+                                    onMouseDown={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
+                                />
+                            </Tooltip>
+                            <Tooltip title="Attach video">
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    icon={uploadingVideo ? <Spin size="small" /> : <VideoCameraOutlined />}
+                                    disabled={uploadingVideo}
+                                    onMouseDown={(e) => { e.preventDefault(); videoInputRef.current?.click(); }}
+                                />
+                            </Tooltip>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                className="!hidden"
+                                onChange={handleFileChange}
+                            />
+                            <input
+                                ref={videoInputRef}
+                                type="file"
+                                accept={VIDEO_TYPES.join(",")}
+                                className="!hidden"
+                                onChange={handleVideoChange}
+                            />
+                        </>
+                    )}
                 </div>
             )}
             <EditorContent
                 editor={editor}
-                className="px-3 py-2 min-h-[120px] prose prose-sm max-w-none focus:outline-none"
+                className={`px-3 py-2 ${showToolbar ? "min-h-[120px]" : "min-h-[32px]"} prose prose-sm max-w-none focus:outline-none`}
             />
         </div>
     );
