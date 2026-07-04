@@ -272,6 +272,15 @@ export interface ConversationSummary {
   // watermarks could unambiguously refer to.
   peerReadThroughMessageId: number | null;
   peerDeliveredThroughMessageId: number | null;
+  // GROUP only — null for DIRECT. false = public, discoverable/self-joinable via
+  // browsePublicChannels + joinChannel; true = today's invite-only behavior.
+  privateChannel: boolean | null;
+}
+
+export interface PublicChannel {
+  id: string;
+  name: string;
+  memberCount: number;
 }
 
 export interface PresenceStatus {
@@ -290,6 +299,8 @@ export interface CreateConversationRequest {
   type: ConversationType;
   name?: string;
   participantSubs: string[];
+  // GROUP only; omit/true = invite-only (today's behavior), false = public channel.
+  privateChannel?: boolean;
 }
 
 export interface SendMessageRequest {

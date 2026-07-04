@@ -6,6 +6,7 @@ import type {
   ConversationSummary,
   CreateConversationRequest,
   PresenceStatus,
+  PublicChannel,
   SendMessageRequest,
 } from "./types";
 
@@ -54,6 +55,17 @@ export async function markConversationRead(conversationId: string): Promise<void
 
 export async function notifyTyping(conversationId: string): Promise<void> {
   await api.post(`/chat-service/chat/conversations/${conversationId}/typing`);
+}
+
+export async function browsePublicChannels(search?: string): Promise<PublicChannel[]> {
+  const { data } = await api.get<PublicChannel[]>("/chat-service/chat/channels", {
+    params: search ? { search } : undefined,
+  });
+  return data;
+}
+
+export async function joinChannel(conversationId: string): Promise<void> {
+  await api.post(`/chat-service/chat/conversations/${conversationId}/join`);
 }
 
 export async function fetchPresence(subs: string[]): Promise<Record<string, PresenceStatus>> {

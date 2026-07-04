@@ -3,6 +3,7 @@ package com.takypok.chatservice.service;
 import com.takypok.chatservice.model.entity.Conversation;
 import com.takypok.chatservice.model.request.CreateConversationRequest;
 import com.takypok.chatservice.model.response.ConversationListResponse;
+import com.takypok.chatservice.model.response.PublicChannelResponse;
 import com.takypok.core.model.authentication.User;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -26,6 +27,12 @@ public interface ConversationService {
 
   /** Ephemeral — fans out over WS only, nothing persisted. */
   Mono<Void> notifyTyping(UUID conversationId, User caller);
+
+  /** Public GROUP conversations {@code callerSub} hasn't already joined. */
+  Mono<List<PublicChannelResponse>> browsePublicChannels(String callerSub, String search);
+
+  /** Errors with {@link IllegalStateException} if the channel doesn't exist or isn't public. */
+  Mono<Void> joinChannel(UUID conversationId, String callerSub);
 
   /** Errors with {@link IllegalStateException} when {@code sub} is not in the conversation. */
   Mono<Void> assertParticipant(UUID conversationId, String sub);

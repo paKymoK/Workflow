@@ -1,7 +1,6 @@
 package com.takypok.chatservice.model.request;
 
 import com.takypok.chatservice.model.ConversationType;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.Getter;
@@ -16,5 +15,11 @@ public class CreateConversationRequest {
 
   private String name; // required for GROUP, ignored for DIRECT
 
-  @NotEmpty private List<String> participantSubs; // other participants, excluding the caller
+  // Other participants, excluding the caller. Required (non-null) but may be empty for a
+  // GROUP — a public channel in particular can be created solo and grown via joinChannel.
+  @NotNull private List<String> participantSubs;
+
+  // GROUP only: defaults to true (today's invite-only behavior) when omitted. false makes the
+  // channel discoverable/self-joinable via browsePublicChannels + joinChannel.
+  private Boolean privateChannel;
 }

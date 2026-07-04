@@ -9,6 +9,7 @@ import com.takypok.chatservice.model.event.ChatEvent;
 import com.takypok.chatservice.model.request.CreateConversationRequest;
 import com.takypok.chatservice.model.response.ConversationListResponse;
 import com.takypok.chatservice.model.response.ConversationSummaryResponse;
+import com.takypok.chatservice.model.response.PublicChannelResponse;
 import com.takypok.chatservice.repository.ConversationParticipantRepository;
 import com.takypok.chatservice.repository.ConversationRepository;
 import com.takypok.chatservice.repository.MessageRepository;
@@ -72,6 +73,8 @@ public class ConversationServiceImpl implements ConversationService {
           .switchIfEmpty(Mono.defer(() -> createNewConversation(request, caller)));
     }
 
+    // GROUP may have zero other participants — a public channel in particular can be created
+    // solo and grown later via joinChannel/addParticipants.
     return createNewConversation(request, caller);
   }
 
@@ -79,6 +82,10 @@ public class ConversationServiceImpl implements ConversationService {
     Conversation conversation = new Conversation();
     conversation.setType(request.getType());
     conversation.setName(request.getType() == ConversationType.GROUP ? request.getName() : null);
+    conversation.setPrivateChannel(
+        request.getType() == ConversationType.GROUP
+            ? !Boolean.FALSE.equals(request.getPrivateChannel())
+            : true);
 
     return conversationRepository
         .save(conversation)
@@ -186,7 +193,10 @@ public class ConversationServiceImpl implements ConversationService {
                                     : lastMessages.get(c.getLastMessageId()),
                                 unread.getOrDefault(c.getId(), 0L),
                                 peer == null ? null : peer.getLastReadMessageId(),
-                                peer == null ? null : peer.getDeliveredThroughMessageId());
+                                peer == null ? null : peer.getDeliveredThroughMessageId(),
+                                c.getType() == ConversationType.GROUP
+                                    ? c.getPrivateChannel()
+                                    : null);
                           })
                       .toList();
 
@@ -329,6 +339,55 @@ public class ConversationServiceImpl implements ConversationService {
                         "name",
                         caller.getName()),
                     caller.getSub()));
+  }
+
+  @Override
+  public Mono<List<PublicChannelResponse>> browsePublicChannels(String callerSub, String search) {
+    int limit = 50;
+    Flux<Conversation> channels =
+        search == null || search.isBlank()
+            ? conversationRepository.findPublicChannelsNotJoined(callerSub, limit)
+            : conversationRepository.findPublicChannelsNotJoinedMatching(
+                callerSub, search.trim(), limit);
+
+    return channels
+        .flatMap(
+            c ->
+                participantRepository
+                    .countByConversationId(c.getId())
+                    .defaultIfEmpty(0L)
+                    .map(count -> new PublicChannelResponse(c.getId(), c.getName(), count)))
+        .collectList();
+  }
+
+  @Override
+  public Mono<Void> joinChannel(UUID conversationId, String callerSub) {
+    return conversationRepository
+        .findById(conversationId)
+        .switchIfEmpty(Mono.error(new IllegalStateException("Conversation not found")))
+        .flatMap(
+            conversation -> {
+              if (conversation.getType() != ConversationType.GROUP
+                  || Boolean.TRUE.equals(conversation.getPrivateChannel())) {
+                return Mono.<Void>error(
+                    new IllegalStateException("This channel is not open to join"));
+              }
+              return participantRepository
+                  .findByConversationIdAndParticipantSub(conversationId, callerSub)
+                  .switchIfEmpty(
+                      Mono.defer(
+                          () ->
+                              participantRepository.save(
+                                  newParticipant(conversationId, callerSub, false))))
+                  .then();
+            })
+        .doOnSuccess(
+            v ->
+                notifyParticipants(
+                    conversationId,
+                    ChatEvent.ChatEventType.PARTICIPANT_ADDED,
+                    Map.of("conversationId", conversationId, "participantSubs", List.of(callerSub)),
+                    callerSub));
   }
 
   @Override

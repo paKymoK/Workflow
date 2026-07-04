@@ -2,16 +2,19 @@ import { useCallback, useEffect, useRef } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addConversationMembers,
+  browsePublicChannels,
   createConversation,
   fetchConversations,
   fetchMessages,
   fetchPresence,
+  joinChannel,
   markConversationRead,
   notifyTyping,
   removeConversationMember,
   renameConversation,
   sendMessage,
 } from "../api/messagesApi";
+import { fetchUserBySub } from "../api/ticketApi";
 import type { CreateConversationRequest, PresenceStatus, SendMessageRequest } from "../api/types";
 
 // Live updates now arrive via useChatSocket (see AppLayout); this is just a safety-net
@@ -30,6 +33,10 @@ export const messagesKeys = {
   typing: (conversationId: string) => ["conversations", conversationId, "typing"] as const,
   // Global, not per-conversation — presence isn't scoped to a single conversation.
   presence: ["presence"] as const,
+  publicChannels: (search: string) => ["publicChannels", search] as const,
+  // Global, sub -> resolved display name — same "shared cache, seeded + read separately"
+  // trick as presence.
+  participantNames: ["participantNames"] as const,
 };
 
 export function useConversations() {
@@ -169,4 +176,70 @@ export function useSyncPresence(subs: string[]) {
       cancelled = true;
     };
   }, [dedupedKey, qc]);
+}
+
+/** Public GROUP conversations the caller hasn't joined yet — for the "browse channels" tab. */
+export function useBrowsePublicChannels(search: string, enabled: boolean) {
+  return useQuery({
+    queryKey: messagesKeys.publicChannels(search.trim().toLowerCase()),
+    queryFn: () => browsePublicChannels(search.trim() || undefined),
+    enabled,
+  });
+}
+
+/** sub -> resolved display name, for DM peers (ConversationSummary only ever carries raw
+ * subs, not names). Only ever reads the shared cache — useSyncParticipantNames populates it. */
+export function useParticipantNamesMap(): Record<string, string> {
+  const { data } = useQuery({
+    queryKey: messagesKeys.participantNames,
+    queryFn: () => Promise.resolve({} as Record<string, string>),
+    enabled: false,
+    initialData: {} as Record<string, string>,
+    staleTime: Infinity,
+  });
+  return data;
+}
+
+/** Resolves names for whichever of the given subs aren't already cached. auth-service has no
+ * batch-by-subs endpoint, so this is one request per missing sub — fine at DM-list scale, but
+ * callers should pass only the subs that actually need a name (DM peers), not every channel
+ * member, to keep the request count small. */
+export function useSyncParticipantNames(subs: string[]) {
+  const qc = useQueryClient();
+  const dedupedKey = Array.from(new Set(subs)).sort().join(",");
+
+  useEffect(() => {
+    if (!dedupedKey) return;
+    const known = qc.getQueryData<Record<string, string>>(messagesKeys.participantNames) ?? {};
+    const missing = dedupedKey.split(",").filter((sub) => !(sub in known));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    Promise.all(
+      missing.map((sub) => fetchUserBySub(sub).then((user) => [sub, user] as const)),
+    ).then((results) => {
+      if (cancelled) return;
+      qc.setQueryData<Record<string, string>>(messagesKeys.participantNames, (existing) => {
+        const next = { ...existing };
+        for (const [sub, user] of results) {
+          if (user) next[sub] = user.name;
+        }
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dedupedKey, qc]);
+}
+
+export function useJoinChannel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationId: string) => joinChannel(conversationId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: messagesKeys.conversations });
+      qc.invalidateQueries({ queryKey: ["publicChannels"] });
+    },
+  });
 }

@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/v3/add-user-presence.sql
   - include:
       file: db/changelog/v4/add-delivered-through-message-id.sql
+  - include:
+      file: db/changelog/v5/add-channel-privacy.sql

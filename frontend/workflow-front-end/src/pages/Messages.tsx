@@ -1,17 +1,38 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Avatar, AutoComplete, Badge, Button, Empty, Input, message as antMessage, Modal, Spin } from "antd";
 import {
+  Avatar,
+  AutoComplete,
+  Badge,
+  Button,
+  Empty,
+  Input,
+  message as antMessage,
+  Modal,
+  Spin,
+  Switch,
+  Tabs,
+} from "antd";
+import {
+  LockOutlined,
+  MessageOutlined,
+  NumberOutlined,
   PaperClipOutlined,
   PlusOutlined,
   SendOutlined,
-  TeamOutlined,
+  SmileOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuth } from "@takypok/shared";
 import { fetchUsers, getFileUrl, uploadFile, uploadVideo, type UserSummary } from "../api/ticketApi";
-import type { ChatMessage, ConversationSummary, MessageAttachment, MessageType } from "../api/types";
+import type {
+  ChatMessage,
+  ConversationSummary,
+  MessageAttachment,
+  MessageType,
+  PresenceStatus,
+} from "../api/types";
 import { dynamicStyle } from "../utils/dynamicStyle";
 import { resizeImageForUpload } from "../utils/imageResize";
 import { waitForVideoReady } from "../utils/videoJob";
@@ -20,21 +41,30 @@ import MessageComposerAttachments, {
   type PendingAttachment,
 } from "../components/MessageComposerAttachments";
 import {
+  useBrowsePublicChannels,
   useConversationMessages,
   useConversations,
   useCreateConversation,
+  useJoinChannel,
   useMarkConversationRead,
+  useParticipantNamesMap,
   useSendMessage,
   usePresenceMap,
   useSendTyping,
+  useSyncParticipantNames,
   useSyncPresence,
   useTypingUsers,
 } from "../hooks/useMessages";
 
-function conversationLabel(conversation: ConversationSummary, mySub?: string) {
+function conversationLabel(
+  conversation: ConversationSummary,
+  mySub?: string,
+  nameBySub?: Record<string, string>,
+) {
   if (conversation.type === "GROUP") return conversation.name ?? "Group";
   const other = conversation.participantSubs.find((sub) => sub !== mySub);
-  return other ?? "Direct message";
+  if (!other) return "Direct message";
+  return nameBySub?.[other] ?? other;
 }
 
 // Presence is only unambiguous for 1:1 conversations — a GROUP has no single "the other
@@ -46,14 +76,26 @@ function directPeerSub(conversation: ConversationSummary, mySub?: string): strin
 
 // Same DIRECT-only scoping as presence — a GROUP has no single peer watermark these ticks
 // could reflect, so ticks are only ever shown for 1:1 conversations.
-function receiptLabel(message: ChatMessage, conversation: ConversationSummary | null): string | null {
+function receiptStatus(
+  message: ChatMessage,
+  conversation: ConversationSummary | null,
+): { label: string; read: boolean } | null {
   if (!conversation || conversation.type !== "DIRECT") return null;
   const { peerReadThroughMessageId, peerDeliveredThroughMessageId } = conversation;
-  if (peerReadThroughMessageId != null && message.id <= peerReadThroughMessageId) return "Read";
-  if (peerDeliveredThroughMessageId != null && message.id <= peerDeliveredThroughMessageId) {
-    return "Delivered";
+  if (peerReadThroughMessageId != null && message.id <= peerReadThroughMessageId) {
+    return { label: "✓✓ Read", read: true };
   }
-  return "Sent";
+  if (peerDeliveredThroughMessageId != null && message.id <= peerDeliveredThroughMessageId) {
+    return { label: "✓✓ Delivered", read: false };
+  }
+  return { label: "✓ Sent", read: false };
+}
+
+// Reactions and threaded replies aren't built yet (separate roadmap items) — these are
+// honest placeholders, not fake-working stand-ins, since a reaction/reply that looked like
+// it worked but didn't persist or reach the other participant would be actively misleading.
+function notifyComingSoon(feature: string) {
+  antMessage.info(`${feature} — coming soon`);
 }
 
 function deriveMessageType(hasContent: boolean, attachments: MessageAttachment[]): MessageType {
@@ -62,6 +104,66 @@ function deriveMessageType(hasContent: boolean, attachments: MessageAttachment[]
   const hasVideo = attachments.some((a) => a.type === "VIDEO");
   if (hasContent || (hasImage && hasVideo)) return "MIXED";
   return hasImage ? "IMAGE" : "VIDEO";
+}
+
+function ConversationRow({
+  conversation,
+  mySub,
+  selectedId,
+  presenceBySub,
+  nameBySub,
+  onOpen,
+}: {
+  conversation: ConversationSummary;
+  mySub?: string;
+  selectedId: string | null;
+  presenceBySub: Record<string, PresenceStatus>;
+  nameBySub: Record<string, string>;
+  onOpen: (id: string) => void;
+}) {
+  const peerSub = directPeerSub(conversation, mySub);
+  const peerOnline = peerSub ? (presenceBySub[peerSub]?.online ?? false) : false;
+  const channelIcon =
+    conversation.type === "GROUP" ? (
+      conversation.privateChannel ? <LockOutlined /> : <NumberOutlined />
+    ) : (
+      <UserOutlined />
+    );
+
+  return (
+    <button
+      onClick={() => onOpen(conversation.id)}
+      className={`w-full flex items-center gap-2.5 px-4 py-3 border-b border-[var(--line)] hover:bg-[var(--bg-2)] text-left cursor-crosshair transition-colors ${
+        conversation.id === selectedId ? "bg-[var(--bg-2)]" : ""
+      }`}
+    >
+      <div className="relative flex-shrink-0">
+        <Avatar
+          icon={channelIcon}
+          shape={conversation.type === "GROUP" ? "square" : "circle"}
+          className="!bg-[var(--acc-1)] !text-[var(--bg-0)]"
+        />
+        {peerSub && (
+          <span
+            className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-1)] ${
+              peerOnline ? "bg-emerald-400" : "bg-[var(--fg-faint)]"
+            }`}
+          />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono-tech text-[11px] text-[var(--fg)] truncate">
+            {conversationLabel(conversation, mySub, nameBySub)}
+          </span>
+          {conversation.unreadCount > 0 && <Badge count={conversation.unreadCount} size="small" />}
+        </div>
+        <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)] truncate">
+          {conversation.lastMessage?.content ?? "No messages yet"}
+        </span>
+      </div>
+    </button>
+  );
 }
 
 export default function Messages() {
@@ -74,14 +176,65 @@ export default function Messages() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newOpen, setNewOpen] = useState(false);
+  const [newTab, setNewTab] = useState<"dm" | "channel" | "browse">("dm");
   const [search, setSearch] = useState("");
   const [options, setOptions] = useState<UserSummary[]>([]);
   const [picked, setPicked] = useState<UserSummary | null>(null);
   const optionsRef = useRef<UserSummary[]>([]);
+  const [channelName, setChannelName] = useState("");
+  const [channelPrivate, setChannelPrivate] = useState(true);
+  const [channelSearch, setChannelSearch] = useState("");
+  const [messageSearch, setMessageSearch] = useState("");
+  const [sidebarSearch, setSidebarSearch] = useState("");
+  // Messenger-style: react/reply icons and the receipt line are hidden until hovered
+  // (desktop) or tapped (this tracks the one tapped-open, mobile) — except the receipt
+  // line, which always shows on the last message regardless.
+  const [revealedMessageId, setRevealedMessageId] = useState<number | null>(null);
 
   const { data: conversations = [], isLoading } = useConversations();
   const { mutate: createConversation, isPending: creating } = useCreateConversation();
   const { mutate: markRead } = useMarkConversationRead();
+  const { mutate: joinChannelMutate, isPending: joining } = useJoinChannel();
+  const { data: publicChannels = [], isLoading: loadingChannels } = useBrowsePublicChannels(
+    channelSearch,
+    newOpen && newTab === "browse",
+  );
+
+  const directPeerSubs = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          conversations
+            .map((c) => directPeerSub(c, mySub))
+            .filter((sub): sub is string => sub !== null),
+        ),
+      ),
+    [conversations, mySub],
+  );
+  useSyncParticipantNames(directPeerSubs);
+  const nameBySub = useParticipantNamesMap();
+
+  const sidebarQuery = sidebarSearch.trim().toLowerCase();
+  const directConversations = useMemo(
+    () =>
+      conversations.filter(
+        (c) =>
+          c.type === "DIRECT" &&
+          (!sidebarQuery ||
+            conversationLabel(c, mySub, nameBySub).toLowerCase().includes(sidebarQuery)),
+      ),
+    [conversations, mySub, nameBySub, sidebarQuery],
+  );
+  const channelConversations = useMemo(
+    () =>
+      conversations.filter(
+        (c) =>
+          c.type === "GROUP" &&
+          (!sidebarQuery ||
+            conversationLabel(c, mySub, nameBySub).toLowerCase().includes(sidebarQuery)),
+      ),
+    [conversations, mySub, nameBySub, sidebarQuery],
+  );
 
   const allParticipantSubs = useMemo(
     () =>
@@ -129,17 +282,32 @@ export default function Messages() {
     [messagePages],
   );
 
+  // Interim search — filters only what's already loaded in this thread. Real cross-history
+  // search (backend full-text, all conversations) is a separate, not-yet-built feature; this
+  // is a lightweight stand-in scoped to the currently open thread.
+  const visibleMessages = useMemo(() => {
+    const q = messageSearch.trim().toLowerCase();
+    if (!q) return messages;
+    return messages.filter((m) => m.content?.toLowerCase().includes(q));
+  }, [messages, messageSearch]);
+
+  useEffect(() => {
+    setMessageSearch("");
+    setRevealedMessageId(null);
+  }, [selectedId]);
+
   const scrollParentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
-    count: messages.length,
+    count: visibleMessages.length,
     getScrollElement: () => scrollParentRef.current,
     estimateSize: () => 68,
     overscan: 8,
-    getItemKey: (index) => messages[index].id,
+    getItemKey: (index) => visibleMessages[index].id,
   });
 
   // Auto-scroll to bottom on conversation switch and when a new (newest) message arrives —
-  // but not when older pages get prepended, which is handled separately below.
+  // but not when older pages get prepended (handled separately below), and not while a
+  // search filter is active (jumping around a filtered view would be jarring mid-search).
   const newestMessageId = messages.length ? messages[messages.length - 1].id : null;
   const prevNewestMessageIdRef = useRef<number | null>(null);
 
@@ -150,8 +318,9 @@ export default function Messages() {
   useLayoutEffect(() => {
     if (newestMessageId === null || newestMessageId === prevNewestMessageIdRef.current) return;
     prevNewestMessageIdRef.current = newestMessageId;
-    rowVirtualizer.scrollToIndex(messages.length - 1, { align: "end" });
-  }, [newestMessageId, messages.length, rowVirtualizer]);
+    if (messageSearch.trim()) return;
+    rowVirtualizer.scrollToIndex(visibleMessages.length - 1, { align: "end" });
+  }, [newestMessageId, visibleMessages.length, rowVirtualizer, messageSearch]);
 
   useEffect(() => {
     if (!selectedId || newestMessageId === null) return;
@@ -251,20 +420,56 @@ export default function Messages() {
     setOptions(filtered);
   }
 
-  function handleCreate() {
+  function closeNewModal() {
+    setNewOpen(false);
+    setNewTab("dm");
+    setPicked(null);
+    setSearch("");
+    setOptions([]);
+    optionsRef.current = [];
+    setChannelName("");
+    setChannelPrivate(true);
+    setChannelSearch("");
+  }
+
+  function handleCreateDm() {
     if (!picked) return;
     createConversation(
       { type: "DIRECT", participantSubs: [picked.sub] },
       {
         onSuccess: (conversation) => {
-          setNewOpen(false);
-          setPicked(null);
-          setSearch("");
-          setOptions([]);
+          closeNewModal();
           setSelectedId(conversation.id);
         },
       },
     );
+  }
+
+  function handleCreateChannel() {
+    if (!channelName.trim()) return;
+    createConversation(
+      {
+        type: "GROUP",
+        name: channelName.trim(),
+        participantSubs: [],
+        privateChannel: channelPrivate,
+      },
+      {
+        onSuccess: (conversation) => {
+          closeNewModal();
+          setSelectedId(conversation.id);
+        },
+      },
+    );
+  }
+
+  function handleJoinChannel(channelId: string) {
+    joinChannelMutate(channelId, {
+      onSuccess: () => {
+        closeNewModal();
+        setSelectedId(channelId);
+      },
+    });
   }
 
   const hasPendingUploads = pendingAttachments.some(
@@ -302,6 +507,16 @@ export default function Messages() {
             className="!text-[var(--acc-1)]"
           />
         </div>
+        <div className="px-3 pt-3">
+          <Input
+            value={sidebarSearch}
+            onChange={(e) => setSidebarSearch(e.target.value)}
+            placeholder="Search people, channels..."
+            allowClear
+            size="small"
+            className="w-full font-mono-tech !text-xs"
+          />
+        </div>
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex justify-center py-8">
@@ -313,47 +528,51 @@ export default function Messages() {
                 No conversations yet
               </p>
             </div>
+          ) : sidebarQuery && channelConversations.length === 0 && directConversations.length === 0 ? (
+            <div className="flex items-center justify-center h-full py-8">
+              <p className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+                No matches for “{sidebarSearch.trim()}”
+              </p>
+            </div>
           ) : (
-            conversations.map((conversation) => {
-              const peerSub = directPeerSub(conversation, mySub);
-              const peerOnline = peerSub ? (presenceBySub[peerSub]?.online ?? false) : false;
-              return (
-              <button
-                key={conversation.id}
-                onClick={() => openConversation(conversation.id)}
-                className={`w-full flex items-center gap-2.5 px-4 py-3 border-b border-[var(--line)] hover:bg-[var(--bg-2)] text-left cursor-crosshair transition-colors ${
-                  conversation.id === selectedId ? "bg-[var(--bg-2)]" : ""
-                }`}
-              >
-                <div className="relative flex-shrink-0">
-                  <Avatar
-                    icon={conversation.type === "GROUP" ? <TeamOutlined /> : <UserOutlined />}
-                    className="!bg-[var(--acc-1)] !text-[var(--bg-0)]"
-                  />
-                  {peerSub && (
-                    <span
-                      className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-1)] ${
-                        peerOnline ? "bg-emerald-400" : "bg-[var(--fg-faint)]"
-                      }`}
+            <>
+              {channelConversations.length > 0 && (
+                <>
+                  <p className="px-4 pt-3 pb-1 font-mono-tech text-[9px] tracking-[.1em] text-[var(--fg-faint)] uppercase">
+                    Channels
+                  </p>
+                  {channelConversations.map((conversation) => (
+                    <ConversationRow
+                      key={conversation.id}
+                      conversation={conversation}
+                      mySub={mySub}
+                      selectedId={selectedId}
+                      presenceBySub={presenceBySub}
+                      nameBySub={nameBySub}
+                      onOpen={openConversation}
                     />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono-tech text-[11px] text-[var(--fg)] truncate">
-                      {conversationLabel(conversation, mySub)}
-                    </span>
-                    {conversation.unreadCount > 0 && (
-                      <Badge count={conversation.unreadCount} size="small" />
-                    )}
-                  </div>
-                  <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)] truncate">
-                    {conversation.lastMessage?.content ?? "No messages yet"}
-                  </span>
-                </div>
-              </button>
-              );
-            })
+                  ))}
+                </>
+              )}
+              {directConversations.length > 0 && (
+                <>
+                  <p className="px-4 pt-3 pb-1 font-mono-tech text-[9px] tracking-[.1em] text-[var(--fg-faint)] uppercase">
+                    Direct Messages
+                  </p>
+                  {directConversations.map((conversation) => (
+                    <ConversationRow
+                      key={conversation.id}
+                      conversation={conversation}
+                      mySub={mySub}
+                      selectedId={selectedId}
+                      presenceBySub={presenceBySub}
+                      nameBySub={nameBySub}
+                      onOpen={openConversation}
+                    />
+                  ))}
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -372,21 +591,37 @@ export default function Messages() {
           </div>
         ) : (
           <>
-            <div className="px-4 py-3 border-b border-[var(--line)]">
-              <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">
-                {conversationLabel(selected, mySub)}
-              </span>
-              {presenceLabel && (
-                <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)]">
-                  {presenceLabel}
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--line)]">
+              <div className="min-w-0 flex-1">
+                <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">
+                  {conversationLabel(selected, mySub, nameBySub)}
                 </span>
-              )}
+                {presenceLabel && (
+                  <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                    {presenceLabel}
+                  </span>
+                )}
+              </div>
+              <Input
+                value={messageSearch}
+                onChange={(e) => setMessageSearch(e.target.value)}
+                placeholder="Search in conversation..."
+                allowClear
+                size="small"
+                className="!w-48 font-mono-tech !text-xs"
+              />
             </div>
 
             <div ref={scrollParentRef} onScroll={handleThreadScroll} className="flex-1 overflow-y-auto p-4">
               {loadingMessages ? (
                 <div className="flex justify-center py-8">
                   <Spin />
+                </div>
+              ) : messageSearch.trim() && visibleMessages.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+                    No messages match “{messageSearch.trim()}” in what's loaded so far
+                  </p>
                 </div>
               ) : (
                 <>
@@ -400,8 +635,12 @@ export default function Messages() {
                     style={dynamicStyle({ height: rowVirtualizer.getTotalSize() })}
                   >
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                      const msg = messages[virtualRow.index];
+                      const msg = visibleMessages[virtualRow.index];
                       const mine = msg.sender.sub === mySub;
+                      const receipt = mine ? receiptStatus(msg, selected) : null;
+                      const isLastMessage = msg.id === newestMessageId;
+                      const isRevealed = revealedMessageId === msg.id;
+                      const receiptRevealed = isLastMessage || isRevealed;
                       return (
                         <div
                           key={virtualRow.key}
@@ -410,43 +649,102 @@ export default function Messages() {
                           className="absolute top-0 left-0 w-full pb-2"
                           style={dynamicStyle({ transform: `translateY(${virtualRow.start}px)` })}
                         >
-                          <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                            <div
-                              className={`max-w-[70%] px-3 py-2 font-mono-tech text-xs ${
-                                mine
-                                  ? "bg-[var(--acc-1)] text-[var(--bg-0)]"
-                                  : "bg-[var(--bg-2)] text-[var(--fg)]"
+                          <div
+                            className={`group flex gap-2 ${mine ? "flex-row-reverse" : "flex-row"}`}
+                            onClick={() =>
+                              setRevealedMessageId((prev) => (prev === msg.id ? null : msg.id))
+                            }
+                          >
+                            <Avatar
+                              size={26}
+                              className={`flex-shrink-0 !text-[10px] !font-semibold !text-[var(--bg-0)] ${
+                                mine ? "!bg-[var(--acc-2)]" : "!bg-[var(--acc-1)]"
                               }`}
                             >
-                              {!mine && (
-                                <div className="text-[9px] opacity-70 mb-0.5">{msg.sender.name}</div>
-                              )}
-                              {msg.content && (
-                                <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                              )}
-                              {msg.attachments && msg.attachments.length > 0 && (
-                                <div className="mt-1.5 flex flex-col gap-1.5">
-                                  {msg.attachments.map((att, i) =>
-                                    att.type === "IMAGE" ? (
-                                      <img
-                                        key={i}
-                                        src={att.url ?? undefined}
-                                        alt="attachment"
-                                        loading="lazy"
-                                        className="max-w-[220px] max-h-[220px] rounded object-cover"
-                                      />
-                                    ) : (
-                                      <LazyVideoAttachment key={i} attachment={att} />
-                                    ),
-                                  )}
-                                </div>
-                              )}
-                              <div className="text-[8px] opacity-60 mt-1 text-right">
-                                {dayjs(msg.createdAt).format("HH:mm")}
-                                {mine && receiptLabel(msg, selected) && (
-                                  <span className="ml-1">{receiptLabel(msg, selected)}</span>
+                              {msg.sender.name.trim().charAt(0).toUpperCase() || "?"}
+                            </Avatar>
+                            <div
+                              className={`max-w-[70%] flex flex-col ${mine ? "items-end" : "items-start"}`}
+                            >
+                              <div
+                                className={`flex items-baseline gap-1.5 mb-0.5 ${
+                                  mine ? "flex-row-reverse" : "flex-row"
+                                }`}
+                              >
+                                {!mine && (
+                                  <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                                    {msg.sender.name}
+                                  </span>
+                                )}
+                                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                  {dayjs(msg.createdAt).format("HH:mm")}
+                                </span>
+                              </div>
+                              <div
+                                className={`px-3 py-2 font-mono-tech text-xs ${
+                                  mine
+                                    ? "bg-[var(--acc-1)] text-[var(--bg-0)]"
+                                    : "bg-[var(--bg-2)] text-[var(--fg)]"
+                                }`}
+                              >
+                                {msg.content && (
+                                  <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                                )}
+                                {msg.attachments && msg.attachments.length > 0 && (
+                                  <div className="mt-1.5 flex flex-col gap-1.5">
+                                    {msg.attachments.map((att, i) =>
+                                      att.type === "IMAGE" ? (
+                                        <img
+                                          key={i}
+                                          src={att.url ?? undefined}
+                                          alt="attachment"
+                                          loading="lazy"
+                                          className="max-w-[220px] max-h-[220px] object-cover"
+                                        />
+                                      ) : (
+                                        <LazyVideoAttachment key={i} attachment={att} />
+                                      ),
+                                    )}
+                                  </div>
                                 )}
                               </div>
+                              <div
+                                className={`flex items-center gap-2 mt-1 transition-opacity ${
+                                  mine ? "flex-row-reverse" : "flex-row"
+                                } ${isRevealed ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    notifyComingSoon("Reactions");
+                                  }}
+                                  title="React (coming soon)"
+                                  className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
+                                >
+                                  <SmileOutlined className="text-[11px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    notifyComingSoon("Threaded replies");
+                                  }}
+                                  title="Reply in thread (coming soon)"
+                                  className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
+                                >
+                                  <MessageOutlined className="text-[11px]" />
+                                </button>
+                              </div>
+                              {receipt && (
+                                <div
+                                  className={`text-[8px] mt-0.5 transition-opacity ${
+                                    receiptRevealed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                  } ${receipt.read ? "text-[var(--acc-1)]" : "text-[var(--fg-faint)]"}`}
+                                >
+                                  {receipt.label}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -470,75 +768,168 @@ export default function Messages() {
               </div>
             )}
 
-            <div className="flex gap-2 px-4 py-3 border-t border-[var(--line)]">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  handleAttachFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-              <Button
-                type="text"
-                icon={<PaperClipOutlined />}
-                onClick={() => fileInputRef.current?.click()}
-                className="!text-[var(--fg-faint)] self-end"
-              />
-              <Input.TextArea
-                value={draft}
-                onChange={(e) => {
-                  setDraft(e.target.value);
-                  if (e.target.value.trim()) sendTyping();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                autoSize={{ minRows: 1, maxRows: 4 }}
-                placeholder="Type a message..."
-                className="font-mono-tech !flex-1 !text-xs !resize-none"
-              />
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={handleSend}
-                loading={sending}
-                disabled={!canSend}
-                className="self-end"
-              />
+            <div className="px-4 py-3 border-t border-[var(--line)]">
+              <div className="flex items-end gap-1.5 border border-[var(--line)] bg-[var(--bg-2)] px-2 py-1.5">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    handleAttachFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  type="text"
+                  icon={<PaperClipOutlined />}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="!text-[var(--fg-faint)]"
+                />
+                <Input.TextArea
+                  value={draft}
+                  onChange={(e) => {
+                    setDraft(e.target.value);
+                    if (e.target.value.trim()) sendTyping();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  autoSize={{ minRows: 1, maxRows: 4 }}
+                  placeholder="Type a message..."
+                  variant="borderless"
+                  className="font-mono-tech !flex-1 !text-xs !resize-none !bg-transparent !shadow-none"
+                />
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={handleSend}
+                  loading={sending}
+                  disabled={!canSend}
+                />
+              </div>
             </div>
           </>
         )}
       </div>
 
-      {/* New conversation modal */}
+      {/* New conversation / channel modal */}
       <Modal
-        title="New message"
+        title="New"
         open={newOpen}
-        onCancel={() => { setNewOpen(false); setPicked(null); setSearch(""); setOptions([]); optionsRef.current = []; }}
-        onOk={handleCreate}
-        okButtonProps={{ disabled: !picked, loading: creating }}
-        destroyOnClose
+        onCancel={closeNewModal}
+        destroyOnHidden
+        footer={
+          newTab === "browse"
+            ? [
+                <Button key="close" onClick={closeNewModal}>
+                  Close
+                </Button>,
+              ]
+            : [
+                <Button key="cancel" onClick={closeNewModal}>
+                  Cancel
+                </Button>,
+                <Button
+                  key="ok"
+                  type="primary"
+                  loading={creating}
+                  disabled={newTab === "dm" ? !picked : !channelName.trim()}
+                  onClick={newTab === "dm" ? handleCreateDm : handleCreateChannel}
+                >
+                  {newTab === "dm" ? "Create" : "Create Channel"}
+                </Button>,
+              ]
+        }
       >
-        <AutoComplete
-          className="w-full"
-          value={search}
-          options={options.map((u) => ({ value: u.sub, label: `${u.name} (${u.email})` }))}
-          onSearch={handleSearch}
-          onSelect={(value) => {
-              const user = optionsRef.current.find((u) => u.sub === value);
-              if (user) {
-                setPicked(user);
-                setSearch(`${user.name} (${user.email})`);
-              }
-            }}
-          placeholder="Search a colleague..."
+        <Tabs
+          activeKey={newTab}
+          onChange={(key) => setNewTab(key as typeof newTab)}
+          items={[
+            {
+              key: "dm",
+              label: "Direct Message",
+              children: (
+                <AutoComplete
+                  className="w-full"
+                  value={search}
+                  options={options.map((u) => ({ value: u.sub, label: `${u.name} (${u.email})` }))}
+                  onSearch={handleSearch}
+                  onSelect={(value) => {
+                    const user = optionsRef.current.find((u) => u.sub === value);
+                    if (user) {
+                      setPicked(user);
+                      setSearch(`${user.name} (${user.email})`);
+                    }
+                  }}
+                  placeholder="Search a colleague..."
+                />
+              ),
+            },
+            {
+              key: "channel",
+              label: "New Channel",
+              children: (
+                <div className="flex flex-col gap-4">
+                  <Input
+                    value={channelName}
+                    onChange={(e) => setChannelName(e.target.value)}
+                    placeholder="Channel name"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-[var(--fg-faint)]">
+                      Private (invite-only) — turn off to make it public and joinable by anyone
+                    </span>
+                    <Switch checked={channelPrivate} onChange={setChannelPrivate} />
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: "browse",
+              label: "Browse Channels",
+              children: (
+                <div className="flex flex-col gap-2">
+                  <Input
+                    value={channelSearch}
+                    onChange={(e) => setChannelSearch(e.target.value)}
+                    placeholder="Search public channels..."
+                  />
+                  {loadingChannels ? (
+                    <div className="flex justify-center py-6">
+                      <Spin />
+                    </div>
+                  ) : publicChannels.length === 0 ? (
+                    <p className="text-xs text-[var(--fg-faint)] py-2">
+                      No public channels to join
+                    </p>
+                  ) : (
+                    publicChannels.map((channel) => (
+                      <div key={channel.id} className="flex items-center justify-between py-1.5">
+                        <span className="text-sm">
+                          # {channel.name}{" "}
+                          <span className="text-xs text-[var(--fg-faint)]">
+                            ({channel.memberCount})
+                          </span>
+                        </span>
+                        <Button
+                          size="small"
+                          loading={joining}
+                          onClick={() => handleJoinChannel(channel.id)}
+                        >
+                          Join
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ),
+            },
+          ]}
         />
       </Modal>
     </div>

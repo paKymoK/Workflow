@@ -22,6 +22,8 @@ public interface ConversationParticipantRepository
 
   Mono<Void> deleteByConversationIdAndParticipantSub(UUID conversationId, String participantSub);
 
+  Mono<Long> countByConversationId(UUID conversationId);
+
   // GREATEST guards against this ever regressing if the send-time (presence-based) and
   // fetch-time (reconnect catch-up) delivery paths race each other.
   @Query(

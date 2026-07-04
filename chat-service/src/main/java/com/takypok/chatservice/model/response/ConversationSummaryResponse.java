@@ -25,4 +25,7 @@ public class ConversationSummaryResponse {
   // "the other participant") — null for GROUP, populated for DIRECT.
   private Long peerReadThroughMessageId;
   private Long peerDeliveredThroughMessageId;
+
+  // GROUP only — null for DIRECT.
+  private Boolean privateChannel;
 }

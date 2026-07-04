@@ -27,4 +27,10 @@ public class Conversation extends BaseEntity {
 
   @Column("last_message_id")
   private Long lastMessageId;
+
+  // Only meaningful for GROUP — a public one (false) can be discovered and self-joined via
+  // browsePublicChannels/joinChannel instead of needing an owner invite. DIRECT stays true
+  // (unused, but the column is NOT NULL).
+  @Column("is_private")
+  private Boolean privateChannel;
 }

@@ -72,4 +72,9 @@ public class ConversationController {
   public Mono<Void> typing(@PathVariable UUID id, Authentication authentication) {
     return conversationService.notifyTyping(id, getUserInfo(authentication));
   }
+
+  @PostMapping("/{id}/join")
+  public Mono<Void> join(@PathVariable UUID id, Authentication authentication) {
+    return conversationService.joinChannel(id, getUserInfo(authentication).getSub());
+  }
 }
