@@ -289,6 +289,9 @@ export interface ConversationSummary {
   // GROUP only — null for DIRECT. false = public, discoverable/self-joinable via
   // browsePublicChannels + joinChannel; true = today's invite-only behavior.
   privateChannel: boolean | null;
+  // Whether the caller is this conversation's owner — only the owner may invite/remove other
+  // GROUP members (enforced server-side). Meaningless for DIRECT.
+  owner: boolean;
 }
 
 export interface PublicChannel {

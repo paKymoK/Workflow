@@ -28,4 +28,8 @@ public class ConversationSummaryResponse {
 
   // GROUP only — null for DIRECT.
   private Boolean privateChannel;
+
+  // Whether the caller is this conversation's OWNER — only an owner may invite/remove other
+  // GROUP members (see ConversationServiceImpl#requireOwner). Meaningless for DIRECT.
+  private boolean owner;
 }

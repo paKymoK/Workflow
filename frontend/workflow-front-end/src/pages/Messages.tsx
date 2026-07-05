@@ -22,6 +22,7 @@ import {
   PlusOutlined,
   SendOutlined,
   SmileOutlined,
+  UserAddOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -45,6 +46,7 @@ import MessageComposerAttachments, {
 import MessageContent from "../components/MessageContent";
 import RichTextEditor from "../components/RichTextEditor";
 import {
+  useAddConversationMembers,
   useBrowsePublicChannels,
   useConversationMessages,
   useConversations,
@@ -54,6 +56,7 @@ import {
   useMessageSearch,
   useParticipantAvatarsMap,
   useParticipantNamesMap,
+  useRemoveConversationMember,
   useSendMessage,
   usePresenceMap,
   useSendTyping,
@@ -213,6 +216,10 @@ export default function Messages() {
   const [channelName, setChannelName] = useState("");
   const [channelPrivate, setChannelPrivate] = useState(true);
   const [channelSearch, setChannelSearch] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [inviteOptions, setInviteOptions] = useState<UserSummary[]>([]);
+  const inviteOptionsRef = useRef<UserSummary[]>([]);
   const [messageSearch, setMessageSearch] = useState("");
   const [debouncedMessageSearch, setDebouncedMessageSearch] = useState("");
   const [sidebarSearch, setSidebarSearch] = useState("");
@@ -296,6 +303,8 @@ export default function Messages() {
   } = useConversationMessages(selectedId);
   const { mutate: send, isPending: sending } = useSendMessage(selectedId ?? "");
   const { mutate: toggleReaction } = useToggleReaction(selectedId ?? "");
+  const { mutate: addMembers } = useAddConversationMembers(selectedId ?? "");
+  const { mutate: removeMember } = useRemoveConversationMember(selectedId ?? "");
   const sendTyping = useSendTyping(selectedId);
   const typingUsers = useTypingUsers(selectedId);
   const { data: threadReplies = [], isLoading: loadingReplies } = useThreadReplies(
@@ -505,6 +514,43 @@ export default function Messages() {
     setChannelSearch("");
   }
 
+  async function handleInviteSearch(query: string) {
+    setInviteSearch(query);
+    if (!query.trim()) {
+      inviteOptionsRef.current = [];
+      setInviteOptions([]);
+      return;
+    }
+    const results = await fetchUsers(query, 8);
+    const existing = new Set(selected?.participantSubs ?? []);
+    const filtered = results.filter((u) => u.sub !== mySub && !existing.has(u.sub));
+    inviteOptionsRef.current = filtered;
+    setInviteOptions(filtered);
+  }
+
+  function handleInviteSelect(value: string) {
+    const user = inviteOptionsRef.current.find((u) => u.sub === value);
+    if (!user) return;
+    addMembers([user.sub], {
+      onSuccess: () => antMessage.success(`${user.name} added`),
+      onError: () => antMessage.error("Failed to add member"),
+    });
+    setInviteSearch("");
+    setInviteOptions([]);
+    inviteOptionsRef.current = [];
+  }
+
+  function closeInviteModal() {
+    setInviteOpen(false);
+    setInviteSearch("");
+    setInviteOptions([]);
+    inviteOptionsRef.current = [];
+  }
+
+  function handleRemoveMember(sub: string) {
+    removeMember(sub, { onError: () => antMessage.error("Failed to remove member") });
+  }
+
   function handleCreateDm() {
     if (!picked) return;
     createConversation(
@@ -686,14 +732,25 @@ export default function Messages() {
                   </span>
                 )}
               </div>
-              <Input
-                value={messageSearch}
-                onChange={(e) => setMessageSearch(e.target.value)}
-                placeholder="Search in conversation..."
-                allowClear
-                size="small"
-                className="!w-48 font-mono-tech !text-xs"
-              />
+              <div className="flex items-center gap-2">
+                {selected.type === "GROUP" && selected.owner && (
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<UserAddOutlined />}
+                    onClick={() => setInviteOpen(true)}
+                    className="!text-[var(--acc-1)]"
+                  />
+                )}
+                <Input
+                  value={messageSearch}
+                  onChange={(e) => setMessageSearch(e.target.value)}
+                  placeholder="Search in conversation..."
+                  allowClear
+                  size="small"
+                  className="!w-48 font-mono-tech !text-xs"
+                />
+              </div>
             </div>
 
             <div ref={scrollParentRef} onScroll={handleThreadScroll} className="flex-1 overflow-y-auto p-4">
@@ -1195,6 +1252,45 @@ export default function Messages() {
             },
           ]}
         />
+      </Modal>
+
+      {/* Invite / manage members modal — GROUP conversations, owner only */}
+      <Modal
+        title={selected ? `Members — ${conversationLabel(selected, mySub, nameBySub)}` : "Members"}
+        open={inviteOpen}
+        onCancel={closeInviteModal}
+        destroyOnHidden
+        footer={[
+          <Button key="close" onClick={closeInviteModal}>
+            Close
+          </Button>,
+        ]}
+      >
+        <div className="flex flex-col gap-4">
+          <AutoComplete
+            className="w-full"
+            value={inviteSearch}
+            options={inviteOptions.map((u) => ({ value: u.sub, label: `${u.name} (${u.email})` }))}
+            onSearch={handleInviteSearch}
+            onSelect={handleInviteSelect}
+            placeholder="Search a colleague to invite..."
+          />
+          <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
+            <span className="text-xs text-[var(--fg-faint)] tracking-wide">
+              MEMBERS ({selected?.participantSubs.length ?? 0})
+            </span>
+            {(selected?.participantSubs ?? []).map((sub) => (
+              <div key={sub} className="flex items-center justify-between py-1">
+                <span className="text-sm">{nameBySub[sub] ?? sub}</span>
+                {sub !== mySub && (
+                  <Button size="small" danger type="text" onClick={() => handleRemoveMember(sub)}>
+                    Remove
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </Modal>
     </div>
   );

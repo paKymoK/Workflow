@@ -183,6 +183,13 @@ public class ConversationServiceImpl implements ConversationService {
                                         .orElse(null)
                                     : null;
 
+                            boolean owner =
+                                parts.stream()
+                                    .anyMatch(
+                                        p ->
+                                            p.getParticipantSub().equals(callerSub)
+                                                && p.getRole() == ParticipantRole.OWNER);
+
                             return new ConversationSummaryResponse(
                                 c.getId(),
                                 c.getType(),
@@ -196,7 +203,8 @@ public class ConversationServiceImpl implements ConversationService {
                                 peer == null ? null : peer.getDeliveredThroughMessageId(),
                                 c.getType() == ConversationType.GROUP
                                     ? c.getPrivateChannel()
-                                    : null);
+                                    : null,
+                                owner);
                           })
                       .toList();
 
