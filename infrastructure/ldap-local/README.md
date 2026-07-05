@@ -37,17 +37,14 @@ All users have the default password: **`123456`**
 
 ### Internal Users (`ou=users`)
 
-| CN | UID (login username) | Mail | Group |
-|----|----------------------|------|-------|
-| john.doe | `john.doe` | john.doe@mycompany.local | developers |
-| jane.smith | `jane.smith` | jane.smith@mycompany.local | admins |
+| CN | UID (login username) | Mail |
+|----|----------------------|------|
+| john.doe | `john.doe` | john.doe@mycompany.local |
+| jane.smith | `jane.smith` | jane.smith@mycompany.local |
 
-### Groups (`ou=groups`)
-
-| Group | Members |
-|-------|---------|
-| developers | john.doe |
-| admins | jane.smith |
+> Login only relies on `cn`/username + password — no LDAP groups are used for
+> authentication or authorization. Roles/permissions are managed separately in
+> Postgres (`authorities`, `client_role_assignment`, `user_group*`).
 
 ---
 
@@ -63,7 +60,6 @@ ldap:
   password: admin_secret
   user-search-base: ou=users
   user-search-filter: "(cn={0})"
-  group-search-base: ou=groups
 ```
 
 ## Re-seeding

@@ -25,7 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
-import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.NullLdapAuthoritiesPopulator;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -60,9 +60,6 @@ public class SecurityConfig {
   @Value("${ldap.user-search-filter}")
   private String userSearchFilter;
 
-  @Value("${ldap.group-search-base}")
-  private String groupSearchBase;
-
   @Bean
   public LdapContextSource ldapContextSource() {
     LdapContextSource source = new LdapContextSource();
@@ -82,13 +79,7 @@ public class SecurityConfig {
     BindAuthenticator authenticator = new BindAuthenticator(ldapContextSource);
     authenticator.setUserSearch(userSearch);
 
-    DefaultLdapAuthoritiesPopulator authoritiesPopulate =
-        new DefaultLdapAuthoritiesPopulator(ldapContextSource, groupSearchBase);
-    authoritiesPopulate.setGroupRoleAttribute("cn");
-    authoritiesPopulate.setRolePrefix("ROLE_");
-    authoritiesPopulate.setSearchSubtree(true);
-
-    return new LdapAuthenticationProvider(authenticator, authoritiesPopulate);
+    return new LdapAuthenticationProvider(authenticator, new NullLdapAuthoritiesPopulator());
   }
 
   @Bean
