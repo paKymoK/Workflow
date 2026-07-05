@@ -31,11 +31,6 @@ import KpiStrip from "../components/home/KpiStrip";
 
 type Layout = "console" | "board";
 
-const LAYOUT_LABEL: Record<Layout, string> = {
-  console: "// TICKET QUEUE",
-  board:   "// MY BOARD",
-};
-
 export default function Dashboard() {
   const navigate    = useNavigate();
   const qc          = useQueryClient();
@@ -236,7 +231,7 @@ export default function Dashboard() {
       key: "code",
       width: 110,
       render: (_, record) => (
-        <span className="font-mono-tech text-[11px] text-[var(--acc-1)]">
+        <span className="text-[11.5px] font-semibold text-[var(--accent)]">
           {record.project.code}-{String(record.id).padStart(4, "0")}
         </span>
       ),
@@ -286,7 +281,7 @@ export default function Dashboard() {
       render: (assignee: TicketSla["assignee"]) =>
         assignee?.name
           ? <div className="flex items-center gap-2"><SquareAvatar name={assignee.name} size={22} /><span>{assignee.name}</span></div>
-          : <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">UNASSIGNED</span>,
+          : <span className="text-[11px] text-[var(--text-faint)]">Unassigned</span>,
     },
     {
       title: "Age",
@@ -296,7 +291,7 @@ export default function Dashboard() {
       render: (_: unknown, record: TicketSla) => {
         const h = dayjs().diff(dayjs(record.createdAt), "hour");
         return (
-          <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+          <span className="text-[11px] text-[var(--text-faint)]">
             {h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`}
           </span>
         );
@@ -334,7 +329,7 @@ export default function Dashboard() {
                 size="small"
                 loading={isLoading}
                 onClick={(e) => e.stopPropagation()}
-                className="font-mono-tech text-[var(--fg-faint)] hover:text-[var(--acc-1)]"
+                className="text-[var(--text-faint)] hover:text-[var(--accent)]"
               >
                 ···
               </Button>
@@ -387,16 +382,17 @@ export default function Dashboard() {
         className="!w-[200px]"
       />
       <Button onClick={handleReset}>Reset</Button>
-      <span className="font-mono-tech text-[11px] text-[var(--fg-faint)] self-center">
+      <span className="text-[11.5px] text-[var(--text-faint)] self-center">
         {total} tickets
       </span>
       <Button
+        type="primary"
         icon={<DownloadOutlined />}
         loading={isExporting}
         onClick={handleExport}
-        className="neon-btn font-bebas! tracking-widest! ml-auto"
+        className="ml-auto"
       >
-        <span className="neon-btn-content">Export</span>
+        Export
       </Button>
     </div>
   );
@@ -420,7 +416,7 @@ export default function Dashboard() {
             staleTime: 30_000,
           });
         },
-        style: { cursor: "crosshair" },
+        style: { cursor: "pointer" },
       })}
       onChange={(pagination, _, sorter, extra) => {
         setSearchParams((prev) => {
@@ -458,14 +454,7 @@ export default function Dashboard() {
     <>
       {/* Page header */}
       <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <h2
-            className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0 [text-shadow:0_0_calc(16px_*_var(--glow))_color-mix(in_oklab,var(--acc-1)_60%,transparent)]"
-          >▸ TICKET QUEUE</h2>
-          <span className="font-mono-tech text-xs text-[var(--fg-faint)] tracking-widest hidden sm:block">
-            {LAYOUT_LABEL[layout]}
-          </span>
-        </div>
+        <div className="text-xl font-bold text-[var(--text)]">Ticket Queue</div>
         <Segmented<Layout>
           options={[
             { label: "Console", value: "console" },

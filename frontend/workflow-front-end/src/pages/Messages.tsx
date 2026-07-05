@@ -164,8 +164,8 @@ function ConversationRow({
   return (
     <button
       onClick={() => onOpen(conversation.id)}
-      className={`w-full flex items-center gap-2.5 px-4 py-3 border-b border-[var(--line)] hover:bg-[var(--bg-2)] text-left cursor-crosshair transition-colors ${
-        conversation.id === selectedId ? "bg-[var(--bg-2)]" : ""
+      className={`w-full flex items-center gap-2.5 px-4 py-2.5 border-none text-left cursor-pointer transition-colors ${
+        conversation.id === selectedId ? "bg-[var(--hover)]" : "bg-transparent hover:bg-[var(--hover)]"
       }`}
     >
       <div className="relative flex-shrink-0">
@@ -173,24 +173,24 @@ function ConversationRow({
           src={peerAvatarUrl ?? undefined}
           icon={!peerAvatarUrl ? channelIcon : undefined}
           shape={conversation.type === "GROUP" ? "square" : "circle"}
-          className="!bg-[var(--acc-1)] !text-[var(--bg-0)]"
+          className="!bg-[var(--accent)] !text-white"
         />
         {peerSub && (
           <span
-            className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-1)] ${
-              peerOnline ? "bg-emerald-400" : "bg-[var(--fg-faint)]"
+            className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--surface)] ${
+              peerOnline ? "bg-[var(--green)]" : "bg-[var(--text-faint)]"
             }`}
           />
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-mono-tech text-[11px] text-[var(--fg)] truncate">
+          <span className="text-[12.5px] font-semibold text-[var(--text)] truncate">
             {conversationLabel(conversation, mySub, nameBySub)}
           </span>
           {conversation.unreadCount > 0 && <Badge count={conversation.unreadCount} size="small" />}
         </div>
-        <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)] truncate">
+        <span className="block text-[11px] text-[var(--text-faint)] truncate">
           {lastMessagePreview(conversation.lastMessage)}
         </span>
       </div>
@@ -622,27 +622,27 @@ export default function Messages() {
   }
 
   return (
-    <div className="h-full flex gap-3">
+    <div className="h-full flex gap-3.5">
       {/* Conversation list */}
-      <div className="w-80 flex-shrink-0 border border-[var(--line)] bg-[var(--bg-1)] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
-          <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">MESSAGES</span>
+      <div className="w-72 flex-shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--border)]">
+          <span className="text-[14px] font-bold text-[var(--text)]">Messages</span>
           <Button
             type="text"
             size="small"
             icon={<PlusOutlined />}
             onClick={() => setNewOpen(true)}
-            className="!text-[var(--acc-1)]"
+            className="!text-[var(--accent)]"
           />
         </div>
-        <div className="px-3 pt-3">
+        <div className="px-3 pt-2.5">
           <Input
             value={sidebarSearch}
             onChange={(e) => setSidebarSearch(e.target.value)}
             placeholder="Search people, channels..."
             allowClear
             size="small"
-            className="w-full font-mono-tech !text-xs"
+            className="w-full"
           />
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -652,13 +652,13 @@ export default function Messages() {
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex items-center justify-center h-full py-8">
-              <p className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+              <p className="text-[11px] text-[var(--text-faint)]">
                 No conversations yet
               </p>
             </div>
           ) : sidebarQuery && channelConversations.length === 0 && directConversations.length === 0 ? (
             <div className="flex items-center justify-center h-full py-8">
-              <p className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+              <p className="text-[11px] text-[var(--text-faint)]">
                 No matches for “{sidebarSearch.trim()}”
               </p>
             </div>
@@ -666,7 +666,7 @@ export default function Messages() {
             <>
               {channelConversations.length > 0 && (
                 <>
-                  <p className="px-4 pt-3 pb-1 font-mono-tech text-[9px] tracking-[.1em] text-[var(--fg-faint)] uppercase">
+                  <p className="px-4 pt-2.5 pb-1 text-[10px] font-bold tracking-[.04em] text-[var(--text-faint)] uppercase">
                     Channels
                   </p>
                   {channelConversations.map((conversation) => (
@@ -685,7 +685,7 @@ export default function Messages() {
               )}
               {directConversations.length > 0 && (
                 <>
-                  <p className="px-4 pt-3 pb-1 font-mono-tech text-[9px] tracking-[.1em] text-[var(--fg-faint)] uppercase">
+                  <p className="px-4 pt-2.5 pb-1 text-[10px] font-bold tracking-[.04em] text-[var(--text-faint)] uppercase">
                     Direct Messages
                   </p>
                   {directConversations.map((conversation) => (
@@ -708,12 +708,12 @@ export default function Messages() {
       </div>
 
       {/* Thread */}
-      <div className="flex-1 border border-[var(--line)] bg-[var(--bg-1)] flex flex-col overflow-hidden">
+      <div className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] flex flex-col overflow-hidden">
         {!selected ? (
           <div className="flex-1 flex items-center justify-center">
             <Empty
               description={
-                <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+                <span className="text-[11px] text-[var(--text-faint)]">
                   Select a conversation
                 </span>
               }
@@ -721,13 +721,13 @@ export default function Messages() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--line)]">
+            <div className="flex items-center justify-between gap-3 px-[18px] py-3.5 border-b border-[var(--border)]">
               <div className="min-w-0 flex-1">
-                <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">
+                <span className="text-[14px] font-bold text-[var(--text)]">
                   {conversationLabel(selected, mySub, nameBySub)}
                 </span>
                 {presenceLabel && (
-                  <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                  <span className={`block text-[11px] ${selectedPeerStatus?.online ? "text-[var(--green)]" : "text-[var(--text-faint)]"}`}>
                     {presenceLabel}
                   </span>
                 )}
@@ -739,7 +739,7 @@ export default function Messages() {
                     size="small"
                     icon={<UserAddOutlined />}
                     onClick={() => setInviteOpen(true)}
-                    className="!text-[var(--acc-1)]"
+                    className="!text-[var(--accent)]"
                   />
                 )}
                 <Input
@@ -748,7 +748,7 @@ export default function Messages() {
                   placeholder="Search in conversation..."
                   allowClear
                   size="small"
-                  className="!w-48 font-mono-tech !text-xs"
+                  className="!w-48"
                 />
               </div>
             </div>
@@ -760,7 +760,7 @@ export default function Messages() {
                 </div>
               ) : debouncedMessageSearch && visibleMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+                  <p className="text-[11px] text-[var(--text-faint)]">
                     No messages match “{debouncedMessageSearch}”
                   </p>
                 </div>
@@ -806,8 +806,8 @@ export default function Messages() {
                               <Avatar
                                 size={26}
                                 src={msg.sender.avatar ?? undefined}
-                                className={`flex-shrink-0 !text-[10px] !font-semibold !text-[var(--bg-0)] ${
-                                  mine ? "!bg-[var(--acc-2)]" : "!bg-[var(--acc-1)]"
+                                className={`flex-shrink-0 !text-[10px] !font-semibold !text-white ${
+                                  mine ? "!bg-[var(--purple)]" : "!bg-[var(--accent)]"
                                 }`}
                               >
                                 {msg.sender.name.trim().charAt(0).toUpperCase() || "?"}
@@ -825,20 +825,20 @@ export default function Messages() {
                                   }`}
                                 >
                                   {!mine && (
-                                    <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                                    <span className="text-[11px] text-[var(--text)] font-semibold">
                                       {msg.sender.name}
                                     </span>
                                   )}
-                                  <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                  <span className="text-[10px] text-[var(--text-faint)]">
                                     {dayjs(msg.createdAt).format("HH:mm")}
                                   </span>
                                 </div>
                               )}
                               <div
-                                className={`px-3 py-2 font-mono-tech text-xs ${
+                                className={`px-3 py-2 rounded-[13px] text-xs leading-[1.4] ${
                                   mine
-                                    ? "bg-[var(--acc-1)] text-[var(--bg-0)]"
-                                    : "bg-[var(--bg-2)] text-[var(--fg)]"
+                                    ? "bg-[var(--accent)] text-white"
+                                    : "bg-[var(--hover)] text-[var(--text)]"
                                 }`}
                               >
                                 {msg.content && <MessageContent html={msg.content} />}
@@ -876,10 +876,10 @@ export default function Messages() {
                                           e.stopPropagation();
                                           toggleReaction({ messageId: msg.id, emoji: r.emoji });
                                         }}
-                                        className={`text-[11px] px-1.5 py-0.5 border cursor-pointer ${
+                                        className={`text-[11px] px-1.5 py-0.5 rounded-full border cursor-pointer ${
                                           mineReacted
-                                            ? "border-[var(--acc-1)] text-[var(--acc-1)] bg-[color-mix(in_oklab,var(--acc-1)_15%,transparent)]"
-                                            : "border-[var(--line)] text-[var(--fg-dim)]"
+                                            ? "border-[var(--accent)] text-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_15%,transparent)]"
+                                            : "border-[var(--border)] text-[var(--text-dim)]"
                                         }`}
                                       >
                                         {r.emoji} {r.subs.length}
@@ -921,7 +921,7 @@ export default function Messages() {
                                     type="button"
                                     onClick={(e) => e.stopPropagation()}
                                     title="React"
-                                    className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
+                                    className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer"
                                   >
                                     <SmileOutlined className="text-[11px]" />
                                   </button>
@@ -933,7 +933,7 @@ export default function Messages() {
                                     setThreadParentId(msg.id);
                                   }}
                                   title="Reply in thread"
-                                  className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer"
+                                  className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer"
                                 >
                                   <MessageOutlined className="text-[11px]" />
                                 </button>
@@ -945,18 +945,18 @@ export default function Messages() {
                                     e.stopPropagation();
                                     setThreadParentId(msg.id);
                                   }}
-                                  className="text-[10px] mt-1 text-[var(--acc-1)] hover:underline cursor-pointer"
+                                  className="text-[10px] mt-1 text-[var(--accent)] hover:underline cursor-pointer"
                                 >
                                   💬 {msg.replyCount} {msg.replyCount === 1 ? "reply" : "replies"}
                                 </button>
                               )}
                               {receipt && (
                                 <div
-                                  className={`text-[8px] overflow-hidden transition-all ${
+                                  className={`text-[9px] overflow-hidden transition-all ${
                                     receiptRevealed
                                       ? "h-3 opacity-100 mt-0.5"
                                       : "h-0 opacity-0 mt-0 group-hover:h-3 group-hover:opacity-100 group-hover:mt-0.5"
-                                  } ${receipt.read ? "text-[var(--acc-1)]" : "text-[var(--fg-faint)]"}`}
+                                  } ${receipt.read ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}
                                 >
                                   {receipt.label}
                                 </div>
@@ -978,13 +978,13 @@ export default function Messages() {
 
             {typingLabel && (
               <div className="px-4 pt-1">
-                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] italic">
+                <span className="text-[10.5px] text-[var(--text-faint)] italic">
                   {typingLabel}
                 </span>
               </div>
             )}
 
-            <div className="px-4 py-3 border-t border-[var(--line)] flex flex-col gap-2">
+            <div className="px-4 py-3 border-t border-[var(--border)] flex flex-col gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1014,13 +1014,13 @@ export default function Messages() {
                     type="text"
                     icon={<PaperClipOutlined />}
                     onClick={() => fileInputRef.current?.click()}
-                    className="!text-[var(--fg-faint)]"
+                    className="!text-[var(--text-faint)]"
                   />
                   <Button
                     type={richOpen ? "primary" : "text"}
                     onClick={() => setRichOpen((o) => !o)}
                     title="Formatting"
-                    className={richOpen ? "" : "!text-[var(--fg-faint)]"}
+                    className={richOpen ? "" : "!text-[var(--text-faint)]"}
                   >
                     Aa
                   </Button>
@@ -1042,25 +1042,25 @@ export default function Messages() {
 
       {/* Thread panel */}
       {threadParentId && (
-        <div className="w-80 flex-shrink-0 border border-[var(--line)] bg-[var(--bg-1)] flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
-            <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">THREAD</span>
+        <div className="w-80 flex-shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--border)]">
+            <span className="text-[14px] font-bold text-[var(--text)]">Thread</span>
             <button
               type="button"
               onClick={() => setThreadParentId(null)}
-              className="text-[var(--fg-faint)] hover:text-[var(--fg-dim)] cursor-pointer text-sm"
+              className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer text-sm"
             >
               ✕
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {threadParentMessage && (
-              <div className="pb-3 border-b border-[var(--line)]">
+              <div className="pb-3 border-b border-[var(--border)]">
                 <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                  <span className="text-[11px] text-[var(--text)] font-semibold">
                     {threadParentMessage.sender.name}
                   </span>
-                  <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                  <span className="text-[10px] text-[var(--text-faint)]">
                     {dayjs(threadParentMessage.createdAt).format("HH:mm")}
                   </span>
                 </div>
@@ -1079,16 +1079,16 @@ export default function Messages() {
                   <Avatar
                     size={22}
                     src={reply.sender.avatar ?? undefined}
-                    className="flex-shrink-0 !text-[9px] !font-semibold !text-[var(--bg-0)] !bg-[var(--acc-1)]"
+                    className="flex-shrink-0 !text-[9px] !font-semibold !text-white !bg-[var(--accent)]"
                   >
                     {reply.sender.name.trim().charAt(0).toUpperCase() || "?"}
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="font-mono-tech text-[10px] text-[var(--fg)] font-semibold">
+                      <span className="text-[11px] text-[var(--text)] font-semibold">
                         {reply.sender.name}
                       </span>
-                      <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                      <span className="text-[10px] text-[var(--text-faint)]">
                         {dayjs(reply.createdAt).format("HH:mm")}
                       </span>
                     </div>
@@ -1098,7 +1098,7 @@ export default function Messages() {
               ))
             )}
           </div>
-          <div className="px-4 py-3 border-t border-[var(--line)] flex flex-col gap-2">
+          <div className="px-4 py-3 border-t border-[var(--border)] flex flex-col gap-2">
             <RichTextEditor
               key={`reply-${threadParentId}-${replyResetKey}`}
               content={threadDraft}
@@ -1116,7 +1116,7 @@ export default function Messages() {
                 type={replyRichOpen ? "primary" : "text"}
                 onClick={() => setReplyRichOpen((o) => !o)}
                 title="Formatting"
-                className={replyRichOpen ? "" : "!text-[var(--fg-faint)]"}
+                className={replyRichOpen ? "" : "!text-[var(--text-faint)]"}
               >
                 Aa
               </Button>

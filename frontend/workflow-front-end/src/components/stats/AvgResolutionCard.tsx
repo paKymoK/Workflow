@@ -17,10 +17,10 @@ import DeadlineTag from "../DeadlineTag.tsx";
 import { useTheme } from "@takypok/shared";
 import dayjs, { type Dayjs } from "dayjs";
 
-const COLOR_RESOLUTION = "#00F5FF";
-const COLOR_RESPONSE   = "#FFE500";
-const DIM_RESOLUTION   = "rgba(0,245,255,0.35)";
-const DIM_RESPONSE     = "rgba(255,229,0,0.35)";
+const COLOR_RESOLUTION = "#2F6FED";
+const COLOR_RESPONSE   = "#C77700";
+const DIM_RESOLUTION   = "rgba(47,111,237,0.35)";
+const DIM_RESPONSE     = "rgba(199,119,0,0.35)";
 
 type ColKey =
   | "id" | "summary" | "status" | "issueType" | "priority"
@@ -81,18 +81,18 @@ function CustomTooltip({ active, payload, isDark }: CustomTooltipProps) {
   const d = payload[0].payload as AvgResolutionByPriority;
   return (
     <div
-      className={`rounded px-3 py-2 text-sm ${isDark ? "bg-[#041428] text-[#C8F0FF] [border:1px_solid_rgba(0,207,255,0.35)]" : "bg-[#E8EAED] text-[#0A2540] [border:1px_solid_rgba(0,102,187,0.35)]"}`}
+      className={`rounded-lg px-3 py-2 text-sm border ${isDark ? "bg-[#161D2B] text-[#E7ECF5] border-[#26304399]" : "bg-white text-[#1E2A3A] border-[#E4E9F0]"}`}
     >
       <div className="font-semibold mb-1">{d.priorityName}</div>
       <div>
         Response:{" "}
-        <span className="font-semibold" style={{ color: isDark ? "#FFE500" : "var(--acc-warn)" }}>
+        <span className="font-semibold" style={{ color: "var(--amber)" }}>
           {d.avgResponseHours != null ? `${d.avgResponseHours.toFixed(2)}h` : "—"}
         </span>
       </div>
       <div>
         Resolution:{" "}
-        <span className="font-semibold" style={{ color: isDark ? "#00F5FF" : "var(--acc-1)" }}>
+        <span className="font-semibold" style={{ color: "var(--accent)" }}>
           {d.avgHours != null ? `${d.avgHours.toFixed(2)}h` : "—"}
         </span>
       </div>

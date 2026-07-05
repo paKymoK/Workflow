@@ -1,13 +1,9 @@
-// Panel.tsx — reusable bracketed panel matching the prototype's panels.
-//
-// The prototype wraps content in a panel with a header row (Bebas title +
-// optional right slot) and decorative corner brackets. Your current screens use
-// bare `<div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">`,
-// which is why panels read flatter than the mock.
+// Panel.tsx — reusable card matching the Workflow redesign's panels
+// (surface bg, soft border, rounded corners, small uppercase title row).
 //
 // Place at: src/components/ui/Panel.tsx
 // Use it to wrap the Description / Comments / Details / SLA blocks, e.g.:
-//     <Panel title="DESCRIPTION" icon={<FileTextOutlined />}>
+//     <Panel title="Description" icon={<FileTextOutlined />}>
 //       <CommentContent html={ticket.detail.description} />
 //     </Panel>
 
@@ -17,7 +13,6 @@ interface PanelProps {
   title?: string;
   icon?: ReactNode;
   right?: ReactNode;
-  brackets?: boolean;   // show corner brackets (default true)
   className?: string;
   bodyClassName?: string;
   children: ReactNode;
@@ -27,25 +22,15 @@ export default function Panel({
   title,
   icon,
   right,
-  brackets = false,
   className = "",
   bodyClassName = "p-4",
   children,
 }: PanelProps) {
   return (
-    <div className={`relative border border-[var(--line)] bg-[var(--bg-1)] ${className}`}>
-      {brackets && (
-        <>
-          <span className="content-corner content-corner-tl" />
-          <span className="content-corner content-corner-tr" />
-          <span className="content-corner content-corner-bl" />
-          <span className="content-corner content-corner-br" />
-        </>
-      )}
-
+    <div className={`relative border border-[var(--border)] bg-[var(--surface)] rounded-xl overflow-hidden ${className}`}>
       {title && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
-          <span className="flex items-center gap-2 font-bebas text-[15px] tracking-[.14em] text-[var(--acc-1)]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+          <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)]">
             {icon}
             {title}
           </span>

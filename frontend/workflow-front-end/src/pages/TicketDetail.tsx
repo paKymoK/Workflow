@@ -27,8 +27,6 @@ import WorkflowStepper from "../components/ticket/WorkflowStepper";
 import Panel from "../components/ui/Panel";
 import { StatusChip } from "../components/ui/StatusChip";
 
-const GLOW_CLASS = "[text-shadow:0_0_calc(16px_*_var(--glow))_color-mix(in_oklab,var(--acc-1)_60%,transparent)]";
-
 export default function TicketDetail() {
   const { message } = App.useApp();
   const { id }      = useParams<{ id: string }>();
@@ -205,7 +203,7 @@ export default function TicketDetail() {
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard")} className="mb-4">
           Back to Dashboard
         </Button>
-        <p className="font-bebas text-xl text-[var(--fg-faint)]">Ticket not found</p>
+        <p className="text-xl font-semibold text-[var(--text-faint)]">Ticket not found</p>
       </div>
     );
   }
@@ -215,10 +213,10 @@ export default function TicketDetail() {
   const resolutionPct = ticket.sla?.status.resolutionPercent ?? 0;
   const clamped       = Math.min(100, Math.round(resolutionPct));
   const slaColor      = resolutionPct >= 100
-    ? "var(--priority-critical)"
+    ? "var(--red)"
     : resolutionPct >= 80
-    ? "var(--acc-amber)"
-    : "var(--acc-1)";
+    ? "var(--amber)"
+    : "var(--accent)";
 
   const menuItems: MenuProps["items"] = [
     {
@@ -285,19 +283,19 @@ export default function TicketDetail() {
       </Modal>
 
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2.5">
         <div className="flex items-center gap-3 min-w-0">
           <Button
             size="small"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/dashboard")}
-            className="font-bebas! tracking-wider! flex-shrink-0"
+            className="flex-shrink-0"
           >
             Back
           </Button>
-          <span className="font-mono-tech text-[13px] text-[var(--acc-1)] flex-shrink-0">{ticketCode}</span>
-          <h2 className={`font-bebas text-2xl tracking-[.1em] neon-text-acc m-0 truncate ${GLOW_CLASS}`}>
-            ▸ TICKET #{ticket.id}
+          <span className="text-[13px] font-semibold text-[var(--accent)] flex-shrink-0">{ticketCode}</span>
+          <h2 className="text-lg font-bold text-[var(--text)] m-0 truncate">
+            Ticket #{ticket.id}
           </h2>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -305,12 +303,12 @@ export default function TicketDetail() {
           <StatusChip color={ticket.status.color} name={ticket.status.name} />
           {ticket.sla && (
             isPaused
-              ? <Tag icon={<PauseCircleOutlined />} color="warning" className="font-bebas! tracking-wider!">PAUSED</Tag>
-              : <Tag icon={<PlayCircleOutlined />}  color="success" className="font-bebas! tracking-wider!">ACTIVE</Tag>
+              ? <Tag icon={<PauseCircleOutlined />} color="warning">Paused</Tag>
+              : <Tag icon={<PlayCircleOutlined />}  color="success">Active</Tag>
           )}
           {menuItems.length > 0 && (
             <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
-              <Button size="small" icon={<MoreOutlined />} className="font-bebas! tracking-wider!">
+              <Button size="small" icon={<MoreOutlined />}>
                 Actions
               </Button>
             </Dropdown>
@@ -333,23 +331,23 @@ export default function TicketDetail() {
         {/* ── LEFT COLUMN ───────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
 
-          {/* Fix ③ — dedicated Summary panel */}
-          <Panel title="SUMMARY">
-            <p className="font-mono-tech text-[15px] leading-[1.5] text-[var(--fg)] m-0">
+          {/* Summary panel */}
+          <Panel title="Summary">
+            <p className="text-sm leading-[1.5] text-[var(--text)] m-0">
               {ticket.summary}
             </p>
           </Panel>
 
           {/* Description */}
           {ticket.detail?.description && (
-            <Panel title="DESCRIPTION">
+            <Panel title="Description">
               <CommentContent html={ticket.detail.description} />
             </Panel>
           )}
 
           {/* Attachments */}
           {ticket.detail && (
-            <Panel title="ATTACHMENTS">
+            <Panel title="Attachments">
               <AttachmentUpload value={ticket.detail.attachment ?? []} readonly />
             </Panel>
           )}
@@ -362,14 +360,14 @@ export default function TicketDetail() {
                 margin: 0,
                 paddingLeft: 16,
                 paddingRight: 16,
-                borderBottom: "1px solid var(--line)",
+                borderBottom: "1px solid var(--border)",
               }}
               items={[
                 {
                   key: "comments",
                   label: (
-                    <span className="font-bebas tracking-[.14em] text-[15px]">
-                      COMMENTS ({comments.length})
+                    <span className="text-[12.5px] font-semibold">
+                      Comments ({comments.length})
                     </span>
                   ),
                   children: (
@@ -378,7 +376,7 @@ export default function TicketDetail() {
                         {commentsLoading ? (
                           <div className="flex justify-center py-6"><Spin size="small" /></div>
                         ) : comments.length === 0 ? (
-                          <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] mb-4">No comments yet.</p>
+                          <p className="text-[11px] text-[var(--text-faint)] mb-4">No comments yet.</p>
                         ) : (
                           <List
                             dataSource={comments}
@@ -390,17 +388,17 @@ export default function TicketDetail() {
                                 <List.Item className="!items-start !py-3 !px-0">
                                   <List.Item.Meta
                                     avatar={
-                                      <Avatar className="font-bebas! bg-[var(--acc-2)] text-[var(--bg-0)]">
+                                      <Avatar className="bg-[var(--purple)] text-white font-semibold">
                                         {comment.commenter.name.charAt(0).toUpperCase()}
                                       </Avatar>
                                     }
                                     title={
                                       <div className="flex items-center gap-2">
-                                        <span className="font-mono-tech text-[12px] text-[var(--fg)]">
+                                        <span className="text-[12.5px] font-semibold text-[var(--text)]">
                                           {comment.commenter.name}
                                         </span>
                                         {comment.isEdited && comment.modifiedAt && (
-                                          <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                          <span className="text-[10.5px] text-[var(--text-faint)]">
                                             edited {dayjs(comment.modifiedAt).format("DD MMM YYYY, HH:mm")}
                                           </span>
                                         )}
@@ -420,11 +418,9 @@ export default function TicketDetail() {
                                             <Button size="small" type="primary" icon={<CheckOutlined />}
                                               loading={editMutation.isPending}
                                               onClick={() => handleSaveEdit(comment.id)}
-                                              className="font-bebas! tracking-wider!"
                                             >Save</Button>
                                             <Button size="small" icon={<CloseOutlined />}
                                               onClick={handleCancelEdit}
-                                              className="font-bebas! tracking-wider!"
                                             >Cancel</Button>
                                           </div>
                                         </div>
@@ -437,7 +433,7 @@ export default function TicketDetail() {
                                     <Button
                                       type="text" size="small" icon={<EditOutlined />}
                                       onClick={() => handleStartEdit(comment.id, comment.content)}
-                                      className="!text-[var(--fg-faint)] hover:!text-[var(--acc-1)] mt-1"
+                                      className="!text-[var(--text-faint)] hover:!text-[var(--accent)] mt-1"
                                     />
                                   )}
                                 </List.Item>
@@ -448,7 +444,7 @@ export default function TicketDetail() {
                       </div>
 
                       <div className="px-4 pb-4">
-                        <div className="border-t border-[var(--line)] mt-0 mb-3" />
+                        <div className="border-t border-[var(--border)] mt-0 mb-3" />
                         <div
                           onKeyDown={(e) => {
                             if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -465,14 +461,13 @@ export default function TicketDetail() {
                           />
                         </div>
                         <div className="flex items-center justify-between mt-3">
-                          <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">⌘/Ctrl+↵ to submit</span>
+                          <span className="text-[10.5px] text-[var(--text-faint)]">⌘/Ctrl+↵ to submit</span>
                           <Button
                             type="primary" size="small" icon={<SendOutlined />}
                             loading={commentSubmitting}
                             onClick={handleSubmitComment}
-                            className="font-bebas! tracking-wider!"
                           >
-                            SUBMIT
+                            Submit
                           </Button>
                         </div>
                       </div>
@@ -482,8 +477,8 @@ export default function TicketDetail() {
                 {
                   key: "audit",
                   label: (
-                    <span className="font-bebas tracking-[.14em] text-[15px]">
-                      AUDIT LOG ({auditLogs.length})
+                    <span className="text-[12.5px] font-semibold">
+                      Audit Log ({auditLogs.length})
                     </span>
                   ),
                   children: (
@@ -491,13 +486,13 @@ export default function TicketDetail() {
                       {auditLoading ? (
                         <div className="flex justify-center py-6"><Spin size="small" /></div>
                       ) : auditLogs.length === 0 ? (
-                        <p className="font-mono-tech text-[11px] text-[var(--fg-faint)] px-4 py-4 m-0">No audit entries yet.</p>
+                        <p className="text-[11px] text-[var(--text-faint)] px-4 py-4 m-0">No audit entries yet.</p>
                       ) : (
                         <div className="flex flex-col">
                           {auditLogs.map((log, i) => (
                             <div
                               key={log.id}
-                              className={`flex items-start justify-between gap-3 px-4 py-2.5 ${i < auditLogs.length - 1 ? "border-b border-[var(--line)]" : ""}`}
+                              className={`flex items-start justify-between gap-3 px-4 py-2.5 ${i < auditLogs.length - 1 ? "border-b border-[var(--border)]" : ""}`}
                             >
                               <div className="flex items-start gap-2 min-w-0">
                                 <span
@@ -505,21 +500,21 @@ export default function TicketDetail() {
                                   style={dynamicStyle({ background: AUDIT_DOT_COLOR[log.action] })}
                                 />
                                 <div className="min-w-0">
-                                  <span className="font-bebas text-[12px] tracking-[.12em] text-[var(--fg)]">
+                                  <span className="text-[12px] font-semibold text-[var(--text)]">
                                     {AUDIT_ACTION_LABEL[log.action]}
                                   </span>
                                   {auditDetail(log) && (
-                                    <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] m-0 truncate">
+                                    <p className="text-[11px] text-[var(--text-faint)] m-0 truncate">
                                       {auditDetail(log)}
                                     </p>
                                   )}
                                 </div>
                               </div>
                               <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
-                                <span className="font-mono-tech text-[10px] text-[var(--fg-dim)]">
+                                <span className="text-[11px] text-[var(--text-dim)]">
                                   {log.actor?.name ?? "System"}
                                 </span>
-                                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+                                <span className="text-[10px] text-[var(--text-faint)]">
                                   {dayjs(log.createdAt).format("DD MMM, HH:mm")}
                                 </span>
                               </div>
@@ -539,38 +534,38 @@ export default function TicketDetail() {
         <div className="sticky top-4 flex flex-col gap-4">
 
           {/* Details */}
-          <Panel title="DETAILS">
+          <Panel title="Details">
             <div className="flex flex-col gap-3">
               <MetaRow label="Priority">
                 <PriorityBars priority={ticket.priority} />
               </MetaRow>
               <MetaRow label="Project">
-                <span className="font-mono-tech text-[11px] text-[var(--fg)]">
+                <span className="text-[12px] text-[var(--text)]">
                   {ticket.project.name}
-                  <span className="text-[var(--fg-faint)] ml-1">({ticket.project.code})</span>
+                  <span className="text-[var(--text-faint)] ml-1">({ticket.project.code})</span>
                 </span>
               </MetaRow>
               <MetaRow label="Issue Type">
-                <span className="font-mono-tech text-[11px] text-[var(--fg)]">{ticket.issueType.name}</span>
+                <span className="text-[12px] text-[var(--text)]">{ticket.issueType.name}</span>
               </MetaRow>
               <MetaRow label="Reporter">
                 <div>
-                  <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0">{ticket.reporter.name}</p>
-                  <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">{ticket.reporter.email}</p>
+                  <p className="text-[12px] text-[var(--text)] m-0">{ticket.reporter.name}</p>
+                  <p className="text-[10.5px] text-[var(--text-faint)] m-0">{ticket.reporter.email}</p>
                 </div>
               </MetaRow>
               <MetaRow label="Assignee">
                 {ticket.assignee ? (
                   <div>
-                    <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0">{ticket.assignee.name}</p>
-                    <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">{ticket.assignee.email}</p>
+                    <p className="text-[12px] text-[var(--text)] m-0">{ticket.assignee.name}</p>
+                    <p className="text-[10.5px] text-[var(--text-faint)] m-0">{ticket.assignee.email}</p>
                   </div>
                 ) : (
-                  <span className="font-mono-tech text-[11px] text-[var(--fg-faint)]">UNASSIGNED</span>
+                  <span className="text-[12px] text-[var(--text-faint)]">Unassigned</span>
                 )}
               </MetaRow>
               <MetaRow label="Created">
-                <span className="font-mono-tech text-[11px] text-[var(--fg)]">
+                <span className="text-[12px] text-[var(--text)]">
                   {dayjs(ticket.createdAt).format("DD MMM YYYY, HH:mm")}
                 </span>
               </MetaRow>
@@ -582,10 +577,10 @@ export default function TicketDetail() {
             <Panel title="SLA">
               {/* Big resolution % */}
               <div className="flex items-end gap-2 mb-3">
-                <span className="font-bebas text-5xl leading-none" style={dynamicStyle({ color: slaColor })}>
+                <span className="text-4xl font-bold leading-none" style={dynamicStyle({ color: slaColor })}>
                   {clamped}%
                 </span>
-                <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] mb-1">resolution elapsed</span>
+                <span className="text-[11px] text-[var(--text-faint)] mb-1">resolution elapsed</span>
               </div>
 
               <SlaBar sla={ticket.sla} />
@@ -595,8 +590,8 @@ export default function TicketDetail() {
                   ["Response",   !ticket.sla.status.isResponseOverdue],
                   ["Resolution", !ticket.sla.status.isResolutionOverdue],
                 ].map(([label, ok]) => (
-                  <span key={label as string} className="font-mono-tech text-[10px]"
-                    style={dynamicStyle({ color: ok ? "var(--acc-3)" : "var(--priority-critical)" })}>
+                  <span key={label as string} className="text-[11px] font-semibold"
+                    style={dynamicStyle({ color: ok ? "var(--green)" : "var(--red)" })}>
                     {ok ? "✓" : "✗"} {label as string}
                   </span>
                 ))}
@@ -616,9 +611,9 @@ export default function TicketDetail() {
               </div>
 
               {isPaused && (
-                <div className="px-3 py-2 border-l-2 border-[var(--acc-amber)] bg-[var(--bg-2)] mb-3">
-                  <p className="font-mono-tech text-[10px] text-[var(--acc-amber)] m-0">
-                    SLA PAUSED
+                <div className="px-3 py-2 rounded-md border-l-2 border-[var(--amber)] bg-[var(--hover)] mb-3">
+                  <p className="text-[11px] text-[var(--amber)] m-0">
+                    SLA paused
                     {ticket.sla.pausedTime?.length
                       ? ` — ${ticket.sla.pausedTime[ticket.sla.pausedTime.length - 1].reason ?? "No reason"}`
                       : ""}
@@ -628,23 +623,23 @@ export default function TicketDetail() {
 
               {ticket.sla.pausedTime.length > 0 && (
                 <>
-                  <p className="font-bebas text-[10px] tracking-[.2em] text-[var(--acc-1)] mb-2">
-                    PAUSE HISTORY
+                  <p className="text-[10px] font-bold uppercase tracking-[.06em] text-[var(--accent)] mb-2">
+                    Pause history
                   </p>
                   <div className="flex flex-col gap-2">
                     {ticket.sla.pausedTime.map((p, i) => (
-                      <div key={i} className="pl-2 border-l border-[var(--line-strong)]">
+                      <div key={i} className="pl-2 border-l border-[var(--border)]">
                         {p.reason && (
-                          <Tag color="warning" className="font-bebas! tracking-wider! mb-1">
+                          <Tag color="warning" className="mb-1">
                             {PENDING_REASON_LABELS[p.reason]}
                           </Tag>
                         )}
                         {p.description && (
-                          <p className="font-mono-tech text-[10px] text-[var(--fg-dim)] m-0 mb-0.5">
+                          <p className="text-[11px] text-[var(--text-dim)] m-0 mb-0.5">
                             {p.description}
                           </p>
                         )}
-                        <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">
+                        <p className="text-[10px] text-[var(--text-faint)] m-0">
                           {dayjs(p.pausedTime).format("DD MMM HH:mm")}
                           {p.resumeTime ? ` → ${dayjs(p.resumeTime).format("HH:mm")}` : " → ongoing"}
                         </p>
@@ -670,11 +665,11 @@ const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
 };
 
 const AUDIT_DOT_COLOR: Record<AuditAction, string> = {
-  TICKET_CREATED:   "var(--acc-3)",
-  STATUS_CHANGED:   "var(--acc-1)",
-  ASSIGNEE_CHANGED: "var(--acc-2)",
-  SLA_PAUSED:       "var(--acc-amber)",
-  SLA_RESUMED:      "var(--acc-3)",
+  TICKET_CREATED:   "var(--accent)",
+  STATUS_CHANGED:   "var(--accent)",
+  ASSIGNEE_CHANGED: "var(--purple)",
+  SLA_PAUSED:       "var(--amber)",
+  SLA_RESUMED:      "var(--green)",
 };
 
 function auditDetail(log: AuditLog): string {
@@ -689,7 +684,7 @@ function auditDetail(log: AuditLog): string {
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="font-mono-tech text-[9px] tracking-widest text-[var(--fg-faint)] uppercase w-20 flex-shrink-0 mt-0.5">
+      <span className="text-[10px] tracking-[.04em] text-[var(--text-faint)] uppercase w-20 flex-shrink-0 mt-0.5">
         {label}
       </span>
       <div className="flex-1">{children}</div>

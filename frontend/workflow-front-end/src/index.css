@@ -2,16 +2,21 @@
 
 :root,
 [data-theme="dark"] {
-  --neon-yellow: #00CFFF;
-  --neon-pink: #7B2FBE;
-  --neon-cyan: #00F5C4;
-  --black: #020B18;
-  --dark: #041428;
-  --darker: #030E1E;
-  --white: #C8F0FF;
-  --grid-color: rgba(0, 180, 255, 0.05);
-  --text-muted: rgba(200, 240, 255, 0.35);
-  --border-subtle: rgba(0, 207, 255, 0.15);
+  /* ── Canonical design tokens (source of truth: the Workflow redesign mock) ── */
+  --bg: #0E141F;
+  --surface: #161D2B;
+  --border: #26304399;
+  --hover: #1E2636;
+  --text: #E7ECF5;
+  --text-dim: #9AA7BC;
+  --text-faint: #65728A;
+  --accent: #5B8DEF;
+  --accent-soft: #1C2B4D;
+  --green: #3ECF8E;
+  --red: #F0616A;
+  --amber: #F0A83C;
+  --purple: #9B90F0;
+
   /* diary */
   --diary-page-bg: #1c1208;
   --diary-page-border: rgba(180, 140, 60, 0.25);
@@ -23,53 +28,69 @@
   --diary-badge-bg: rgba(180, 140, 60, 0.1);
   --diary-sep-color: rgba(180, 140, 60, 0.4);
 
-  /* ── Accent scheme — ice (default) ── */
-  --acc-1: #00CFFF;
-  --acc-2: #7B2FBE;
-  --acc-3: #00F5C4;
-  --acc-warn: #FFE500;
-  --acc-hot: #FF2D6B;
-  --acc-amber: #FF6B35;
+  /* ── Legacy aliases — kept so every existing component still resolves
+     to the new palette without needing to be touched in this pass. ── */
+  --neon-yellow: var(--accent);
+  --neon-pink: var(--purple);
+  --neon-cyan: var(--green);
+  --black: var(--bg);
+  --dark: var(--surface);
+  --darker: var(--hover);
+  --white: var(--text);
+  --grid-color: transparent;
+  --text-muted: var(--text-faint);
+  --border-subtle: var(--border);
 
-  /* ── Surface tokens ── */
-  --bg-0: #020B18;
-  --bg-1: #04101F;
-  --bg-2: #061829;
-  --bg-3: #0A2236;
-  --line: rgba(0, 207, 255, .14);
-  --line-strong: rgba(0, 207, 255, .30);
-  --fg: #C8F0FF;
-  --fg-dim: rgba(200, 240, 255, .55);
-  --fg-faint: rgba(200, 240, 255, .30);
-  --glow: 0.85;
+  --acc-1: var(--accent);
+  --acc-2: var(--purple);
+  --acc-3: var(--green);
+  --acc-warn: var(--amber);
+  --acc-hot: var(--red);
+  --acc-amber: var(--amber);
+
+  --bg-0: var(--bg);
+  --bg-1: var(--surface);
+  --bg-2: var(--hover);
+  --bg-3: var(--surface);
+  --line: var(--border);
+  --line-strong: #38445C;
+  --fg: var(--text);
+  --fg-dim: var(--text-dim);
+  --fg-faint: var(--text-faint);
+  --glow: 0;
 
   /* ── Status colors ── */
-  --status-open: #00CFFF;
-  --status-triaged: #22D3EE;
-  --status-in-progress: #FFE500;
-  --status-pending: #FF6B35;
-  --status-in-review: #A855F7;
-  --status-resolved: #00F5C4;
-  --status-closed: #5B7186;
+  --status-open: var(--accent);
+  --status-triaged: var(--accent);
+  --status-in-progress: var(--amber);
+  --status-pending: var(--amber);
+  --status-in-review: var(--purple);
+  --status-resolved: var(--green);
+  --status-closed: var(--text-faint);
 
   /* ── Priority colors ── */
-  --priority-critical: #FF2D6B;
-  --priority-high: #FF6B35;
-  --priority-medium: #FFE500;
-  --priority-low: #00F5C4;
+  --priority-critical: var(--red);
+  --priority-high: var(--amber);
+  --priority-medium: var(--accent);
+  --priority-low: var(--green);
 }
 
 [data-theme="light"] {
-  --neon-yellow: #0066BB;
-  --neon-pink: #C8455E;
-  --neon-cyan: #00897B;
-  --black: #DDE1E7;
-  --dark: #E8EAED;
-  --darker: #CDD1D8;
-  --white: #0A2540;
-  --grid-color: rgba(0, 102, 187, 0.01);
-  --text-muted: rgba(10, 37, 64, 0.4);
-  --border-subtle: rgba(0, 102, 187, 0.18);
+  /* ── Canonical design tokens (source of truth: the Workflow redesign mock) ── */
+  --bg: #F4F6F9;
+  --surface: #FFFFFF;
+  --border: #E4E9F0;
+  --hover: #F1F4F9;
+  --text: #1E2A3A;
+  --text-dim: #5B6B82;
+  --text-faint: #93A0B4;
+  --accent: #2F6FED;
+  --accent-soft: #E9F0FF;
+  --green: #1E9E6A;
+  --red: #E5484D;
+  --amber: #C77700;
+  --purple: #7C6FE0;
+
   /* diary */
   --diary-page-bg: #f5ead0;
   --diary-page-border: rgba(120, 80, 30, 0.28);
@@ -81,56 +102,67 @@
   --diary-badge-bg: rgba(120, 80, 30, 0.08);
   --diary-sep-color: rgba(120, 80, 30, 0.4);
 
-  /* ── Accent scheme — light ── */
-  --acc-1: #0066BB;
-  --acc-2: #7B2D8B;
-  --acc-3: #007A70;
-  --acc-warn: #B8860B;
-  --acc-hot: #C8455E;
-  --acc-amber: #D4600F;
+  /* ── Legacy aliases — kept so every existing component still resolves
+     to the new palette without needing to be touched in this pass. ── */
+  --neon-yellow: var(--accent);
+  --neon-pink: var(--purple);
+  --neon-cyan: var(--green);
+  --black: var(--bg);
+  --dark: var(--surface);
+  --darker: var(--hover);
+  --white: var(--text);
+  --grid-color: transparent;
+  --text-muted: var(--text-faint);
+  --border-subtle: var(--border);
 
-  /* ── Surface tokens ── */
-  --bg-0: #DCE3EA;
-  --bg-1: #E7ECF2;
-  --bg-2: #F1F5F9;
-  --bg-3: #FFFFFF;
-  --line: rgba(8, 70, 120, .16);
-  --line-strong: rgba(8, 70, 120, .34);
-  --fg: #0A2540;
-  --fg-dim: rgba(10, 37, 64, .62);
-  --fg-faint: rgba(10, 37, 64, .34);
-  --glow: 0.6;
+  --acc-1: var(--accent);
+  --acc-2: var(--purple);
+  --acc-3: var(--green);
+  --acc-warn: var(--amber);
+  --acc-hot: var(--red);
+  --acc-amber: var(--amber);
+
+  --bg-0: var(--bg);
+  --bg-1: var(--surface);
+  --bg-2: var(--hover);
+  --bg-3: var(--surface);
+  --line: var(--border);
+  --line-strong: #C9D3E0;
+  --fg: var(--text);
+  --fg-dim: var(--text-dim);
+  --fg-faint: var(--text-faint);
+  --glow: 0;
 
   /* ── Status colors ── */
-  --status-open: #0066BB;
-  --status-triaged: #0288A8;
-  --status-in-progress: #B8860B;
-  --status-pending: #D4600F;
-  --status-in-review: #7B2D8B;
-  --status-resolved: #007A70;
-  --status-closed: #5B7186;
+  --status-open: var(--accent);
+  --status-triaged: var(--accent);
+  --status-in-progress: var(--amber);
+  --status-pending: var(--amber);
+  --status-in-review: var(--purple);
+  --status-resolved: var(--green);
+  --status-closed: var(--text-faint);
 
   /* ── Priority colors ── */
-  --priority-critical: #C8455E;
-  --priority-high: #D4600F;
-  --priority-medium: #B8860B;
-  --priority-low: #007A70;
+  --priority-critical: var(--red);
+  --priority-high: var(--amber);
+  --priority-medium: var(--accent);
+  --priority-low: var(--green);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background: var(--black) !important;
-  color: var(--white) !important;
-  cursor: crosshair;
-  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  cursor: default;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   transition: background 0.25s ease, color 0.25s ease;
 }
 
 /* ── Scrollbar ───────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--darker); }
-::-webkit-scrollbar-thumb { background: var(--neon-yellow); border-radius: 2px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--hover); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 /* ── Custom font ─────────────────────────────────────── */
 @font-face {
@@ -250,224 +282,22 @@ body {
 .neon-btn-content { position: relative; z-index: 1; }
 .neon-btn:disabled { pointer-events: none; }
 
-/* ── Accent scheme overrides ─────────────────────────── */
-.scheme-amber    { --acc-1: #FF9E3D; --acc-2: #FF4D6D; --acc-3: #FFD166; --acc-warn: #FFD166; }
-.scheme-phosphor { --acc-1: #3DF58A; --acc-2: #00C2A8; --acc-3: #C6FF4D; --acc-warn: #C6FF4D; }
-.scheme-magenta  { --acc-1: #FF3D9A; --acc-2: #7B5BFF; --acc-3: #00E0FF; --acc-warn: #FF8AD1; }
-
-/* ═══════════════════════════════════════════════════════
-   SCHEME: DEFAULT — plain Ant Design look
-   Colors are split by [data-theme] since default now follows
-   the light/dark toggle like every other scheme (it just
-   renders plain AntD instead of the neon terminal look).
-   The [data-theme="x"].scheme-default compound selector is
-   naturally more specific than the base [data-theme="x"]
-   rules, so source order doesn't matter here.
-   ═══════════════════════════════════════════════════════ */
-.scheme-default {
-  --acc-1: #1677ff;
-  --acc-2: #722ed1;
-  --acc-3: #52c41a;
-  --acc-warn: #faad14;
-  --acc-hot:  #ff4d4f;
-  --acc-amber: #fa8c16;
-  --grid-color: transparent;
-  --glow: 0;
-
-  --status-open: #1677ff;
-  --status-triaged: #13a8a8;
-  --status-in-progress: #faad14;
-  --status-pending: #fa8c16;
-  --status-in-review: #722ed1;
-  --status-resolved: #52c41a;
-  --status-closed: #8c8c8c;
-
-  --priority-critical: #ff4d4f;
-  --priority-high: #fa8c16;
-  --priority-medium: #faad14;
-  --priority-low: #52c41a;
-
-  cursor: default;
-}
-
-[data-theme="light"].scheme-default {
-  --neon-yellow: #1677ff;
-  --neon-pink:   #722ed1;
-  --neon-cyan:   #52c41a;
-  --black:  #f0f2f5;
-  --dark:   #ffffff;
-  --darker: #fafafa;
-  --white:  #000000d9;
-  --text-muted:    rgba(0,0,0,0.45);
-  --border-subtle: rgba(5,5,5,0.10);
-
-  --bg-0: #f0f2f5;
-  --bg-1: #ffffff;
-  --bg-2: #fafafa;
-  --bg-3: #ffffff;
-  --line: rgba(5, 5, 5, .10);
-  --line-strong: rgba(5, 5, 5, .18);
-  --fg: rgba(0, 0, 0, .88);
-  --fg-dim: rgba(0, 0, 0, .65);
-  --fg-faint: rgba(0, 0, 0, .45);
-}
-
-[data-theme="dark"].scheme-default {
-  --neon-yellow: #1677ff;
-  --neon-pink:   #722ed1;
-  --neon-cyan:   #52c41a;
-  --black:  #000000;
-  --dark:   #141414;
-  --darker: #1f1f1f;
-  --white:  rgba(255,255,255,.85);
-  --text-muted:    rgba(255,255,255,0.45);
-  --border-subtle: rgba(255,255,255,0.12);
-
-  --bg-0: #000000;
-  --bg-1: #141414;
-  --bg-2: #1f1f1f;
-  --bg-3: #262626;
-  --line: rgba(255, 255, 255, .12);
-  --line-strong: rgba(255, 255, 255, .24);
-  --fg: rgba(255, 255, 255, .85);
-  --fg-dim: rgba(255, 255, 255, .65);
-  --fg-faint: rgba(255, 255, 255, .45);
-}
-
-.scheme-default body { cursor: default; }
-.scheme-default .cursor-crosshair { cursor: pointer !important; }
-
-/* Plain sans font, no letter-spacing games */
-.scheme-default body,
-.scheme-default .font-bebas,
-.scheme-default .font-mono-tech,
-.scheme-default .font-barlow,
-.scheme-default .ant-card .ant-card-head-title,
-.scheme-default .ant-table-thead > tr > th,
-.scheme-default .ant-tabs .ant-tabs-tab,
-.scheme-default .ant-segmented,
-.scheme-default .ant-steps .ant-steps-item-title,
-.scheme-default .ant-typography h1,
-.scheme-default .ant-typography h2,
-.scheme-default .ant-typography h3,
-.scheme-default .ant-typography h4,
-.scheme-default .ant-typography h5,
-.scheme-default .ant-descriptions .ant-descriptions-item-label,
-.scheme-default .neon-input {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
-  letter-spacing: normal !important;
-}
-.scheme-default .ant-card .ant-card-head-title { color: inherit !important; font-size: 15px !important; }
-.scheme-default .ant-table-thead > tr > th,
-.scheme-default .ant-tabs .ant-tabs-tab { font-size: 14px !important; }
-
-/* No neon glow / grid / scanlines / hard corners */
-.scheme-default .bg-neon-grid { background-image: none !important; }
-.scheme-default .scanlines-overlay { display: none !important; }
-.scheme-default .neon-glow-yellow,
-.scheme-default .neon-glow-pink,
-.scheme-default .neon-glow-cyan,
-.scheme-default .neon-glow-acc { box-shadow: none !important; }
-.scheme-default .neon-btn:hover { box-shadow: none !important; }
-.scheme-default .login-slash-accent { display: none !important; }
-.scheme-default .content-corner,
-.scheme-default .corner-tl,
-.scheme-default .corner-tr,
-.scheme-default .corner-bl,
-.scheme-default .corner-br { display: none !important; }
-.scheme-default .glitch-anim { animation: none !important; }
-
-/* Rounded corners instead of the sharp terminal look */
-.scheme-default .ant-segmented,
-.scheme-default .ant-segmented .ant-segmented-item,
-.scheme-default .ant-segmented .ant-segmented-thumb,
-.scheme-default .ant-menu .ant-menu-item,
-.scheme-default .react-flow__controls {
-  border-radius: 6px !important;
-}
-
-/* Plain inputs */
-[data-theme="light"].scheme-default .neon-input {
-  background: #ffffff !important;
-  border: 1px solid #d9d9d9 !important;
-  color: rgba(0,0,0,0.88) !important;
-  letter-spacing: normal;
-}
-[data-theme="light"].scheme-default .neon-input::placeholder { color: rgba(0,0,0,0.25) !important; }
-[data-theme="light"].scheme-default .neon-input:focus {
-  border-color: #1677ff !important;
-  background: #ffffff !important;
-  box-shadow: 0 0 0 2px rgba(22,119,255,0.1) !important;
-}
-[data-theme="dark"].scheme-default .neon-input {
-  background: #141414 !important;
-  border: 1px solid #424242 !important;
-  color: rgba(255,255,255,0.85) !important;
-  letter-spacing: normal;
-}
-[data-theme="dark"].scheme-default .neon-input::placeholder { color: rgba(255,255,255,0.25) !important; }
-[data-theme="dark"].scheme-default .neon-input:focus {
-  border-color: #1677ff !important;
-  background: #141414 !important;
-  box-shadow: 0 0 0 2px rgba(22,119,255,0.15) !important;
-}
-
-/* Table row backgrounds (hardcoded per data-theme, need a plain override) */
-[data-theme="light"].scheme-default .ant-table-wrapper .ant-table-tbody > tr > td { background: #ffffff !important; }
-[data-theme="light"].scheme-default .ant-table-wrapper .ant-table-tbody > tr:hover > td { background: #fafafa !important; }
-[data-theme="dark"].scheme-default .ant-table-wrapper .ant-table-tbody > tr > td { background: #141414 !important; }
-[data-theme="dark"].scheme-default .ant-table-wrapper .ant-table-tbody > tr:hover > td { background: #1f1f1f !important; }
-
-/* ReactFlow workflow canvas — hardcoded cyan literals, not var-driven */
-[data-theme="light"].scheme-default .react-flow__background { background: #fafafa !important; }
-[data-theme="light"].scheme-default .react-flow__controls {
-  background: #ffffff !important;
-  border: 1px solid #d9d9d9 !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-}
-[data-theme="light"].scheme-default .react-flow__controls-button {
-  background: #ffffff !important;
-  border-bottom: 1px solid #f0f0f0 !important;
-  color: rgba(0,0,0,0.65) !important;
-  fill: rgba(0,0,0,0.65) !important;
-}
-[data-theme="light"].scheme-default .react-flow__controls-button:hover { background: #fafafa !important; }
-[data-theme="light"].scheme-default .react-flow__controls-button svg { fill: rgba(0,0,0,0.65) !important; }
-[data-theme="light"].scheme-default .react-flow__edge-path { stroke: #b1b1b7 !important; }
-[data-theme="light"].scheme-default .react-flow__selection {
-  background: rgba(22,119,255,0.05) !important;
-  border: 1px solid #1677ff !important;
-}
-[data-theme="light"].scheme-default .react-flow__minimap {
-  background: #ffffff !important;
-  border: 1px solid #d9d9d9 !important;
-}
-
-[data-theme="dark"].scheme-default .react-flow__background { background: #000000 !important; }
-[data-theme="dark"].scheme-default .react-flow__controls {
-  background: #141414 !important;
-  border: 1px solid #424242 !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
-}
-[data-theme="dark"].scheme-default .react-flow__controls-button {
-  background: #141414 !important;
-  border-bottom: 1px solid #303030 !important;
-  color: rgba(255,255,255,0.65) !important;
-  fill: rgba(255,255,255,0.65) !important;
-}
-[data-theme="dark"].scheme-default .react-flow__controls-button:hover { background: #1f1f1f !important; }
-[data-theme="dark"].scheme-default .react-flow__controls-button svg { fill: rgba(255,255,255,0.65) !important; }
-[data-theme="dark"].scheme-default .react-flow__edge-path { stroke: #424242 !important; }
-[data-theme="dark"].scheme-default .react-flow__selection {
-  background: rgba(22,119,255,0.1) !important;
-  border: 1px solid #1677ff !important;
-}
-[data-theme="dark"].scheme-default .react-flow__minimap {
-  background: #141414 !important;
-  border: 1px solid #424242 !important;
-}
-
-.scheme-default .react-flow__edge.selected .react-flow__edge-path { stroke: #1677ff !important; }
+/* ── Decorative chrome retired for the reskinned workflow console ──
+   (font-family/radius/table-row-bg/react-flow theming are now set
+   unconditionally at their original definitions further below) ── */
+.cursor-crosshair { cursor: pointer !important; }
+.neon-glow-yellow,
+.neon-glow-pink,
+.neon-glow-cyan,
+.neon-glow-acc { box-shadow: none !important; }
+.neon-btn:hover { box-shadow: none !important; }
+.login-slash-accent { display: none !important; }
+.content-corner,
+.corner-tl,
+.corner-tr,
+.corner-bl,
+.corner-br { display: none !important; }
+.glitch-anim { animation: none !important; }
 
 /* ── Glow / accent utilities ─────────────────────────── */
 .neon-text-acc { color: var(--acc-1) !important; }
@@ -499,9 +329,9 @@ body {
 }
 
 /* ── AntD Segmented ──────────────────────────────────── */
-.ant-segmented { border-radius: 0 !important; font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 0.08em !important; }
+.ant-segmented { border-radius: 9px !important; }
 .ant-segmented .ant-segmented-item,
-.ant-segmented .ant-segmented-thumb { border-radius: 0 !important; }
+.ant-segmented .ant-segmented-thumb { border-radius: 7px !important; }
 
 /* ── Auth service down warning ───────────────────────── */
 @keyframes authDownPulse {
@@ -525,122 +355,90 @@ body {
 input:focus ~ .focus-bar,
 input:focus-within ~ .focus-bar { width: 100%; }
 
-/* ── Neon input ──────────────────────────────────────── */
+/* ── Text input (formerly "neon-input") ──────────────── */
 .neon-input {
   width: 100%;
-  background: rgba(0,180,255,0.04) !important;
-  border: 1.5px solid rgba(0,207,255,0.25) !important;
-  color: var(--white) !important;
-  font-family: 'Share Tech Mono', monospace !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  font-family: inherit !important;
   font-size: 14px;
-  padding: 12px 16px 12px 44px !important;
+  padding: 10px 14px 10px 40px !important;
+  border-radius: 9px !important;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  letter-spacing: 0.05em;
+  letter-spacing: normal;
 }
-.neon-input::placeholder { color: rgba(200,240,255,0.25) !important; }
+.neon-input::placeholder { color: var(--text-faint) !important; }
 .neon-input:focus {
-  border-color: var(--neon-yellow) !important;
-  background: rgba(0,207,255,0.04) !important;
-  box-shadow: 0 0 0 3px rgba(0,207,255,0.1), inset 0 0 20px rgba(0,207,255,0.03) !important;
+  border-color: var(--accent) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 15%, transparent) !important;
 }
 
 /* ── Layout shell borders ────────────────────────────── */
 .neon-sider-border {
-  border-right: 2px solid var(--line-strong) !important;
+  border-right: 1px solid var(--border) !important;
 }
 .neon-header-border {
-  border-bottom: 2px solid var(--line) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 [data-theme="light"] .pf-ticker-inner span { color: #DDE1E7; }
 
-/* ── Login page specific ─────────────────────────────── */
-.login-slash-accent {
-  position: fixed;
-  top: -20%; right: -10%;
-  width: 60vw; height: 140vh;
-  background: linear-gradient(
-    135deg,
-    transparent 49.5%,
-    rgba(0,207,255,0.04) 49.5%,
-    rgba(0,207,255,0.04) 50.5%,
-    transparent 50.5%
-  );
-  transform: skewX(-10deg);
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* ── Ant Design global overrides ─────────────────────── */
-/* Card head — Bebas Neue title */
+/* Card head */
 .ant-card .ant-card-head-title {
-  font-family: 'Bebas Neue', sans-serif !important;
-  letter-spacing: 0.12em;
-  color: var(--neon-yellow) !important;
-  font-size: 16px !important;
+  color: inherit !important;
+  font-size: 15px !important;
 }
 /* Table headers */
 .ant-table-thead > tr > th {
-  font-family: 'Bebas Neue', sans-serif !important;
-  letter-spacing: 0.12em !important;
-  font-size: 14px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em !important;
 }
 /* Table body cells — explicit background to prevent bleed-through on horizontal scroll */
-[data-theme="dark"] .ant-table-wrapper .ant-table-tbody > tr > td {
-  background: #041428 !important;
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  background: var(--surface) !important;
 }
-[data-theme="dark"] .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-  background: #051B30 !important;
-}
-[data-theme="light"] .ant-table-wrapper .ant-table-tbody > tr > td {
-  background: #F0FAFF !important;
-}
-[data-theme="light"] .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-  background: #E0F0FF !important;
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background: var(--hover) !important;
 }
 /* Tab labels */
 .ant-tabs .ant-tabs-tab {
-  font-family: 'Bebas Neue', sans-serif !important;
-  letter-spacing: 0.1em !important;
-  font-size: 15px !important;
+  font-size: 13px !important;
 }
 /* Dropdown / Menu items */
 .ant-menu .ant-menu-item {
-  border-radius: 0 !important;
+  border-radius: 8px !important;
 }
-/* Recharts dark labels */
+/* Recharts labels */
 .recharts-cartesian-axis-tick-value {
-  fill: var(--white) !important;
+  fill: var(--text) !important;
   opacity: 0.75;
-}
-[data-theme="light"] .recharts-cartesian-axis-tick-value {
-  opacity: 0.9;
 }
 .recharts-legend-item-text {
-  color: var(--white) !important;
-  fill: var(--white) !important;
+  color: var(--text) !important;
+  fill: var(--text) !important;
   opacity: 0.75;
-}
-[data-theme="light"] .recharts-legend-item-text {
-  opacity: 0.9;
 }
 /* Steps */
 .ant-steps .ant-steps-item-title {
-  font-family: 'Share Tech Mono', monospace !important;
+  font-family: inherit !important;
 }
-/* Typography titles in dark mode */
+/* Typography titles */
 .ant-typography h1, .ant-typography h2, .ant-typography h3,
 .ant-typography h4, .ant-typography h5 {
-  font-family: 'Bebas Neue', sans-serif !important;
-  letter-spacing: 0.05em !important;
+  letter-spacing: normal !important;
 }
 /* Descriptions labels */
 .ant-descriptions .ant-descriptions-item-label {
-  font-family: 'Share Tech Mono', monospace !important;
+  font-family: inherit !important;
   font-size: 11px !important;
-  letter-spacing: 0.08em !important;
-  opacity: 0.55;
+  letter-spacing: 0.04em !important;
+  opacity: 0.65;
 }
 /* Form item label background bleed fix */
 .ant-form-item .ant-form-item-label {
@@ -652,43 +450,43 @@ input:focus-within ~ .focus-bar { width: 100%; }
   background: transparent !important;
 }
 
-/* ── ReactFlow dark theme ────────────────────────────── */
-.react-flow__background { background: var(--darker) !important; }
+/* ── ReactFlow workflow canvas ────────────────────────── */
+.react-flow__background { background: var(--bg) !important; }
 
 /* Controls panel */
 .react-flow__controls {
-  background: var(--dark) !important;
-  border: 1.5px solid rgba(0,207,255,0.35) !important;
-  border-radius: 0 !important;
-  box-shadow: 0 0 12px rgba(0,207,255,0.15) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  overflow: hidden;
 }
 .react-flow__controls-button {
-  background: var(--dark) !important;
-  border-bottom: 1px solid rgba(0,207,255,0.15) !important;
-  border-radius: 0 !important;
-  color: var(--neon-yellow) !important;
-  fill: var(--neon-yellow) !important;
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-dim) !important;
+  fill: var(--text-dim) !important;
 }
 .react-flow__controls-button:hover {
-  background: rgba(0,207,255,0.1) !important;
+  background: var(--hover) !important;
 }
-.react-flow__controls-button svg { fill: var(--neon-yellow) !important; }
+.react-flow__controls-button svg { fill: var(--text-dim) !important; }
 .react-flow__controls-button:last-child { border-bottom: none !important; }
 
 /* Edge lines */
-.react-flow__edge-path { stroke: rgba(0,207,255,0.35) !important; }
-.react-flow__edge.selected .react-flow__edge-path { stroke: var(--neon-yellow) !important; }
+.react-flow__edge-path { stroke: var(--text-faint) !important; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--accent) !important; }
 
 /* Selection box */
 .react-flow__selection {
-  background: rgba(0,207,255,0.05) !important;
-  border: 1px solid var(--neon-yellow) !important;
+  background: color-mix(in oklab, var(--accent) 8%, transparent) !important;
+  border: 1px solid var(--accent) !important;
 }
 
 /* Minimap */
 .react-flow__minimap {
-  background: var(--darker) !important;
-  border: 1px solid rgba(255,229,0,0.2) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
 }
 
 /* ═══════════════════════════════════════════════════════

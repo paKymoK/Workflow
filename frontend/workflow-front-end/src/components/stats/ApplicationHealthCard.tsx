@@ -17,8 +17,8 @@ import { useTheme } from "@takypok/shared";
 import dayjs, { type Dayjs } from "dayjs";
 
 const LINE_COLORS = [
-  "#FFE500", "#00F5FF", "#FF2D6B", "#FF6B35",
-  "#A855F7", "#22D3EE", "#10B981", "#F59E0B", "#6366F1", "#EC4899",
+  "#2F6FED", "#7C6FE0", "#1E9E6A", "#C77700", "#E5484D",
+  "#0EA5E9", "#D6409F", "#65A30D", "#0D9488", "#9333EA",
 ];
 
 const STATUS_GROUPS = ["TODO", "PROCESSING", "DONE"] as const;
@@ -162,9 +162,10 @@ export default function ApplicationHealthCard({ refetchKey = 0 }: Props) {
   };
 
   const tooltipStyle = {
-    backgroundColor: isDark ? "#041428" : "#E8EAED",
-    border: `1px solid ${isDark ? "rgba(0,207,255,0.35)" : "rgba(0,102,187,0.35)"}`,
-    color: isDark ? "#C8F0FF" : "#0A2540",
+    backgroundColor: isDark ? "#161D2B" : "#FFFFFF",
+    border: `1px solid ${isDark ? "#26304399" : "#E4E9F0"}`,
+    borderRadius: 8,
+    color: isDark ? "#E7ECF5" : "#1E2A3A",
   };
 
   const colDefs: Record<ColKey, ColumnsType<TicketSla>[0]> = {

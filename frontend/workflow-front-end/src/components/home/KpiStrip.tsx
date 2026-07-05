@@ -26,14 +26,14 @@ interface KpiCardProps {
 function DeltaBadge({ delta, invert }: { delta: Delta; invert?: boolean }) {
   const up = delta.value >= 0;
   const good = invert ? !up : up;
-  const color = good ? "var(--acc-3)" : "var(--acc-hot)";
+  const color = good ? "var(--green)" : "var(--red)";
   const arrow = up ? "▲" : "▼";
   const label = delta.unit === "%"
     ? `${Math.abs(delta.value)}%`
     : `${Math.abs(delta.value)}`;
   return (
     <span
-      className="font-mono-tech text-[9px] tracking-[.05em] flex-shrink-0"
+      className="text-[11px] font-semibold flex-shrink-0"
       style={dynamicStyle({ color })}
     >
       {arrow} {label}
@@ -43,25 +43,25 @@ function DeltaBadge({ delta, invert }: { delta: Delta; invert?: boolean }) {
 
 function KpiCard({ eyebrow, value, accent, sparkData, sub, delta, invertDelta }: KpiCardProps) {
   return (
-    <div className="relative flex flex-col justify-between p-4 border border-[var(--line)] bg-[var(--bg-1)] overflow-hidden">
+    <div className="relative flex flex-col justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
       <div
-        className="absolute top-0 left-0 w-[3px] h-[26px]"
+        className="absolute top-0 left-0 w-full h-[3px]"
         style={dynamicStyle({ background: accent })}
       />
       <div>
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <p className="font-mono-tech text-[9px] tracking-[.25em] text-[var(--fg-dim)] m-0">{eyebrow}</p>
+        <div className="flex items-center justify-between gap-2 mb-0.5">
+          <p className="text-[10.5px] font-semibold tracking-[.05em] text-[var(--text-faint)] uppercase m-0">{eyebrow}</p>
           {delta != null && <DeltaBadge delta={delta} invert={invertDelta} />}
         </div>
-        <p className="font-bebas text-4xl leading-none m-0" style={dynamicStyle({ color: accent })}>
+        <p className="text-[28px] font-bold leading-none m-0 mt-0.5" style={dynamicStyle({ color: accent })}>
           {value}
         </p>
         {sub && (
-          <p className="font-mono-tech text-[9px] text-[var(--fg-dim)] m-0 mt-1">{sub}</p>
+          <p className="text-[11px] text-[var(--text-faint)] m-0 mt-1.5">{sub}</p>
         )}
       </div>
       {sparkData && sparkData.length > 1 && (
-        <div className="h-8 mt-2 opacity-60 min-w-0 overflow-hidden">
+        <div className="h-8 mt-2 opacity-70 min-w-0 overflow-hidden">
           <ResponsiveContainer width="99%" height="100%">
             <LineChart data={sparkData}>
               <Line

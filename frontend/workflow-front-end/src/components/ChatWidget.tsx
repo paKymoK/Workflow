@@ -127,14 +127,14 @@ export default function ChatWidget() {
         <div
           // eslint-disable-next-line local/no-inline-styles
           style={panelStyle}
-          className="z-[1000] flex flex-col bg-[var(--dark)] border border-[var(--neon-yellow)] shadow-[0_0_24px_rgba(0,207,255,0.2)]"
+          className="z-[1000] flex flex-col rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-[0_12px_36px_rgba(0,0,0,0.16)] overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-subtle)] bg-[var(--darker)] shrink-0">
+          <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[var(--border)] shrink-0">
             <div className="flex items-center gap-2">
-              <RobotOutlined className="text-[var(--neon-cyan)] text-sm" />
-              <span className="font-bebas text-[var(--neon-yellow)] text-[15px] tracking-[0.2em]">
-                AI ASSISTANT
+              <RobotOutlined className="text-[var(--accent)] text-sm" />
+              <span className="text-[13.5px] font-bold text-[var(--text)]">
+                AI Assistant
               </span>
             </div>
             <Button
@@ -142,7 +142,7 @@ export default function ChatWidget() {
               size="small"
               icon={<CloseOutlined />}
               onClick={() => setOpen(false)}
-              className="!text-[var(--text-muted)]"
+              className="!text-[var(--text-faint)]"
             />
           </div>
 
@@ -154,10 +154,10 @@ export default function ChatWidget() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`font-mono-tech max-w-[80%] px-3 py-2 text-xs leading-[1.6] whitespace-pre-wrap break-words ${
+                  className={`max-w-[80%] px-3 py-2 rounded-[13px] text-xs leading-[1.6] whitespace-pre-wrap break-words ${
                     msg.role === "user"
-                      ? "bg-[rgba(0,207,255,0.12)] border border-[var(--neon-yellow)] text-[var(--white)]"
-                      : "bg-[rgba(0,245,196,0.08)] border border-[rgba(0,245,196,0.3)] text-[var(--neon-cyan)]"
+                      ? "bg-[var(--accent)] text-white"
+                      : "bg-[var(--hover)] text-[var(--text)]"
                   }`}
                 >
                   {msg.text}
@@ -167,11 +167,11 @@ export default function ChatWidget() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="px-[14px] py-2 border border-[rgba(0,245,196,0.3)] bg-[rgba(0,245,196,0.08)] flex gap-[5px] items-center">
+                <div className="px-[14px] py-2 rounded-[13px] bg-[var(--hover)] flex gap-[5px] items-center">
                   {[0, 1, 2].map((n) => (
                     <span
                       key={n}
-                      className={`w-[6px] h-[6px] rounded-full bg-[var(--neon-cyan)] inline-block [animation:chatDot_1.2s_ease-in-out_infinite] ${dotDelays[n]}`}
+                      className={`w-[6px] h-[6px] rounded-full bg-[var(--text-faint)] inline-block [animation:chatDot_1.2s_ease-in-out_infinite] ${dotDelays[n]}`}
                     />
                   ))}
                 </div>
@@ -182,7 +182,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div className="flex gap-2 px-3 py-[10px] border-t border-[var(--border-subtle)] bg-[var(--darker)] shrink-0">
+          <div className="flex gap-2 px-3 py-[10px] border-t border-[var(--border)] shrink-0">
             <Input.TextArea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -190,7 +190,7 @@ export default function ChatWidget() {
               placeholder="Ask a question..."
               autoSize={{ minRows: 1, maxRows: 3 }}
               disabled={loading}
-              className="font-mono-tech !flex-1 !text-xs !resize-none !bg-[var(--black)] !border-[var(--border-subtle)] !text-[var(--white)]"
+              className="!flex-1 !text-xs !resize-none"
             />
             <Button
               type="primary"
@@ -198,7 +198,7 @@ export default function ChatWidget() {
               onClick={send}
               loading={loading}
               disabled={!input.trim()}
-              className="!bg-[var(--neon-yellow)] !border-[var(--neon-yellow)] !text-[var(--dark)] self-end"
+              className="self-end"
             />
           </div>
         </div>
@@ -209,11 +209,7 @@ export default function ChatWidget() {
         onMouseDown={onMouseDown}
         // eslint-disable-next-line local/no-inline-styles
         style={buttonStyle}
-        className={`z-[1001] w-12 h-12 border border-[var(--neon-yellow)] cursor-grab active:cursor-grabbing flex items-center justify-center text-xl shadow-[0_0_16px_rgba(0,207,255,0.3)] transition-colors duration-200 ease-in-out select-none ${
-          open
-            ? "bg-[var(--neon-yellow)] text-[var(--dark)]"
-            : "bg-[var(--dark)] text-[var(--neon-yellow)]"
-        }`}
+        className={`z-[1001] w-12 h-12 rounded-full border-none cursor-grab active:cursor-grabbing flex items-center justify-center text-xl shadow-[0_6px_18px_rgba(0,0,0,0.2)] transition-colors duration-200 ease-in-out select-none bg-[var(--accent)] text-white`}
         title="AI Assistant — drag to move"
       >
         <RobotOutlined />

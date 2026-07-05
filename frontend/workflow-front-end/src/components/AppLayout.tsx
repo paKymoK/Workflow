@@ -1,35 +1,30 @@
 import { useEffect, type ReactNode } from "react";
 import { useState } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown, App } from "antd";
+import { App, Dropdown } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import ChatWidget from "./ChatWidget";
 import CreateTicketModal from "./CreateTicketModal";
 import { useChatSocket } from "../hooks/useChatSocket";
-import { BubbleBackground, useTheme, useFont, useAuth, api } from "@takypok/shared";
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  HomeOutlined,
-  DashboardOutlined,
-  MessageOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  SettingOutlined,
-  SunOutlined,
-  MoonOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { BubbleBackground, useTheme, useAuth, api } from "@takypok/shared";
+import { Icon, type IconName } from "./ui/Icon";
+import { SquareAvatar } from "./ui/SquareAvatar";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchTickets } from "../api/ticketApi";
+import { dynamicStyle } from "../utils/dynamicStyle";
 
-const { Header, Sider, Content } = Layout;
-
-const ROUTE_LABELS: Record<string, string> = {
-  "/": "// OVERVIEW",
-  "/dashboard": "// DASHBOARD",
-  "/messages": "// MESSAGES",
-  "/settings": "// SETTINGS",
+const ROUTE_TITLES: Record<string, string> = {
+  "/": "Overview",
+  "/dashboard": "Ticket Queue",
+  "/messages": "Messages",
+  "/settings": "Settings",
 };
+
+const NAV_ITEMS: { path: string; icon: IconName; label: string }[] = [
+  { path: "/", icon: "home", label: "Home" },
+  { path: "/dashboard", icon: "grid", label: "Dashboard" },
+  { path: "/messages", icon: "message", label: "Messages" },
+  { path: "/settings", icon: "gear", label: "Settings" },
+];
 
 type ServiceHealth = {
   service: string;
@@ -45,14 +40,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { isDark, accentScheme, toggleTheme } = useTheme();
-  const { isCustomFont, toggleFont } = useFont();
-
-  const shellTheme = isDark ? "dark" : "light";
+  const { isDark, toggleTheme } = useTheme();
 
   useChatSocket();
 
-  // Open ticket count for TopBar badge
+  // Open ticket count for header badge
   const { data: countData } = useQuery({
     queryKey: ["tickets", "totalCount"],
     queryFn: () => fetchTickets({ page: 0, size: 1 }),
@@ -130,21 +122,20 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return null;
   })();
 
-  const routeLabel =
-    ROUTE_LABELS[location.pathname] ??
-    (location.pathname.startsWith("/dashboard/") ? "// TICKET" : "// TERMINAL");
+  const pageTitle =
+    ROUTE_TITLES[location.pathname] ??
+    (location.pathname.startsWith("/dashboard/")
+      ? "Ticket Detail"
+      : location.pathname.startsWith("/settings/")
+      ? "Settings"
+      : "");
 
-  const siderMenuItems = [
-    { key: "/",          icon: <HomeOutlined />,      label: "Home" },
-    { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
-    { key: "/messages",  icon: <MessageOutlined />,   label: "Messages" },
-    { key: "/settings",  icon: <SettingOutlined />,   label: "Settings" },
-  ];
+  const showOpenChip = openCount > 0 && (location.pathname === "/" || location.pathname === "/dashboard");
 
   const userMenuItems = [
     {
       key: "logout",
-      icon: <LogoutOutlined />,
+      icon: <Icon name="logout" size={14} />,
       label: "Logout",
       danger: true,
       onClick: logout,
@@ -153,153 +144,140 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <App>
-      {accentScheme !== "default" && <BubbleBackground />}
+      <BubbleBackground />
 
-      <Layout className="h-screen">
+      <div className="h-screen w-full flex overflow-hidden bg-[var(--bg)] text-[var(--text)]">
         {/* ── Sidebar ───────────────────────────────────── */}
-        <Sider
-          trigger={null}
-          collapsible
-          collapsed={collapsed}
-          theme={shellTheme}
-          className="neon-sider-border overflow-hidden flex flex-col"
+        <div
+          className="flex-shrink-0 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col overflow-hidden transition-[width] duration-200 ease-in-out"
+          style={dynamicStyle({ width: collapsed ? 64 : 212 })}
         >
           {/* Brand */}
-          <div className="flex h-16 flex-col items-center justify-center border-b border-[var(--line)] px-3 flex-shrink-0">
-            <span className="font-bebas text-2xl tracking-[0.2em] glitch-anim neon-text-acc leading-none">
-              {collapsed ? "T" : "TAKYPOK"}
-            </span>
+          <div className="h-[60px] flex-shrink-0 flex items-center gap-2.5 px-4 border-b border-[var(--border)]">
+            <div className="w-[30px] h-[30px] rounded-[9px] bg-[var(--accent)] flex-shrink-0 flex items-center justify-center text-white font-bold text-[15px]">
+              T
+            </div>
             {!collapsed && (
-              <span className="font-mono-tech text-[8px] tracking-[0.3em] text-[var(--fg-faint)] uppercase mt-0.5">
-                ▸ OPS CONSOLE
-              </span>
+              <div className="flex flex-col leading-tight overflow-hidden whitespace-nowrap">
+                <span className="font-bold text-[14.5px] text-[var(--text)]">TAKYPOK</span>
+                <span className="text-[10.5px] text-[var(--text-faint)] tracking-[.02em]">Ops Console</span>
+              </div>
             )}
           </div>
 
           {/* Navigation */}
-          <Menu
-            theme={shellTheme}
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            items={siderMenuItems}
-            onClick={({ key }) => navigate(key)}
-            className="flex-1 border-none!"
-          />
-
-          {/* Collapse toggle at bottom */}
-          <div className="flex-shrink-0 border-t border-[var(--line)] p-2">
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-              className="!text-[var(--acc-1)] hover:!bg-[var(--bg-2)] !w-full !h-9"
-            />
+          <div className="flex-1 overflow-y-auto p-2.5">
+            {NAV_ITEMS.map((item) => {
+              const active = location.pathname === item.path;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  title={item.label}
+                  className="w-full flex items-center gap-[11px] px-[11px] py-[9px] mb-[3px] rounded-[9px] border-none cursor-pointer text-left text-[13.5px] font-medium transition-colors"
+                  style={dynamicStyle({
+                    background: active ? "var(--accent-soft)" : "transparent",
+                    color: active ? "var(--accent)" : "var(--text-dim)",
+                  })}
+                >
+                  <Icon name={item.icon} size={18} stroke={1.8} className="flex-shrink-0" />
+                  {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                </button>
+              );
+            })}
           </div>
-        </Sider>
 
-        {/* ── Main area ─────────────────────────────────── */}
-        <Layout className="flex flex-col overflow-hidden">
+          {/* Sign out + collapse toggle */}
+          <div className="flex-shrink-0 border-t border-[var(--border)] p-2 flex flex-col gap-0.5">
+            <button
+              onClick={logout}
+              title="Sign out"
+              className="w-full flex items-center gap-[11px] px-[11px] py-[9px] rounded-[9px] border-none bg-transparent text-[var(--text-dim)] cursor-pointer text-[13.5px] font-medium hover:bg-[var(--hover)]"
+            >
+              <Icon name="logout" size={17} stroke={1.8} className="flex-shrink-0" />
+              {!collapsed && <span className="whitespace-nowrap">Sign out</span>}
+            </button>
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="w-full flex items-center justify-center py-[9px] rounded-[9px] border-none bg-transparent text-[var(--text-dim)] cursor-pointer hover:bg-[var(--hover)]"
+            >
+              <Icon
+                name="chevL"
+                size={17}
+                stroke={2}
+                style={dynamicStyle({ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .18s" })}
+              />
+            </button>
+          </div>
+        </div>
 
+        {/* ── Main ──────────────────────────────────────── */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           {/* Header */}
-          <Header className="neon-header-border flex items-center justify-between !px-4 !h-14 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="font-bebas text-lg tracking-[0.25em] text-[var(--fg-dim)] hidden sm:block">
-                {routeLabel}
-              </span>
-              {openCount > 0 && (
-                <span className="font-mono-tech text-[11px] text-[var(--acc-1)] border border-[var(--line)] px-2 py-0.5 hidden sm:inline leading-none">
+          <div className="h-14 flex-shrink-0 flex items-center justify-between px-5 bg-[var(--surface)] border-b border-[var(--border)]">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-[15px] font-semibold text-[var(--text)]">{pageTitle}</span>
+              {showOpenChip && (
+                <span className="text-[11.5px] font-semibold text-[var(--accent)] bg-[var(--accent-soft)] px-[9px] py-[3px] rounded-full">
                   {openCount} open
                 </span>
               )}
             </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
                 onClick={() => setCreateTicketOpen(true)}
-                className="neon-btn font-bebas! tracking-widest!"
+                className="flex items-center gap-[7px] px-[15px] py-2 rounded-[9px] border-none bg-[var(--accent)] text-white text-[13px] font-semibold cursor-pointer"
               >
-                <span className="neon-btn-content">Create</span>
-              </Button>
-              {accentScheme !== "default" && (
-                <Button
-                  type="text"
-                  onClick={toggleFont}
-                  title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
-                  className="!text-[var(--acc-1)] hover:!bg-[var(--bg-2)] !font-bold !text-sm !tracking-wider !h-9 !w-9"
-                >
-                  Aa
-                </Button>
-              )}
-              <Button
-                type="text"
-                icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+                <Icon name="plus" size={14} stroke={2.2} />
+                Create
+              </button>
+              <button
                 onClick={toggleTheme}
                 title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                className="!text-[var(--acc-1)] hover:!bg-[var(--bg-2)] !h-9 !w-9"
-              />
+                className="w-[34px] h-[34px] rounded-[9px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-dim)] flex items-center justify-center cursor-pointer"
+              >
+                <Icon name={isDark ? "sun" : "moon"} size={15} stroke={2} />
+              </button>
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-                <div className="flex cursor-pointer items-center gap-2.5 px-3 py-2 border border-[var(--line)] hover:border-[var(--acc-1)] hover:bg-[var(--bg-2)] transition-all">
-                  <div className="flex flex-col items-end">
-                    <span className="font-mono-tech text-xs text-[var(--fg)] leading-tight">
-                      {displayName}
-                    </span>
+                <div className="flex cursor-pointer items-center gap-[9px] pl-1.5 pr-3 py-[5px] rounded-[9px] border border-[var(--border)] hover:bg-[var(--hover)] transition-colors">
+                  <SquareAvatar name={displayName} size={26} variant="filled" />
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-xs font-semibold text-[var(--text)]">{displayName}</span>
                     {displayRole && (
-                      <span className="font-mono-tech text-[9px] text-[var(--fg-faint)] leading-tight tracking-wider">
+                      <span className="text-[9.5px] font-semibold text-[var(--text-faint)] tracking-[.03em]">
                         {displayRole}
                       </span>
                     )}
                   </div>
-                  <Avatar
-                    size="default"
-                    icon={<UserOutlined />}
-                    className="!bg-[var(--acc-1)] !text-[var(--bg-0)]"
-                  />
                 </div>
               </Dropdown>
             </div>
-          </Header>
+          </div>
 
-          {/* Page content — relative wrapper holds corner brackets */}
-          <div className="relative flex-1 min-h-0 m-3 border border-[var(--line)] flex flex-col">
-            <span className="content-corner content-corner-tl" />
-            <span className="content-corner content-corner-tr" />
-            <span className="content-corner content-corner-bl" />
-            <span className="content-corner content-corner-br" />
-            <Content className="flex-1 min-h-0 overflow-auto p-5 bg-neon-grid">
-              {children}
-            </Content>
+          {/* Content */}
+          <div className="flex-1 min-h-0 overflow-auto p-5 bg-[var(--bg)]">
+            {children}
           </div>
 
           {/* Status bar */}
-          <div className="h-7 bg-[var(--acc-1)] flex items-center px-4 gap-6 flex-shrink-0">
-            <span className="font-bebas text-[12px] text-[var(--bg-0)] tracking-[0.15em] flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--bg-0)] blink" />
+          <div className="h-7 flex-shrink-0 bg-[var(--accent)] flex items-center px-[18px] gap-5 text-white text-[11px] font-semibold">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-white blink" />
               LIVE
             </span>
-            <span className="font-bebas text-[12px] text-[var(--bg-0)] tracking-[0.15em]">
-              SYS: {systemStatusLabel}
-            </span>
-            <span className="font-bebas text-[12px] text-[var(--bg-0)] tracking-[0.15em]">
-              SVC: {serviceStatusText}
-            </span>
+            <span>SYS: {systemStatusLabel}</span>
+            <span>SVC: {serviceStatusText}</span>
             {visibleServices.map((service) => (
-              <span key={service.service} className="font-bebas text-[12px] text-[var(--bg-0)] tracking-[0.15em] hidden md:inline">
+              <span key={service.service} className="hidden md:inline">
                 {formatServiceName(service.service).toUpperCase()}: {service.status}
               </span>
             ))}
-            {serviceListHint && (
-              <span className="font-bebas text-[12px] text-[var(--bg-0)] tracking-[0.15em] hidden md:inline">
-                {serviceListHint}
-              </span>
-            )}
-            <span className="font-bebas text-[12px] text-[var(--bg-0)] tracking-[0.15em] ml-auto">
-              {clock}
-            </span>
+            {serviceListHint && <span className="hidden md:inline">{serviceListHint}</span>}
+            <span className="ml-auto tabular-nums">{clock}</span>
           </div>
-        </Layout>
-      </Layout>
+        </div>
+      </div>
+
       <ChatWidget />
       <CreateTicketModal
         open={createTicketOpen}

@@ -22,13 +22,13 @@ export default function MessageComposerAttachments({ items, onRemove }: Props) {
     <div className="flex gap-2 px-4 pt-2 flex-wrap">
       {items.map((item) => (
         <Tooltip key={item.key} title={item.name}>
-          <div className="relative w-14 h-14 rounded border border-[var(--line)] bg-[var(--bg-2)] flex items-center justify-center overflow-hidden">
+          <div className="relative w-14 h-14 rounded-lg border border-[var(--border)] bg-[var(--hover)] flex items-center justify-center overflow-hidden">
             {item.status === "ready" && item.attachment?.type === "IMAGE" && item.attachment.url ? (
               <img src={item.attachment.url} alt={item.name} className="w-full h-full object-cover" />
             ) : item.kind === "video" ? (
-              <VideoCameraOutlined className="text-lg text-[var(--fg-faint)]" />
+              <VideoCameraOutlined className="text-lg text-[var(--text-faint)]" />
             ) : (
-              <PictureOutlined className="text-lg text-[var(--fg-faint)]" />
+              <PictureOutlined className="text-lg text-[var(--text-faint)]" />
             )}
 
             {(item.status === "uploading" || item.status === "processing") && (
@@ -39,7 +39,7 @@ export default function MessageComposerAttachments({ items, onRemove }: Props) {
 
             {item.status === "failed" && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <span className="text-red-400 text-[9px] font-mono-tech">Failed</span>
+                <span className="text-[var(--red)] text-[9px]">Failed</span>
               </div>
             )}
 
@@ -48,7 +48,7 @@ export default function MessageComposerAttachments({ items, onRemove }: Props) {
               size="small"
               icon={<CloseOutlined />}
               onClick={() => onRemove(item.key)}
-              className="!absolute -top-1.5 -right-1.5 !w-4 !h-4 !min-w-0 !p-0 !bg-[var(--darker)] !rounded-full"
+              className="!absolute -top-1.5 -right-1.5 !w-4 !h-4 !min-w-0 !p-0 !bg-[var(--surface)] !rounded-full"
             />
           </div>
         </Tooltip>

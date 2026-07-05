@@ -52,18 +52,22 @@ interface Stakeholder {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const LEVEL_CFG = {
-  L1: { color: "#00CFFF", label: "L 1", title: "FRONTLINE SUPPORT",   desc: "FIRST RESPONSE · TRIAGE · INITIAL RESOLUTION",   maxTickets: 8 },
-  L2: { color: "#FF9E3D", label: "L 2", title: "SPECIALIST SUPPORT",  desc: "ADVANCED TROUBLESHOOTING · COMPLEX INCIDENTS",    maxTickets: 5 },
-  L3: { color: "#00F5C4", label: "L 3", title: "ENGINEERING SUPPORT", desc: "ROOT CAUSE ANALYSIS · DEEP ENGINEERING FIXES",    maxTickets: 3 },
+  L1: { color: "var(--accent)", label: "L1", title: "Frontline Support",   desc: "First response · triage · initial resolution", maxTickets: 8 },
+  L2: { color: "var(--amber)",  label: "L2", title: "Specialist Support",  desc: "Advanced troubleshooting · complex incidents",  maxTickets: 5 },
+  L3: { color: "var(--green)",  label: "L3", title: "Engineering Support", desc: "Root cause analysis · deep engineering fixes",  maxTickets: 3 },
 } as const;
 
-const STAKEHOLDER_COLOR = "#FF6B35";
+const STAKEHOLDER_COLOR = "var(--purple)";
 
 const STATUS_COLOR: Record<AgentStatus, string> = {
-  ONLINE: "#00F5C4",
-  BUSY:   "#FF3D9A",
-  AWAY:   "#FF9E3D",
+  ONLINE: "var(--green)",
+  BUSY:   "var(--red)",
+  AWAY:   "var(--amber)",
 };
+
+function tint(color: string, pct: number) {
+  return `color-mix(in oklab, ${color} ${pct}%, transparent)`;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -85,8 +89,8 @@ function computeStatus(open: number, max: number): AgentStatus {
 }
 
 function barColor(pct: number, level: AgentLevel): string {
-  if (pct >= 80) return "#FF3D9A";
-  if (pct >= 60) return "#FF9E3D";
+  if (pct >= 80) return "var(--red)";
+  if (pct >= 60) return "var(--amber)";
   return LEVEL_CFG[level].color;
 }
 
@@ -103,47 +107,44 @@ function levelStats(agents: Agent[]) {
 // ─── Agent Card ──────────────────────────────────────────────────────────────
 
 function AgentCard({ agent }: { agent: Agent }) {
-  const cfg    = LEVEL_CFG[agent.level];
-  const pct    = agent.maxTickets > 0 ? Math.round((agent.openTickets / agent.maxTickets) * 100) : 0;
-  const clr    = barColor(pct, agent.level);
-  const stClr  = STATUS_COLOR[agent.status];
+  const cfg   = LEVEL_CFG[agent.level];
+  const pct   = agent.maxTickets > 0 ? Math.round((agent.openTickets / agent.maxTickets) * 100) : 0;
+  const clr   = barColor(pct, agent.level);
+  const stClr = STATUS_COLOR[agent.status];
 
   return (
-    <div className="relative border border-[var(--line)] bg-[var(--bg-0)] p-3">
-      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[var(--fg-faint)]" />
-      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[var(--fg-faint)]" />
-
+    <div className="rounded-[10px] border border-[var(--border)] p-3">
       <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <div
-            className="w-8 h-8 flex items-center justify-center font-bebas text-sm shrink-0"
-            style={{ background: cfg.color + "20", border: `1px solid ${cfg.color}`, color: cfg.color }}
+            className="w-8 h-8 rounded-[9px] flex items-center justify-center text-xs font-bold shrink-0"
+            style={{ background: tint(cfg.color, 16), color: cfg.color }}
           >
             {agent.initials}
           </div>
           <div>
-            <div className="font-bebas text-sm text-[var(--fg)] leading-tight">{agent.name}</div>
-            <div className="font-mono-tech text-[9px] text-[var(--fg-dim)]">{agent.title}</div>
+            <div className="text-[12.5px] font-semibold text-[var(--text)] leading-tight">{agent.name}</div>
+            <div className="text-[10.5px] text-[var(--text-faint)]">{agent.title}</div>
           </div>
         </div>
-        <span className="font-mono-tech text-[9px] flex items-center gap-1 shrink-0 ml-2" style={{ color: stClr }}>
+        <span className="text-[10px] font-semibold flex items-center gap-1 shrink-0 ml-2" style={{ color: stClr }}>
           <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: stClr }} />
           {agent.status}
         </span>
       </div>
 
       <div className="flex items-end justify-between">
-        <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+        <span className="text-[11px] text-[var(--text-faint)]">
           {agent.openTickets}/{agent.maxTickets} tickets
         </span>
-        <span className="font-bebas text-xl leading-none" style={{ color: clr }}>
+        <span className="text-lg font-bold leading-none" style={{ color: clr }}>
           {pct}%
         </span>
       </div>
 
-      <div className="h-[2px] bg-[var(--bg-2)] mt-1.5 overflow-hidden">
+      <div className="h-1 rounded-full bg-[var(--hover)] mt-1.5 overflow-hidden">
         <div
-          className="h-full transition-all duration-500"
+          className="h-full rounded-full transition-all duration-500"
           style={{ width: `${Math.min(pct, 100)}%`, background: clr }}
         />
       </div>
@@ -155,24 +156,21 @@ function AgentCard({ agent }: { agent: Agent }) {
 
 function StakeholderCard({ s }: { s: Stakeholder }) {
   return (
-    <div className="relative border border-[var(--line)] bg-[var(--bg-0)] p-3">
-      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[var(--fg-faint)]" />
-      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[var(--fg-faint)]" />
-
-      <div className="flex items-start gap-2">
+    <div className="rounded-[10px] border border-[var(--border)] p-3">
+      <div className="flex items-start gap-2.5">
         <div
-          className="relative w-8 h-8 flex items-center justify-center font-bebas text-sm shrink-0"
-          style={{ background: STAKEHOLDER_COLOR + "20", border: `1px solid ${STAKEHOLDER_COLOR}`, color: STAKEHOLDER_COLOR }}
+          className="relative w-8 h-8 rounded-[9px] flex items-center justify-center text-xs font-bold shrink-0"
+          style={{ background: tint(STAKEHOLDER_COLOR, 16), color: STAKEHOLDER_COLOR }}
         >
           {s.initials}
-          <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#00F5C4]" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--green)] border border-[var(--surface)]" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-bebas text-sm text-[var(--fg)] truncate">{s.name}</div>
-          <div className="font-mono-tech text-[9px] text-[var(--fg-dim)] truncate leading-tight">{s.title}</div>
+          <div className="text-[12.5px] font-semibold text-[var(--text)] truncate">{s.name}</div>
+          <div className="text-[10.5px] text-[var(--text-faint)] truncate leading-tight">{s.title}</div>
           <div
-            className="mt-1.5 inline-block px-1.5 py-0.5 font-mono-tech text-[8px] font-bold"
-            style={{ background: STAKEHOLDER_COLOR, color: "#020B18" }}
+            className="mt-1.5 inline-block px-1.5 py-0.5 rounded text-[9px] font-bold"
+            style={{ background: STAKEHOLDER_COLOR, color: "#fff" }}
           >
             {s.department}
           </div>
@@ -187,53 +185,50 @@ function StakeholderCard({ s }: { s: Stakeholder }) {
 function TopologyCard({ level, agents }: { level: AgentLevel; agents: Agent[] }) {
   const cfg  = LEVEL_CFG[level];
   const stat = levelStats(agents);
-  const clr  = stat.pct >= 80 ? "#FF3D9A" : stat.pct >= 60 ? "#FF9E3D" : cfg.color;
+  const clr  = stat.pct >= 80 ? "var(--red)" : stat.pct >= 60 ? "var(--amber)" : cfg.color;
 
   return (
-    <div
-      className="flex-1 p-4 min-w-0"
-      style={{ border: `1px solid ${cfg.color}`, boxShadow: `inset 0 0 24px ${cfg.color}0a` }}
-    >
-      <div className="font-bebas leading-none" style={{ fontSize: 52, color: cfg.color }}>
+    <div className="flex-1 rounded-xl p-3.5 min-w-0 border" style={{ borderColor: cfg.color }}>
+      <div className="text-[26px] font-bold leading-none" style={{ color: cfg.color }}>
         {cfg.label}
       </div>
-      <div className="font-mono-tech text-[8px] text-[var(--fg-faint)] tracking-widest mb-3">
+      <div className="text-[9.5px] font-semibold text-[var(--text-faint)] tracking-[.03em] mt-1 mb-2.5">
         {cfg.title}
       </div>
 
-      <div className="flex items-end gap-3 mb-3">
+      <div className="flex items-end gap-3.5 mb-2">
         <div>
-          <div className="font-bebas text-2xl text-[var(--fg)]">{agents.length}</div>
-          <div className="font-mono-tech text-[7px] text-[var(--fg-faint)] tracking-widest">AGENTS</div>
+          <div className="text-base font-bold text-[var(--text)]">{agents.length}</div>
+          <div className="text-[8.5px] text-[var(--text-faint)]">AGENTS</div>
         </div>
         <div>
-          <div className="font-bebas text-2xl text-[var(--fg)]">{stat.open}</div>
-          <div className="font-mono-tech text-[7px] text-[var(--fg-faint)] tracking-widest">OPEN</div>
+          <div className="text-base font-bold text-[var(--text)]">{stat.open}</div>
+          <div className="text-[8.5px] text-[var(--text-faint)]">OPEN</div>
         </div>
         <div>
-          <div className="font-bebas text-2xl" style={{ color: clr }}>{stat.pct}%</div>
-          <div className="font-mono-tech text-[7px] text-[var(--fg-faint)] tracking-widest">LOAD</div>
+          <div className="text-base font-bold" style={{ color: clr }}>{stat.pct}%</div>
+          <div className="text-[8.5px] text-[var(--text-faint)]">LOAD</div>
         </div>
       </div>
 
-      <div className="h-[2px] bg-[var(--bg-0)] mb-2 overflow-hidden">
-        <div className="h-full transition-all duration-500" style={{ width: `${Math.min(stat.pct, 100)}%`, background: clr }} />
+      <div className="h-1 rounded-full bg-[var(--hover)] mb-2 overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(stat.pct, 100)}%`, background: clr }} />
       </div>
 
       <div className="flex flex-wrap gap-2">
         {stat.online > 0 && (
-          <span className="font-mono-tech text-[8px] flex items-center gap-1" style={{ color: "#00F5C4" }}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#00F5C4]" /> {stat.online} ONLINE
+          <span className="text-[10px] font-medium flex items-center gap-1" style={{ color: "var(--green)" }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--green)]" /> {stat.online} online
           </span>
         )}
         {stat.busy > 0 && (
-          <span className="font-mono-tech text-[8px] flex items-center gap-1" style={{ color: "#FF3D9A" }}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#FF3D9A]" /> {stat.busy} BUSY
+          <span className="text-[10px] font-medium flex items-center gap-1" style={{ color: "var(--red)" }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--red)]" /> {stat.busy} busy
           </span>
         )}
         {stat.away > 0 && (
-          <span className="font-mono-tech text-[8px] flex items-center gap-1" style={{ color: "#FF9E3D" }}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#FF9E3D]" /> {stat.away} AWAY
+          <span className="text-[10px] font-medium flex items-center gap-1" style={{ color: "var(--amber)" }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--amber)]" /> {stat.away} away
           </span>
         )}
       </div>
@@ -243,28 +238,25 @@ function TopologyCard({ level, agents }: { level: AgentLevel; agents: Agent[] })
 
 function StakeholderTopologyCard({ stakeholders }: { stakeholders: Stakeholder[] }) {
   return (
-    <div
-      className="flex-1 p-4 min-w-0"
-      style={{ border: `1px solid ${STAKEHOLDER_COLOR}`, boxShadow: `inset 0 0 24px ${STAKEHOLDER_COLOR}0a` }}
-    >
-      <div className="font-bebas leading-tight" style={{ fontSize: 18, color: STAKEHOLDER_COLOR }}>
-        STAKE-<br />HOLDERS
+    <div className="flex-1 rounded-xl p-3.5 min-w-0 border" style={{ borderColor: STAKEHOLDER_COLOR }}>
+      <div className="text-[13px] font-bold leading-tight" style={{ color: STAKEHOLDER_COLOR }}>
+        Stakeholders
       </div>
-      <div className="font-bebas leading-none my-1" style={{ fontSize: 52, color: STAKEHOLDER_COLOR }}>
+      <div className="text-[26px] font-bold leading-none my-1" style={{ color: STAKEHOLDER_COLOR }}>
         {stakeholders.length}
       </div>
-      <div className="font-mono-tech text-[8px] text-[var(--fg-faint)] tracking-widest mb-3">CONTACTS</div>
+      <div className="text-[9.5px] text-[var(--text-faint)] mb-2.5">Contacts</div>
 
       <div className="flex flex-wrap gap-1.5">
         {stakeholders.map((s) => (
           <div key={s.sub} className="relative">
             <div
-              className="w-8 h-8 flex items-center justify-center font-bebas text-sm"
-              style={{ background: STAKEHOLDER_COLOR + "20", border: `1px solid ${STAKEHOLDER_COLOR}`, color: STAKEHOLDER_COLOR }}
+              className="w-8 h-8 rounded-[9px] flex items-center justify-center text-xs font-bold"
+              style={{ background: tint(STAKEHOLDER_COLOR, 16), color: STAKEHOLDER_COLOR }}
             >
               {s.initials}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#00F5C4]" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--green)] border border-[var(--surface)]" />
           </div>
         ))}
       </div>
@@ -274,14 +266,12 @@ function StakeholderTopologyCard({ stakeholders }: { stakeholders: Stakeholder[]
 
 function EscalateArrow() {
   return (
-    <div className="flex flex-col items-center justify-center w-14 shrink-0 gap-0.5">
+    <div className="flex flex-col items-center justify-center w-12 shrink-0 gap-0.5">
       <div className="flex items-center w-full">
-        <div className="flex-1 h-px bg-[var(--line)]" />
-        <span className="text-[var(--line)] leading-none" style={{ fontSize: 10 }}>▶</span>
+        <div className="flex-1 h-px bg-[var(--border)]" />
+        <span className="text-[var(--text-faint)] leading-none text-[10px]">▶</span>
       </div>
-      <span className="font-mono-tech tracking-wider" style={{ fontSize: 6, color: "var(--fg-faint)" }}>
-        ESCALATE
-      </span>
+      <span className="text-[8px] font-medium text-[var(--text-faint)]">Escalate</span>
     </div>
   );
 }
@@ -292,30 +282,30 @@ function LevelSection({ level, agents }: { level: AgentLevel; agents: Agent[] })
   const [expanded, setExpanded] = useState(true);
   const cfg  = LEVEL_CFG[level];
   const stat = levelStats(agents);
-  const clr  = stat.pct >= 80 ? "#FF3D9A" : stat.pct >= 60 ? "#FF9E3D" : cfg.color;
+  const clr  = stat.pct >= 80 ? "var(--red)" : stat.pct >= 60 ? "var(--amber)" : cfg.color;
 
   return (
-    <div className="border border-[var(--line)] bg-[var(--bg-1)]">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-2)] transition-colors text-left"
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--hover)] transition-colors text-left cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="w-2 h-2 shrink-0" style={{ background: cfg.color }} />
-        <span className="font-bebas text-sm tracking-wider shrink-0" style={{ color: cfg.color }}>
+        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: cfg.color }} />
+        <span className="text-[13px] font-bold shrink-0" style={{ color: cfg.color }}>
           {level}
         </span>
-        <span className="font-bebas text-sm text-[var(--fg)] tracking-wider shrink-0">
+        <span className="text-[13px] font-semibold text-[var(--text)] shrink-0">
           {cfg.title}
         </span>
-        <span className="font-mono-tech text-[8px] text-[var(--fg-faint)] hidden lg:block truncate">
+        <span className="text-[10.5px] text-[var(--text-faint)] hidden lg:block truncate">
           · {cfg.desc}
         </span>
-        <div className="ml-auto flex items-center gap-4 font-mono-tech text-[9px] text-[var(--fg-dim)] shrink-0">
-          <span>{stat.online}/{agents.length} ONLINE</span>
-          <span>{stat.open} OPEN</span>
-          <span style={{ color: clr }}>{stat.pct}% LOAD</span>
+        <div className="ml-auto flex items-center gap-4 text-[11px] text-[var(--text-dim)] shrink-0">
+          <span>{stat.online}/{agents.length} online</span>
+          <span>{stat.open} open</span>
+          <span style={{ color: clr }}>{stat.pct}% load</span>
           <span
-            className="text-[var(--fg-faint)] transition-transform duration-200 inline-block"
+            className="text-[var(--text-faint)] transition-transform duration-200 inline-block"
             style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
           >
             ▼
@@ -324,7 +314,7 @@ function LevelSection({ level, agents }: { level: AgentLevel; agents: Agent[] })
       </button>
 
       {expanded && agents.length > 0 && (
-        <div className="border-t border-[var(--line)] p-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="border-t border-[var(--border)] p-3.5 grid grid-cols-2 gap-3 xl:grid-cols-4">
           {agents.map((a) => <AgentCard key={a.sub} agent={a} />)}
         </div>
       )}
@@ -423,50 +413,37 @@ export default function TeamOrg() {
 
   if (usersLoading || groupsLoading || ticketsLoading) {
     return (
-      <div className="flex items-center gap-2 py-8 font-mono-tech text-xs text-[var(--fg-faint)]">
-        <span className="animate-pulse">▸</span> LOADING TEAM DATA...
+      <div className="flex items-center gap-2 py-8 text-xs text-[var(--text-faint)]">
+        Loading team data…
       </div>
     );
   }
 
   if (totalMembers === 0) {
     return (
-      <div className="py-8 text-center font-mono-tech text-xs text-[var(--fg-faint)]">
-        NO TEAM MEMBERS FOUND
+      <div className="py-8 text-center text-xs text-[var(--text-faint)]">
+        No team members found
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3.5">
       {/* Global stats */}
-      <div className="flex items-center justify-end gap-4 font-mono-tech text-[10px]">
-        <span style={{ color: "#00F5C4" }}>● {totalOnline} ONLINE</span>
-        <span className="text-[var(--fg-dim)]">{totalMembers} TOTAL MEMBERS</span>
+      <div className="flex items-center justify-end gap-4 text-[11px]">
+        <span className="font-semibold" style={{ color: "var(--green)" }}>● {totalOnline} online</span>
+        <span className="text-[var(--text-dim)]">{totalMembers} total members</span>
       </div>
 
       {/* Escalation Topology */}
-      <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="font-mono-tech text-[9px] text-[var(--acc-1)]">▲▲</span>
-            <span className="font-bebas text-sm tracking-[.15em] text-[var(--fg)]">ESCALATION TOPOLOGY</span>
-          </div>
-          <div className="flex items-center gap-3 font-mono-tech text-[9px] text-[var(--fg-dim)]">
-            <span style={{ color: "#00F5C4" }}>{totalOnline} ONLINE</span>
-            <span>{agents.length} AGENTS</span>
-          </div>
-        </div>
-
-        <div className="flex items-stretch">
-          <TopologyCard level="L1" agents={byLevel.L1} />
-          <EscalateArrow />
-          <TopologyCard level="L2" agents={byLevel.L2} />
-          <EscalateArrow />
-          <TopologyCard level="L3" agents={byLevel.L3} />
-          <EscalateArrow />
-          <StakeholderTopologyCard stakeholders={stakeholders} />
-        </div>
+      <div className="flex items-stretch gap-2.5">
+        <TopologyCard level="L1" agents={byLevel.L1} />
+        <EscalateArrow />
+        <TopologyCard level="L2" agents={byLevel.L2} />
+        <EscalateArrow />
+        <TopologyCard level="L3" agents={byLevel.L3} />
+        <EscalateArrow />
+        <StakeholderTopologyCard stakeholders={stakeholders} />
       </div>
 
       {/* Per-level agent sections */}
@@ -478,20 +455,20 @@ export default function TeamOrg() {
 
       {/* Stakeholder section */}
       {stakeholders.length > 0 && (
-        <div className="border border-[var(--line)] bg-[var(--bg-1)]">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
           <div className="flex items-center gap-3 px-4 py-3">
-            <div className="w-2 h-2 shrink-0" style={{ background: STAKEHOLDER_COLOR }} />
-            <span className="font-bebas text-sm tracking-wider" style={{ color: STAKEHOLDER_COLOR }}>
-              STAKEHOLDERS
+            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: STAKEHOLDER_COLOR }} />
+            <span className="text-[13px] font-bold" style={{ color: STAKEHOLDER_COLOR }}>
+              Stakeholders
             </span>
-            <span className="font-mono-tech text-[8px] text-[var(--fg-faint)]">
-              KEY CONTACTS & ESCALATION
+            <span className="text-[10.5px] text-[var(--text-faint)]">
+              Key contacts &amp; escalation
             </span>
-            <span className="ml-auto font-mono-tech text-[9px] text-[var(--fg-dim)]">
-              {stakeholders.length} CONTACTS
+            <span className="ml-auto text-[11px] text-[var(--text-dim)]">
+              {stakeholders.length} contacts
             </span>
           </div>
-          <div className="border-t border-[var(--line)] p-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="border-t border-[var(--border)] p-3.5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {stakeholders.map((s) => <StakeholderCard key={s.sub} s={s} />)}
           </div>
         </div>

@@ -14,7 +14,7 @@ import DeadlineTag from "../DeadlineTag.tsx";
 import { useTheme } from "@takypok/shared";
 import dayjs from "dayjs";
 
-const COLORS = ["#FFE500", "#FF2D6B", "#00F5FF", "#FF6B35", "#A855F7", "#22D3EE"];
+const COLORS = ["#2F6FED", "#7C6FE0", "#1E9E6A", "#C77700", "#E5484D", "#0EA5E9"];
 
 type Tab = "status" | "issueType" | "project";
 type SortField = FilterTicketRequest["sortBy"];
@@ -150,9 +150,10 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
   };
 
   const tooltipStyle = {
-    backgroundColor: isDark ? "#041428" : "#E8EAED",
-    border: `1px solid ${isDark ? "rgba(0,207,255,0.35)" : "rgba(0,102,187,0.35)"}`,
-    color: isDark ? "#C8F0FF" : "#0A2540",
+    backgroundColor: isDark ? "#161D2B" : "#FFFFFF",
+    border: `1px solid ${isDark ? "#26304399" : "#E4E9F0"}`,
+    borderRadius: 8,
+    color: isDark ? "#E7ECF5" : "#1E2A3A",
   };
 
   // Map column key → API sortBy value
@@ -259,7 +260,7 @@ export default function TicketDistributionCard({ refetchKey = 0 }: Props) {
 
   const cardTitle = (
     <span className="flex items-center gap-2">
-      <Icon name="grid" size={14} className="text-[var(--acc-2)] opacity-80" />
+      <Icon name="grid" size={14} className="text-[var(--purple)] opacity-80" />
       Ticket Distribution
     </span>
   );

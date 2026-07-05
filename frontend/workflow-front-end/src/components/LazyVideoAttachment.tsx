@@ -13,8 +13,8 @@ export default function LazyVideoAttachment({ attachment }: { attachment: Messag
 
   if (attachment.status === "PROCESSING") {
     return (
-      <div className="w-[220px] h-[120px] rounded border border-[var(--line)] bg-[var(--bg-2)] flex items-center justify-center">
-        <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">
+      <div className="w-[220px] h-[120px] rounded-lg border border-[var(--border)] bg-[var(--hover)] flex items-center justify-center">
+        <span className="text-[10px] text-[var(--text-faint)]">
           Processing video...
         </span>
       </div>
@@ -23,8 +23,8 @@ export default function LazyVideoAttachment({ attachment }: { attachment: Messag
 
   if (attachment.status === "FAILED") {
     return (
-      <div className="w-[220px] h-[120px] rounded border border-[var(--line)] bg-[var(--bg-2)] flex items-center justify-center">
-        <span className="font-mono-tech text-[9px] text-red-400">Video failed to process</span>
+      <div className="w-[220px] h-[120px] rounded-lg border border-[var(--border)] bg-[var(--hover)] flex items-center justify-center">
+        <span className="text-[10px] text-[var(--red)]">Video failed to process</span>
       </div>
     );
   }
@@ -33,9 +33,9 @@ export default function LazyVideoAttachment({ attachment }: { attachment: Messag
     return (
       <button
         onClick={() => setPlaying(true)}
-        className="w-[220px] h-[120px] rounded border border-[var(--line)] bg-[var(--bg-2)] flex items-center justify-center cursor-pointer hover:bg-[var(--bg-0)] transition-colors"
+        className="w-[220px] h-[120px] rounded-lg border border-[var(--border)] bg-[var(--hover)] flex items-center justify-center cursor-pointer hover:bg-[var(--bg)] transition-colors"
       >
-        <PlayCircleOutlined className="text-3xl text-[var(--acc-1)]" />
+        <PlayCircleOutlined className="text-3xl text-[var(--accent)]" />
       </button>
     );
   }

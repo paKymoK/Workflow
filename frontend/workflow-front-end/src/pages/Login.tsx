@@ -1,11 +1,8 @@
-import { useEffect } from "react";
-import { useState } from "react";
-import { useAuth } from "@takypok/shared";
+import { useEffect, useState } from "react";
+import { useAuth, useTheme, BubbleBackground } from "@takypok/shared";
 import AddUserModal from "../components/settings/AddUserModal";
-import { useTheme } from "@takypok/shared";
-import { SunOutlined, MoonOutlined } from "@ant-design/icons";
-import { useFont } from "@takypok/shared";
-import { BubbleBackground } from "@takypok/shared";
+import { Icon } from "../components/ui/Icon";
+import { dynamicStyle } from "../utils/dynamicStyle";
 
 type AuthHealth = "checking" | "up" | "down";
 
@@ -27,7 +24,6 @@ export default function Login() {
   const [clock, setClock] = useState("");
   const [registerOpen, setRegisterOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { isCustomFont, toggleFont } = useFont();
   const [authHealth, setAuthHealth] = useState<AuthHealth>("checking");
 
   useEffect(() => {
@@ -44,158 +40,116 @@ export default function Login() {
     return () => clearInterval(id);
   }, []);
 
+  const ssoDisabled = authHealth !== "up";
+  const ssoLabel =
+    authHealth === "checking"
+      ? "Checking service…"
+      : authHealth === "down"
+      ? "Service unavailable"
+      : "Continue with SSO";
+
   return (
-    <div className="relative min-h-screen bg-[var(--black)] flex flex-col items-center justify-center overflow-hidden cursor-crosshair">
-      {/* Bubble background */}
+    <div
+      className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden"
+      style={dynamicStyle({ background: "radial-gradient(circle at 50% 0%, var(--accent-soft) 0%, var(--bg) 55%)" })}
+    >
       <BubbleBackground />
 
-      {/* Diagonal slash accent */}
-      <div className="login-slash-accent" />
+      <button
+        onClick={toggleTheme}
+        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        className="fixed top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-[9px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-dim)] hover:bg-[var(--hover)] transition-all cursor-pointer"
+      >
+        <Icon name={isDark ? "sun" : "moon"} size={15} stroke={2} />
+      </button>
 
-      {/* Font + Theme toggles */}
-      <div className="fixed top-4 right-4 z-20 flex gap-2">
-        <button
-          onClick={toggleFont}
-          title={isCustomFont ? "Switch to Default Font" : "Switch to Custom Font"}
-          className="w-9 h-9 flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--darker)] text-[var(--neon-yellow)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all text-xs font-bold tracking-wider"
-        >
-          Aa
-        </button>
-        <button
-          onClick={toggleTheme}
-          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          className="w-9 h-9 flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--darker)] text-[var(--neon-yellow)] hover:border-[var(--neon-yellow)] hover:bg-[var(--border-subtle)] transition-all"
-        >
-          {isDark ? <SunOutlined /> : <MoonOutlined />}
-        </button>
-      </div>
-
-      {/* Main card */}
-      <div className="relative z-10 slide-in grid grid-cols-1 md:grid-cols-[5fr_3fr] w-[min(1100px,95vw)] mt-8">
-
-        {/* ── Left banner placeholder ── */}
-        {/* TODO: replace with actual banner (illustration / brand art) */}
-        <div className="hidden md:flex flex-col items-center justify-center border-2 border-dashed border-[var(--border-subtle)] bg-[rgba(0,207,255,0.02)]">
-          <span className="font-bebas text-[13px] tracking-[0.3em] text-[var(--text-muted)]">[ BANNER PLACEHOLDER ]</span>
-          <span className="font-mono-tech text-[10px] text-[var(--text-muted)] mt-2 opacity-50">e.g. illustration / brand art</span>
+      <div className="relative z-10 flex flex-col items-center gap-7 w-[min(400px,88vw)] fade-up">
+        {/* Brand lockup */}
+        <div className="flex flex-col items-center gap-2.5">
+          <div
+            className="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white font-bold text-[19px]"
+            style={dynamicStyle({ boxShadow: "0 6px 18px color-mix(in oklab, var(--accent) 35%, transparent)" })}
+          >
+            T
+          </div>
+          <span className="text-[17px] font-bold text-[var(--text)]">TAKYPOK</span>
         </div>
 
-        <div className="bg-[var(--dark)] border-2 border-[var(--neon-yellow)] md:border-l-0 flex flex-col px-10 py-9">
-
-          {/* Brand header */}
-          <div className="flex items-center justify-between mb-6 pb-5 border-b border-[var(--border-subtle)]">
-            <span className="font-bebas text-[32px] leading-none tracking-[0.05em] text-[var(--neon-yellow)] glitch-anim">
-              AMS GATE
-            </span>
-            <span className="font-bebas text-[10px] tracking-[0.25em] text-[var(--text-muted)] border border-[var(--border-subtle)] px-2 py-1">
-              ▲ SECURE PORTAL
-            </span>
+        {/* Card */}
+        <div
+          className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl px-[30px] py-8 box-border"
+          style={dynamicStyle({ boxShadow: "0 12px 36px rgba(30,42,58,0.08)" })}
+        >
+          <div className="text-center mb-[22px]">
+            <h2 className="text-[21px] font-bold text-[var(--text)] mb-1.5">Sign in to your workspace</h2>
+            <p className="text-[12.5px] text-[var(--text-faint)]">Use your organization account to continue</p>
           </div>
 
-          {/* Header */}
-          <div className="mb-6">
-            <p className="font-mono-tech text-[10px] text-[var(--neon-cyan)] tracking-[0.3em] uppercase mb-2">
-              ▸ Terminal Login
-            </p>
-            <h2 className="font-bebas text-[36px] text-[var(--white)] tracking-[0.05em] leading-none">
-              ENTER <span className="neon-text-yellow">ACCESS</span>
-            </h2>
-          </div>
-
-          {/* Info block */}
-          <div className="mb-6 border-l-2 border-[var(--neon-cyan)] pl-4 bg-[rgba(0,245,255,0.04)] py-3 pr-3">
-            <p className="font-mono-tech text-[11px] text-[var(--neon-cyan)] tracking-[0.08em] leading-relaxed">
-              ✓ STATUS // Authentication is managed via OAuth2.<br />
-              A secure popup will open for the identity provider.
-            </p>
-          </div>
-
-          {/* Auth service down warning */}
           {authHealth === "down" && (
-            <div className="mb-6 border border-[var(--neon-pink)] bg-[rgba(255,45,107,0.07)] px-4 py-3 auth-down-pulse">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center justify-center w-4 h-4 border border-[var(--neon-pink)] rounded-full text-[9px] text-[var(--neon-pink)] auth-icon-spin shrink-0">
-                  !
-                </span>
-                <span className="font-bebas text-[14px] text-[var(--neon-pink)] tracking-[0.25em]">
-                  AUTH SERVICE DEGRADED
-                </span>
-              </div>
-              <p className="font-mono-tech text-[10px] text-[rgba(255,45,107,0.7)] tracking-[0.08em] leading-relaxed">
-                Authentication system is currently unavailable.<br />
-                Access has been disabled until the service recovers.
+            <div
+              className="mb-4 rounded-[10px] border border-[var(--red)] px-4 py-3"
+              style={dynamicStyle({ background: "color-mix(in oklab, var(--red) 8%, transparent)" })}
+            >
+              <span className="text-[13px] font-semibold text-[var(--red)]">Authentication unavailable</span>
+              <p className="text-[11.5px] text-[var(--text-dim)] leading-relaxed mt-1 mb-0">
+                The authentication service is currently unavailable. Access is disabled until it recovers.
               </p>
-              <span className="inline-block mt-2 bg-[rgba(255,45,107,0.15)] text-[var(--neon-pink)] font-mono-tech text-[9px] px-2 py-0.5 tracking-[0.05em]">
-                ERR // AUTH_SERVICE_UNAVAILABLE
-              </span>
             </div>
           )}
 
-          {/* Server / token exchange error */}
           {authError && (
-            <div className="mb-6 border border-[var(--neon-pink)] bg-[rgba(255,45,107,0.07)] px-4 py-3">
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-4 h-4 border border-[var(--neon-pink)] rounded-full text-[9px] text-[var(--neon-pink)] shrink-0">
-                    !
-                  </span>
-                  <span className="font-bebas text-[14px] text-[var(--neon-pink)] tracking-[0.25em]">
-                    AUTHENTICATION ERROR
-                  </span>
-                </div>
+            <div
+              className="mb-4 rounded-[10px] border border-[var(--red)] px-4 py-3"
+              style={dynamicStyle({ background: "color-mix(in oklab, var(--red) 8%, transparent)" })}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[13px] font-semibold text-[var(--red)]">Authentication error</span>
                 <button
                   onClick={clearAuthError}
-                  className="text-[var(--neon-pink)] opacity-60 hover:opacity-100 font-mono-tech text-[11px] leading-none"
+                  className="text-[var(--red)] opacity-60 hover:opacity-100 text-[13px] leading-none bg-transparent border-none cursor-pointer p-0"
                   aria-label="Dismiss error"
                 >
                   ✕
                 </button>
               </div>
-              <p className="font-mono-tech text-[10px] text-[rgba(255,45,107,0.8)] tracking-[0.08em] leading-relaxed break-words">
-                {authError}
-              </p>
+              <p className="text-[11.5px] text-[var(--text-dim)] leading-relaxed break-words mt-1 mb-0">{authError}</p>
             </div>
           )}
 
-          {/* OAuth2 button */}
           <button
             onClick={() => login(true)}
-            disabled={authHealth !== "up"}
-            className={`neon-btn w-full py-4 font-bebas text-[22px] tracking-[0.25em] border-none transition-all ${
-              authHealth === "up"
-                ? "bg-[var(--neon-yellow)] text-[var(--dark)] cursor-crosshair"
-                : authHealth === "checking"
-                ? "bg-[rgba(255,229,0,0.15)] text-[rgba(255,229,0,0.4)] cursor-not-allowed"
-                : "bg-[rgba(255,45,107,0.12)] text-[var(--neon-pink)] border border-[var(--neon-pink)] cursor-not-allowed opacity-70"
-            }`}
+            disabled={ssoDisabled}
+            className="w-full py-3 rounded-[10px] border-none bg-[var(--accent)] text-white text-sm font-bold cursor-pointer mb-2.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="neon-btn-content">
-              {authHealth === "checking"
-                ? "CHECKING SERVICE..."
-                : authHealth === "down"
-                ? "// SERVICE OFFLINE //"
-                : "INITIATE ACCESS ⚡"}
-            </span>
+            <Icon name="shield" size={15} stroke={2.2} />
+            {ssoLabel}
           </button>
-
-          {/* Register button */}
           <button
             onClick={() => setRegisterOpen(true)}
-            disabled={authHealth !== "up"}
-            className={`w-full mt-3 py-4 font-bebas text-[22px] tracking-[0.25em] bg-transparent border-2 transition-all ${
-              authHealth === "up"
-                ? "border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--neon-cyan)] hover:text-[var(--neon-cyan)] hover:shadow-[0_0_16px_rgba(0,245,255,0.2)] cursor-crosshair"
-                : "border-[rgba(123,47,190,0.2)] text-[rgba(123,47,190,0.35)] cursor-not-allowed"
-            }`}
+            className="w-full py-3 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-dim)] text-sm font-semibold cursor-pointer mb-[18px] hover:bg-[var(--hover)]"
           >
-            REGISTER ◈
+            Request access
           </button>
 
-          {/* Footer note */}
-          <p className="font-mono-tech text-[9px] tracking-[0.15em] text-[var(--text-muted)] uppercase mt-6 text-center">
-            // Secure OAuth2 · PKCE Flow · Session Encrypted
-          </p>
+          <div className="flex items-center gap-2.5 mb-[18px]">
+            <div className="flex-1 h-px bg-[var(--border)]" />
+            <span className="text-[10.5px] text-[var(--text-faint)] uppercase tracking-[.05em]">Secured</span>
+            <div className="flex-1 h-px bg-[var(--border)]" />
+          </div>
+
+          <div className="flex items-center justify-center gap-[18px]">
+            <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-faint)]">
+              <Icon name="lock" size={12} stroke={2} /> OAuth2 · PKCE
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-faint)]">
+              <Icon name="shield" size={12} stroke={2} /> Session encrypted
+            </span>
+          </div>
         </div>
+
+        <span className="text-[11px] text-[var(--text-faint)]">
+          Need help? <a href="#" className="text-[var(--accent)] no-underline font-semibold">Contact your admin</a>
+        </span>
       </div>
 
       <AddUserModal
@@ -205,12 +159,12 @@ export default function Login() {
       />
 
       {/* Status bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-[var(--neon-pink)] flex items-center px-4 gap-6 z-10">
-        <span className="font-bebas text-[12px] text-black tracking-[0.15em] flex items-center gap-1.5">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-black blink" />
+      <div className="fixed bottom-0 left-0 right-0 h-7 bg-[var(--accent)] flex items-center px-[18px] gap-5 text-white text-[11px] font-semibold z-10">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-white blink" />
           LIVE
         </span>
-        <span className="font-bebas text-[12px] text-black tracking-[0.15em] ml-auto">{clock}</span>
+        <span className="ml-auto tabular-nums">{clock}</span>
       </div>
     </div>
   );

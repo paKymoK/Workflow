@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.0",
+    "@fontsource/inter": "^5.2.8",
     "@takypok/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-virtual": "^3.14.5",

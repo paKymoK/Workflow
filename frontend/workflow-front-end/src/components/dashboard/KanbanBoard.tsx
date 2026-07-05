@@ -11,25 +11,20 @@ import PriorityBars from "./PriorityBars";
 import dayjs from "dayjs";
 
 const GROUPS = [
-  { key: "TODO",        label: "TODO",        color: "var(--acc-1)" },
-  { key: "PROCESSING",  label: "IN PROGRESS",  color: "var(--acc-warn)" },
-  { key: "DONE",        label: "DONE",         color: "var(--acc-3)" },
+  { key: "TODO",        label: "To Do",        color: "var(--accent)" },
+  { key: "PROCESSING",  label: "In Progress",  color: "var(--amber)"  },
+  { key: "DONE",        label: "Done",         color: "var(--green)"  },
 ] as const;
 
 const COL_DRAG_CLASSES: Record<string, string> = {
-  "TODO":       "border-[var(--acc-1)] bg-[color-mix(in_oklab,var(--acc-1)_5%,transparent)]",
-  "PROCESSING": "border-[var(--acc-warn)] bg-[color-mix(in_oklab,var(--acc-warn)_5%,transparent)]",
-  "DONE":       "border-[var(--acc-3)] bg-[color-mix(in_oklab,var(--acc-3)_5%,transparent)]",
-};
-const COL_BORDER_TOP: Record<string, string> = {
-  "TODO":       "[border-top:2px_solid_var(--acc-1)]",
-  "PROCESSING": "[border-top:2px_solid_var(--acc-warn)]",
-  "DONE":       "[border-top:2px_solid_var(--acc-3)]",
+  "TODO":       "border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_5%,transparent)]",
+  "PROCESSING": "border-[var(--amber)] bg-[color-mix(in_oklab,var(--amber)_5%,transparent)]",
+  "DONE":       "border-[var(--green)] bg-[color-mix(in_oklab,var(--green)_5%,transparent)]",
 };
 const COL_TEXT: Record<string, string> = {
-  "TODO":       "text-[var(--acc-1)]",
-  "PROCESSING": "text-[var(--acc-warn)]",
-  "DONE":       "text-[var(--acc-3)]",
+  "TODO":       "text-[var(--text-dim)]",
+  "PROCESSING": "text-[var(--text-dim)]",
+  "DONE":       "text-[var(--text-dim)]",
 };
 
 interface Props {
@@ -121,7 +116,7 @@ export default function KanbanBoard({ onCardClick }: Props) {
   if (tickets.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="font-mono-tech text-[var(--fg-faint)] text-sm">
+        <p className="text-[var(--text-faint)] text-sm">
           No tickets assigned to you
         </p>
       </div>
@@ -133,7 +128,7 @@ export default function KanbanBoard({ onCardClick }: Props) {
       {columns.map((col) => (
         <div
           key={col.key}
-          className={`flex flex-col border transition-colors ${overGroup === col.key ? COL_DRAG_CLASSES[col.key] : "border-[var(--line)] bg-transparent"}`}
+          className={`flex flex-col rounded-xl border overflow-hidden transition-colors ${overGroup === col.key ? COL_DRAG_CLASSES[col.key] : "border-[var(--border)] bg-[var(--surface)]"}`}
           onDragOver={(e) => { e.preventDefault(); setOverGroup(col.key); }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverGroup(null);
@@ -141,19 +136,17 @@ export default function KanbanBoard({ onCardClick }: Props) {
           onDrop={() => handleDrop(col.key)}
         >
           {/* Column header */}
-          <div
-            className={`flex items-center justify-between px-3 py-2 border-b border-[var(--line)] ${COL_BORDER_TOP[col.key]}`}
-          >
-            <span className={`font-bebas text-sm tracking-[.15em] ${COL_TEXT[col.key]}`}>
+          <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[var(--border)]">
+            <span className={`text-xs font-bold uppercase tracking-[.03em] ${COL_TEXT[col.key]}`}>
               {col.label}
             </span>
-            <span className="font-mono-tech text-[10px] text-[var(--fg-faint)]">
+            <span className="text-[11px] font-semibold text-[var(--text-faint)] bg-[var(--hover)] rounded-full px-1.5 py-0.5">
               {col.tickets.length}
             </span>
           </div>
 
           {/* Cards */}
-          <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
+          <div className="flex-1 overflow-y-auto p-2.5 flex flex-col gap-2">
             {col.tickets.map((ticket) => (
               <KanbanCard
                 key={ticket.id}
@@ -165,8 +158,8 @@ export default function KanbanBoard({ onCardClick }: Props) {
               />
             ))}
             {col.tickets.length === 0 && (
-              <p className="font-mono-tech text-[10px] text-[var(--fg-faint)] text-center mt-4">
-                EMPTY
+              <p className="text-[11px] text-[var(--text-faint)] text-center mt-4">
+                No tickets
               </p>
             )}
           </div>
@@ -199,21 +192,19 @@ function KanbanCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onClick}
-      className={`border border-[var(--line)] bg-[var(--bg-1)] p-3 flex flex-col gap-2 cursor-crosshair select-none transition-all ${isDragging ? "opacity-40" : "opacity-100"}`}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--line-strong)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.borderColor = "var(--line)"; }}
+      className={`rounded-[9px] border border-[var(--border)] bg-[var(--bg)] p-2.5 flex flex-col gap-2 cursor-pointer select-none transition-all hover:-translate-y-0.5 hover:border-[var(--text-faint)] ${isDragging ? "opacity-40" : "opacity-100"}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono-tech text-[11px] text-[var(--acc-1)]">{code}</span>
+        <span className="text-[11px] font-semibold text-[var(--accent)]">{code}</span>
         <StatusChip color={ticket.status.color} name={ticket.status.name} small />
       </div>
-      <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0 line-clamp-2 leading-snug">
+      <p className="text-xs text-[var(--text)] m-0 line-clamp-2 leading-snug">
         {ticket.summary}
       </p>
       <SlaBar sla={ticket.sla} />
       <div className="flex items-center justify-between">
         <PriorityBars priority={ticket.priority} />
-        <span className="font-mono-tech text-[9px] text-[var(--fg-faint)]">{ageDisplay}</span>
+        <span className="text-[10px] text-[var(--text-faint)]">{ageDisplay}</span>
       </div>
     </div>
   );

@@ -77,7 +77,6 @@ export default function InspectorDrawer({ id, onClose }: Props) {
           icon={<CaretRightOutlined />}
           loading={transitionMutation.isPending}
           onClick={() => handleTransition(availableTransitions[0].name)}
-          className="font-bebas! tracking-wider!"
         >
           {availableTransitions[0].name}
         </Button>
@@ -94,12 +93,7 @@ export default function InspectorDrawer({ id, onClose }: Props) {
         }}
         trigger={["click"]}
       >
-        <Button
-          size="small"
-          icon={<DownOutlined />}
-          loading={transitionMutation.isPending}
-          className="font-bebas! tracking-wider!"
-        >
+        <Button size="small" icon={<DownOutlined />} loading={transitionMutation.isPending}>
           Advance
         </Button>
       </Dropdown>
@@ -114,16 +108,10 @@ export default function InspectorDrawer({ id, onClose }: Props) {
       title={null}
       closeIcon={null}
       className="inspector-drawer"
-      styles={{ body: { padding: 0 }, wrapper: { boxShadow: "-8px 0 32px rgba(0,0,0,.5)" } }}
+      styles={{ body: { padding: 0 }, wrapper: { boxShadow: "-8px 0 32px rgba(0,0,0,.16)" } }}
     >
-      {/* Corner brackets */}
-      <span className="content-corner content-corner-tl absolute top-0 left-0" />
-      <span className="content-corner content-corner-tr absolute top-0 right-0" />
-      <span className="content-corner content-corner-bl absolute bottom-0 left-0" />
-      <span className="content-corner content-corner-br absolute bottom-0 right-0" />
-
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-[var(--line)]">
+      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
         {isLoading || !ticket ? (
           <Skeleton active paragraph={{ rows: 2 }} />
         ) : (
@@ -131,18 +119,18 @@ export default function InspectorDrawer({ id, onClose }: Props) {
             <div className="flex items-center gap-2 flex-wrap mb-2">
               <button
                 onClick={() => { navigate(`/dashboard/${ticket.id}`); onClose(); }}
-                className="font-mono-tech text-[13px] text-[var(--acc-1)] hover:underline cursor-pointer bg-transparent border-none p-0"
+                className="text-[13px] font-semibold text-[var(--accent)] hover:underline cursor-pointer bg-transparent border-none p-0"
               >
                 {ticketCode}
               </button>
               <StatusChip color={ticket.status.color} name={ticket.status.name} />
               {isPaused && (
-                <Tag color="var(--acc-amber)" className="font-bebas! tracking-wider! text-xs!">
-                  PAUSED
+                <Tag color="var(--amber)" className="text-xs!">
+                  Paused
                 </Tag>
               )}
             </div>
-            <p className="font-mono-tech text-[12px] text-[var(--fg)] leading-snug m-0 line-clamp-2">
+            <p className="text-[13px] text-[var(--text)] leading-snug m-0 line-clamp-2">
               {ticket.summary}
             </p>
           </>
@@ -157,41 +145,41 @@ export default function InspectorDrawer({ id, onClose }: Props) {
           <>
             {/* SLA block */}
             <section>
-              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-2">
-                // SLA STATUS
+              <p className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)] mb-2">
+                SLA Status
               </p>
               <div className="flex items-end gap-3 mb-2">
                 <span
-                  className="font-bebas text-4xl leading-none"
+                  className="text-4xl font-bold leading-none"
                   style={dynamicStyle({
                     color: ticket.sla?.status.isResolutionOverdue
-                      ? "var(--priority-critical)"
+                      ? "var(--red)"
                       : resolutionPct >= 80
-                      ? "var(--acc-amber)"
-                      : "var(--acc-1)",
+                      ? "var(--amber)"
+                      : "var(--accent)",
                   })}
                 >
                   {Math.min(100, Math.round(resolutionPct))}%
                 </span>
-                <span className="font-mono-tech text-[10px] text-[var(--fg-faint)] mb-1">
+                <span className="text-[11px] text-[var(--text-faint)] mb-1">
                   resolution
                 </span>
               </div>
               <SlaBar sla={ticket.sla} />
               <div className="flex gap-4 mt-2">
-                <span className="font-mono-tech text-[10px]"
-                  style={dynamicStyle({ color: responseOk ? "var(--acc-3)" : "var(--priority-critical)" })}>
+                <span className="text-[11px] font-semibold"
+                  style={dynamicStyle({ color: responseOk ? "var(--green)" : "var(--red)" })}>
                   {responseOk ? "✓" : "✗"} Response
                 </span>
-                <span className="font-mono-tech text-[10px]"
-                  style={dynamicStyle({ color: resolutionOk ? "var(--acc-3)" : "var(--priority-critical)" })}>
+                <span className="text-[11px] font-semibold"
+                  style={dynamicStyle({ color: resolutionOk ? "var(--green)" : "var(--red)" })}>
                   {resolutionOk ? "✓" : "✗"} Resolution
                 </span>
               </div>
               {isPaused && ticket.sla?.pausedTime?.length ? (
-                <div className="mt-2 px-3 py-2 border-l-2 border-[var(--acc-amber)] bg-[var(--bg-2)]">
-                  <p className="font-mono-tech text-[10px] text-[var(--acc-amber)] m-0">
-                    SLA PAUSED — {ticket.sla.pausedTime[ticket.sla.pausedTime.length - 1].reason ?? "No reason given"}
+                <div className="mt-2 px-3 py-2 rounded-md border-l-2 border-[var(--amber)] bg-[var(--hover)]">
+                  <p className="text-[11px] text-[var(--amber)] m-0">
+                    SLA paused — {ticket.sla.pausedTime[ticket.sla.pausedTime.length - 1].reason ?? "No reason given"}
                   </p>
                 </div>
               ) : null}
@@ -199,16 +187,16 @@ export default function InspectorDrawer({ id, onClose }: Props) {
 
             {/* Priority */}
             <section>
-              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-2">
-                // PRIORITY
+              <p className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)] mb-2">
+                Priority
               </p>
               <PriorityBars priority={ticket.priority} />
             </section>
 
             {/* Meta grid */}
             <section>
-              <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-2">
-                // DETAILS
+              <p className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)] mb-2">
+                Details
               </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {[
@@ -216,11 +204,11 @@ export default function InspectorDrawer({ id, onClose }: Props) {
                   ["Issue Type", ticket.issueType.name],
                   ["Reporter",   ticket.reporter.name],
                   ["Created",    dayjs(ticket.createdAt).format("DD MMM YYYY")],
-                  ["Assignee",   ticket.assignee?.name ?? "UNASSIGNED"],
+                  ["Assignee",   ticket.assignee?.name ?? "Unassigned"],
                 ].map(([label, value]) => (
                   <div key={label}>
-                    <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] tracking-widest uppercase m-0">{label}</p>
-                    <p className="font-mono-tech text-[11px] text-[var(--fg)] m-0 truncate">{value}</p>
+                    <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-[.04em] m-0">{label}</p>
+                    <p className="text-[12px] text-[var(--text)] m-0 truncate">{value}</p>
                   </div>
                 ))}
               </div>
@@ -229,10 +217,10 @@ export default function InspectorDrawer({ id, onClose }: Props) {
             {/* Description */}
             {ticket.detail?.description && (
               <section>
-                <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-2">
-                  // DESCRIPTION
+                <p className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)] mb-2">
+                  Description
                 </p>
-                <p className="font-mono-tech text-[11px] text-[var(--fg-dim)] leading-relaxed m-0 line-clamp-4">
+                <p className="text-[12.5px] text-[var(--text-dim)] leading-relaxed m-0 line-clamp-4">
                   {ticket.detail.description}
                 </p>
               </section>
@@ -241,20 +229,20 @@ export default function InspectorDrawer({ id, onClose }: Props) {
             {/* Pause history */}
             {(ticket.sla?.pausedTime?.length ?? 0) > 0 && (
               <section>
-                <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-2">
-                  // PAUSE HISTORY
+                <p className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)] mb-2">
+                  Pause History
                 </p>
                 <div className="flex flex-col gap-2">
                   {ticket.sla!.pausedTime.map((pt, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--acc-amber)] mt-1.5 flex-shrink-0" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--amber)] mt-1.5 flex-shrink-0" />
                       <div>
-                        <p className="font-mono-tech text-[10px] text-[var(--fg-dim)] m-0">
+                        <p className="text-[11px] text-[var(--text-dim)] m-0">
                           {dayjs(pt.pausedTime).format("DD MMM HH:mm")}
                           {pt.resumeTime ? ` → ${dayjs(pt.resumeTime).format("HH:mm")}` : " (active)"}
                         </p>
                         {pt.reason && (
-                          <p className="font-mono-tech text-[9px] text-[var(--fg-faint)] m-0">{pt.reason}</p>
+                          <p className="text-[10px] text-[var(--text-faint)] m-0">{pt.reason}</p>
                         )}
                       </div>
                     </div>
@@ -267,13 +255,13 @@ export default function InspectorDrawer({ id, onClose }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-[var(--line)] flex items-center gap-2 flex-wrap">
+      <div className="px-5 py-3 border-t border-[var(--border)] flex items-center gap-2 flex-wrap">
         <Button
           type="primary"
           size="small"
           icon={<ArrowRightOutlined />}
           onClick={() => { navigate(`/dashboard/${id}`); onClose(); }}
-          className="font-bebas! tracking-wider! flex-shrink-0"
+          className="flex-shrink-0"
         >
           Open full ticket
         </Button>
@@ -283,7 +271,6 @@ export default function InspectorDrawer({ id, onClose }: Props) {
           loading={pauseMutation.isPending || resumeMutation.isPending}
           onClick={handlePause}
           disabled={!ticket}
-          className="font-bebas! tracking-wider!"
         >
           {isPaused ? "Resume" : "Pause"}
         </Button>
