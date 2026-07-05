@@ -243,6 +243,7 @@ export interface ChatSender {
   sub: string;
   name: string;
   email?: string;
+  avatar?: string | null;
 }
 
 export interface Conversation {

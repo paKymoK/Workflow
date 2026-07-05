@@ -3,6 +3,7 @@ package com.takypok.authservice.service.impl;
 import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.model.mapper.UserinfoMapper;
 import com.takypok.authservice.model.request.FilterUserRequest;
+import com.takypok.authservice.model.request.UpdateAvatarRequest;
 import com.takypok.authservice.model.request.UserinfoRequest;
 import com.takypok.authservice.model.response.UserinfoResponse;
 import com.takypok.authservice.repository.UserInfoRepository;
@@ -62,6 +63,13 @@ public class UserServiceImpl implements UserService {
     userDetailsManager.createUser(user);
     Userinfo info = userinfoMapper.toEntity(request.getUserinfo(), user.getUsername());
     return userinfoMapper.toResponse(userInfoRepository.save(info));
+  }
+
+  @Override
+  @Transactional
+  public UserinfoResponse updateAvatar(String sub, UpdateAvatarRequest request) {
+    userInfoRepository.updateAvatar(sub, request.getAvatar());
+    return userinfoMapper.toResponse(userInfoRepository.getReferenceById(sub));
   }
 
   private void validateUsername(String username) {

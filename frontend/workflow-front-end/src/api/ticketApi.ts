@@ -221,6 +221,7 @@ export interface UserSummary {
     sub: string;
     name: string;
     email: string;
+    avatar?: string | null;
 }
 
 export async function searchMentions(q: string): Promise<UserSummary[]> {
@@ -243,6 +244,14 @@ export async function fetchUserBySub(sub: string): Promise<UserSummary | null> {
     } catch {
         return null;
     }
+}
+
+export async function updateMyAvatar(sub: string, avatar: string): Promise<UserSummary> {
+    const { data } = await api.patch<ResultMessage<UserSummary>>(
+        `/auth-service/v1/users/${sub}/avatar`,
+        { avatar },
+    );
+    return data.data;
 }
 
 export async function fetchTicketByIssueType(from?: string, to?: string) {

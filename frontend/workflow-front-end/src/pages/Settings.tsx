@@ -1,6 +1,9 @@
+import { useRef, useState } from "react";
 import { useUrlState } from "@state";
-import { useTheme } from "@takypok/shared";
+import { useAuth, useTheme } from "@takypok/shared";
 import type { AccentScheme } from "@takypok/shared";
+import { Avatar, Button, message as antMessage } from "antd";
+import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 import { Icon } from "../components/ui/Icon";
 import type { IconName } from "../components/ui/Icon";
 import WorkflowList from "../components/settings/WorkflowList";
@@ -10,6 +13,8 @@ import ProjectList from "../components/settings/ProjectList";
 import IssueTypeList from "../components/settings/IssueTypeList";
 import TeamOrg from "../components/settings/TeamOrg";
 import { useStatuses, useProjects, usePriorities, useAllIssueTypes } from "../hooks/useTickets";
+import { getFileUrl, updateMyAvatar, uploadFile } from "../api/ticketApi";
+import { resizeImageForUpload } from "../utils/imageResize";
 
 const SCHEMES: { key: AccentScheme; label: string }[] = [
   { key: "ice",      label: "ICE"      },
@@ -69,11 +74,42 @@ function SectionContent({ tabKey }: { tabKey: string }) {
 export default function Settings() {
   const [activeKey, setActiveKey]          = useUrlState("wfTab", "workflow");
   const { accentScheme, setAccentScheme }  = useTheme();
+  const { user } = useAuth();
 
   const { data: statuses   = [] } = useStatuses();
   const { data: projects   = [] } = useProjects();
   const { data: priorities = [] } = usePriorities();
   const { data: issueTypes = [] } = useAllIssueTypes();
+
+  const mySub = user?.sub as string | undefined;
+  // Profile fields live under the JWT's custom "info" claim, not top-level — see
+  // CustomOAuth2TokenCustomizer on the auth-service side.
+  const info = user?.info as { avatar?: string | null } | undefined;
+  // undefined = "use whatever the current session's token says"; once we upload, we override
+  // locally since the token itself won't reflect the change until it's next refreshed.
+  const [avatarOverride, setAvatarOverride] = useState<string | null | undefined>(undefined);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+
+  const avatarUrl = avatarOverride !== undefined ? avatarOverride : (info?.avatar ?? null);
+
+  async function handleAvatarChange(files: FileList | null) {
+    const file = files?.[0];
+    if (!file || !mySub) return;
+    setAvatarUploading(true);
+    try {
+      const resized = await resizeImageForUpload(file);
+      const uploaded = await uploadFile(resized);
+      const url = getFileUrl(uploaded.id, uploaded.extension);
+      await updateMyAvatar(mySub, url);
+      setAvatarOverride(url);
+      antMessage.success("Avatar updated");
+    } catch {
+      antMessage.error("Failed to update avatar");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
 
   const counts: Record<string, number | null> = {
     workflow:     null,
@@ -92,6 +128,35 @@ export default function Settings() {
       <div className="flex items-center gap-3">
         <h2 className="font-bebas text-3xl tracking-[0.15em] neon-text-acc m-0">▸ SETTINGS</h2>
         <span className="font-mono-tech text-xs text-[var(--fg-faint)] tracking-widest">// SYSTEM CONFIG</span>
+      </div>
+
+      {/* Profile */}
+      <div className="border border-[var(--line)] bg-[var(--bg-1)] p-4">
+        <p className="font-bebas text-[11px] tracking-[.2em] text-[var(--acc-1)] mb-3">// PROFILE</p>
+        <div className="flex items-center gap-4">
+          <Avatar size={64} src={avatarUrl ?? undefined} icon={!avatarUrl ? <UserOutlined /> : undefined} />
+          <div className="flex flex-col gap-1.5">
+            <span className="font-mono-tech text-[11px] text-[var(--fg-dim)]">Avatar</span>
+            <input
+              ref={avatarFileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                handleAvatarChange(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <Button
+              size="small"
+              icon={<UploadOutlined />}
+              loading={avatarUploading}
+              onClick={() => avatarFileInputRef.current?.click()}
+            >
+              Change Avatar
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Appearance */}

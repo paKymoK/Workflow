@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class AuditingConfig {
 
-  private static final User SYSTEM = new User("system", "System", null, null, null);
+  private static final User SYSTEM = new User("system", "System", null, null, null, null);
 
   @Bean
   public ReactiveAuditorAware<User> auditorAware() {

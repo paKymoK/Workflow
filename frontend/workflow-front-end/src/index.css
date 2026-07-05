@@ -646,8 +646,9 @@ input:focus-within ~ .focus-bar { width: 100%; }
 .ant-form-item .ant-form-item-label {
   background: transparent !important;
 }
-/* Modal header background bleed fix */
-.ant-modal .ant-modal-header {
+/* Modal header/footer background bleed fix */
+.ant-modal .ant-modal-header,
+.ant-modal .ant-modal-footer {
   background: transparent !important;
 }
 

@@ -26,6 +26,11 @@ public interface UserInfoRepository extends JpaRepository<Userinfo, String> {
       @Param("title") String title,
       @Param("department") String department);
 
+  @Modifying
+  @Transactional
+  @Query("UPDATE Userinfo u SET u.avatar = :avatar WHERE u.sub = :sub")
+  int updateAvatar(@Param("sub") String sub, @Param("avatar") String avatar);
+
   Page<Userinfo> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
       String name, String email, Pageable pageable);
 

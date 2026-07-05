@@ -43,6 +43,8 @@ export const messagesKeys = {
   // Global, sub -> resolved display name — same "shared cache, seeded + read separately"
   // trick as presence.
   participantNames: ["participantNames"] as const,
+  // Same idea, sub -> avatar URL (or null) — populated alongside participantNames.
+  participantAvatars: ["participantAvatars"] as const,
 };
 
 export function useConversations() {
@@ -225,10 +227,24 @@ export function useParticipantNamesMap(): Record<string, string> {
   return data;
 }
 
-/** Resolves names for whichever of the given subs aren't already cached. auth-service has no
- * batch-by-subs endpoint, so this is one request per missing sub — fine at DM-list scale, but
- * callers should pass only the subs that actually need a name (DM peers), not every channel
- * member, to keep the request count small. */
+/** sub -> avatar image URL (or null if that user has none set) — same cache-seeded-elsewhere
+ * pattern as participant names, populated by the same useSyncParticipantNames fetch so DM
+ * peer avatars never need a lookup of their own. */
+export function useParticipantAvatarsMap(): Record<string, string | null> {
+  const { data } = useQuery({
+    queryKey: messagesKeys.participantAvatars,
+    queryFn: () => Promise.resolve({} as Record<string, string | null>),
+    enabled: false,
+    initialData: {} as Record<string, string | null>,
+    staleTime: Infinity,
+  });
+  return data;
+}
+
+/** Resolves names + avatars for whichever of the given subs aren't already cached. auth-service
+ * has no batch-by-subs endpoint, so this is one request per missing sub — fine at DM-list
+ * scale, but callers should pass only the subs that actually need this (DM peers), not every
+ * channel member, to keep the request count small. */
 export function useSyncParticipantNames(subs: string[]) {
   const qc = useQueryClient();
   const dedupedKey = Array.from(new Set(subs)).sort().join(",");
@@ -251,6 +267,16 @@ export function useSyncParticipantNames(subs: string[]) {
         }
         return next;
       });
+      qc.setQueryData<Record<string, string | null>>(
+        messagesKeys.participantAvatars,
+        (existing) => {
+          const next = { ...existing };
+          for (const [sub, user] of results) {
+            if (user) next[sub] = user.avatar ?? null;
+          }
+          return next;
+        },
+      );
     });
     return () => {
       cancelled = true;

@@ -1,6 +1,7 @@
 package com.takypok.authservice.api;
 
 import com.takypok.authservice.model.request.FilterUserRequest;
+import com.takypok.authservice.model.request.UpdateAvatarRequest;
 import com.takypok.authservice.model.request.UserinfoRequest;
 import com.takypok.authservice.model.response.UserinfoResponse;
 import com.takypok.authservice.service.UserService;
@@ -32,5 +33,11 @@ public class UserController {
   public ResponseEntity<ResultMessage<UserinfoResponse>> create(
       @RequestBody @Valid UserinfoRequest request) {
     return ResponseEntity.ok(ResultMessage.success(userService.create(request)));
+  }
+
+  @PatchMapping("/{sub}/avatar")
+  public ResponseEntity<ResultMessage<UserinfoResponse>> updateAvatar(
+      @PathVariable String sub, @RequestBody @Valid UpdateAvatarRequest request) {
+    return ResponseEntity.ok(ResultMessage.success(userService.updateAvatar(sub, request)));
   }
 }

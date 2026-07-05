@@ -25,6 +25,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import DOMPurify from "dompurify";
 import { useAuth } from "@takypok/shared";
 import { fetchUsers, getFileUrl, uploadFile, uploadVideo, type UserSummary } from "../api/ticketApi";
 import type {
@@ -51,6 +52,7 @@ import {
   useJoinChannel,
   useMarkConversationRead,
   useMessageSearch,
+  useParticipantAvatarsMap,
   useParticipantNamesMap,
   useSendMessage,
   usePresenceMap,
@@ -104,6 +106,23 @@ function isHtmlEmpty(html: string): boolean {
   return html.replace(/<[^>]*>/g, "").trim().length === 0;
 }
 
+// Rich-text message content is HTML; previews (conversation list, etc.) need plain text.
+function htmlToPlainText(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+}
+
+function lastMessagePreview(lastMessage: ChatMessage | null): string {
+  if (!lastMessage) return "No messages yet";
+  const text = lastMessage.content ? htmlToPlainText(lastMessage.content) : "";
+  if (text) return text;
+  const hasImage = lastMessage.attachments?.some((a) => a.type === "IMAGE");
+  const hasVideo = lastMessage.attachments?.some((a) => a.type === "VIDEO");
+  if (hasImage && hasVideo) return "📎 Photo & video";
+  if (hasImage) return "📎 Photo";
+  if (hasVideo) return "📎 Video";
+  return "";
+}
+
 function deriveMessageType(hasContent: boolean, attachments: MessageAttachment[]): MessageType {
   if (attachments.length === 0) return "TEXT";
   const hasImage = attachments.some((a) => a.type === "IMAGE");
@@ -118,6 +137,7 @@ function ConversationRow({
   selectedId,
   presenceBySub,
   nameBySub,
+  avatarBySub,
   onOpen,
 }: {
   conversation: ConversationSummary;
@@ -125,10 +145,12 @@ function ConversationRow({
   selectedId: string | null;
   presenceBySub: Record<string, PresenceStatus>;
   nameBySub: Record<string, string>;
+  avatarBySub: Record<string, string | null>;
   onOpen: (id: string) => void;
 }) {
   const peerSub = directPeerSub(conversation, mySub);
   const peerOnline = peerSub ? (presenceBySub[peerSub]?.online ?? false) : false;
+  const peerAvatarUrl = peerSub ? avatarBySub[peerSub] : null;
   const channelIcon =
     conversation.type === "GROUP" ? (
       conversation.privateChannel ? <LockOutlined /> : <NumberOutlined />
@@ -145,7 +167,8 @@ function ConversationRow({
     >
       <div className="relative flex-shrink-0">
         <Avatar
-          icon={channelIcon}
+          src={peerAvatarUrl ?? undefined}
+          icon={!peerAvatarUrl ? channelIcon : undefined}
           shape={conversation.type === "GROUP" ? "square" : "circle"}
           className="!bg-[var(--acc-1)] !text-[var(--bg-0)]"
         />
@@ -165,7 +188,7 @@ function ConversationRow({
           {conversation.unreadCount > 0 && <Badge count={conversation.unreadCount} size="small" />}
         </div>
         <span className="block font-mono-tech text-[9px] text-[var(--fg-faint)] truncate">
-          {conversation.lastMessage?.content ?? "No messages yet"}
+          {lastMessagePreview(conversation.lastMessage)}
         </span>
       </div>
     </button>
@@ -231,6 +254,7 @@ export default function Messages() {
   );
   useSyncParticipantNames(directPeerSubs);
   const nameBySub = useParticipantNamesMap();
+  const avatarBySub = useParticipantAvatarsMap();
 
   const sidebarQuery = sidebarSearch.trim().toLowerCase();
   const directConversations = useMemo(
@@ -607,6 +631,7 @@ export default function Messages() {
                       selectedId={selectedId}
                       presenceBySub={presenceBySub}
                       nameBySub={nameBySub}
+                      avatarBySub={avatarBySub}
                       onOpen={openConversation}
                     />
                   ))}
@@ -625,6 +650,7 @@ export default function Messages() {
                       selectedId={selectedId}
                       presenceBySub={presenceBySub}
                       nameBySub={nameBySub}
+                      avatarBySub={avatarBySub}
                       onOpen={openConversation}
                     />
                   ))}
@@ -722,6 +748,7 @@ export default function Messages() {
                             {endOfGroup ? (
                               <Avatar
                                 size={26}
+                                src={msg.sender.avatar ?? undefined}
                                 className={`flex-shrink-0 !text-[10px] !font-semibold !text-[var(--bg-0)] ${
                                   mine ? "!bg-[var(--acc-2)]" : "!bg-[var(--acc-1)]"
                                 }`}
@@ -994,6 +1021,7 @@ export default function Messages() {
                 <div key={reply.id} className="flex gap-2">
                   <Avatar
                     size={22}
+                    src={reply.sender.avatar ?? undefined}
                     className="flex-shrink-0 !text-[9px] !font-semibold !text-[var(--bg-0)] !bg-[var(--acc-1)]"
                   >
                     {reply.sender.name.trim().charAt(0).toUpperCase() || "?"}
@@ -1112,11 +1140,15 @@ export default function Messages() {
                     onChange={(e) => setChannelName(e.target.value)}
                     placeholder="Channel name"
                   />
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--fg-faint)]">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex-1 text-xs text-[var(--fg-faint)]">
                       Private (invite-only) — turn off to make it public and joinable by anyone
                     </span>
-                    <Switch checked={channelPrivate} onChange={setChannelPrivate} />
+                    <Switch
+                      checked={channelPrivate}
+                      onChange={setChannelPrivate}
+                      className="flex-shrink-0 mt-0.5"
+                    />
                   </div>
                 </div>
               ),
