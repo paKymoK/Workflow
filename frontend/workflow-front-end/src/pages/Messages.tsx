@@ -408,6 +408,14 @@ export default function Messages() {
     markRead(selectedId);
   }, [selectedId, newestMessageId, markRead]);
 
+  // Auto-open the most recent conversation on first load, Slack/Messenger-style,
+  // instead of leaving the thread pane blank until the user clicks something.
+  useEffect(() => {
+    if (!isLoading && selectedId === null && conversations.length > 0) {
+      setSelectedId(conversations[0].id);
+    }
+  }, [isLoading, conversations, selectedId]);
+
   // Keep the viewport anchored on the message the user was looking at when an older
   // page loads in above it, instead of letting the prepend shove the view around.
   const prevScrollHeightRef = useRef<number | null>(null);
@@ -714,10 +722,16 @@ export default function Messages() {
             <Empty
               description={
                 <span className="text-[11px] text-[var(--text-faint)]">
-                  Select a conversation
+                  {conversations.length === 0 ? "No conversations yet" : "Select a conversation"}
                 </span>
               }
-            />
+            >
+              {conversations.length === 0 && (
+                <Button type="primary" size="small" onClick={() => setNewOpen(true)}>
+                  Start a conversation
+                </Button>
+              )}
+            </Empty>
           </div>
         ) : (
           <>
@@ -834,31 +848,81 @@ export default function Messages() {
                                   </span>
                                 </div>
                               )}
-                              <div
-                                className={`px-3 py-2 rounded-[13px] text-xs leading-[1.4] ${
-                                  mine
-                                    ? "bg-[var(--accent)] text-white"
-                                    : "bg-[var(--hover)] text-[var(--text)]"
-                                }`}
-                              >
-                                {msg.content && <MessageContent html={msg.content} />}
-                                {msg.attachments && msg.attachments.length > 0 && (
-                                  <div className="mt-1.5 flex flex-col gap-1.5">
-                                    {msg.attachments.map((att, i) =>
-                                      att.type === "IMAGE" ? (
-                                        <img
-                                          key={i}
-                                          src={att.url ?? undefined}
-                                          alt="attachment"
-                                          loading="lazy"
-                                          className="max-w-[220px] max-h-[220px] object-cover"
-                                        />
-                                      ) : (
-                                        <LazyVideoAttachment key={i} attachment={att} />
-                                      ),
-                                    )}
-                                  </div>
-                                )}
+                              <div className={`flex items-center gap-1 ${mine ? "flex-row-reverse" : "flex-row"}`}>
+                                <div
+                                  className={`px-3 py-2 rounded-[13px] text-xs leading-[1.4] ${
+                                    mine
+                                      ? "bg-[var(--accent)] text-white"
+                                      : "bg-[var(--hover)] text-[var(--text)]"
+                                  }`}
+                                >
+                                  {msg.content && <MessageContent html={msg.content} />}
+                                  {msg.attachments && msg.attachments.length > 0 && (
+                                    <div className="mt-1.5 flex flex-col gap-1.5">
+                                      {msg.attachments.map((att, i) =>
+                                        att.type === "IMAGE" ? (
+                                          <img
+                                            key={i}
+                                            src={att.url ?? undefined}
+                                            alt="attachment"
+                                            loading="lazy"
+                                            className="max-w-[220px] max-h-[220px] object-cover"
+                                          />
+                                        ) : (
+                                          <LazyVideoAttachment key={i} attachment={att} />
+                                        ),
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <div
+                                  className={`flex items-center gap-1 shrink-0 transition-opacity ${
+                                    isRevealed
+                                      ? "opacity-100"
+                                      : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
+                                  }`}
+                                >
+                                  <Popover
+                                    trigger="click"
+                                    content={
+                                      <div className="flex gap-2">
+                                        {REACTION_EMOJIS.map((emoji) => (
+                                          <button
+                                            key={emoji}
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleReaction({ messageId: msg.id, emoji });
+                                            }}
+                                            className="text-base hover:scale-110 transition-transform cursor-pointer"
+                                          >
+                                            {emoji}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    }
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={(e) => e.stopPropagation()}
+                                      title="React"
+                                      className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer"
+                                    >
+                                      <SmileOutlined className="text-[11px]" />
+                                    </button>
+                                  </Popover>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setThreadParentId(msg.id);
+                                    }}
+                                    title="Reply in thread"
+                                    className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer"
+                                  >
+                                    <MessageOutlined className="text-[11px]" />
+                                  </button>
+                                </div>
                               </div>
                               {msg.reactions.length > 0 && (
                                 <div
@@ -888,56 +952,6 @@ export default function Messages() {
                                   })}
                                 </div>
                               )}
-                              <div
-                                className={`flex items-center gap-2 overflow-hidden transition-all ${
-                                  mine ? "flex-row-reverse" : "flex-row"
-                                } ${
-                                  isRevealed
-                                    ? "h-4 opacity-100 mt-1"
-                                    : "h-0 opacity-0 mt-0 group-hover:h-4 group-hover:opacity-100 group-hover:mt-1"
-                                }`}
-                              >
-                                <Popover
-                                  trigger="click"
-                                  content={
-                                    <div className="flex gap-2">
-                                      {REACTION_EMOJIS.map((emoji) => (
-                                        <button
-                                          key={emoji}
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleReaction({ messageId: msg.id, emoji });
-                                          }}
-                                          className="text-base hover:scale-110 transition-transform cursor-pointer"
-                                        >
-                                          {emoji}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  }
-                                >
-                                  <button
-                                    type="button"
-                                    onClick={(e) => e.stopPropagation()}
-                                    title="React"
-                                    className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer"
-                                  >
-                                    <SmileOutlined className="text-[11px]" />
-                                  </button>
-                                </Popover>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setThreadParentId(msg.id);
-                                  }}
-                                  title="Reply in thread"
-                                  className="text-[var(--text-faint)] hover:text-[var(--text-dim)] cursor-pointer"
-                                >
-                                  <MessageOutlined className="text-[11px]" />
-                                </button>
-                              </div>
                               {msg.replyCount > 0 && (
                                 <button
                                   type="button"
@@ -952,10 +966,8 @@ export default function Messages() {
                               )}
                               {receipt && (
                                 <div
-                                  className={`text-[9px] overflow-hidden transition-all ${
-                                    receiptRevealed
-                                      ? "h-3 opacity-100 mt-0.5"
-                                      : "h-0 opacity-0 mt-0 group-hover:h-3 group-hover:opacity-100 group-hover:mt-0.5"
+                                  className={`text-[9px] h-3 mt-0.5 shrink-0 transition-opacity ${
+                                    receiptRevealed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                                   } ${receipt.read ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}
                                 >
                                   {receipt.label}

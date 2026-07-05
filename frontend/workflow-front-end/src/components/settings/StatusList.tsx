@@ -95,23 +95,27 @@ export default function StatusList() {
           <Form.Item
             name="color"
             label="Color"
+            initialValue="#1677ff"
             rules={[
               { required: true },
               { pattern: /^#[0-9A-Fa-f]{6}$/, message: "Use hex format like #1677ff" },
             ]}
             extra="Pick a color or type hex value (#RRGGBB)."
           >
-            <Input
-              placeholder="#1677ff"
-              addonAfter={
-                <ColorPicker
-                  format="hex"
-                  value={watchedColor || "#1677ff"}
-                  onChange={(_, hex) => form.setFieldValue("color", hex)}
-                  showText
-                />
-              }
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="#1677ff"
+                value={watchedColor}
+                onChange={(e) => form.setFieldValue("color", e.target.value)}
+                className="!w-[140px] flex-none"
+              />
+              <ColorPicker
+                format="hex"
+                value={watchedColor}
+                onChange={(_, hex) => form.setFieldValue("color", hex)}
+                showText
+              />
+            </div>
           </Form.Item>
           <Form.Item name="group" label="Group" rules={[{ required: true }]}>
             <Select options={groupOptions} />

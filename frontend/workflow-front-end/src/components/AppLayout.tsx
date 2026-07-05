@@ -187,16 +187,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             })}
           </div>
 
-          {/* Sign out + collapse toggle */}
-          <div className="flex-shrink-0 border-t border-[var(--border)] p-2 flex flex-col gap-0.5">
-            <button
-              onClick={logout}
-              title="Sign out"
-              className="w-full flex items-center gap-[11px] px-[11px] py-[9px] rounded-[9px] border-none bg-transparent text-[var(--text-dim)] cursor-pointer text-[13.5px] font-medium hover:bg-[var(--hover)]"
-            >
-              <Icon name="logout" size={17} stroke={1.8} className="flex-shrink-0" />
-              {!collapsed && <span className="whitespace-nowrap">Sign out</span>}
-            </button>
+          {/* Collapse toggle — sign out lives in the user menu up in the header
+             instead of here, so it can't be fat-fingered while navigating. */}
+          <div className="flex-shrink-0 border-t border-[var(--border)] p-2">
             <button
               onClick={() => setCollapsed((c) => !c)}
               className="w-full flex items-center justify-center py-[9px] rounded-[9px] border-none bg-transparent text-[var(--text-dim)] cursor-pointer hover:bg-[var(--hover)]"
