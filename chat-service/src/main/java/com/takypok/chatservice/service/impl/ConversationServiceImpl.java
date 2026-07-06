@@ -307,6 +307,16 @@ public class ConversationServiceImpl implements ConversationService {
               ConversationParticipant participant = tuple.getT1();
               Conversation conversation = tuple.getT2();
               Long through = conversation.getLastMessageId();
+              // No-op when there's nothing new to mark read — skipping this is what matters,
+              // not just for the wasted write. Every open thread calls markRead on mount and
+              // again on each new message; without this guard it broadcasts RECEIPT_UPDATED
+              // unconditionally, which round-trips into the peer refetching and broadcasting
+              // back, forever.
+              if (through == null
+                  || (participant.getLastReadMessageId() != null
+                      && participant.getLastReadMessageId() >= through)) {
+                return Mono.<Long>empty();
+              }
               participant.setLastReadAt(ZonedDateTime.now());
               participant.setLastReadMessageId(through);
               // Having read it implies having received it — keep the two watermarks

@@ -28,6 +28,13 @@ const MESSAGES_PAGE_SIZE = 50;
 // than the indicator it drives can even go stale.
 const TYPING_THROTTLE_MS = 2_500;
 
+// `conversations` is a prefix of `thread`/`typing`/`search`/`replies` below (they all start
+// with the "conversations" element too) — TanStack Query's default invalidateQueries/
+// setQueryData matching is prefix-based, so any invalidateQueries({queryKey: messagesKeys.conversations})
+// call MUST pass `exact: true`, or it will also match — and refetch, if active — the open
+// thread and friends. This caused a real bug: an unhandled WS event type invalidating just
+// the list also refetched the open thread, and that refetch's side effects re-emitted the
+// same event, looping forever. See useChatSocket's RECEIPT_UPDATED handling.
 export const messagesKeys = {
   conversations: ["conversations"] as const,
   thread: (conversationId: string) => ["conversations", conversationId, "messages"] as const,
@@ -59,7 +66,7 @@ export function useCreateConversation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateConversationRequest) => createConversation(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true }),
   });
 }
 
@@ -67,7 +74,7 @@ export function useRenameConversation(conversationId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (name: string) => renameConversation(conversationId, name),
-    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true }),
   });
 }
 
@@ -76,7 +83,7 @@ export function useAddConversationMembers(conversationId: string) {
   return useMutation({
     mutationFn: (participantSubs: string[]) =>
       addConversationMembers(conversationId, participantSubs),
-    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true }),
   });
 }
 
@@ -84,7 +91,7 @@ export function useRemoveConversationMember(conversationId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (sub: string) => removeConversationMember(conversationId, sub),
-    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true }),
   });
 }
 
@@ -119,7 +126,7 @@ export function useSendMessage(conversationId: string) {
     onSuccess: () => {
       // Thread cache is kept in sync by the MESSAGE_CREATED WS echo (see useChatSocket) —
       // invalidating it here too would refetch every already-loaded page on each send.
-      qc.invalidateQueries({ queryKey: messagesKeys.conversations });
+      qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true });
     },
   });
 }
@@ -139,7 +146,7 @@ export function useMarkConversationRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (conversationId: string) => markConversationRead(conversationId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true }),
   });
 }
 
@@ -300,7 +307,7 @@ export function useJoinChannel() {
   return useMutation({
     mutationFn: (conversationId: string) => joinChannel(conversationId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: messagesKeys.conversations });
+      qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true });
       qc.invalidateQueries({ queryKey: ["publicChannels"] });
     },
   });

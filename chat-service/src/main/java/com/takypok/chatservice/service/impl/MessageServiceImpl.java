@@ -302,7 +302,8 @@ public class MessageServiceImpl implements MessageService {
             sub ->
                 participantRepository
                     .bumpDeliveredThrough(conversationId, sub, messageId)
-                    .doOnSuccess(
+                    .filter(count -> count > 0)
+                    .doOnNext(
                         count ->
                             broadcastToOthers(
                                 conversationId,
@@ -328,7 +329,8 @@ public class MessageServiceImpl implements MessageService {
               }
               return participantRepository
                   .bumpDeliveredThrough(conversationId, callerSub, through)
-                  .doOnSuccess(
+                  .filter(count -> count > 0)
+                  .doOnNext(
                       count ->
                           broadcastToOthers(
                               conversationId,

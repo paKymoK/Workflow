@@ -24,13 +24,17 @@ public interface ConversationParticipantRepository
 
   Mono<Long> countByConversationId(UUID conversationId);
 
-  // GREATEST guards against this ever regressing if the send-time (presence-based) and
-  // fetch-time (reconnect catch-up) delivery paths race each other.
+  // The WHERE guard (not just the GREATEST in SET) is what makes this a true no-op — including
+  // returning 0 affected rows — when the watermark hasn't actually advanced. Every GET on the
+  // message list calls this; without the guard it always reports 1 row affected and the caller
+  // broadcasts a RECEIPT_UPDATED regardless, which round-trips back into another fetch on the
+  // peer's side and repeats forever.
   @Query(
       """
       UPDATE conversation_participant
-      SET delivered_through_message_id = GREATEST(COALESCE(delivered_through_message_id, 0), :messageId)
+      SET delivered_through_message_id = :messageId
       WHERE conversation_id = :conversationId AND participant_sub = :sub
+        AND (delivered_through_message_id IS NULL OR delivered_through_message_id < :messageId)
       """)
   Mono<Integer> bumpDeliveredThrough(UUID conversationId, String sub, Long messageId);
 }
