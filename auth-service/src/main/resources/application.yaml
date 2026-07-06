@@ -57,7 +57,6 @@ ldap:
   password: admin_secret
   user-search-base: ou=users
   user-search-filter: "(cn={0})"
-  group-search-base: ou=groups
 
 management:
   endpoint:

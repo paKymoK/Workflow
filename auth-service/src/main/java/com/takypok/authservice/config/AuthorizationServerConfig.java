@@ -75,6 +75,8 @@ public class AuthorizationServerConfig {
   private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
   private static final String WORKFLOW_CLIENT_ID = "workflow-spa";
   private static final String WORKFLOW_CLIENT_SECRET = "{noop}workflow-secret";
+  private static final String WORKFLOW_MOBILE_CLIENT_ID = "workflow-mobile";
+  private static final String WORKFLOW_MOBILE_REDIRECT_URI = "com.takypok.workflow://oauth2redirect";
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -183,9 +185,32 @@ public class AuthorizationServerConfig {
                     .build())
             .build();
 
+    RegisteredClient workflowMobile =
+        RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId(WORKFLOW_MOBILE_CLIENT_ID)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+            .tokenSettings(tokenSettings)
+            .redirectUri(WORKFLOW_MOBILE_REDIRECT_URI)
+            .scope(OidcScopes.OPENID)
+            .scope(OidcScopes.PROFILE)
+            .scope("offline_access")
+            .clientSettings(
+                ClientSettings.builder()
+                    .requireAuthorizationConsent(false)
+                    .requireProofKey(true)
+                    .build())
+            .build();
+
     upsertClient(registeredClientRepository, workflow);
-    seedAdminRole(registeredClientRepository, clientRoleAssignmentRepository);
-    seedGroupRoles(registeredClientRepository, clientRoleAssignmentRepository);
+    upsertClient(registeredClientRepository, workflowMobile);
+    seedAdminRole(registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_CLIENT_ID);
+    seedAdminRole(
+        registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_MOBILE_CLIENT_ID);
+    seedGroupRoles(registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_CLIENT_ID);
+    seedGroupRoles(
+        registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_MOBILE_CLIENT_ID);
     return registeredClientRepository;
   }
 
@@ -201,8 +226,9 @@ public class AuthorizationServerConfig {
 
   private void seedGroupRoles(
       JdbcRegisteredClientRepository repository,
-      ClientRoleAssignmentRepository clientRoleAssignmentRepository) {
-    RegisteredClient client = repository.findByClientId(WORKFLOW_CLIENT_ID);
+      ClientRoleAssignmentRepository clientRoleAssignmentRepository,
+      String clientId) {
+    RegisteredClient client = repository.findByClientId(clientId);
     if (client == null) return;
     Map.of(
             "grp-l1-support", "AGENT",
@@ -226,8 +252,9 @@ public class AuthorizationServerConfig {
 
   private void seedAdminRole(
       JdbcRegisteredClientRepository repository,
-      ClientRoleAssignmentRepository clientRoleAssignmentRepository) {
-    RegisteredClient client = repository.findByClientId(WORKFLOW_CLIENT_ID);
+      ClientRoleAssignmentRepository clientRoleAssignmentRepository,
+      String clientId) {
+    RegisteredClient client = repository.findByClientId(clientId);
     if (client == null) return;
     if (clientRoleAssignmentRepository.existsByRegisteredClientIdAndUserSubAndProjectId(
         client.getId(), "admin", null)) return;
