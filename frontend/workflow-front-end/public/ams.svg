@@ -37,16 +37,16 @@
             fill="none" stroke="#00CFFF" stroke-width="2.5" stroke-linecap="square"
             filter="url(#glow-soft)"/>
 
-  <!-- Glow halo behind AMS -->
+  <!-- Glow halo behind TAK -->
   <text x="32" y="38"
         font-family="Arial Black, Impact, sans-serif"
         font-weight="900"
         font-size="23"
         text-anchor="middle"
         fill="rgba(0,207,255,0.18)"
-        letter-spacing="1">AMS</text>
+        letter-spacing="1">TAK</text>
 
-  <!-- AMS main text -->
+  <!-- TAK main text -->
   <text x="32" y="38"
         font-family="Arial Black, Impact, sans-serif"
         font-weight="900"
@@ -54,7 +54,7 @@
         text-anchor="middle"
         fill="#00CFFF"
         filter="url(#glow)"
-        letter-spacing="1">AMS</text>
+        letter-spacing="1">TAK</text>
 
   <!-- Separator line -->
   <line x1="10" y1="44" x2="54" y2="44"
