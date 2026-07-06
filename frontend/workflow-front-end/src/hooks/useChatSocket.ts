@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 import { wsBaseUrl, useAuth } from "@takypok/shared";
 import { messagesKeys } from "./useMessages";
-import type { ChatMessage, PresenceStatus, ReactionSummary } from "../api/types";
+import type { ChatMessage, ConversationSummary, PresenceStatus, ReactionSummary } from "../api/types";
 
 type ChatEventType =
   | "MESSAGE_CREATED"
@@ -144,6 +144,34 @@ function handleEvent(qc: QueryClient, event: ChatEvent) {
     return; // doesn't affect the conversations list
   }
 
+  if (event.type === "RECEIPT_UPDATED") {
+    // Patched directly in-place — no invalidate/refetch. This event fires on essentially
+    // every message fetch (delivery-on-fetch catch-up), so treating it as "go refetch the
+    // conversations list" would round-trip into a GET .../messages on whichever side has the
+    // thread open, which re-triggers the same backend delivery-tracking path and broadcasts
+    // right back — a self-sustaining ping-pong between two open clients. There used to be a
+    // backend bug that broadcast this unconditionally (fixed), but this handler doesn't rely
+    // on that: it simply never triggers a network call in the first place.
+    const readThroughMessageId = event.payload.readThroughMessageId as number | undefined;
+    const deliveredThroughMessageId = event.payload.deliveredThroughMessageId as
+      | number
+      | undefined;
+    qc.setQueryData<ConversationSummary[]>(messagesKeys.conversations, (existing) => {
+      if (!existing) return existing;
+      return existing.map((c) =>
+        c.id === conversationId
+          ? {
+              ...c,
+              peerReadThroughMessageId: readThroughMessageId ?? c.peerReadThroughMessageId,
+              peerDeliveredThroughMessageId:
+                deliveredThroughMessageId ?? c.peerDeliveredThroughMessageId,
+            }
+          : c,
+      );
+    });
+    return;
+  }
+
   if (event.type === "MESSAGE_CREATED") {
     const message = event.payload.message as ChatMessage;
 
@@ -185,6 +213,10 @@ function handleEvent(qc: QueryClient, event: ChatEvent) {
   }
 
   // Covers unread counts / last-message preview (MESSAGE_CREATED) as well as membership
-  // and rename changes — all of those only affect the conversation summary list.
-  qc.invalidateQueries({ queryKey: messagesKeys.conversations });
+  // and rename changes — all of those only affect the conversation summary list. exact:true
+  // matters here: messagesKeys.conversations is ["conversations"], and every other key in
+  // this file (thread, typing, search, replies) starts with that same "conversations"
+  // element — without exact:true this would also invalidate (and, for the active thread,
+  // refetch) all of those by TanStack Query's default prefix matching.
+  qc.invalidateQueries({ queryKey: messagesKeys.conversations, exact: true });
 }
