@@ -76,7 +76,8 @@ public class AuthorizationServerConfig {
   private static final String WORKFLOW_CLIENT_ID = "workflow-spa";
   private static final String WORKFLOW_CLIENT_SECRET = "{noop}workflow-secret";
   private static final String WORKFLOW_MOBILE_CLIENT_ID = "workflow-mobile";
-  private static final String WORKFLOW_MOBILE_REDIRECT_URI = "com.takypok.workflow://oauth2redirect";
+  private static final String WORKFLOW_MOBILE_REDIRECT_URI =
+      "com.takypok.workflow://oauth2redirect";
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
