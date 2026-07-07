@@ -1,10 +1,10 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const GATEWAY_URL = process.env.EXPO_PUBLIC_GATEWAY_URL ?? 'http://localhost:8080';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
 
 export const api = axios.create({
-  baseURL: GATEWAY_URL,
+  baseURL: API_BASE_URL,
 });
 
 api.interceptors.request.use(async (config) => {
