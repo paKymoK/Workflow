@@ -223,9 +223,10 @@ export default function Messages() {
   const [messageSearch, setMessageSearch] = useState("");
   const [debouncedMessageSearch, setDebouncedMessageSearch] = useState("");
   const [sidebarSearch, setSidebarSearch] = useState("");
-  // Messenger-style: react/reply icons and the receipt line are hidden until hovered
-  // (desktop) or tapped (this tracks the one tapped-open, mobile) — except the receipt
-  // line, which always shows on the last message regardless.
+  // Messenger-style: react/reply icons are hidden until hovered (desktop) or tapped (this
+  // tracks the one tapped-open, mobile). The receipt line only mounts (no reserved space)
+  // when tapped/clicked, or always for the last message — it's never hover-revealed, since
+  // an invisible reserved row was creating an ugly gap under every own-message bubble.
   const [revealedMessageId, setRevealedMessageId] = useState<number | null>(null);
   const [threadParentId, setThreadParentId] = useState<number | null>(null);
   const [threadDraft, setThreadDraft] = useState("");
@@ -793,9 +794,8 @@ export default function Messages() {
                       const msg = visibleMessages[virtualRow.index];
                       const mine = msg.sender.sub === mySub;
                       const receipt = mine ? receiptStatus(msg, selected) : null;
-                      const isLastMessage = msg.id === newestMessageId;
                       const isRevealed = revealedMessageId === msg.id;
-                      const receiptRevealed = isLastMessage || isRevealed;
+                      const isLastMessage = msg.id === newestMessageId;
                       // Messenger-style clustering: avatar + name/time header show once per
                       // consecutive run from the same sender, not on every bubble.
                       const prevMsg = visibleMessages[virtualRow.index - 1];
@@ -964,11 +964,11 @@ export default function Messages() {
                                   💬 {msg.replyCount} {msg.replyCount === 1 ? "reply" : "replies"}
                                 </button>
                               )}
-                              {receipt && (
+                              {receipt && (isRevealed || isLastMessage) && (
                                 <div
-                                  className={`text-[9px] h-3 mt-0.5 shrink-0 transition-opacity ${
-                                    receiptRevealed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                  } ${receipt.read ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}
+                                  className={`text-[9px] mt-0.5 ${
+                                    receipt.read ? "text-[var(--accent)]" : "text-[var(--text-faint)]"
+                                  }`}
                                 >
                                   {receipt.label}
                                 </div>
