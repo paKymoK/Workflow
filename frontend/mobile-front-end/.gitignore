@@ -36,6 +36,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+# Native build outputs (bare RN CLI project — ios/ and android/ source is committed)
+/ios/build/
+/ios/Pods/
+/android/build/
+/android/app/build/
+/android/.gradle/

@@ -23,13 +23,18 @@ export const HOME_SLIDES = [
   },
 ];
 
-export const QUICK_LINKS: { icon: LucideIcon; label: string; href: string }[] = [
-  { icon: Calendar, label: 'Leave Request', href: '/(tabs)/profile/leave' },
-  { icon: FileText, label: 'Payslip', href: '/(tabs)/profile/payslip' },
-  { icon: Clock, label: 'Work Schedule', href: '/(tabs)/profile/schedule' },
-  { icon: Utensils, label: 'Meal Booking', href: '/(tabs)/profile/canteen' },
-  { icon: Headphones, label: 'IT Helpdesk', href: '/(tabs)/more/helpdesk' },
-  { icon: Timer, label: 'Overtime Reg.', href: '/(tabs)/profile/overtime' },
+export const QUICK_LINKS: {
+  icon: LucideIcon;
+  label: string;
+  tab: 'Profile' | 'More';
+  screen: string;
+}[] = [
+  { icon: Calendar, label: 'Leave Request', tab: 'Profile', screen: 'Leave' },
+  { icon: FileText, label: 'Payslip', tab: 'Profile', screen: 'Payslip' },
+  { icon: Clock, label: 'Work Schedule', tab: 'Profile', screen: 'Schedule' },
+  { icon: Utensils, label: 'Meal Booking', tab: 'Profile', screen: 'Canteen' },
+  { icon: Headphones, label: 'IT Helpdesk', tab: 'More', screen: 'Helpdesk' },
+  { icon: Timer, label: 'Overtime Reg.', tab: 'Profile', screen: 'Overtime' },
 ];
 
 export const HOME_WIDGETS = {
