@@ -12,7 +12,7 @@ const Stack = createNativeStackNavigator<MoreStackParamList>();
 
 export function MoreStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: true }}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MoreHome" component={MoreMenuScreen} options={{ title: 'More' }} />
       <Stack.Screen name="Training" component={TrainingScreen} options={{ title: 'Training Materials' }} />
       <Stack.Screen name="Policies" component={PoliciesScreen} options={{ title: 'Company Policies' }} />

@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { Search, Bell, TrendingUp, CheckCircle, Star, Clock, Calendar, type LucideIcon } from 'lucide-react-native';
+import { Search, Bell, TrendingUp, CheckCircle, Star, Clock, Calendar, Bot, type LucideIcon } from 'lucide-react-native';
 
 import { ProgressBar } from '@/src/components/ProgressBar';
+import { AIChatOverlay } from '@/src/components/AIChatOverlay';
+import { colors } from '@/src/theme/colors';
 import { HOME_SLIDES, QUICK_LINKS, HOME_WIDGETS, ANNOUNCEMENTS } from '@/src/data/home';
 import type { RootTabParamList } from '@/src/navigation/types';
 
@@ -14,6 +16,7 @@ const logo = require('@/assets/images/logo.png');
 
 export default function HomeScreen() {
   const [slide, setSlide] = useState(0);
+  const [showBot, setShowBot] = useState(false);
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
 
   useEffect(() => {
@@ -22,6 +25,7 @@ export default function HomeScreen() {
   }, []);
 
   return (
+    <View className="flex-1">
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
         <View className="flex-row items-center justify-between px-4 pb-3 pt-2">
@@ -173,6 +177,34 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+
+    {!showBot && (
+      <Pressable
+        onPress={() => setShowBot(true)}
+        className="absolute"
+        style={{
+          bottom: 96,
+          right: 16,
+          shadowColor: colors.primary,
+          shadowOpacity: 0.45,
+          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 8,
+        }}
+      >
+        <LinearGradient
+          colors={[colors.primary, colors.primaryLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ height: 56, width: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Bot size={24} color="#fff" />
+        </LinearGradient>
+      </Pressable>
+    )}
+
+    {showBot && <AIChatOverlay onClose={() => setShowBot(false)} />}
+    </View>
   );
 }
 

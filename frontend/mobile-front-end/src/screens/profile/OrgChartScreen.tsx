@@ -1,5 +1,187 @@
-import { ScreenStub } from '@/src/components/ScreenStub';
+import { useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { ArrowLeft, Camera, Building, Package, MapPin, Clock, User, Phone, Mail } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { colors } from '@/src/theme/colors';
+import { PROFILE, ORG_CHART } from '@/src/data/profile';
+
+function OrgNode({
+  name,
+  role,
+  isSelf,
+  isManager,
+  compact,
+}: {
+  name: string;
+  role: string;
+  isSelf?: boolean;
+  isManager?: boolean;
+  compact?: boolean;
+}) {
+  const initials = name.split(' ').map((w) => w[0]).slice(-2).join('').toUpperCase();
+  return (
+    <View
+      className={`flex-row items-center gap-2.5 rounded-xl border ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
+      style={{
+        backgroundColor: isSelf ? colors.primary : isManager ? colors.surface : '#F8FAFC',
+        borderColor: isSelf ? colors.primary : colors.border,
+        borderWidth: 1.5,
+      }}
+    >
+      <View
+        className={`items-center justify-center rounded-full ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
+        style={{ backgroundColor: isSelf ? 'rgba(255,255,255,0.25)' : colors.primary }}
+      >
+        <Text className={`font-bold text-white ${compact ? 'text-[10px]' : 'text-xs'}`}>{initials}</Text>
+      </View>
+      <View className="min-w-0 flex-1">
+        <Text
+          className={`font-bold ${compact ? 'text-[11px]' : 'text-sm'}`}
+          style={{ color: isSelf ? 'white' : '#1A2740' }}
+          numberOfLines={1}
+        >
+          {name}
+        </Text>
+        <Text className={compact ? 'text-[9px]' : 'text-[10px]'} style={{ color: isSelf ? 'rgba(255,255,255,0.7)' : colors.textMuted }} numberOfLines={1}>
+          {role}
+        </Text>
+      </View>
+      {isSelf && (
+        <Text className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold text-white/70">YOU</Text>
+      )}
+    </View>
+  );
+}
 
 export default function OrgChartScreen() {
-  return <ScreenStub title="My Profile & Org Chart" description="Employee profile and org chart go here." />;
+  const [tab, setTab] = useState<'info' | 'org'>('info');
+  const navigation = useNavigation();
+
+  return (
+    <SafeAreaView edges={['top']} className="flex-1 bg-white">
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 20 }}>
+        <LinearGradient
+          colors={[colors.primaryDark, colors.primary, colors.primaryMid]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.6, y: 1 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+        <View className="mb-4 flex-row items-center gap-2">
+          <Pressable
+            onPress={() => navigation.goBack()}
+            className="h-8 w-8 items-center justify-center rounded-full"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+          >
+            <ArrowLeft size={17} color="#fff" />
+          </Pressable>
+          <Text className="text-sm font-bold text-white">My Profile</Text>
+        </View>
+        <View className="mb-4 flex-row items-center gap-4">
+          <View className="relative">
+            <View
+              className="h-[72px] w-[72px] items-center justify-center rounded-full"
+              style={{ backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)' }}
+            >
+              <Text className="text-xl font-bold text-white">{PROFILE.initials}</Text>
+            </View>
+            <Pressable className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-white shadow">
+              <Camera size={11} color={colors.primary} />
+            </Pressable>
+          </View>
+          <View>
+            <Text className="text-lg font-bold leading-tight text-white">{PROFILE.name}</Text>
+            <Text className="mt-0.5 text-xs text-blue-200">{PROFILE.title}</Text>
+            <Text className="mt-1 text-[10px] text-blue-300">
+              ID: {PROFILE.employeeId} · Joined {PROFILE.joined}
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row gap-2">
+          {(['info', 'org'] as const).map((t) => (
+            <Pressable
+              key={t}
+              onPress={() => setTab(t)}
+              className="rounded-full px-5 py-1.5"
+              style={tab === t ? { backgroundColor: 'white' } : { backgroundColor: 'rgba(255,255,255,0.15)' }}
+            >
+              <Text className="text-xs font-bold" style={{ color: tab === t ? colors.primary : 'rgba(255,255,255,0.85)' }}>
+                {t === 'info' ? 'Profile Info' : 'Org Chart'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 12 }}>
+        {tab === 'info' ? (
+          <>
+            <View className="rounded-2xl bg-white p-4 shadow-sm">
+              <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Work Information</Text>
+              {[
+                { icon: Building, label: 'Department', value: PROFILE.department },
+                { icon: Package, label: 'Production Line', value: PROFILE.line },
+                { icon: MapPin, label: 'Work Location', value: PROFILE.workLocation },
+                { icon: Clock, label: 'Shift', value: PROFILE.shiftHours },
+                { icon: User, label: 'Direct Manager', value: PROFILE.manager },
+              ].map(({ icon: Icon, label, value }, i, arr) => (
+                <View key={label} className={`flex-row items-center gap-3 py-2.5 ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                  <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: colors.surface }}>
+                    <Icon size={15} color={colors.primary} />
+                  </View>
+                  <View>
+                    <Text className="text-[10px] text-gray-400">{label}</Text>
+                    <Text className="text-sm font-semibold text-gray-800">{value}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+            <View className="rounded-2xl bg-white p-4 shadow-sm">
+              <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Contact Information</Text>
+              {[
+                { icon: Phone, label: 'Mobile', value: PROFILE.mobile },
+                { icon: Mail, label: 'Work Email', value: PROFILE.email },
+              ].map(({ icon: Icon, label, value }, i, arr) => (
+                <View key={label} className={`flex-row items-center gap-3 py-2.5 ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                  <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: colors.surface }}>
+                    <Icon size={15} color={colors.primary} />
+                  </View>
+                  <View>
+                    <Text className="text-[10px] text-gray-400">{label}</Text>
+                    <Text className="text-sm font-semibold text-gray-800">{value}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        ) : (
+          <View className="rounded-2xl bg-white p-5 shadow-sm">
+            <Text className="mb-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Organization Chart</Text>
+            {ORG_CHART.chain.map((node, i) => (
+              <View key={node.name}>
+                <OrgNode {...node} />
+                {i < ORG_CHART.chain.length - 1 && (
+                  <View className="my-2 items-center">
+                    <View className="h-5 w-0.5 rounded-full bg-slate-300" />
+                  </View>
+                )}
+              </View>
+            ))}
+            <View className="mt-4">
+              <Text className="mb-2 text-center text-[10px] font-bold uppercase tracking-wide text-gray-400">Direct Reports</Text>
+              <View className="flex-row gap-2">
+                {ORG_CHART.reports.map((p) => (
+                  <View key={p.name} className="min-w-0 flex-1">
+                    <OrgNode name={p.name} role={p.role} compact />
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
