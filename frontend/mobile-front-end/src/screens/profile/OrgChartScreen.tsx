@@ -6,7 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/src/theme/colors';
-import { PROFILE, ORG_CHART } from '@/src/data/profile';
+import { ORG_CHART } from '@/src/data/profile';
+import { useProfile } from '@/src/data/useProfile';
 
 function OrgNode({
   name,
@@ -59,6 +60,7 @@ function OrgNode({
 export default function OrgChartScreen() {
   const [tab, setTab] = useState<'info' | 'org'>('info');
   const navigation = useNavigation();
+  const PROFILE = useProfile();
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -95,7 +97,7 @@ export default function OrgChartScreen() {
             <Text className="text-lg font-bold leading-tight text-white">{PROFILE.name}</Text>
             <Text className="mt-0.5 text-xs text-blue-200">{PROFILE.title}</Text>
             <Text className="mt-1 text-[10px] text-blue-300">
-              ID: {PROFILE.employeeId} · Joined {PROFILE.joined}
+              LDAP: {PROFILE.employeeId} · Joined {PROFILE.joined}
             </Text>
           </View>
         </View>

@@ -1,27 +1,25 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { authorize, type AuthConfiguration } from 'react-native-app-auth';
+import { authorize } from 'react-native-app-auth';
 
-import { AUTH_SERVER, CLIENT_ID, REDIRECT_URI, SCOPES } from '@env';
-
+import { authConfig } from './authConfig';
+import { parseJwtPayload, type AccessTokenClaims } from './jwt';
 import { clearTokens, loadTokens, saveTokens } from './tokenStorage';
+import { registerLogout } from './tokenSync';
 
-const authConfig: AuthConfiguration = {
-  clientId: CLIENT_ID,
-  redirectUrl: REDIRECT_URI,
-  scopes: (SCOPES ?? 'openid profile offline_access').split(' '),
-  usePKCE: true,
-  serviceConfiguration: {
-    authorizationEndpoint: `${AUTH_SERVER}/oauth2/authorize`,
-    tokenEndpoint: `${AUTH_SERVER}/oauth2/token`,
-    revocationEndpoint: `${AUTH_SERVER}/oauth2/revoke`,
-  },
-};
+function decodeUser(accessToken: string): AccessTokenClaims | null {
+  try {
+    return parseJwtPayload(accessToken);
+  } catch {
+    return null;
+  }
+}
 
 type AuthContextValue = {
   isAuthenticated: boolean;
   isLoading: boolean;
   isAuthenticating: boolean;
   error: string | null;
+  user: AccessTokenClaims | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -33,10 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<AccessTokenClaims | null>(null);
 
   useEffect(() => {
     loadTokens().then((tokens) => {
       setIsAuthenticated(!!tokens?.accessToken);
+      setUser(tokens?.accessToken ? decodeUser(tokens.accessToken) : null);
       setIsLoading(false);
     });
   }, []);
@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshToken: result.refreshToken,
         idToken: result.idToken,
       });
+      setUser(decodeUser(result.accessToken));
       setIsAuthenticated(true);
     } catch {
       setError('Could not complete sign-in. Please try again.');
@@ -61,12 +62,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await clearTokens();
+    setUser(null);
     setIsAuthenticated(false);
   };
 
+  useEffect(() => {
+    registerLogout(() => { logout(); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const value = useMemo(
-    () => ({ isAuthenticated, isLoading, isAuthenticating, error, login, logout }),
-    [isAuthenticated, isLoading, isAuthenticating, error],
+    () => ({ isAuthenticated, isLoading, isAuthenticating, error, user, login, logout }),
+    [isAuthenticated, isLoading, isAuthenticating, error, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

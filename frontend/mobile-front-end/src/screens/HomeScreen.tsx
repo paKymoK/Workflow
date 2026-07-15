@@ -10,6 +10,8 @@ import { ProgressBar } from '@/src/components/ProgressBar';
 import { AIChatOverlay } from '@/src/components/AIChatOverlay';
 import { colors } from '@/src/theme/colors';
 import { HOME_SLIDES, QUICK_LINKS, HOME_WIDGETS, ANNOUNCEMENTS } from '@/src/data/home';
+import { useProfile } from '@/src/data/useProfile';
+import { getGreeting } from '@/src/utils/greeting';
 import type { RootTabParamList } from '@/src/navigation/types';
 
 const logo = require('@/assets/images/logo.png');
@@ -18,6 +20,7 @@ export default function HomeScreen() {
   const [slide, setSlide] = useState(0);
   const [showBot, setShowBot] = useState(false);
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
+  const PROFILE = useProfile();
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % HOME_SLIDES.length), 4200);
@@ -30,8 +33,8 @@ export default function HomeScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
         <View className="flex-row items-center justify-between px-4 pb-3 pt-2">
           <View>
-            <Text className="text-xs text-gray-500">Good morning,</Text>
-            <Text className="text-base font-bold text-gray-900">Nguyen Thi Lan 👋</Text>
+            <Text className="text-xs text-gray-500">{getGreeting()},</Text>
+            <Text className="text-base font-bold text-gray-900">{PROFILE.name} 👋</Text>
           </View>
           <View className="flex-row items-center gap-2">
             <Pressable className="h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm">

@@ -23,7 +23,7 @@ import {
 import { colors } from '@/src/theme/colors';
 import { Toggle } from '@/src/components/Toggle';
 import { useAuth } from '@/src/auth/AuthContext';
-import { PROFILE } from '@/src/data/profile';
+import { useProfile } from '@/src/data/useProfile';
 
 const logo = require('@/assets/images/logo.png');
 const LANGUAGES = ['English', 'Vietnamese'];
@@ -31,6 +31,7 @@ const LANGUAGES = ['English', 'Vietnamese'];
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { logout } = useAuth();
+  const PROFILE = useProfile();
   const [lang, setLang] = useState('English');
   const [pushNotifs, setPushNotifs] = useState(true);
   const [emailNotifs, setEmailNotifs] = useState(false);

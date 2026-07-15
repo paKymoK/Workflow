@@ -7,10 +7,11 @@ import { ArrowLeft, ChevronUp, ChevronDown, Download } from 'lucide-react-native
 
 import { colors } from '@/src/theme/colors';
 import { PAYSLIP, PAYSLIP_MONTHS, fmtVND } from '@/src/data/payslip';
-import { PROFILE } from '@/src/data/profile';
+import { useProfile } from '@/src/data/useProfile';
 
 export default function PayslipScreen() {
   const navigation = useNavigation();
+  const PROFILE = useProfile();
   const [month, setMonth] = useState('Jun');
   const [expanded, setExpanded] = useState(false);
   const data = PAYSLIP[month] ?? PAYSLIP.Jun;
