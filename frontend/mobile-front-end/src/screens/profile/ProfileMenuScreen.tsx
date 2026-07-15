@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -12,6 +13,7 @@ import {
   Shield,
   Camera,
   ChevronRight,
+  LogOut,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +22,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/src/navigation/types';
 import { PROFILE } from '@/src/data/profile';
 import { colors } from '@/src/theme/colors';
+import { useAuth } from '@/src/auth/AuthContext';
 
 const PROFILE_NAV: { icon: LucideIcon; label: string; screen: keyof ProfileStackParamList; badge?: string }[] = [
   { icon: User, label: 'My Profile & Org Chart', screen: 'OrgChart' },
@@ -34,6 +37,8 @@ const PROFILE_NAV: { icon: LucideIcon; label: string; screen: keyof ProfileStack
 
 export default function ProfileMenuScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const { logout } = useAuth();
+  const [showLogout, setShowLogout] = useState(false);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
@@ -112,8 +117,41 @@ export default function ProfileMenuScreen() {
               <ChevronRight size={15} color="#D1D5DB" />
             </Pressable>
           ))}
+
+          <Pressable
+            onPress={() => setShowLogout(true)}
+            className="flex-row items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-sm"
+          >
+            <View className="h-9 w-9 items-center justify-center rounded-xl bg-red-50">
+              <LogOut size={17} color="#EF4444" />
+            </View>
+            <Text className="flex-1 text-sm font-medium text-red-500">Log Out</Text>
+          </Pressable>
         </View>
       </ScrollView>
+
+      {showLogout && (
+        <View className="absolute inset-0 justify-end" style={{ backgroundColor: 'rgba(10,24,48,0.5)' }}>
+          <Pressable className="absolute inset-0" onPress={() => setShowLogout(false)} />
+          <View className="rounded-t-3xl bg-white p-6 shadow-2xl">
+            <View className="mb-4 h-12 w-12 items-center justify-center self-center rounded-full bg-red-100">
+              <LogOut size={22} color="#EF4444" />
+            </View>
+            <Text className="mb-1 text-center text-lg font-bold text-gray-900">Log Out?</Text>
+            <Text className="mb-6 text-center text-sm leading-relaxed text-gray-500">
+              You will need to log back in with your employee ID and password to continue using the app.
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable onPress={() => setShowLogout(false)} className="flex-1 items-center rounded-2xl bg-gray-100 py-3.5">
+                <Text className="text-sm font-semibold text-gray-700">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={logout} className="flex-1 items-center rounded-2xl bg-red-500 py-3.5">
+                <Text className="text-sm font-bold text-white">Log Out</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

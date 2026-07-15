@@ -33,6 +33,7 @@
             justify-content: center;
             overflow-y: auto;
             cursor: crosshair;
+            padding-bottom: 40px;
         }
 
         #bubble-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; }
@@ -166,7 +167,7 @@
             border: 1.5px solid var(--border-subtle);
             color: var(--white);
             font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
+            font-size: 16px;
             padding: 12px 16px 12px 44px;
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
@@ -213,6 +214,15 @@
             .left-panel { padding: 32px 28px; }
             .right-panel { border-left: 2px solid var(--neon-yellow); border-top: none; padding: 32px 28px; }
             .brand-title { font-size: 56px; }
+            .form-title { font-size: 30px; }
+        }
+
+        @media (max-width: 400px) {
+            .left-panel { padding: 28px 22px; }
+            .right-panel { padding: 28px 22px; }
+            .brand-title { font-size: 44px; }
+            .form-title { font-size: 26px; }
+            .status-bar { padding: 0 12px; gap: 12px; }
         }
     </style>
 </head>

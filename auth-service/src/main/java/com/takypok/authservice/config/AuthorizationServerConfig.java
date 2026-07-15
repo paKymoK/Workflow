@@ -73,9 +73,8 @@ public class AuthorizationServerConfig {
   private String issuerUri;
 
   private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
-  private static final String WORKFLOW_CLIENT_ID = "workflow-spa";
+  private static final String WORKFLOW_CLIENT_ID = "workflow";
   private static final String WORKFLOW_CLIENT_SECRET = "{noop}workflow-secret";
-  private static final String WORKFLOW_MOBILE_CLIENT_ID = "workflow-mobile";
   private static final String WORKFLOW_MOBILE_REDIRECT_URI =
       "com.takypok.workflow://oauth2redirect";
 
@@ -174,26 +173,9 @@ public class AuthorizationServerConfig {
             .redirectUri("http://localhost:3000/callback")
             .redirectUri("https://app.thaiha.website/callback")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
+            .redirectUri(WORKFLOW_MOBILE_REDIRECT_URI)
             .postLogoutRedirectUri("http://localhost:3000/login")
             .postLogoutRedirectUri("https://app.thaiha.website/login")
-            .scope(OidcScopes.OPENID)
-            .scope(OidcScopes.PROFILE)
-            .scope("offline_access")
-            .clientSettings(
-                ClientSettings.builder()
-                    .requireAuthorizationConsent(true)
-                    .requireProofKey(true)
-                    .build())
-            .build();
-
-    RegisteredClient workflowMobile =
-        RegisteredClient.withId(UUID.randomUUID().toString())
-            .clientId(WORKFLOW_MOBILE_CLIENT_ID)
-            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-            .tokenSettings(tokenSettings)
-            .redirectUri(WORKFLOW_MOBILE_REDIRECT_URI)
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .scope("offline_access")
@@ -205,13 +187,8 @@ public class AuthorizationServerConfig {
             .build();
 
     upsertClient(registeredClientRepository, workflow);
-    upsertClient(registeredClientRepository, workflowMobile);
     seedAdminRole(registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_CLIENT_ID);
-    seedAdminRole(
-        registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_MOBILE_CLIENT_ID);
     seedGroupRoles(registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_CLIENT_ID);
-    seedGroupRoles(
-        registeredClientRepository, clientRoleAssignmentRepository, WORKFLOW_MOBILE_CLIENT_ID);
     return registeredClientRepository;
   }
 
