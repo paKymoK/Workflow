@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '@/src/api/queryClient';
 import { AuthProvider, useAuth } from '@/src/auth/AuthContext';
+import { useChatSocket } from '@/src/chat/useChatSocket';
 import { RootTabs } from '@/src/navigation/RootTabs';
 import LoginScreen from '@/src/screens/LoginScreen';
 import type { RootStackParamList } from '@/src/navigation/types';
@@ -17,6 +18,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  useChatSocket();
 
   if (isLoading) {
     return (

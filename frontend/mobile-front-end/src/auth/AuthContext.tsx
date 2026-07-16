@@ -46,6 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticating(true);
     try {
       const result = await authorize(authConfig);
+      if (__DEV__ && !result.refreshToken) {
+        console.warn('[auth] authorize() returned no refreshToken — future 401s will not be recoverable this session');
+      }
       await saveTokens({
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,

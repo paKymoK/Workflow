@@ -4,7 +4,7 @@ import { Home, Newspaper, MessageCircle, User, Menu } from 'lucide-react-native'
 import type { RootTabParamList } from './types';
 import HomeScreen from '@/src/screens/HomeScreen';
 import NewsScreen from '@/src/screens/NewsScreen';
-import ChatScreen from '@/src/screens/ChatScreen';
+import { ChatStack } from './ChatStack';
 import { ProfileStack } from './ProfileStack';
 import { MoreStack } from './MoreStack';
 
@@ -25,7 +25,7 @@ export function RootTabs() {
       />
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
+        component={ChatStack}
         options={{ title: 'Chat', tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} /> }}
       />
       <Tab.Screen

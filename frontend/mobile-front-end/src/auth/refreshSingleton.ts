@@ -7,7 +7,14 @@ let refreshPromise: Promise<string | null> | null = null;
 
 export async function refreshTokenIfPossible(): Promise<string | null> {
   const tokens = await loadTokens();
-  if (!tokens?.refreshToken) return null;
+  if (!tokens?.refreshToken) {
+    if (__DEV__) {
+      console.warn('[auth] refreshTokenIfPossible: no refreshToken in Keychain, skipping refresh call', {
+        hasAccessToken: !!tokens?.accessToken,
+      });
+    }
+    return null;
+  }
 
   if (!refreshPromise) {
     refreshPromise = refresh(authConfig, { refreshToken: tokens.refreshToken })
@@ -19,7 +26,12 @@ export async function refreshTokenIfPossible(): Promise<string | null> {
         });
         return result.accessToken;
       })
-      .catch(() => null)
+      .catch((err) => {
+        if (__DEV__) {
+          console.warn('[auth] refresh() call was made but failed', String(err));
+        }
+        return null;
+      })
       .finally(() => {
         refreshPromise = null;
       });

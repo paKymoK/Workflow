@@ -21,10 +21,17 @@ export type MoreStackParamList = {
   Settings: undefined;
 };
 
+export type ChatStackParamList = {
+  ChatList: undefined;
+  ChatThread: { conversationId: string };
+  ChatThreadReplies: { conversationId: string; parentMessageId: number };
+  ChatMembers: { conversationId: string };
+};
+
 export type RootTabParamList = {
   Home: undefined;
   News: undefined;
-  Chat: undefined;
+  Chat: NavigatorScreenParams<ChatStackParamList>;
   Profile: NavigatorScreenParams<ProfileStackParamList>;
   More: NavigatorScreenParams<MoreStackParamList>;
 };
