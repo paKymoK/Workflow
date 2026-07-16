@@ -64,9 +64,12 @@ export function useChatSocket() {
       // the handshake in that state would just spin forever on POLICY_VIOLATION closes.
       if (!tokens?.accessToken) return;
 
-      socket = new WebSocket(`${wsBaseUrl}/chat-service/web-socket/chat`);
+      const url = `${wsBaseUrl}/chat-service/web-socket/chat`;
+      if (__DEV__) console.log(`[chat-ws] connecting to ${url}`);
+      socket = new WebSocket(url);
 
       socket.onopen = () => {
+        if (__DEV__) console.log('[chat-ws] open, sending auth frame');
         attempt = 0;
         socket?.send(tokens.accessToken);
       };
@@ -74,21 +77,31 @@ export function useChatSocket() {
       socket.onmessage = (event) => {
         try {
           const chatEvent = JSON.parse(event.data) as ChatEvent;
+          if (__DEV__) console.log('[chat-ws] event', chatEvent.type, chatEvent.payload);
           handleEvent(qc, chatEvent);
         } catch {
           // non-JSON frame, ignore
         }
       };
 
-      socket.onclose = () => {
+      socket.onclose = (closeEvent) => {
+        if (__DEV__) {
+          console.log('[chat-ws] closed', { code: closeEvent.code, reason: closeEvent.reason });
+        }
         socket = null;
         scheduleReconnect();
       };
 
-      socket.onerror = () => socket?.close();
+      socket.onerror = (errorEvent) => {
+        if (__DEV__) console.log('[chat-ws] error', errorEvent);
+        socket?.close();
+      };
     };
 
-    connect().catch(() => scheduleReconnect());
+    connect().catch((err) => {
+      if (__DEV__) console.log('[chat-ws] connect() threw', String(err));
+      scheduleReconnect();
+    });
 
     return () => {
       closedByEffect = true;
