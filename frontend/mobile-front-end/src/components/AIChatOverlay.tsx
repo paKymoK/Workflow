@@ -156,7 +156,8 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="border-t border-gray-50 bg-white px-5 py-2"
-          contentContainerStyle={{ gap: 8 }}
+          style={{ maxHeight: 44, flexGrow: 0, flexShrink: 0 }}
+          contentContainerStyle={{ gap: 8, alignItems: 'center' }}
         >
           {SUGGESTIONS.map((q) => (
             <Pressable
