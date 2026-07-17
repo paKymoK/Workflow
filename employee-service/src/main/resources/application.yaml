@@ -1,0 +1,26 @@
+server:
+  port: 8084
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: employee-service
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  config:
+    import:
+      - 'classpath:config/liquibase.yml'
+      - 'classpath:config/r2dbc.yml'
+      - 'classpath:config/oauth2.yml'
+      - 'classpath:config/eureka-client.yml'
+      - 'classpath:config/springdoc.yml'
+      - 'classpath:config/kafka.yml'
+      - 'classpath:management.yml'
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG

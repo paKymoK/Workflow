@@ -1,0 +1,34 @@
+services:
+  employee-service:
+    build:
+      context: ..
+      dockerfile: employee-service/Dockerfile
+    container_name: employee-service
+    ports:
+      - "8084:8084"
+    environment:
+      AUTH_ISSUER_URI: http://192.168.1.16:9000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SCHEMA: employee
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      EUREKA_URI: http://discovery-service:8761/eureka
+      JWK_URI: http://auth-service:9000/oauth2/jwks
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "500m"
+        max-file: "1"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
