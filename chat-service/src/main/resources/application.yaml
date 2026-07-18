@@ -15,6 +15,7 @@ spring:
       - 'classpath:config/liquibase.yml'
       - 'classpath:config/r2dbc.yml'
       - 'classpath:config/oauth2.yml'
+      - 'classpath:config/kafka.yml'
       - 'classpath:management.yml'
   ai:
     ollama:

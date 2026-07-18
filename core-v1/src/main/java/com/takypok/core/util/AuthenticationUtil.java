@@ -69,10 +69,17 @@ public class AuthenticationUtil {
     }
   }
 
+  /**
+   * The "info" claim is an optional, best-effort display-data snapshot — it can be absent (e.g. a
+   * brand-new account whose directory row hasn't landed yet) even though the JWT subject is always
+   * present. Callers must be able to trust the returned sub regardless, so this never returns null
+   * for an authenticated JWT principal — worst case it's a sub-only User with no display fields.
+   */
   public static User getUserInfo(Authentication authentication) {
     Jwt jwt = (Jwt) authentication.getPrincipal();
     User user = objectMapper().convertValue(jwt.getClaims().get("info"), new TypeReference<>() {});
-    if (user != null) user.setSub(jwt.getSubject());
+    if (user == null) user = new User();
+    user.setSub(jwt.getSubject());
     return user;
   }
 

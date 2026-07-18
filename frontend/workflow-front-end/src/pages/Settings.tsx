@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useUrlState } from "@state";
 import { useAuth, useTheme } from "@takypok/shared";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, Button, message as antMessage } from "antd";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 import { Icon } from "../components/ui/Icon";
@@ -12,7 +13,7 @@ import ProjectList from "../components/settings/ProjectList";
 import IssueTypeList from "../components/settings/IssueTypeList";
 import TeamOrg from "../components/settings/TeamOrg";
 import { useStatuses, useProjects, usePriorities, useAllIssueTypes } from "../hooks/useTickets";
-import { getFileUrl, updateMyAvatar, uploadFile } from "../api/ticketApi";
+import { getFileUrl, updateMyAvatar, uploadFile, fetchUserBySub } from "../api/ticketApi";
 import { resizeImageForUpload } from "../utils/imageResize";
 
 const TABS_KEYS = ["workflow", "status", "priority", "project", "issue-type", "team-org"] as const;
@@ -57,16 +58,20 @@ export default function Settings() {
   const { data: issueTypes = [] } = useAllIssueTypes();
 
   const mySub = user?.sub as string | undefined;
-  // Profile fields live under the JWT's custom "info" claim, not top-level — see
-  // CustomOAuth2TokenCustomizer on the auth-service side.
-  const info = user?.info as { avatar?: string | null } | undefined;
-  // undefined = "use whatever the current session's token says"; once we upload, we override
-  // locally since the token itself won't reflect the change until it's next refreshed.
+  // The JWT no longer carries display data — fetch it live from employee-service instead,
+  // same as everywhere else in the app.
+  const { data: myProfile } = useQuery({
+    queryKey: ["user", mySub],
+    queryFn: () => fetchUserBySub(mySub!),
+    enabled: !!mySub,
+  });
+  // undefined = "use whatever the live query says"; once we upload, we override locally since
+  // the query won't reflect the change until it's next refetched.
   const [avatarOverride, setAvatarOverride] = useState<string | null | undefined>(undefined);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
-  const avatarUrl = avatarOverride !== undefined ? avatarOverride : (info?.avatar ?? null);
+  const avatarUrl = avatarOverride !== undefined ? avatarOverride : (myProfile?.avatar ?? null);
 
   async function handleAvatarChange(files: FileList | null) {
     const file = files?.[0];

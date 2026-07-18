@@ -104,10 +104,12 @@ public class TicketExportRepository {
         """
         ,
             t.created_at,
-            t.created_by,
+            COALESCE(created_by_emp.name, t.created_by->>'name') AS created_by,
             t.modified_at,
-            t.modified_by
+            COALESCE(modified_by_emp.name, t.modified_by->>'name') AS modified_by
         FROM ticket t
+        LEFT JOIN employee_directory created_by_emp ON created_by_emp.sub = t.created_by->>'sub'
+        LEFT JOIN employee_directory modified_by_emp ON modified_by_emp.sub = t.modified_by->>'sub'
         WHERE (:summary IS NULL OR t.summary ILIKE CONCAT('%', :summary, '%'))
           AND (:statusId IS NULL OR (t.status->>'id')::bigint = :statusId)
           AND (:priorityId IS NULL OR (t.priority->>'id')::bigint = :priorityId)

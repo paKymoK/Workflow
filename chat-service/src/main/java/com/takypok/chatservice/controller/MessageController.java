@@ -5,6 +5,7 @@ import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
 import com.takypok.chatservice.model.request.SendMessageRequest;
 import com.takypok.chatservice.model.request.ToggleReactionRequest;
 import com.takypok.chatservice.model.response.MessageResponse;
+import com.takypok.chatservice.service.EmployeeDirectoryService;
 import com.takypok.chatservice.service.MessageService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -19,13 +20,16 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/chat/conversations/{conversationId}/messages")
 public class MessageController {
   private final MessageService messageService;
+  private final EmployeeDirectoryService employeeDirectoryService;
 
   @PostMapping
   public Mono<MessageResponse> send(
       @PathVariable UUID conversationId,
       @RequestBody SendMessageRequest request,
       Authentication authentication) {
-    return messageService.sendMessage(conversationId, request, getUserInfo(authentication));
+    return employeeDirectoryService
+        .resolveActingUser(authentication.getName())
+        .flatMap(sender -> messageService.sendMessage(conversationId, request, sender));
   }
 
   @GetMapping

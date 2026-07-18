@@ -4,6 +4,7 @@ import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.ResultMessage;
+import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.entity.AuditLog;
 import com.takypok.workflowservice.model.entity.Sla;
 import com.takypok.workflowservice.model.entity.Ticket;
@@ -24,6 +25,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -118,14 +120,42 @@ public class TicketController {
 
   @GetMapping("/audit")
   public Mono<ResultMessage<List<AuditLog>>> getRecentAuditLog() {
-    return auditLogRepository.findTop20ByOrderByIdDesc().collectList().map(ResultMessage::success);
+    return enrichAuditLogs(auditLogRepository.findTop20ByOrderByIdDesc())
+        .map(ResultMessage::success);
   }
 
   @GetMapping("/{id}/audit")
   public Mono<ResultMessage<List<AuditLog>>> getAuditLog(@PathVariable Long id) {
-    return auditLogRepository
-        .findByTicketIdOrderByIdDesc(id)
-        .collectList()
+    return enrichAuditLogs(auditLogRepository.findByTicketIdOrderByIdDesc(id))
         .map(ResultMessage::success);
+  }
+
+  /**
+   * {@code AuditLog.actor} is populated by a DB trigger reading {@code Ticket}/{@code Sla}'s {@code
+   * created_by}/{@code modified_by} columns at write time — those only ever carry a bare sub now
+   * that the JWT "info" claim is gone, so display data is re-resolved here instead of trusting
+   * whatever's stored. Unlike {@code Ticket.reporter}/{@code Comment.commenter}, this means the
+   * audit trail always reflects the actor's *current* profile, not a write-time snapshot — a
+   * deliberate difference, since an audit log is a "what does this look like now" view rather than
+   * a point-in-time record. Falls back to the stored (sub-only) actor if the directory doesn't have
+   * a match. {@code concatMap} keeps the repository's id-desc ordering.
+   */
+  private Mono<List<AuditLog>> enrichAuditLogs(Flux<AuditLog> logs) {
+    return logs.concatMap(
+            log -> {
+              User actor = log.getActor();
+              if (actor == null || actor.getSub() == null) {
+                return Mono.just(log);
+              }
+              return employeeDirectoryService
+                  .getUser(actor.getSub())
+                  .defaultIfEmpty(actor)
+                  .map(
+                      resolved -> {
+                        log.setActor(resolved);
+                        return log;
+                      });
+            })
+        .collectList();
   }
 }

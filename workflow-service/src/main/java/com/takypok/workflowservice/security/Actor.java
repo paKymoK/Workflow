@@ -15,11 +15,14 @@ import org.springframework.security.core.Authentication;
  */
 public final class Actor {
 
+  private final String sub;
   private final User user;
   private final List<String> globalRoles;
   private final Map<String, List<String>> projectRoles;
 
-  private Actor(User user, List<String> globalRoles, Map<String, List<String>> projectRoles) {
+  private Actor(
+      String sub, User user, List<String> globalRoles, Map<String, List<String>> projectRoles) {
+    this.sub = sub;
     this.user = user;
     this.globalRoles = globalRoles != null ? globalRoles : Collections.emptyList();
     this.projectRoles = projectRoles != null ? projectRoles : Collections.emptyMap();
@@ -27,6 +30,10 @@ public final class Actor {
 
   public static Actor from(Authentication authentication) {
     return new Actor(
+        // The JWT subject is always present, unlike the optional "info" claim (e.g. the
+        // employee_mirror row it's sourced from hasn't been fed yet) — access-rule checks that
+        // key off sub() must not go blind just because the display snapshot is missing.
+        authentication.getName(),
         AuthenticationUtil.getUserInfo(authentication),
         AuthenticationUtil.getRoles(authentication),
         AuthenticationUtil.getProjectRoles(authentication));
@@ -37,7 +44,7 @@ public final class Actor {
   }
 
   public String sub() {
-    return user != null ? user.getSub() : null;
+    return sub;
   }
 
   public boolean isAdmin() {

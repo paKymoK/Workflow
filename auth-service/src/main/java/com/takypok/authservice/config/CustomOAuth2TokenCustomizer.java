@@ -1,11 +1,8 @@
 package com.takypok.authservice.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.authservice.model.entity.ClientRoleAssignment;
-import com.takypok.authservice.model.entity.EmployeeMirror;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
-import com.takypok.authservice.repository.EmployeeMirrorRepository;
 import com.takypok.core.Constants;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +13,17 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.stereotype.Component;
 
+/**
+ * Note: no "info" claim here anymore — display data (name/title/department/avatar) is resolved live
+ * by each consuming service from its own Kafka-fed local directory instead of a frozen login-time
+ * snapshot. {@code EmployeeMirror} still exists and is still fed by Kafka, but only for {@code
+ * GroupServiceImpl}/{@code ClientRoleServiceImpl}'s display-name lookups — unrelated to token
+ * minting.
+ */
 @Component
 @RequiredArgsConstructor
 public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
-  private final ObjectMapper mapper;
-  private final EmployeeMirrorRepository employeeMirrorRepository;
   private final ClientRoleAssignmentRepository clientRoleAssignmentRepository;
   private final ClientSessionPolicyRepository clientSessionPolicyRepository;
 
@@ -31,10 +33,6 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
     Authentication principal = context.getPrincipal();
     if (principal == null) return;
     String subject = principal.getName();
-    EmployeeMirror employeeMirror = employeeMirrorRepository.getBySub(subject);
-    if (employeeMirror != null) {
-      context.getClaims().claim("info", mapper.convertValue(employeeMirror, HashMap.class));
-    }
 
     if (principal instanceof AbstractAuthenticationToken aat
         && aat.getDetails() instanceof String domain) {

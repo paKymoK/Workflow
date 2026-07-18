@@ -41,7 +41,7 @@ export function useProfile() {
     enabled: !!employee?.managerSub,
   });
 
-  const name = employee?.name ?? user?.info?.name ?? MOCK_PROFILE.name;
+  const name = employee?.name ?? MOCK_PROFILE.name;
 
   return {
     ...MOCK_PROFILE,
