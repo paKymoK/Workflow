@@ -6,31 +6,29 @@ import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface EmployeeRepository extends R2dbcRepository<Employee, Long> {
+public interface EmployeeRepository extends R2dbcRepository<Employee, String> {
 
-  Mono<Employee> findBySub(String sub);
-
-  Flux<Employee> findByManagerIdOrderByName(Long managerId);
+  Flux<Employee> findByManagerSubOrderByName(String managerSub);
 
   @Query(
       """
       SELECT * FROM employee
       WHERE (:q IS NULL OR name ILIKE CONCAT('%', :q, '%')
                         OR email ILIKE CONCAT('%', :q, '%')
-                        OR employee_code ILIKE CONCAT('%', :q, '%'))
-        AND (:department IS NULL OR department = :department)
-        AND (:line IS NULL OR line = :line)
+                        OR sub ILIKE CONCAT('%', :q, '%'))
+        AND (:departmentId IS NULL OR department_id = :departmentId)
+        AND (:unitId IS NULL OR unit_id = :unitId)
         AND (:status IS NULL OR status = :status)
-        AND (:managerId IS NULL OR manager_id = :managerId)
+        AND (:managerSub IS NULL OR manager_sub = :managerSub)
       ORDER BY name
       LIMIT :size OFFSET :offset
       """)
   Flux<Employee> search(
       String q,
-      String department,
-      String line,
+      Long departmentId,
+      Long unitId,
       String status,
-      Long managerId,
+      String managerSub,
       int size,
       long offset);
 
@@ -39,11 +37,11 @@ public interface EmployeeRepository extends R2dbcRepository<Employee, Long> {
       SELECT COUNT(*) FROM employee
       WHERE (:q IS NULL OR name ILIKE CONCAT('%', :q, '%')
                         OR email ILIKE CONCAT('%', :q, '%')
-                        OR employee_code ILIKE CONCAT('%', :q, '%'))
-        AND (:department IS NULL OR department = :department)
-        AND (:line IS NULL OR line = :line)
+                        OR sub ILIKE CONCAT('%', :q, '%'))
+        AND (:departmentId IS NULL OR department_id = :departmentId)
+        AND (:unitId IS NULL OR unit_id = :unitId)
         AND (:status IS NULL OR status = :status)
-        AND (:managerId IS NULL OR manager_id = :managerId)
+        AND (:managerSub IS NULL OR manager_sub = :managerSub)
       """)
-  Mono<Long> count(String q, String department, String line, String status, Long managerId);
+  Mono<Long> count(String q, Long departmentId, Long unitId, String status, String managerSub);
 }

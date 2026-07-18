@@ -8,8 +8,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class OrgChartNode {
-  private Long id;
-  private String employeeCode;
+  private String sub;
   private String name;
   private String title;
 

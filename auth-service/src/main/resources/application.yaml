@@ -33,11 +33,36 @@ spring:
       ddl-auto: none
     database: postgresql
     show-sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:29092}
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.takypok.authservice.model.event
+        spring.json.value.default.type: com.takypok.authservice.model.event.EmployeeEvent
+        spring.json.use.type.headers: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        # employee-service deserializes into its own local AccountEvent DTO — a type
+        # header naming auth-service's class would be meaningless (and unresolvable) there.
+        spring.json.add.type.headers: false
   config:
     import: 'classpath:management.yml'
   autoconfigure:
     exclude:
       - org.springframework.boot.actuate.autoconfigure.data.redis.RedisReactiveHealthContributorAutoConfiguration
+
+employee-events:
+  topic: employee.events
+
+account-events:
+  topic: account.events
 
 eureka:
   client:

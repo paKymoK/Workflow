@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import com.takypok.authservice.config.auth.ProfileIncompleteFilter;
 import com.takypok.authservice.model.entity.ClientRoleAssignment;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
@@ -61,7 +60,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -83,8 +81,7 @@ public class AuthorizationServerConfig {
   public SecurityFilterChain authorizationServerSecurityFilterChain(
       HttpSecurity http,
       CorsConfigurationSource corsConfigurationSource,
-      SecurityContextRepository securityContextRepository,
-      ProfileIncompleteFilter profileIncompleteFilter)
+      SecurityContextRepository securityContextRepository)
       throws Exception {
     Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper =
         (context) -> {
@@ -128,7 +125,6 @@ public class AuthorizationServerConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        .addFilterAfter(profileIncompleteFilter, SecurityContextHolderFilter.class)
         .exceptionHandling(
             (exceptions) -> {
               MediaTypeRequestMatcher htmlMatcher =

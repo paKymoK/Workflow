@@ -10,6 +10,7 @@ import com.takypok.workflowservice.model.request.CommentUpdateRequest;
 import com.takypok.workflowservice.security.Actor;
 import com.takypok.workflowservice.security.TicketAccessPolicy;
 import com.takypok.workflowservice.service.CommentService;
+import com.takypok.workflowservice.service.EmployeeDirectoryService;
 import com.takypok.workflowservice.service.TicketService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -27,6 +28,7 @@ public class CommentController {
   private final CommentService commentService;
   private final TicketService ticketService;
   private final TicketAccessPolicy ticketAccessPolicy;
+  private final EmployeeDirectoryService employeeDirectoryService;
 
   @GetMapping("")
   public Mono<ResultMessage<List<Comment>>> get(
@@ -43,7 +45,12 @@ public class CommentController {
       Authentication authentication) {
     Actor actor = Actor.from(authentication);
     return withTicketAccess(
-            ticketId, actor, ticket -> commentService.comment(ticketId, request, actor.user()))
+            ticketId,
+            actor,
+            ticket ->
+                employeeDirectoryService
+                    .resolveActingUser(actor)
+                    .flatMap(user -> commentService.comment(ticketId, request, user)))
         .map(ResultMessage::success);
   }
 
@@ -58,7 +65,11 @@ public class CommentController {
             ticketId,
             actor,
             ticket ->
-                commentService.update(ticketId, commentId, request.getContent(), actor.user()))
+                employeeDirectoryService
+                    .resolveActingUser(actor)
+                    .flatMap(
+                        user ->
+                            commentService.update(ticketId, commentId, request.getContent(), user)))
         .map(ResultMessage::success);
   }
 

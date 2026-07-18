@@ -11,11 +11,10 @@ import lombok.Setter;
 public class UpdateEmployeeRequest {
   @NotBlank private String name;
   private String email;
-  private String mobilePhone;
   private String avatarUrl;
   private String title;
-  private String department;
-  private String line;
+  private Long departmentId;
+  private Long unitId;
   private String workLocation;
   private LocalDate joinedDate;
   private Shift shift;

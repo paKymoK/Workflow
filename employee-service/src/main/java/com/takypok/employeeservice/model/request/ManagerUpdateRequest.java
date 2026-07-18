@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class ManagerUpdateRequest {
   /** Null clears the manager, putting this employee at the top of its chain. */
-  private Long managerId;
+  private String managerSub;
 }

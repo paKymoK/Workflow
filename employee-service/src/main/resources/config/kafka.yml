@@ -5,6 +5,23 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
+      properties:
+        # Each consumer deserializes into its own local event DTO (see e.g.
+        # auth-service's EmployeeEvent) — type headers naming employee-service's
+        # class would be meaningless (and unresolvable) there.
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.takypok.employeeservice.model.event
+        spring.json.value.default.type: com.takypok.employeeservice.model.event.AccountEvent
+        spring.json.use.type.headers: false
 
 employee-events:
   topic: employee.events
+
+account-events:
+  topic: account.events

@@ -1,17 +1,7 @@
 package com.takypok.authservice.service;
 
-import com.takypok.authservice.model.request.FilterUserRequest;
-import com.takypok.authservice.model.request.UpdateAvatarRequest;
-import com.takypok.authservice.model.request.UserinfoRequest;
-import com.takypok.authservice.model.response.UserinfoResponse;
-import com.takypok.core.model.PageResponse;
+import com.takypok.authservice.model.request.CreateUserRequest;
 
 public interface UserService {
-  PageResponse<UserinfoResponse> getUsers(FilterUserRequest request);
-
-  UserinfoResponse getUserById(String sub);
-
-  UserinfoResponse create(UserinfoRequest request);
-
-  UserinfoResponse updateAvatar(String sub, UpdateAvatarRequest request);
+  void create(CreateUserRequest request);
 }

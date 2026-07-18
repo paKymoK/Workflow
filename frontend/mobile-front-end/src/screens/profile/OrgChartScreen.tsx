@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
 import LinearGradient from 'react-native-linear-gradient';
 import { ArrowLeft, Camera, Building, Package, MapPin, Clock, User, Phone, Mail } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/src/theme/colors';
-import { ORG_CHART } from '@/src/data/profile';
+import { useAuth } from '@/src/auth/AuthContext';
+import { fetchOrgChart } from '@/src/api/employeesApi';
+import { ORG_CHART as MOCK_ORG_CHART } from '@/src/data/profile';
 import { useProfile } from '@/src/data/useProfile';
 
 function OrgNode({
@@ -61,6 +64,23 @@ export default function OrgChartScreen() {
   const [tab, setTab] = useState<'info' | 'org'>('info');
   const navigation = useNavigation();
   const PROFILE = useProfile();
+  const { user } = useAuth();
+
+  const { data: orgChart } = useQuery({
+    queryKey: ['org-chart', user?.sub],
+    queryFn: () => fetchOrgChart(user!.sub),
+    enabled: !!user?.sub,
+  });
+
+  const chain =
+    orgChart?.chain.map((n) => ({
+      name: n.name,
+      role: n.title ?? '',
+      isSelf: n.isSelf,
+      isManager: n.isManager,
+    })) ?? MOCK_ORG_CHART.chain;
+  const reports =
+    orgChart?.reports.map((n) => ({ name: n.name, role: n.title ?? '' })) ?? MOCK_ORG_CHART.reports;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -161,10 +181,10 @@ export default function OrgChartScreen() {
         ) : (
           <View className="rounded-2xl bg-white p-5 shadow-sm">
             <Text className="mb-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Organization Chart</Text>
-            {ORG_CHART.chain.map((node, i) => (
+            {chain.map((node, i) => (
               <View key={node.name}>
                 <OrgNode {...node} />
-                {i < ORG_CHART.chain.length - 1 && (
+                {i < chain.length - 1 && (
                   <View className="my-2 items-center">
                     <View className="h-5 w-0.5 rounded-full bg-slate-300" />
                   </View>
@@ -174,7 +194,7 @@ export default function OrgChartScreen() {
             <View className="mt-4">
               <Text className="mb-2 text-center text-[10px] font-bold uppercase tracking-wide text-gray-400">Direct Reports</Text>
               <View className="flex-row gap-2">
-                {ORG_CHART.reports.map((p) => (
+                {reports.map((p) => (
                   <View key={p.name} className="min-w-0 flex-1">
                     <OrgNode name={p.name} role={p.role} compact />
                   </View>

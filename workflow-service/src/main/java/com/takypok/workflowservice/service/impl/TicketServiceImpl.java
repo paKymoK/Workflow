@@ -5,7 +5,6 @@ import com.takypok.core.model.Message;
 import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.client.ApplicationAssigneeResolver;
-import com.takypok.workflowservice.client.AuthServiceClient;
 import com.takypok.workflowservice.function.postfunction.index.PostFunction;
 import com.takypok.workflowservice.function.validator.index.Validator;
 import com.takypok.workflowservice.model.entity.*;
@@ -24,6 +23,7 @@ import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.repository.*;
 import com.takypok.workflowservice.security.Actor;
 import com.takypok.workflowservice.security.TicketAccessPolicy;
+import com.takypok.workflowservice.service.EmployeeDirectoryService;
 import com.takypok.workflowservice.service.TicketService;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -51,7 +51,7 @@ public class TicketServiceImpl implements TicketService {
   private final SlaMapper slaMapper;
   private final SlaRepository slaRepository;
   private final ApplicationAssigneeResolver assigneeResolver;
-  private final AuthServiceClient authServiceClient;
+  private final EmployeeDirectoryService employeeDirectoryService;
   private final TicketAccessPolicy ticketAccessPolicy;
 
   @Override
@@ -347,7 +347,7 @@ public class TicketServiceImpl implements TicketService {
                         Message.Application.ERROR,
                         "You are not allowed to assign tickets on this project"));
               }
-              return authServiceClient
+              return employeeDirectoryService
                   .getUser(request.getSub())
                   .switchIfEmpty(
                       Mono.error(

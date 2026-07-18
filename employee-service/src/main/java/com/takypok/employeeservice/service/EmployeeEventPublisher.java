@@ -25,14 +25,11 @@ public class EmployeeEventPublisher {
 
   public Mono<Void> publish(EmployeeEventType eventType, EmployeeResponse snapshot) {
     EmployeeEvent event = new EmployeeEvent(eventType, snapshot);
-    return Mono.fromFuture(kafkaTemplate.send(topic, event.getEmployeeId().toString(), event))
+    return Mono.fromFuture(kafkaTemplate.send(topic, event.getSub(), event))
         .doOnError(
             ex ->
                 log.error(
-                    "Failed to publish {} event for employee {}",
-                    eventType,
-                    event.getEmployeeId(),
-                    ex))
+                    "Failed to publish {} event for employee {}", eventType, event.getSub(), ex))
         .onErrorResume(ex -> Mono.empty())
         .then();
   }

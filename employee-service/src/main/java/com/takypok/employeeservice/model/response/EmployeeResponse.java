@@ -14,18 +14,17 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeResponse {
-  private Long id;
   private String sub;
-  private String employeeCode;
   private String name;
   private String email;
-  private String mobilePhone;
   private String avatarUrl;
   private String title;
-  private String department;
-  private String line;
+  private Long departmentId;
+  private String departmentName;
+  private Long unitId;
+  private String unitName;
   private String workLocation;
-  private Long managerId;
+  private String managerSub;
   private LocalDate joinedDate;
   private Shift shift;
   private String shiftHours;

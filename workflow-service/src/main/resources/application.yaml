@@ -20,6 +20,7 @@ spring:
       - 'classpath:config/eureka-client.yml'
       - 'classpath:config/springdoc.yml'
       - 'classpath:config/debezium.yml'
+      - 'classpath:config/kafka.yml'
       - 'classpath:management.yml'
 
 logging:

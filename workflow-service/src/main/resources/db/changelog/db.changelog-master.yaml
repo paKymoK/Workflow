@@ -8,6 +8,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/init/init-data.sql
   - include:
+      file: db/changelog/init/init-employee-directory-schema.sql
+  - include:
       file: db/changelog/test/stress.sql
 
   - changeSet:

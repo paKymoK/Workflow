@@ -1,16 +1,15 @@
 package com.takypok.authservice.api;
 
-import com.takypok.authservice.model.request.FilterUserRequest;
-import com.takypok.authservice.model.request.UpdateAvatarRequest;
-import com.takypok.authservice.model.request.UserinfoRequest;
-import com.takypok.authservice.model.response.UserinfoResponse;
+import com.takypok.authservice.model.request.CreateUserRequest;
 import com.takypok.authservice.service.UserService;
-import com.takypok.core.model.PageResponse;
 import com.takypok.core.model.ResultMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,26 +17,9 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
   private final UserService userService;
 
-  @GetMapping
-  public ResponseEntity<ResultMessage<PageResponse<UserinfoResponse>>> get(
-      @Valid FilterUserRequest request) {
-    return ResponseEntity.ok(ResultMessage.success(userService.getUsers(request)));
-  }
-
-  @GetMapping("/{sub}")
-  public ResponseEntity<ResultMessage<UserinfoResponse>> getById(@PathVariable String sub) {
-    return ResponseEntity.ok(ResultMessage.success(userService.getUserById(sub)));
-  }
-
-  @PostMapping()
-  public ResponseEntity<ResultMessage<UserinfoResponse>> create(
-      @RequestBody @Valid UserinfoRequest request) {
-    return ResponseEntity.ok(ResultMessage.success(userService.create(request)));
-  }
-
-  @PatchMapping("/{sub}/avatar")
-  public ResponseEntity<ResultMessage<UserinfoResponse>> updateAvatar(
-      @PathVariable String sub, @RequestBody @Valid UpdateAvatarRequest request) {
-    return ResponseEntity.ok(ResultMessage.success(userService.updateAvatar(sub, request)));
+  @PostMapping
+  public ResponseEntity<ResultMessage<Void>> create(@RequestBody @Valid CreateUserRequest request) {
+    userService.create(request);
+    return ResponseEntity.ok(ResultMessage.success(null));
   }
 }

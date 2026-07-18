@@ -10,12 +10,8 @@ interface Props {
 }
 
 interface FormValues {
-  username:   string;
-  password:   string;
-  name:       string;
-  email:      string;
-  title:      string;
-  department: string;
+  username: string;
+  password: string;
 }
 
 export default function AddUserModal({ open, onClose, onSuccess }: Props) {
@@ -25,15 +21,13 @@ export default function AddUserModal({ open, onClose, onSuccess }: Props) {
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
+      // auth-service confirms the sub is real and announces it over Kafka — employee-service
+      // reacts by creating a PENDING shell for it. There's no employee-service call here
+      // anymore; a hand-typed sub can no longer create a row directly. HR completes the
+      // profile (name/title/department) separately once the shell exists.
       await api.post<ResultMessage<void>>("/auth-service/v1/users", {
         username: values.username,
         password: values.password,
-        userinfo: {
-          name:       values.name,
-          email:      values.email,
-          title:      values.title,
-          department: values.department,
-        },
       });
       message.success("User registered successfully");
       form.resetFields();
@@ -58,18 +52,6 @@ export default function AddUserModal({ open, onClose, onSuccess }: Props) {
         </Form.Item>
         <Form.Item label="Password" name="password" rules={[{ required: true }]}>
           <Input.Password placeholder="password" />
-        </Form.Item>
-        <Form.Item label="Full Name" name="name" rules={[{ required: true }]}>
-          <Input placeholder="Full name" />
-        </Form.Item>
-        <Form.Item label="Email" name="email" rules={[{ required: true }, { type: "email" }]}>
-          <Input placeholder="user@example.com" />
-        </Form.Item>
-        <Form.Item label="Title" name="title" rules={[{ required: true }]}>
-          <Input placeholder="Job title" />
-        </Form.Item>
-        <Form.Item label="Department" name="department" rules={[{ required: true }]}>
-          <Input placeholder="Department" />
         </Form.Item>
         <Form.Item className="mb-0 flex justify-end">
           <Button onClick={handleClose} className="mr-2" disabled={loading}>Cancel</Button>

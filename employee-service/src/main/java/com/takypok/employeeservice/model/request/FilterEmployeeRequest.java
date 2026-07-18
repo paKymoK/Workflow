@@ -9,10 +9,10 @@ import lombok.Setter;
 @Setter
 public class FilterEmployeeRequest {
   private String q;
-  private String department;
-  private String line;
+  private Long departmentId;
+  private Long unitId;
   private EmploymentStatus status;
-  private Long managerId;
+  private String managerSub;
 
   @NotNull private Long page = 0L;
   @NotNull private Long size = 20L;

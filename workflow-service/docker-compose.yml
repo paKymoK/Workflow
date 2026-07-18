@@ -18,12 +18,15 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       DEBEZIUM_OFFSET_PATH: /data/offset.dat
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
       - workflow-data:/data
     depends_on:
       postgres:
         condition: service_healthy
       discovery-service:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     logging:
       driver: json-file

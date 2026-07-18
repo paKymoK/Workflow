@@ -1,19 +1,12 @@
 package com.takypok.authservice.service.impl;
 
-import com.takypok.authservice.model.entity.Userinfo;
-import com.takypok.authservice.model.mapper.UserinfoMapper;
-import com.takypok.authservice.model.request.FilterUserRequest;
-import com.takypok.authservice.model.request.UpdateAvatarRequest;
-import com.takypok.authservice.model.request.UserinfoRequest;
-import com.takypok.authservice.model.response.UserinfoResponse;
-import com.takypok.authservice.repository.UserInfoRepository;
+import com.takypok.authservice.model.event.AccountEvent;
+import com.takypok.authservice.model.request.CreateUserRequest;
 import com.takypok.authservice.service.UserService;
-import com.takypok.core.model.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -26,32 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
-  private final UserInfoRepository userInfoRepository;
   private final JdbcUserDetailsManager userDetailsManager;
-  private final UserinfoMapper userinfoMapper;
+  private final KafkaTemplate<String, AccountEvent> kafkaTemplate;
 
   @Value("${auth.internal-domain}")
   private String internalDomain;
 
-  @Override
-  public PageResponse<UserinfoResponse> getUsers(FilterUserRequest request) {
-    Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-    if (request.getQ() != null && !request.getQ().isBlank()) {
-      return userinfoMapper.toPageResponse(
-          userInfoRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-              request.getQ(), request.getQ(), pageable));
-    }
-    return userinfoMapper.toPageResponse(userInfoRepository.findAll(pageable));
-  }
-
-  @Override
-  public UserinfoResponse getUserById(String sub) {
-    return userinfoMapper.toResponse(userInfoRepository.getReferenceById(sub));
-  }
+  @Value("${account-events.topic}")
+  private String accountEventsTopic;
 
   @Override
   @Transactional
-  public UserinfoResponse create(UserinfoRequest request) {
+  public void create(CreateUserRequest request) {
     validateUsername(request.getUsername());
     PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
     UserDetails user =
@@ -61,15 +40,16 @@ public class UserServiceImpl implements UserService {
             .roles("USER")
             .build();
     userDetailsManager.createUser(user);
-    Userinfo info = userinfoMapper.toEntity(request.getUserinfo(), user.getUsername());
-    return userinfoMapper.toResponse(userInfoRepository.save(info));
-  }
 
-  @Override
-  @Transactional
-  public UserinfoResponse updateAvatar(String sub, UpdateAvatarRequest request) {
-    userInfoRepository.updateAvatar(sub, request.getAvatar());
-    return userinfoMapper.toResponse(userInfoRepository.getReferenceById(sub));
+    AccountEvent event = new AccountEvent(request.getUsername());
+    kafkaTemplate
+        .send(accountEventsTopic, event.getSub(), event)
+        .whenComplete(
+            (result, ex) -> {
+              if (ex != null) {
+                log.error("Failed to publish account event for sub {}", request.getUsername(), ex);
+              }
+            });
   }
 
   private void validateUsername(String username) {

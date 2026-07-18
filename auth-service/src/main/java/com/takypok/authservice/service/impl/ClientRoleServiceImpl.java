@@ -4,8 +4,8 @@ import com.takypok.authservice.model.entity.ClientRoleAssignment;
 import com.takypok.authservice.model.request.ClientRoleAssignmentRequest;
 import com.takypok.authservice.model.response.ClientRoleAssignmentResponse;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
+import com.takypok.authservice.repository.EmployeeMirrorRepository;
 import com.takypok.authservice.repository.UserGroupRepository;
-import com.takypok.authservice.repository.UserInfoRepository;
 import com.takypok.authservice.service.ClientRoleService;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class ClientRoleServiceImpl implements ClientRoleService {
 
   private final ClientRoleAssignmentRepository assignmentRepository;
-  private final UserInfoRepository userInfoRepository;
+  private final EmployeeMirrorRepository employeeMirrorRepository;
   private final UserGroupRepository groupRepository;
 
   @Override
@@ -85,7 +85,7 @@ public class ClientRoleServiceImpl implements ClientRoleService {
     boolean isUser = a.getUserSub() != null;
     String subjectName;
     if (isUser) {
-      var info = userInfoRepository.getBySub(a.getUserSub());
+      var info = employeeMirrorRepository.getBySub(a.getUserSub());
       subjectName = info != null ? info.getName() : a.getUserSub();
     } else {
       subjectName =

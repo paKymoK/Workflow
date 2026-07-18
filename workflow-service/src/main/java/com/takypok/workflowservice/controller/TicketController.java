@@ -1,7 +1,5 @@
 package com.takypok.workflowservice.controller;
 
-import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
-
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
 import com.takypok.core.model.PageResponse;
@@ -19,6 +17,7 @@ import com.takypok.workflowservice.model.response.TicketSla;
 import com.takypok.workflowservice.repository.AuditLogRepository;
 import com.takypok.workflowservice.security.Actor;
 import com.takypok.workflowservice.security.TicketAccessPolicy;
+import com.takypok.workflowservice.service.EmployeeDirectoryService;
 import com.takypok.workflowservice.service.TicketService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -34,6 +33,7 @@ public class TicketController {
   private final TicketService ticketService;
   private final AuditLogRepository auditLogRepository;
   private final TicketAccessPolicy ticketAccessPolicy;
+  private final EmployeeDirectoryService employeeDirectoryService;
 
   @GetMapping("")
   public Mono<ResultMessage<PageResponse<TicketSla>>> get(
@@ -68,19 +68,28 @@ public class TicketController {
           new ApplicationException(
               Message.Application.ERROR, "You are not allowed to create tickets"));
     }
-    return ticketService.create(request, actor.user()).map(ResultMessage::success);
+    return employeeDirectoryService
+        .resolveActingUser(actor)
+        .flatMap(user -> ticketService.create(request, user))
+        .map(ResultMessage::success);
   }
 
   @PostMapping("/pause/{id}")
   public Mono<ResultMessage<Sla>> pause(
       @Valid @PathVariable Long id, Authentication authentication) {
-    return ticketService.pause(id, getUserInfo(authentication)).map(ResultMessage::success);
+    return employeeDirectoryService
+        .resolveActingUser(Actor.from(authentication))
+        .flatMap(user -> ticketService.pause(id, user))
+        .map(ResultMessage::success);
   }
 
   @PostMapping("/resume/{id}")
   public Mono<ResultMessage<Sla>> resume(
       @Valid @PathVariable Long id, Authentication authentication) {
-    return ticketService.resume(id, getUserInfo(authentication)).map(ResultMessage::success);
+    return employeeDirectoryService
+        .resolveActingUser(Actor.from(authentication))
+        .flatMap(user -> ticketService.resume(id, user))
+        .map(ResultMessage::success);
   }
 
   @PatchMapping("/{id}/assignee")
@@ -96,8 +105,9 @@ public class TicketController {
   @PostMapping("/transition")
   public Mono<ResultMessage<Ticket<TicketDetail>>> transition(
       @RequestBody @Valid TransitionRequest transitionRequest, Authentication authentication) {
-    return ticketService
-        .transition(transitionRequest, getUserInfo(authentication))
+    return employeeDirectoryService
+        .resolveActingUser(Actor.from(authentication))
+        .flatMap(user -> ticketService.transition(transitionRequest, user))
         .map(ResultMessage::success);
   }
 

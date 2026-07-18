@@ -2,17 +2,16 @@ package com.takypok.authservice.config;
 
 import com.takypok.authservice.config.auth.DomainAuthenticationFilter;
 import com.takypok.authservice.config.auth.DomainAuthenticationManager;
+import com.takypok.authservice.config.auth.LdapAutoProvisionSuccessHandler;
 import com.takypok.authservice.config.auth.LoginFailureHandler;
-import com.takypok.authservice.config.auth.ProfileCompleteSuccessHandler;
-import com.takypok.authservice.config.auth.ProfileIncompleteFilter;
-import com.takypok.authservice.repository.UserInfoRepository;
+import com.takypok.authservice.model.event.AccountEvent;
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -59,6 +58,9 @@ public class SecurityConfig {
   @Value("${ldap.user-search-filter}")
   private String userSearchFilter;
 
+  @Value("${account-events.topic}")
+  private String accountEventsTopic;
+
   @Bean
   public LdapContextSource ldapContextSource() {
     LdapContextSource source = new LdapContextSource();
@@ -94,35 +96,28 @@ public class SecurityConfig {
   public DomainAuthenticationFilter domainAuthenticationFilter(
       DomainAuthenticationManager domainAuthenticationManager,
       SecurityContextRepository securityContextRepository,
-      UserInfoRepository userInfoRepository,
       JdbcUserDetailsManager jdbcUserDetailsManager,
       PasswordEncoder passwordEncoder,
-      LoginFailureHandler loginFailureHandler) {
+      LoginFailureHandler loginFailureHandler,
+      KafkaTemplate<String, AccountEvent> accountEventKafkaTemplate) {
     DomainAuthenticationFilter filter = new DomainAuthenticationFilter(domainAuthenticationManager);
     filter.setFilterProcessesUrl("/login");
     filter.setSecurityContextRepository(securityContextRepository);
     filter.setSessionAuthenticationStrategy(new ChangeSessionIdAuthenticationStrategy());
     filter.setAuthenticationSuccessHandler(
-        new ProfileCompleteSuccessHandler(
-            userInfoRepository, jdbcUserDetailsManager, passwordEncoder));
+        new LdapAutoProvisionSuccessHandler(
+            jdbcUserDetailsManager,
+            passwordEncoder,
+            accountEventKafkaTemplate,
+            accountEventsTopic));
     filter.setAuthenticationFailureHandler(loginFailureHandler);
     return filter;
-  }
-
-  @Bean
-  public FilterRegistrationBean<ProfileIncompleteFilter> profileIncompleteFilterRegistration(
-      ProfileIncompleteFilter filter) {
-    FilterRegistrationBean<ProfileIncompleteFilter> registration =
-        new FilterRegistrationBean<>(filter);
-    registration.setEnabled(false);
-    return registration;
   }
 
   @Bean
   public SecurityFilterChain defaultSecurityFilterChain(
       HttpSecurity http,
       DomainAuthenticationFilter domainAuthenticationFilter,
-      ProfileIncompleteFilter profileIncompleteFilter,
       SecurityContextRepository securityContextRepository)
       throws Exception {
 
@@ -153,7 +148,6 @@ public class SecurityConfig {
                         "/logout",
                         "/v1/**",
                         "/actuator/**",
-                        "/admin/assets/**",
                         "/*.svg",
                         "/*.png",
                         "/*.ico",
@@ -163,7 +157,6 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated())
         .addFilterAt(domainAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .addFilterAfter(profileIncompleteFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(
             ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
         .build();

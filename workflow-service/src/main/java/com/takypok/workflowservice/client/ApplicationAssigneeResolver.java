@@ -5,6 +5,7 @@ import com.takypok.core.model.authentication.User;
 import com.takypok.workflowservice.model.annotation.InternalApplicationAnnotation;
 import com.takypok.workflowservice.model.entity.Project;
 import com.takypok.workflowservice.model.entity.custom.TicketDetail;
+import com.takypok.workflowservice.service.EmployeeDirectoryService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono;
 public class ApplicationAssigneeResolver {
 
   private final Set<Class<? extends TicketDetail>> configTicket;
-  private final AuthServiceClient authServiceClient;
+  private final EmployeeDirectoryService employeeDirectoryService;
 
   public Mono<User> resolve(JsonNode detail, Project project) {
     if (!"IA".equals(project.getCode()) || detail == null || detail.isNull()) {
@@ -33,7 +34,7 @@ public class ApplicationAssigneeResolver {
         .map(
             c -> {
               String sub = c.getAnnotation(InternalApplicationAnnotation.class).assignee();
-              return sub.isBlank() ? Mono.<User>empty() : authServiceClient.getUser(sub);
+              return sub.isBlank() ? Mono.<User>empty() : employeeDirectoryService.getUser(sub);
             })
         .orElse(Mono.empty());
   }

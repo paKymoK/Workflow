@@ -17,9 +17,7 @@ public class EmployeeEvent {
   private UUID eventId = UUID.randomUUID();
   private EmployeeEventType eventType;
   private ZonedDateTime occurredAt = ZonedDateTime.now();
-  private Long employeeId;
   private String sub;
-  private String employeeCode;
   private EmployeeResponse payload;
 
   public EmployeeEvent() {}
@@ -27,8 +25,6 @@ public class EmployeeEvent {
   public EmployeeEvent(EmployeeEventType eventType, EmployeeResponse payload) {
     this.eventType = eventType;
     this.payload = payload;
-    this.employeeId = payload.getId();
     this.sub = payload.getSub();
-    this.employeeCode = payload.getEmployeeCode();
   }
 }

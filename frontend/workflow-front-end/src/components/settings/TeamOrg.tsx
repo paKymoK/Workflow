@@ -17,6 +17,17 @@ interface TeamUser {
   department: string;
 }
 
+// Shape returned by employee-service's GET /v1/employees — department comes back
+// denormalized as departmentName (it's a FK to a department table on that side),
+// mapped down to TeamUser's flat `department` string below.
+interface EmployeeRecord {
+  sub:            string;
+  name:           string;
+  email:          string | null;
+  title:          string | null;
+  departmentName: string | null;
+}
+
 interface GroupMember {
   sub:   string;
   name:  string;
@@ -328,11 +339,20 @@ export default function TeamOrg() {
   const { data: rawUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ["team", "users"],
     queryFn: async () => {
-      const { data } = await api.get<ResultMessage<{ content: TeamUser[] }>>(
-        "/auth-service/v1/users",
+      const { data } = await api.get<ResultMessage<{ content: EmployeeRecord[] }>>(
+        "/employee-service/v1/employees",
         { params: { page: 0, size: 100 } },
       );
-      return data.data?.content ?? [];
+      const employees = data.data?.content ?? [];
+      return employees.map(
+        (e): TeamUser => ({
+          sub:        e.sub,
+          name:       e.name,
+          email:      e.email ?? "",
+          title:      e.title ?? "",
+          department: e.departmentName ?? "",
+        }),
+      );
     },
     staleTime: 2 * 60 * 1000,
   });

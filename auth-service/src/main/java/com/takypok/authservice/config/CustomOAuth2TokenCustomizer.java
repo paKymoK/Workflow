@@ -2,10 +2,10 @@ package com.takypok.authservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takypok.authservice.model.entity.ClientRoleAssignment;
-import com.takypok.authservice.model.entity.Userinfo;
+import com.takypok.authservice.model.entity.EmployeeMirror;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
-import com.takypok.authservice.repository.UserInfoRepository;
+import com.takypok.authservice.repository.EmployeeMirrorRepository;
 import com.takypok.core.Constants;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
   private final ObjectMapper mapper;
-  private final UserInfoRepository userInfoRepository;
+  private final EmployeeMirrorRepository employeeMirrorRepository;
   private final ClientRoleAssignmentRepository clientRoleAssignmentRepository;
   private final ClientSessionPolicyRepository clientSessionPolicyRepository;
 
@@ -31,9 +31,9 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
     Authentication principal = context.getPrincipal();
     if (principal == null) return;
     String subject = principal.getName();
-    Userinfo userinfo = userInfoRepository.getBySub(subject);
-    if (userinfo != null) {
-      context.getClaims().claim("info", mapper.convertValue(userinfo, HashMap.class));
+    EmployeeMirror employeeMirror = employeeMirrorRepository.getBySub(subject);
+    if (employeeMirror != null) {
+      context.getClaims().claim("info", mapper.convertValue(employeeMirror, HashMap.class));
     }
 
     if (principal instanceof AbstractAuthenticationToken aat

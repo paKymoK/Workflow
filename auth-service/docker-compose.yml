@@ -21,10 +21,13 @@ services:
       LDAP_USER_SEARCH_BASE: ${LDAP_USER_SEARCH_BASE}
       LDAP_USER_SEARCH_FILTER: ${LDAP_USER_SEARCH_FILTER}
       LDAP_GROUP_SEARCH_BASE: ${LDAP_GROUP_SEARCH_BASE}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       postgres:
         condition: service_healthy
       discovery-service:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     logging:
       driver: json-file
