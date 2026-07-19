@@ -26,7 +26,10 @@ CREATE TABLE IF NOT EXISTS unit
 CREATE TABLE IF NOT EXISTS employee
 (
     sub           varchar(200) NOT NULL,
-    name          varchar(200) NOT NULL,
+    -- Nullable: a freshly-created shell (Phase 3) arrives via AccountEventConsumer the instant
+    -- auth-service confirms a sub — for a guest that hasn't completed their profile yet (Phase 7),
+    -- name is genuinely unknown until then.
+    name          varchar(200),
     email         varchar(200),
     avatar_url    varchar(500),
     title         varchar(200),

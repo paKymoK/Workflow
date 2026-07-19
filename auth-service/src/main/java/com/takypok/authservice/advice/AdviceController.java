@@ -2,6 +2,7 @@ package com.takypok.authservice.advice;
 
 import com.takypok.core.model.Message;
 import com.takypok.core.model.ResultMessage;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,9 @@ public class AdviceController {
   public ResponseEntity<ResultMessage<String>> handleResourceNotFoundException(
       DuplicateKeyException ex) {
     return new ResponseEntity<>(
-        ResultMessage.error(Message.get(Message.Application.ERROR), ex.getRootCause().getMessage()),
+        ResultMessage.error(
+            Message.get(Message.Application.ERROR),
+            Objects.requireNonNull(ex.getRootCause()).getMessage()),
         HttpStatus.FORBIDDEN);
   }
 

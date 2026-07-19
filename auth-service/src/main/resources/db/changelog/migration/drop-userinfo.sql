@@ -1,16 +1,6 @@
--- employee-service is now the source of truth for employee/HR data; auth-service is
--- authentication/authorization only. Two FKs need to move off userinfo(sub) before it can be
--- dropped — they're authorization data (group membership, role assignments), not HR data, so
--- users(username) — Spring Security JDBC's own identity table — is the correct home for them.
--- Safe with no data migration: userinfo.sub already had FOREIGN KEY (sub) REFERENCES
--- users(username), so every value satisfying the old constraint already satisfies the new one.
-
-ALTER TABLE user_group_member DROP CONSTRAINT fk_ugm_user;
-ALTER TABLE user_group_member
-    ADD CONSTRAINT fk_ugm_user FOREIGN KEY (user_sub) REFERENCES users (username) ON DELETE CASCADE;
-
-ALTER TABLE client_role_assignment DROP CONSTRAINT fk_cra_user;
-ALTER TABLE client_role_assignment
-    ADD CONSTRAINT fk_cra_user FOREIGN KEY (user_sub) REFERENCES users (username) ON DELETE CASCADE;
-
-DROP TABLE IF EXISTS userinfo;
+-- Superseded by Phase 7: `userinfo` was recreated (with full column parity to employee-service's
+-- `employee` table) directly in init-schema.sql, and the fk_ugm_user/fk_cra_user re-pointing this
+-- file used to do is now baked into init-schema.sql's original table definitions — instead of
+-- layering a create -> drop -> recreate chain of migrations on a codebase that isn't deployed yet.
+-- This file is stubbed rather than deleted (the environment this was authored in couldn't run `rm`)
+-- and is no longer included in db.changelog-master.yaml, so it does not execute.

@@ -78,18 +78,51 @@ CREATE TABLE IF NOT EXISTS authorities
     CONSTRAINT ix_auth_username UNIQUE (username, authority)
 );
 
+-- Department/unit are auth-service-owned catalog tables (Phase 7) — they rarely change, so keeping
+-- them alongside identity data avoids a second hop to employee-service. employee-service keeps a
+-- read-only Kafka-fed mirror of these two tables under the same names.
+CREATE TABLE IF NOT EXISTS department
+(
+    id   BIGSERIAL    NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    CONSTRAINT department_pkey PRIMARY KEY (id),
+    CONSTRAINT department_name_uq UNIQUE (name)
+);
+
+CREATE TABLE IF NOT EXISTS unit
+(
+    id            BIGSERIAL    NOT NULL,
+    name          VARCHAR(200) NOT NULL,
+    department_id BIGINT       NOT NULL,
+    CONSTRAINT unit_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_unit_department FOREIGN KEY (department_id) REFERENCES department (id),
+    CONSTRAINT unit_department_name_uq UNIQUE (department_id, name)
+);
+
+-- Full column parity with employee-service's `employee` (General) table (Phase 7) — only
+-- name/email/department_id/unit_id have real read/write logic; everything else is an inert
+-- placeholder until a future HR-editing frontend exists, kept now so that frontend doesn't need a
+-- second disruptive migration. employee-service remains authoritative for the placeholder fields.
 CREATE TABLE IF NOT EXISTS userinfo
 (
-    sub         VARCHAR(50) NOT NULL,
-    avatar      VARCHAR,
-    name        VARCHAR     NOT NULL,
-    email       VARCHAR,
-    title       VARCHAR(100),
-    department  VARCHAR(100),
-    manager_sub VARCHAR(50),
+    sub           VARCHAR(50) NOT NULL,
+    name          VARCHAR,
+    email         VARCHAR,
+    department_id BIGINT,
+    unit_id       BIGINT,
+    title         VARCHAR(200),
+    work_location VARCHAR(200),
+    manager_sub   VARCHAR(50),
+    joined_date   DATE,
+    shift         VARCHAR(50),
+    shift_hours   VARCHAR(100),
+    status        VARCHAR(20),
+    avatar_url    VARCHAR(500),
     CONSTRAINT userinfo_pkey PRIMARY KEY (sub),
     CONSTRAINT fk_userinfo_users FOREIGN KEY (sub) REFERENCES users (username) ON DELETE CASCADE,
-    CONSTRAINT fk_manager_sub FOREIGN KEY (manager_sub) REFERENCES userinfo (sub)
+    CONSTRAINT fk_userinfo_department FOREIGN KEY (department_id) REFERENCES department (id),
+    CONSTRAINT fk_userinfo_unit FOREIGN KEY (unit_id) REFERENCES unit (id),
+    CONSTRAINT fk_userinfo_manager_sub FOREIGN KEY (manager_sub) REFERENCES userinfo (sub)
 );
 
 CREATE TABLE user_group (
@@ -100,12 +133,15 @@ CREATE TABLE user_group (
                             CONSTRAINT user_group_name_uq UNIQUE (name)
 );
 
+-- Group membership and role assignment back Spring Security's own `users` table, not `userinfo` —
+-- they're authorization data, unrelated to whether a Userinfo/HR record exists for that sub (see
+-- Phase 7: Group was deliberately kept independent of the employee-data cutover).
 CREATE TABLE user_group_member (
                                    group_id VARCHAR(50) NOT NULL,
                                    user_sub VARCHAR(50) NOT NULL,
                                    CONSTRAINT user_group_member_pkey PRIMARY KEY (group_id, user_sub),
                                    CONSTRAINT fk_ugm_group FOREIGN KEY (group_id) REFERENCES user_group(id)  ON DELETE CASCADE,
-                                   CONSTRAINT fk_ugm_user  FOREIGN KEY (user_sub)  REFERENCES userinfo(sub)  ON DELETE CASCADE
+                                   CONSTRAINT fk_ugm_user  FOREIGN KEY (user_sub)  REFERENCES users(username) ON DELETE CASCADE
 );
 
 CREATE TABLE client_role_assignment (
@@ -122,7 +158,7 @@ CREATE TABLE client_role_assignment (
                                             (user_sub IS NOT NULL AND group_id IS NULL)
                                             ),
                                         CONSTRAINT fk_cra_client FOREIGN KEY (registered_client_id) REFERENCES oauth2_registered_client(id) ON DELETE CASCADE,
-                                        CONSTRAINT fk_cra_user   FOREIGN KEY (user_sub)             REFERENCES userinfo(sub)                ON DELETE CASCADE,
+                                        CONSTRAINT fk_cra_user   FOREIGN KEY (user_sub)             REFERENCES users(username)              ON DELETE CASCADE,
                                         CONSTRAINT fk_cra_group  FOREIGN KEY (group_id)             REFERENCES user_group(id)               ON DELETE CASCADE
 );
 
@@ -146,7 +182,8 @@ CREATE INDEX ix_cra_client_user_sub    ON client_role_assignment(registered_clie
 CREATE INDEX ix_cra_client_group_id    ON client_role_assignment(registered_client_id, group_id);
 
 CREATE INDEX IF NOT EXISTS ix_userinfo_manager_sub ON userinfo (manager_sub);
-CREATE INDEX IF NOT EXISTS ix_userinfo_department ON userinfo (department);
+CREATE INDEX IF NOT EXISTS ix_userinfo_department_id ON userinfo (department_id);
+CREATE INDEX IF NOT EXISTS ix_userinfo_unit_id ON userinfo (unit_id);
 
 CREATE INDEX IF NOT EXISTS ix_oa_client_principal ON oauth2_authorization(registered_client_id, principal_name);
 CREATE INDEX IF NOT EXISTS ix_oa_access_token     ON oauth2_authorization USING HASH (access_token_value);

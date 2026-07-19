@@ -1,14 +1,3 @@
-package com.takypok.employeeservice.model.request;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class UnitUpdateRequest {
-  @NotNull private Long id;
-  @NotBlank private String name;
-  @NotNull private Long departmentId;
-}
+// Superseded by Phase 7: unit CRUD moved to auth-service. Stubbed rather than deleted (the
+// environment this was authored in couldn't run `rm`) — no longer referenced anywhere in the
+// codebase.

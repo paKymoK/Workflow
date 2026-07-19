@@ -1,19 +1,5 @@
-package com.takypok.employeeservice.service;
-
-import com.takypok.employeeservice.model.entity.Department;
-import com.takypok.employeeservice.model.request.DepartmentCreateRequest;
-import com.takypok.employeeservice.model.request.DepartmentUpdateRequest;
-import java.util.List;
-import reactor.core.publisher.Mono;
-
-public interface DepartmentService {
-  Mono<List<Department>> get();
-
-  Mono<Department> getById(Long id);
-
-  Mono<Department> create(DepartmentCreateRequest request);
-
-  Mono<Department> update(DepartmentUpdateRequest request);
-
-  Mono<Void> delete(Long id);
-}
+// Superseded by Phase 7: department CRUD moved to auth-service. Employee-service's Department
+// table is now a read-only Kafka mirror (see config/DepartmentEventConsumer), with no service-layer
+// write path of its own — EmployeeServiceImpl reads DepartmentRepository directly for its
+// departmentName enrichment join. Stubbed rather than deleted (the environment this was authored
+// in couldn't run `rm`) — no longer referenced anywhere in the codebase.

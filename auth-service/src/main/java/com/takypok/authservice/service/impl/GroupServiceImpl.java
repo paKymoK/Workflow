@@ -5,9 +5,9 @@ import com.takypok.authservice.model.entity.UserGroupMember;
 import com.takypok.authservice.model.request.UserGroupRequest;
 import com.takypok.authservice.model.response.GroupMemberResponse;
 import com.takypok.authservice.model.response.UserGroupResponse;
-import com.takypok.authservice.repository.EmployeeMirrorRepository;
 import com.takypok.authservice.repository.UserGroupMemberRepository;
 import com.takypok.authservice.repository.UserGroupRepository;
+import com.takypok.authservice.repository.UserinfoRepository;
 import com.takypok.authservice.service.GroupService;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.Message;
@@ -23,7 +23,7 @@ public class GroupServiceImpl implements GroupService {
 
   private final UserGroupRepository groupRepository;
   private final UserGroupMemberRepository memberRepository;
-  private final EmployeeMirrorRepository employeeMirrorRepository;
+  private final UserinfoRepository userinfoRepository;
 
   @Override
   public List<UserGroupResponse> getAll() {
@@ -67,7 +67,7 @@ public class GroupServiceImpl implements GroupService {
     return memberRepository.findByGroupId(groupId).stream()
         .map(
             m -> {
-              var info = employeeMirrorRepository.getBySub(m.getUserSub());
+              var info = userinfoRepository.getBySub(m.getUserSub());
               return GroupMemberResponse.builder()
                   .sub(m.getUserSub())
                   .name(info != null ? info.getName() : m.getUserSub())

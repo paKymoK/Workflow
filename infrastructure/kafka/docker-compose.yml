@@ -18,6 +18,10 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      # Local single-broker dev instance carrying a handful of low-traffic topics — the default
+      # -Xmx1G/-Xms1G is way more than needed and adds up on an 8GB machine running the rest of
+      # this stack alongside it.
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms256m"
     volumes:
       - kafka-data:/var/lib/kafka/data
     healthcheck:

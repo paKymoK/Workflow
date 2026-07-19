@@ -46,35 +46,39 @@ INSERT INTO authorities (username, authority) VALUES
   ('tqthai',   'ROLE_USER'),
   ('ndtu24',   'ROLE_USER');
 
+-- ── Department catalog (Phase 7: auth-service-owned) ────────────
+
+INSERT INTO department (name) VALUES ('IT Support');
+
 -- ── User profiles ─────────────────────────────────────────────
 -- Manager first (L1/L2/L3 reference ndtu24 as manager_sub)
 
-INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) VALUES
+INSERT INTO userinfo (sub, name, email, title, department_id, manager_sub, avatar_url) VALUES
   ('ndtu24',
    'Nguyen Duc Tu',
    'ndtu24@mycompany.local',
    'IT Service Manager',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    NULL,
    'https://api.dicebear.com/9.x/adventurer/svg?seed=ndtu24');
 
 -- L3
-INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) VALUES
+INSERT INTO userinfo (sub, name, email, title, department_id, manager_sub, avatar_url) VALUES
   ('tqthai',
    'Truong Quang Thai',
    'tqthai@mycompany.local',
    'Senior IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=tqthai');
 
 -- L2
-INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) VALUES
+INSERT INTO userinfo (sub, name, email, title, department_id, manager_sub, avatar_url) VALUES
   ('nvtu3',
    'Nguyen Van Tu',
    'nvtu3@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=nvtu3'),
 
@@ -82,17 +86,17 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Anh Tuan',
    'natuan25@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=natuan25');
 
 -- L1
-INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) VALUES
+INSERT INTO userinfo (sub, name, email, title, department_id, manager_sub, avatar_url) VALUES
   ('btngoc2',
    'Bui Thuy Ngoc',
    'btngoc2@mycompany.local',
    'IT Support Analyst',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=btngoc2'),
 
@@ -100,7 +104,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Minh Ngoc',
    'nmngoc5@mycompany.local',
    'IT Support Analyst',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=nmngoc5'),
 
@@ -108,7 +112,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Thi Thuy Dung',
    'nttdung9@mycompany.local',
    'IT Support Analyst',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=nttdung9'),
 
@@ -116,7 +120,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Do Van Tuan',
    'dvtuan4@mycompany.local',
    'IT Support Analyst',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=dvtuan4'),
 
@@ -124,7 +128,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Le Dinh Duc',
    'ldduc@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=ldduc'),
 
@@ -132,7 +136,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Dinh Toi',
    'ndtoi@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=ndtoi'),
 
@@ -140,7 +144,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Minh Hoang',
    'nmhoang6@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=nmhoang6'),
 
@@ -148,7 +152,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Tuan Nghia',
    'ntnghia4@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=ntnghia4'),
 
@@ -156,7 +160,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Vi Tuan',
    'nvtuan16@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=nvtuan16'),
 
@@ -164,7 +168,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Nguyen Xuan Manh',
    'nxmanh1@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=nxmanh1'),
 
@@ -172,7 +176,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Pham Hoang Anh',
    'phanh5@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=phanh5'),
 
@@ -180,7 +184,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Pham Tung Duong',
    'ptduong1@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=ptduong1'),
 
@@ -188,7 +192,7 @@ INSERT INTO userinfo (sub, name, email, title, department, manager_sub, avatar) 
    'Tran Xuan Dat',
    'txdat2@mycompany.local',
    'IT Support Engineer',
-   'IT Support',
+   (SELECT id FROM department WHERE name = 'IT Support'),
    'ndtu24',
    'https://api.dicebear.com/9.x/adventurer/svg?seed=txdat2');
 

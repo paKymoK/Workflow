@@ -1,11 +1,6 @@
--- Account-sync (Phase 3): employee rows are now created as empty PENDING shells the instant
--- auth-service confirms a sub, before HR has filled anything in — so `name` can no longer be
--- NOT NULL, and `status` needs a new PENDING value.
-ALTER TABLE employee ALTER COLUMN name DROP NOT NULL;
-
-ALTER TABLE employee DROP CONSTRAINT employee_status_check;
-ALTER TABLE employee
-    ADD CONSTRAINT employee_status_check
-        CHECK (status IN ('PENDING', 'ACTIVE', 'ON_LEAVE', 'SUSPENDED', 'TERMINATED'));
-
-ALTER TABLE employee ALTER COLUMN status DROP DEFAULT;
+-- Superseded by Phase 7: PENDING is removed from EmploymentStatus entirely (name/email now arrive
+-- trustworthy from auth-service the instant a shell is created — see AccountEventConsumer — so
+-- there's no longer a meaningful "not ready yet" state to gate on). `name` nullable is now baked
+-- directly into init-schema.sql instead of layered here. Stubbed rather than deleted (the
+-- environment this was authored in couldn't run `rm`) and no longer included in
+-- db.changelog-master.yaml, so it does not execute.

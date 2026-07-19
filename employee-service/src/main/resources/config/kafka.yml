@@ -25,3 +25,9 @@ employee-events:
 
 account-events:
   topic: account.events
+
+department-events:
+  topic: department.events
+
+unit-events:
+  topic: unit.events

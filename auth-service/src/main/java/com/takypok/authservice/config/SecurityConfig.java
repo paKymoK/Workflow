@@ -5,6 +5,7 @@ import com.takypok.authservice.config.auth.DomainAuthenticationManager;
 import com.takypok.authservice.config.auth.LdapAutoProvisionSuccessHandler;
 import com.takypok.authservice.config.auth.LoginFailureHandler;
 import com.takypok.authservice.model.event.AccountEvent;
+import com.takypok.authservice.repository.UserinfoRepository;
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +33,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -84,6 +88,11 @@ public class SecurityConfig {
   }
 
   @Bean
+  public LdapTemplate ldapTemplate(LdapContextSource ldapContextSource) {
+    return new LdapTemplate(ldapContextSource);
+  }
+
+  @Bean
   public DaoAuthenticationProvider jdbcAuthenticationProvider(
       UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
     DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -99,7 +108,9 @@ public class SecurityConfig {
       JdbcUserDetailsManager jdbcUserDetailsManager,
       PasswordEncoder passwordEncoder,
       LoginFailureHandler loginFailureHandler,
-      KafkaTemplate<String, AccountEvent> accountEventKafkaTemplate) {
+      KafkaTemplate<String, AccountEvent> accountEventKafkaTemplate,
+      UserinfoRepository userinfoRepository,
+      LdapTemplate ldapTemplate) {
     DomainAuthenticationFilter filter = new DomainAuthenticationFilter(domainAuthenticationManager);
     filter.setFilterProcessesUrl("/login");
     filter.setSecurityContextRepository(securityContextRepository);
@@ -109,7 +120,11 @@ public class SecurityConfig {
             jdbcUserDetailsManager,
             passwordEncoder,
             accountEventKafkaTemplate,
-            accountEventsTopic));
+            accountEventsTopic,
+            userinfoRepository,
+            ldapTemplate,
+            userSearchBase,
+            userSearchFilter));
     filter.setAuthenticationFailureHandler(loginFailureHandler);
     return filter;
   }
@@ -127,6 +142,7 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/login",
                     "/logout",
+                    "/profile/complete",
                     "/v1/**",
                     "/actuator/**",
                     "/.well-known/**",
@@ -196,5 +212,10 @@ public class SecurityConfig {
   @Bean
   public SecurityContextRepository securityContextRepository() {
     return new HttpSessionSecurityContextRepository();
+  }
+
+  @Bean
+  public RequestCache requestCache() {
+    return new HttpSessionRequestCache();
   }
 }

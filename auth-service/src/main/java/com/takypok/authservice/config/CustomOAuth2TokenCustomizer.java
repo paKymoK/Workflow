@@ -1,8 +1,11 @@
 package com.takypok.authservice.config;
 
 import com.takypok.authservice.model.entity.ClientRoleAssignment;
+import com.takypok.authservice.model.entity.ClientSessionPolicy;
+import com.takypok.authservice.model.entity.Userinfo;
 import com.takypok.authservice.repository.ClientRoleAssignmentRepository;
 import com.takypok.authservice.repository.ClientSessionPolicyRepository;
+import com.takypok.authservice.repository.UserinfoRepository;
 import com.takypok.core.Constants;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +17,11 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.stereotype.Component;
 
 /**
- * Note: no "info" claim here anymore — display data (name/title/department/avatar) is resolved live
- * by each consuming service from its own Kafka-fed local directory instead of a frozen login-time
- * snapshot. {@code EmployeeMirror} still exists and is still fed by Kafka, but only for {@code
- * GroupServiceImpl}/{@code ClientRoleServiceImpl}'s display-name lookups — unrelated to token
- * minting.
+ * Note: no nested "info" claim here — that was retired in Phase 5. name/email are auth-service-
+ * owned data now (Phase 7, see {@link Userinfo}), so this adds them back as two flat top-level
+ * claims, purely for frontend display convenience. Nothing persisted (Ticket.reporter,
+ * Comment.commenter, AuditLog.actor, etc.) should trust these claims — those already resolve live
+ * from each service's own directory (Phase 3-5) and stay that way.
  */
 @Component
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
 
   private final ClientRoleAssignmentRepository clientRoleAssignmentRepository;
   private final ClientSessionPolicyRepository clientSessionPolicyRepository;
+  private final UserinfoRepository userinfoRepository;
 
   @Override
   public void customize(JwtEncodingContext context) {
@@ -37,6 +41,16 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
     if (principal instanceof AbstractAuthenticationToken aat
         && aat.getDetails() instanceof String domain) {
       context.getClaims().claim("domain", domain);
+    }
+
+    Userinfo userinfo = userinfoRepository.getBySub(subject);
+    if (userinfo != null) {
+      if (userinfo.getName() != null) {
+        context.getClaims().claim("name", userinfo.getName());
+      }
+      if (userinfo.getEmail() != null) {
+        context.getClaims().claim("email", userinfo.getEmail());
+      }
     }
 
     // Resolve all role assignments for this user on the requesting client (direct + group).
@@ -67,7 +81,7 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
     // Embed per-client session policy as an opaque claim — only present for single-tab clients
     clientSessionPolicyRepository
         .findById(clientId)
-        .filter(p -> p.isSingleTab())
+        .filter(ClientSessionPolicy::isSingleTab)
         .ifPresent(
             p -> {
               String encoded =
