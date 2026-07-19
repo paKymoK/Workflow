@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -19,6 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { ProfileStackParamList } from '@/src/navigation/types';
 import { useProfile } from '@/src/data/useProfile';
+import { useAvatarUpload } from '@/src/data/useAvatarUpload';
 import { colors } from '@/src/theme/colors';
 
 const PROFILE_NAV: { icon: LucideIcon; label: string; screen: keyof ProfileStackParamList; badge?: string }[] = [
@@ -35,6 +36,7 @@ const PROFILE_NAV: { icon: LucideIcon; label: string; screen: keyof ProfileStack
 export default function ProfileMenuScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const PROFILE = useProfile();
+  const { choosePhoto, uploading } = useAvatarUpload();
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
@@ -48,14 +50,30 @@ export default function ProfileMenuScreen() {
           />
           <View className="flex-row items-center gap-4">
             <View className="relative">
-              <View
-                className="h-16 w-16 items-center justify-center rounded-full"
-                style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+              {PROFILE.avatarUrl ? (
+                <Image
+                  source={{ uri: PROFILE.avatarUrl }}
+                  className="h-16 w-16 rounded-full"
+                  style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+                />
+              ) : (
+                <View
+                  className="h-16 w-16 items-center justify-center rounded-full"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+                >
+                  <Text className="text-2xl font-bold text-white">{PROFILE.initials}</Text>
+                </View>
+              )}
+              <Pressable
+                onPress={choosePhoto}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm"
               >
-                <Text className="text-2xl font-bold text-white">{PROFILE.initials}</Text>
-              </View>
-              <Pressable className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
-                <Camera size={11} color={colors.primary} />
+                {uploading ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Camera size={11} color={colors.primary} />
+                )}
               </Pressable>
             </View>
             <View className="flex-1">

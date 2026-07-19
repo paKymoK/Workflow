@@ -16,13 +16,6 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.stereotype.Component;
 
-/**
- * Note: no nested "info" claim here — that was retired in Phase 5. name/email are auth-service-
- * owned data now (Phase 7, see {@link Userinfo}), so this adds them back as two flat top-level
- * claims, purely for frontend display convenience. Nothing persisted (Ticket.reporter,
- * Comment.commenter, AuditLog.actor, etc.) should trust these claims — those already resolve live
- * from each service's own directory (Phase 3-5) and stay that way.
- */
 @Component
 @RequiredArgsConstructor
 public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {

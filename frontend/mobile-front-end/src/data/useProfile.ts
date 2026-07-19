@@ -1,30 +1,38 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/src/auth/AuthContext';
-import { fetchEmployeeBySub } from '@/src/api/employeesApi';
-
-import { PROFILE as MOCK_PROFILE } from './profile';
+import { fetchEmployeeBySub, fetchEmployeePersonal } from '@/src/api/employeesApi';
 
 function initialsOf(name: string): string {
+  if (!name.trim()) return '';
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
   const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
   return (first + last).toUpperCase();
 }
 
-function formatJoined(isoDate?: string | null): string | undefined {
-  if (!isoDate) return undefined;
+function formatJoined(isoDate?: string | null): string {
+  if (!isoDate) return '';
   const d = new Date(isoDate);
-  if (Number.isNaN(d.getTime())) return undefined;
+  if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
-// Falls back to mock fields field-by-field until the real employee record (and,
-// once that's loaded, the manager's name) comes back — screens read the same
-// shape either way, so nothing downstream needs to handle a loading state.
-//
-// Personal contact info (mobile phone) lives in employee-service's separate
-// employee_personal record, not wired up here yet — `mobile` stays mocked.
+function shiftLabel(shift?: string | null): string {
+  switch (shift) {
+    case 'MORNING':
+      return 'Morning';
+    case 'AFTERNOON':
+      return 'Afternoon';
+    case 'NIGHT':
+      return 'Night';
+    default:
+      return '';
+  }
+}
+
+// Every field here is blank ('' / null) until the real employee record loads — no mock
+// fallback, so a failed/empty fetch reads as "no data" on screen rather than fake data.
 export function useProfile() {
   const { user } = useAuth();
   const sub = user?.sub;
@@ -41,20 +49,30 @@ export function useProfile() {
     enabled: !!employee?.managerSub,
   });
 
-  const name = employee?.name ?? MOCK_PROFILE.name;
+  // Most employees don't have a personal record filled in yet (HR hasn't gotten to it) — this
+  // resolves to null in that case, and `mobile` falls back to mock like everything else here.
+  const { data: personal } = useQuery({
+    queryKey: ['employee-personal', sub],
+    queryFn: () => fetchEmployeePersonal(sub!),
+    enabled: !!sub,
+  });
+
+  const name = employee?.name ?? '';
 
   return {
-    ...MOCK_PROFILE,
     name,
     initials: initialsOf(name),
-    employeeId: employee?.sub ?? user?.sub ?? MOCK_PROFILE.employeeId,
-    title: employee?.title ?? MOCK_PROFILE.title,
-    department: employee?.departmentName ?? MOCK_PROFILE.department,
-    line: employee?.unitName ?? MOCK_PROFILE.line,
-    workLocation: employee?.workLocation ?? MOCK_PROFILE.workLocation,
-    shiftHours: employee?.shiftHours ?? MOCK_PROFILE.shiftHours,
-    joined: formatJoined(employee?.joinedDate) ?? MOCK_PROFILE.joined,
-    manager: manager?.name ?? MOCK_PROFILE.manager,
-    email: employee?.email ?? MOCK_PROFILE.email,
+    avatarUrl: employee?.avatarUrl ?? null,
+    employeeId: employee?.sub ?? user?.sub ?? '',
+    title: employee?.title ?? '',
+    department: employee?.departmentName ?? '',
+    line: employee?.unitName ?? '',
+    workLocation: employee?.workLocation ?? '',
+    shift: shiftLabel(employee?.shift),
+    shiftHours: employee?.shiftHours ?? '',
+    joined: formatJoined(employee?.joinedDate),
+    manager: manager?.name ?? '',
+    email: employee?.email ?? '',
+    mobile: personal?.mobilePhone ?? '',
   };
 }

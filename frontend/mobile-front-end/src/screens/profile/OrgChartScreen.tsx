@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import LinearGradient from 'react-native-linear-gradient';
 import { ArrowLeft, Camera, Building, Package, MapPin, Clock, User, Phone, Mail } from 'lucide-react-native';
@@ -9,8 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/src/theme/colors';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchOrgChart } from '@/src/api/employeesApi';
-import { ORG_CHART as MOCK_ORG_CHART } from '@/src/data/profile';
 import { useProfile } from '@/src/data/useProfile';
+import { useAvatarUpload } from '@/src/data/useAvatarUpload';
 
 function OrgNode({
   name,
@@ -65,6 +65,7 @@ export default function OrgChartScreen() {
   const navigation = useNavigation();
   const PROFILE = useProfile();
   const { user } = useAuth();
+  const { choosePhoto, uploading } = useAvatarUpload();
 
   const { data: orgChart } = useQuery({
     queryKey: ['org-chart', user?.sub],
@@ -78,9 +79,8 @@ export default function OrgChartScreen() {
       role: n.title ?? '',
       isSelf: n.isSelf,
       isManager: n.isManager,
-    })) ?? MOCK_ORG_CHART.chain;
-  const reports =
-    orgChart?.reports.map((n) => ({ name: n.name, role: n.title ?? '' })) ?? MOCK_ORG_CHART.reports;
+    })) ?? [];
+  const reports = orgChart?.reports.map((n) => ({ name: n.name, role: n.title ?? '' })) ?? [];
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -103,14 +103,30 @@ export default function OrgChartScreen() {
         </View>
         <View className="mb-4 flex-row items-center gap-4">
           <View className="relative">
-            <View
-              className="h-[72px] w-[72px] items-center justify-center rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)' }}
+            {PROFILE.avatarUrl ? (
+              <Image
+                source={{ uri: PROFILE.avatarUrl }}
+                className="h-[72px] w-[72px] rounded-full"
+                style={{ borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)' }}
+              />
+            ) : (
+              <View
+                className="h-[72px] w-[72px] items-center justify-center rounded-full"
+                style={{ backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)' }}
+              >
+                <Text className="text-xl font-bold text-white">{PROFILE.initials}</Text>
+              </View>
+            )}
+            <Pressable
+              onPress={choosePhoto}
+              disabled={uploading}
+              className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-white shadow"
             >
-              <Text className="text-xl font-bold text-white">{PROFILE.initials}</Text>
-            </View>
-            <Pressable className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full bg-white shadow">
-              <Camera size={11} color={colors.primary} />
+              {uploading ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Camera size={11} color={colors.primary} />
+              )}
             </Pressable>
           </View>
           <View>

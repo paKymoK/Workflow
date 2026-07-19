@@ -59,18 +59,25 @@ export default function SettingsScreen() {
             <Text className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Account</Text>
             <View className="overflow-hidden rounded-2xl bg-white shadow-sm">
               <View className="flex-row items-center gap-3 border-b border-gray-50 px-4 py-4">
-                <LinearGradient
-                  colors={[colors.primary, colors.primaryLight]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ height: 48, width: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Text className="font-bold text-white">{PROFILE.initials}</Text>
-                </LinearGradient>
+                {PROFILE.avatarUrl ? (
+                  <Image
+                    source={{ uri: PROFILE.avatarUrl }}
+                    style={{ height: 48, width: 48, borderRadius: 24 }}
+                  />
+                ) : (
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryLight]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ height: 48, width: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Text className="font-bold text-white">{PROFILE.initials}</Text>
+                  </LinearGradient>
+                )}
                 <View className="flex-1">
                   <Text className="text-sm font-bold text-gray-900">{PROFILE.name}</Text>
                   <Text className="text-xs text-gray-400">
-                    QC Supervisor · {PROFILE.employeeId}
+                    {PROFILE.title} · {PROFILE.employeeId}
                   </Text>
                 </View>
                 <Pressable className="flex-row items-center gap-1">
