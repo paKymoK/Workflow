@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookOpen, FileText, ClipboardList, Headphones, Settings, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -6,8 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { MoreStackParamList } from '@/src/navigation/types';
 import { colors } from '@/src/theme/colors';
-
-const logo = require('@/assets/images/logo.png');
+import { version as appVersion } from '@/package.json';
 
 const MORE_NAV: { icon: LucideIcon; label: string; screen: keyof MoreStackParamList }[] = [
   { icon: BookOpen, label: 'Training Materials & Documents', screen: 'Training' },
@@ -48,9 +47,7 @@ export default function MoreMenuScreen() {
         </View>
 
         <View className="items-center pb-4 pt-6">
-          <Image source={logo} style={{ height: 32, width: 120, opacity: 0.4 }} resizeMode="contain" />
-          <Text className="mt-2 text-xs text-gray-400">CMC Global Employee Portal v2.1.0</Text>
-          <Text className="mt-1 text-[10px] text-gray-300">© 2025 CMC Global. All rights reserved.</Text>
+          <Text className="text-xs text-gray-400">Employee Portal v{appVersion}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

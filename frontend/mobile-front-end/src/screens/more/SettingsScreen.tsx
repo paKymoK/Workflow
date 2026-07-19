@@ -24,8 +24,8 @@ import { colors } from '@/src/theme/colors';
 import { Toggle } from '@/src/components/Toggle';
 import { useAuth } from '@/src/auth/AuthContext';
 import { useProfile } from '@/src/data/useProfile';
+import { version as appVersion } from '@/package.json';
 
-const logo = require('@/assets/images/logo.png');
 const LANGUAGES = ['English', 'Vietnamese'];
 
 export default function SettingsScreen() {
@@ -159,7 +159,7 @@ export default function SettingsScreen() {
                   <Info size={15} color={colors.primary} />
                 </View>
                 <Text className="flex-1 text-sm font-medium text-gray-800">App Version</Text>
-                <Text className="text-xs font-semibold text-gray-400">v2.1.0</Text>
+                <Text className="text-xs font-semibold text-gray-400">v{appVersion}</Text>
               </View>
               <Pressable className="flex-row items-center gap-3 px-4 py-3.5">
                 <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: colors.surface }}>
@@ -177,11 +177,6 @@ export default function SettingsScreen() {
             </View>
             <Text className="flex-1 text-sm font-medium text-red-500">Log Out</Text>
           </Pressable>
-
-          <View className="items-center pb-4">
-            <Image source={logo} style={{ height: 28, width: 100, opacity: 0.3 }} resizeMode="contain" />
-            <Text className="mt-1.5 text-[10px] text-gray-300">© 2025 CMC Global. All rights reserved.</Text>
-          </View>
         </View>
       </ScrollView>
 

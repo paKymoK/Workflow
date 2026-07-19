@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/init/init-schema.sql
   - include:
       file: db/changelog/seed/seed-fake-employees.sql
+  - include:
+      file: db/changelog/v2/add-news-feature.sql
+  - include:
+      file: db/changelog/seed/seed-news.sql
