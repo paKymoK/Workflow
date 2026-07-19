@@ -130,6 +130,23 @@ function makeEdge(id: string, source: string, target: string, name: string, vali
   };
 }
 
+// ─── Validator descriptor helpers ──────────────────────────────────────────────
+// A stored descriptor is `<fully-qualified-class-name>[#arg]` (see workflow-service's
+// `Validator.className()`/`arg()`). The Select below only ever offers/stores bare class names, so
+// arg is tracked separately and recombined into this format on Apply.
+
+function parseDescriptor(descriptor: string): { className: string; arg: string } {
+  const idx = descriptor.indexOf("#");
+  return idx >= 0
+    ? { className: descriptor.slice(0, idx), arg: descriptor.slice(idx + 1) }
+    : { className: descriptor, arg: "" };
+}
+
+function combineDescriptor(className: string, arg: string): string {
+  const trimmed = arg.trim();
+  return trimmed ? `${className}#${trimmed}` : className;
+}
+
 // ─── Detail Panel (editable) ──────────────────────────────────────────────────
 
 function DetailPanel({
@@ -144,18 +161,25 @@ function DetailPanel({
 }) {
   const [name,      setName]      = useState("");
   const [vals,      setVals]      = useState<string[]>([]);
+  const [valArgs,   setValArgs]   = useState<Record<string, string>>({});
   const [postFns,   setPostFns]   = useState<string[]>([]);
 
   useEffect(() => {
     if (!edge) return;
     const id = setTimeout(() => {
       setName((edge.data?.transitionName as string) ?? (edge.label as string) ?? "");
-      setVals((edge.data?.validators    as string[]) ?? []);
+      const parsedVals = ((edge.data?.validators as string[]) ?? []).map(parseDescriptor);
+      setVals(parsedVals.map((p) => p.className));
+      setValArgs(Object.fromEntries(parsedVals.filter((p) => p.arg).map((p) => [p.className, p.arg])));
       setPostFns((edge.data?.postFunctions as string[]) ?? []);
     }, 0);
     return () => clearTimeout(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edge?.id]);
+
+  const parameterizedSelected = vals.filter(
+    (v) => availableValidators.find((av) => av.value === v)?.parameterized,
+  );
 
   if (!edge) return null;
 
@@ -223,6 +247,24 @@ function DetailPanel({
         />
       </div>
 
+      {parameterizedSelected.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {parameterizedSelected.map((cn) => (
+            <div key={cn}>
+              <div className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1 text-[var(--text-muted)]">
+                {shortName(cn)} arg
+              </div>
+              <Input
+                size="small"
+                value={valArgs[cn] ?? ""}
+                onChange={(e) => setValArgs((prev) => ({ ...prev, [cn]: e.target.value }))}
+                placeholder="e.g. APPROVER, or sub1,sub2"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
       <div>
         <div
           className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1 text-[var(--text-muted)]"
@@ -259,7 +301,18 @@ function DetailPanel({
         <Popconfirm title="Remove this transition?" onConfirm={() => onDelete(edge.id)} okText="Remove" okButtonProps={{ danger: true }}>
           <Button size="small" danger type="text">Remove</Button>
         </Popconfirm>
-        <Button size="small" type="primary" onClick={() => onUpdate(edge.id, name, vals, postFns)}>
+        <Button
+          size="small"
+          type="primary"
+          onClick={() =>
+            onUpdate(
+              edge.id,
+              name,
+              vals.map((cn) => combineDescriptor(cn, valArgs[cn] ?? "")),
+              postFns,
+            )
+          }
+        >
           Apply
         </Button>
       </div>

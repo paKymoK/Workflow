@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class FunctionResponse {
   private String name;
   private String value;
+  private boolean parameterized;
 }

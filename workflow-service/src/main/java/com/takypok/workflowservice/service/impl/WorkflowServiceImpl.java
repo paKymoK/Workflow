@@ -6,6 +6,7 @@ import com.takypok.core.exception.ApplicationException;
 import com.takypok.core.model.IdEntity;
 import com.takypok.core.model.Message;
 import com.takypok.workflowservice.function.postfunction.index.PostFunctionInterface;
+import com.takypok.workflowservice.function.validator.index.ParameterizedValidatorInterface;
 import com.takypok.workflowservice.function.validator.index.ValidatorInterface;
 import com.takypok.workflowservice.model.entity.Status;
 import com.takypok.workflowservice.model.entity.Transition;
@@ -189,9 +190,18 @@ public class WorkflowServiceImpl implements WorkflowService {
         .getValidator()
         .forEach(
             validate -> {
+              // Descriptors are `<FQCN>[#arg]` (see function/validator/index/Validator.java) —
+              // the class name has to be isolated before Class.forName, or every parameterized
+              // descriptor (e.g. RoleValidator#APPROVER) fails to resolve.
+              int idx = validate.indexOf('#');
+              String className = idx >= 0 ? validate.substring(0, idx) : validate;
               try {
-                if (!isImplementationClazz(
-                    Class.forName(validate), ValidatorInterface.class.getName())) {
+                Class<?> clazz = Class.forName(className);
+                boolean valid =
+                    isImplementationClazz(clazz, ValidatorInterface.class.getName())
+                        || isImplementationClazz(
+                            clazz, ParameterizedValidatorInterface.class.getName());
+                if (!valid) {
                   throw new ApplicationException(
                       Message.Application.ERROR, "Validator " + validate + " not valid !");
                 }

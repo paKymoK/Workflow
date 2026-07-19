@@ -78,13 +78,16 @@ public class CommentController {
     return ticketService
         .get(ticketId)
         .flatMap(
-            ticket -> {
-              if (!ticketAccessPolicy.canView(actor, ticket)) {
-                return Mono.<T>error(
-                    new ApplicationException(
-                        Message.Application.ERROR, "You are not allowed to access this ticket"));
-              }
-              return action.apply(ticket);
-            });
+            ticket ->
+                ticketAccessPolicy
+                    .canView(actor, ticket)
+                    .flatMap(
+                        allowed ->
+                            allowed
+                                ? action.apply(ticket)
+                                : Mono.<T>error(
+                                    new ApplicationException(
+                                        Message.Application.ERROR,
+                                        "You are not allowed to access this ticket"))));
   }
 }

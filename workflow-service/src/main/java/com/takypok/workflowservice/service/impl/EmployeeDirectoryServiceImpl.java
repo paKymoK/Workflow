@@ -30,6 +30,11 @@ public class EmployeeDirectoryServiceImpl implements EmployeeDirectoryService {
         .collectList();
   }
 
+  @Override
+  public Mono<String> getManagerSub(String sub) {
+    return employeeDirectoryRepository.findById(sub).mapNotNull(EmployeeDirectory::getManagerSub);
+  }
+
   private User toUser(EmployeeDirectory d) {
     return new User(
         d.getSub(), d.getName(), d.getEmail(), d.getTitle(), d.getDepartment(), d.getAvatarUrl());

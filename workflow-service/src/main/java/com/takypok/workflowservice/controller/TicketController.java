@@ -50,14 +50,17 @@ public class TicketController {
     return ticketService
         .get(id)
         .flatMap(
-            ticket -> {
-              if (!ticketAccessPolicy.canView(actor, ticket)) {
-                return Mono.error(
-                    new ApplicationException(
-                        Message.Application.ERROR, "You are not allowed to view this ticket"));
-              }
-              return Mono.just(ticket);
-            })
+            ticket ->
+                ticketAccessPolicy
+                    .canView(actor, ticket)
+                    .flatMap(
+                        allowed ->
+                            allowed
+                                ? Mono.just(ticket)
+                                : Mono.error(
+                                    new ApplicationException(
+                                        Message.Application.ERROR,
+                                        "You are not allowed to view this ticket"))))
         .map(ResultMessage::success);
   }
 

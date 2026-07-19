@@ -12,6 +12,13 @@ public interface EmployeeDirectoryService {
   Mono<List<UserSummary>> searchUsers(String q);
 
   /**
+   * Exposes {@code managerSub} directly — {@link #getUser(String)}'s {@code User} mapping doesn't
+   * carry it, since {@code core.model.authentication.User} is shared across every service and
+   * widening it isn't worth the blast radius for one workflow-service-only need.
+   */
+  Mono<String> getManagerSub(String sub);
+
+  /**
    * Resolves the acting user against the local directory instead of the JWT {@code info} claim, so
    * stamped fields (reporter, commenter, audit actor, approver...) reflect current employee-service
    * data rather than a snapshot frozen at login time. Falls back to a sub-only user if the

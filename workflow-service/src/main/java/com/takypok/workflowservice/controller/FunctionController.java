@@ -2,8 +2,11 @@ package com.takypok.workflowservice.controller;
 
 import com.takypok.core.model.ResultMessage;
 import com.takypok.workflowservice.function.postfunction.index.PostFunctionInterface;
+import com.takypok.workflowservice.function.validator.index.ParameterizedValidatorInterface;
 import com.takypok.workflowservice.function.validator.index.ValidatorInterface;
 import com.takypok.workflowservice.model.response.FunctionResponse;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,19 +29,35 @@ public class FunctionController {
                     postFunction ->
                         new FunctionResponse(
                             postFunction.getClass().getSimpleName(),
-                            postFunction.getClass().getName()))
+                            postFunction.getClass().getName(),
+                            false))
                 .toList())
         .map(ResultMessage::success);
   }
 
   @GetMapping("/validator")
   public Mono<ResultMessage<?>> getListValidator() {
+    // ParameterizedValidatorInterface doesn't extend ValidatorInterface, so a bean implementing
+    // only the former (e.g. RoleValidator, SpecificApproverValidator) is invisible to
+    // getBeansOfType(ValidatorInterface.class) — both bean sets have to be queried and merged.
+    Map<String, Object> byClassName = new LinkedHashMap<>();
+    context
+        .getBeansOfType(ValidatorInterface.class)
+        .values()
+        .forEach(v -> byClassName.put(v.getClass().getName(), v));
+    context
+        .getBeansOfType(ParameterizedValidatorInterface.class)
+        .values()
+        .forEach(v -> byClassName.put(v.getClass().getName(), v));
+
     return Mono.just(
-            context.getBeansOfType(ValidatorInterface.class).values().stream()
+            byClassName.values().stream()
                 .map(
                     validator ->
                         new FunctionResponse(
-                            validator.getClass().getSimpleName(), validator.getClass().getName()))
+                            validator.getClass().getSimpleName(),
+                            validator.getClass().getName(),
+                            validator instanceof ParameterizedValidatorInterface))
                 .toList())
         .map(ResultMessage::success);
   }

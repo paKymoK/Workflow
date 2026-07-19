@@ -143,6 +143,7 @@ export interface Workflow {
 export interface FunctionResponse {
   name: string;
   value: string;
+  parameterized: boolean;
 }
 
 export interface WorkflowCreateRequest {
