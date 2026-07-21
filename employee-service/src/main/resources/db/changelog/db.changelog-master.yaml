@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/v2/add-news-feature.sql
   - include:
       file: db/changelog/seed/seed-news.sql
+  - include:
+      file: db/changelog/v3/add-device-tokens.sql

@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import ChatWidget from "./ChatWidget";
 import CreateTicketModal from "./CreateTicketModal";
 import { useChatSocket } from "../hooks/useChatSocket";
-import { BubbleBackground, useTheme, useAuth, api } from "@takypok/shared";
+import { useFcmSync } from "../hooks/useFcmSync";
+import { BubbleBackground, useTheme, useAuth, api, unregisterDeviceToken } from "@takypok/shared";
 import { Icon, type IconName } from "./ui/Icon";
 import { SquareAvatar } from "./ui/SquareAvatar";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -43,6 +44,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { isDark, toggleTheme } = useTheme();
 
   useChatSocket();
+  const fcmTokenRef = useFcmSync();
 
   // Open ticket count for header badge
   const { data: countData } = useQuery({
@@ -138,7 +140,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       icon: <Icon name="logout" size={14} />,
       label: "Logout",
       danger: true,
-      onClick: logout,
+      onClick: () => {
+        if (fcmTokenRef.current) {
+          unregisterDeviceToken(fcmTokenRef.current).catch(() => {});
+        }
+        logout();
+      },
     },
   ];
 

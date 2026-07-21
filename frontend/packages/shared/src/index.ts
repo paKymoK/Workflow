@@ -8,6 +8,7 @@ export { useAuth } from "./auth/useAuth";
 export { default as api } from "./api/axios";
 export { wsBaseUrl } from "./api/ws";
 export { queryClient } from "./api/queryClient";
+export { registerDeviceToken, unregisterDeviceToken } from "./api/notifications";
 
 // lib
 export { registerNavigate, navigate } from "./lib/navigate";

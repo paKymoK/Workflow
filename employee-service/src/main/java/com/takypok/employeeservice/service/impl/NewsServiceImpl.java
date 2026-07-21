@@ -7,6 +7,7 @@ import com.takypok.employeeservice.exception.NewsCommentNotFoundException;
 import com.takypok.employeeservice.exception.NewsPostNotFoundException;
 import com.takypok.employeeservice.model.entity.ContentStatus;
 import com.takypok.employeeservice.model.entity.Employee;
+import com.takypok.employeeservice.model.entity.EmploymentStatus;
 import com.takypok.employeeservice.model.entity.NewsComment;
 import com.takypok.employeeservice.model.entity.NewsCommentLike;
 import com.takypok.employeeservice.model.entity.NewsPost;
@@ -25,6 +26,7 @@ import com.takypok.employeeservice.repository.NewsCommentRepository;
 import com.takypok.employeeservice.repository.NewsPostRepository;
 import com.takypok.employeeservice.repository.NewsReactionRepository;
 import com.takypok.employeeservice.service.NewsService;
+import com.takypok.employeeservice.service.NotificationEventPublisher;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,6 +47,7 @@ public class NewsServiceImpl implements NewsService {
   private final NewsReactionRepository newsReactionRepository;
   private final NewsCommentLikeRepository newsCommentLikeRepository;
   private final EmployeeRepository employeeRepository;
+  private final NotificationEventPublisher notificationEventPublisher;
 
   @Override
   public Mono<PageResponse<NewsPostResponse>> list(FilterNewsRequest request, String currentSub) {
@@ -80,7 +83,26 @@ public class NewsServiceImpl implements NewsService {
     post.setIsAnonymous(Boolean.TRUE.equals(request.getIsAnonymous()));
     post.setPinned(false);
     post.setStatus(ContentStatus.PUBLISHED);
-    return newsPostRepository.save(post).flatMap(saved -> enrichOne(saved, currentSub));
+    return newsPostRepository
+        .save(post)
+        .flatMap(saved -> enrichOne(saved, currentSub))
+        .flatMap(response -> notifyNewPost(response, currentSub).thenReturn(response));
+  }
+
+  /**
+   * Best-effort broadcast to every other active employee — a Kafka hiccup must not fail the post.
+   */
+  private Mono<Void> notifyNewPost(NewsPostResponse post, String authorSub) {
+    return employeeRepository
+        .findSubsByStatusExcluding(EmploymentStatus.ACTIVE.name(), authorSub)
+        .collectList()
+        .flatMap(
+            recipientSubs ->
+                notificationEventPublisher.publish(
+                    "New post: " + post.getTitle(),
+                    post.getBody(),
+                    recipientSubs,
+                    Map.of("newsPostId", String.valueOf(post.getId()))));
   }
 
   @Override

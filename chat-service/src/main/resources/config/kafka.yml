@@ -13,3 +13,9 @@ spring:
 
 employee-events:
   topic: employee.events
+
+device-token-events:
+  topic: device-token.events
+
+notification-events:
+  topic: notification.events

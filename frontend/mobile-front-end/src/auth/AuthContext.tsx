@@ -5,6 +5,8 @@ import { authConfig } from './authConfig';
 import { parseJwtPayload, type AccessTokenClaims } from './jwt';
 import { clearTokens, loadTokens, saveTokens } from './tokenStorage';
 import { registerLogout } from './tokenSync';
+import { unregisterDeviceToken } from '@/src/api/notificationsApi';
+import { getLastFcmToken, setLastFcmToken } from '@/src/notifications/tokenStore';
 
 function decodeUser(accessToken: string): AccessTokenClaims | null {
   try {
@@ -64,6 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const fcmToken = getLastFcmToken();
+    if (fcmToken) {
+      unregisterDeviceToken(fcmToken).catch(() => {});
+      setLastFcmToken(null);
+    }
     await clearTokens();
     setUser(null);
     setIsAuthenticated(false);

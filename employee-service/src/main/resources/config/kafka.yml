@@ -31,3 +31,9 @@ department-events:
 
 unit-events:
   topic: unit.events
+
+device-token-events:
+  topic: device-token.events
+
+notification-events:
+  topic: notification.events

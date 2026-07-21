@@ -10,6 +10,9 @@ public interface EmployeeRepository extends R2dbcRepository<Employee, String> {
 
   Flux<Employee> findByManagerSubOrderByName(String managerSub);
 
+  @Query("SELECT sub FROM employee WHERE status = :status AND sub != :excludeSub")
+  Flux<String> findSubsByStatusExcluding(String status, String excludeSub);
+
   @Query(
       """
       SELECT * FROM employee
