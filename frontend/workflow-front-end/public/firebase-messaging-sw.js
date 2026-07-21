@@ -6,14 +6,16 @@
 importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");
 
-firebase.initializeApp({
-  apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
-  authDomain: "REPLACE_WITH_FIREBASE_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_FIREBASE_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_FIREBASE_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_FIREBASE_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_FIREBASE_APP_ID",
-});
+const firebaseConfig = {
+  apiKey: "AIzaSyB6sfQANK1jw6pV5VQ7lNORGK18kABHZZQ",
+  authDomain: "workflow-7b6ac.firebaseapp.com",
+  projectId: "workflow-7b6ac",
+  storageBucket: "workflow-7b6ac.firebasestorage.app",
+  messagingSenderId: "385319271521",
+  appId: "1:385319271521:web:91c4b7b3e48c93933abe20",
+};
+
+firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 

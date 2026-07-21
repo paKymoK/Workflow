@@ -5,6 +5,14 @@ objectClass: organizationalUnit
 ou: users
 
 # ── Users ─────────────────────────────────────────
+dn: cn=nttha5,ou=users,dc=mycompany,dc=local
+objectClass: inetOrgPerson
+cn: nttha5
+sn: Ha
+givenName: Nguyen Ha
+displayName: Nguyen Thi Thu Ha
+mail: nttha5@mycompany.local
+userPassword: 1
 
 dn: cn=ndtu24,ou=users,dc=mycompany,dc=local
 objectClass: inetOrgPerson

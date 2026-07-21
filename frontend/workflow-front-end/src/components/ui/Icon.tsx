@@ -28,6 +28,7 @@ const PATHS: Record<string, string> = {
   moon:    "M20 14.5A8.5 8.5 0 1111 3a6.5 6.5 0 009 11.5z",
   shield:  "M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z",
   lock:    "M5 11h14v9H5zM8 11V7a4 4 0 018 0v4",
+  bell:    "M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0",
 };
 
 export type IconName = keyof typeof PATHS;

@@ -6,6 +6,7 @@ import ChatWidget from "./ChatWidget";
 import CreateTicketModal from "./CreateTicketModal";
 import { useChatSocket } from "../hooks/useChatSocket";
 import { useFcmSync } from "../hooks/useFcmSync";
+import { useNotifications } from "../hooks/useNotifications";
 import { BubbleBackground, useTheme, useAuth, api, unregisterDeviceToken } from "@takypok/shared";
 import { Icon, type IconName } from "./ui/Icon";
 import { SquareAvatar } from "./ui/SquareAvatar";
@@ -45,6 +46,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   useChatSocket();
   const fcmTokenRef = useFcmSync();
+  const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
 
   // Open ticket count for header badge
   const { data: countData } = useQuery({
@@ -140,9 +143,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       icon: <Icon name="logout" size={14} />,
       label: "Logout",
       danger: true,
-      onClick: () => {
+      onClick: async () => {
         if (fcmTokenRef.current) {
-          unregisterDeviceToken(fcmTokenRef.current).catch(() => {});
+          await unregisterDeviceToken(fcmTokenRef.current).catch(() => {});
         }
         logout();
       },
@@ -238,6 +241,59 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               >
                 <Icon name={isDark ? "sun" : "moon"} size={15} stroke={2} />
               </button>
+              <Dropdown
+                open={notifOpen}
+                onOpenChange={(next) => {
+                  setNotifOpen(next);
+                  if (next) markAllRead();
+                }}
+                trigger={["click"]}
+                placement="bottomRight"
+                dropdownRender={() => (
+                  <div className="w-80 max-h-96 overflow-y-auto rounded-[9px] border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1.5">
+                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]">
+                      <span className="text-[13px] font-semibold text-[var(--text)]">Notifications</span>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={clearAll}
+                          className="text-[11px] font-medium text-[var(--text-faint)] hover:text-[var(--accent)] cursor-pointer border-none bg-transparent"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="px-3 py-8 text-center text-[12px] text-[var(--text-faint)]">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div key={n.id} className="px-3 py-2.5 border-b border-[var(--border)] last:border-none">
+                          <div className="text-[12.5px] font-semibold text-[var(--text)]">{n.title}</div>
+                          {n.body && (
+                            <div className="text-[12px] text-[var(--text-dim)] mt-0.5">{n.body}</div>
+                          )}
+                          <div className="text-[10px] text-[var(--text-faint)] mt-1">
+                            {new Date(n.receivedAt).toLocaleTimeString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              >
+                <button
+                  title="Notifications"
+                  className="relative w-[34px] h-[34px] rounded-[9px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-dim)] flex items-center justify-center cursor-pointer"
+                >
+                  <Icon name="bell" size={15} stroke={2} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+              </Dropdown>
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                 <div className="flex cursor-pointer items-center gap-[9px] pl-1.5 pr-3 py-[5px] rounded-[9px] border border-[var(--border)] hover:bg-[var(--hover)] transition-colors">
                   <SquareAvatar name={displayName} size={26} variant="filled" />
