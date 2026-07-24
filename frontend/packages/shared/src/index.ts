@@ -3,6 +3,7 @@ export * from "./auth/pkce";
 export * from "./auth/AuthContext";
 export { AuthProvider } from "./auth/AuthProvider";
 export { useAuth } from "./auth/useAuth";
+export { useIsAdmin } from "./auth/useIsAdmin";
 
 // api
 export { default as api } from "./api/axios";

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 import { useState } from "react";
 import { App, Dropdown } from "antd";
 import { useQuery } from "@tanstack/react-query";
@@ -7,10 +7,10 @@ import CreateTicketModal from "./CreateTicketModal";
 import { useChatSocket } from "../hooks/useChatSocket";
 import { useFcmSync } from "../hooks/useFcmSync";
 import { useNotifications } from "../hooks/useNotifications";
-import { BubbleBackground, useTheme, useAuth, api, unregisterDeviceToken } from "@takypok/shared";
+import { BubbleBackground, useTheme, useAuth, useIsAdmin, api, unregisterDeviceToken } from "@takypok/shared";
 import { Icon, type IconName } from "./ui/Icon";
 import { SquareAvatar } from "./ui/SquareAvatar";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { fetchTickets } from "../api/ticketApi";
 import { dynamicStyle } from "../utils/dynamicStyle";
 
@@ -33,7 +33,7 @@ type ServiceHealth = {
   status: string;
 };
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [createTicketOpen, setCreateTicketOpen] = useState(false);
   const [clock, setClock] = useState("");
@@ -42,6 +42,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const isAdmin = useIsAdmin();
   const { isDark, toggleTheme } = useTheme();
 
   useChatSocket();
@@ -138,6 +139,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const showOpenChip = openCount > 0 && (location.pathname === "/" || location.pathname === "/dashboard");
 
   const userMenuItems = [
+    ...(isAdmin
+      ? [
+          {
+            key: "admin",
+            icon: <Icon name="grid" size={14} />,
+            label: "Admin Portal",
+            onClick: () => navigate("/admin"),
+          },
+        ]
+      : []),
     {
       key: "logout",
       icon: <Icon name="logout" size={14} />,
@@ -312,7 +323,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
           {/* Content */}
           <div className="flex-1 min-h-0 overflow-auto p-5 bg-[var(--bg)]">
-            {children}
+            <Outlet />
           </div>
 
           {/* Status bar */}
