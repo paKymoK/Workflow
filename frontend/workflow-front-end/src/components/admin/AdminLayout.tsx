@@ -7,9 +7,12 @@ import {
   CustomerServiceOutlined, TeamOutlined, CoffeeOutlined, FieldTimeOutlined,
   FundProjectionScreenOutlined, SettingOutlined, BellOutlined, SearchOutlined,
   SunOutlined, MoonOutlined, LogoutOutlined, DownOutlined, AppstoreOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
 import { useTheme, useAuth } from "@takypok/shared";
 import { NAV_GROUPS, PAGE_TITLES } from "../../data/admin/navigation";
+import { fetchUserBySub } from "../../api/ticketApi";
 
 const { Sider, Header, Content } = Layout;
 
@@ -56,7 +59,21 @@ export default function AdminLayout() {
     (user?.name as string) ??
     (user?.sub as string) ??
     "Admin";
-  const initials = displayName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+
+  const displayRole = (() => {
+    const roles = user?.roles;
+    if (Array.isArray(roles) && roles.length > 0) return String(roles[0]).toUpperCase();
+    return null;
+  })();
+
+  // Real avatar — the JWT doesn't carry display data, so fetch it live from
+  // employee-service, same as workflow's Settings.tsx does.
+  const mySub = user?.sub as string | undefined;
+  const { data: myProfile } = useQuery({
+    queryKey: ["user", mySub],
+    queryFn: () => fetchUserBySub(mySub!),
+    enabled: !!mySub,
+  });
 
   const notificationItems: MenuProps["items"] = notifications.map((n) => ({
     key: n.id,
@@ -111,7 +128,7 @@ export default function AdminLayout() {
 
       <Layout>
         <Header className="!h-14 !bg-[var(--surface)] !px-5 border-b border-[var(--border)] flex items-center gap-4">
-          <div className="text-xs text-[var(--text-faint)] whitespace-nowrap">
+          <div className="text-xs leading-none text-[var(--text-faint)] whitespace-nowrap">
             <span>CMC Global</span>
             <span className="mx-1.5">/</span>
             <span className="text-[var(--text)] font-medium">{pageTitle}</span>
@@ -138,24 +155,37 @@ export default function AdminLayout() {
               )}
             >
               <Badge count={unreadCount} size="small">
-                <Button type="text" shape="circle" icon={<BellOutlined />} />
+                <Button
+                  type="text"
+                  shape="circle"
+                  className="!border !border-[var(--border)] !text-[var(--text-dim)]"
+                  icon={<BellOutlined />}
+                />
               </Badge>
             </Dropdown>
 
             <Button
               type="text"
               shape="circle"
+              className="!border !border-[var(--border)] !text-[var(--text-dim)]"
               icon={isDark ? <SunOutlined /> : <MoonOutlined />}
               onClick={toggleTheme}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             />
 
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <div className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg cursor-pointer hover:bg-[var(--hover)] transition-colors">
-                <Avatar size={28} className="!bg-[var(--accent)]">{initials}</Avatar>
+              <div className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--hover)] transition-colors">
+                <Avatar
+                  size={28}
+                  src={myProfile?.avatar ?? undefined}
+                  icon={!myProfile?.avatar ? <UserOutlined /> : undefined}
+                  className="!bg-[var(--accent)]"
+                />
                 <div className="text-left leading-tight">
                   <div className="text-xs font-semibold">{displayName}</div>
-                  <div className="text-[10px] text-[var(--text-faint)]">Admin</div>
+                  {displayRole && (
+                    <div className="text-[10px] text-[var(--text-faint)]">{displayRole}</div>
+                  )}
                 </div>
                 <DownOutlined className="text-[10px] text-[var(--text-faint)]" />
               </div>

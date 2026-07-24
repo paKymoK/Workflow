@@ -104,9 +104,6 @@ export default function Settings() {
 
   return (
     <div className="flex flex-col gap-3.5">
-      {/* Header */}
-      <div className="text-xl font-bold text-[var(--text)]">Settings</div>
-
       {/* Profile */}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
         <p className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--text-faint)] mb-3">Profile</p>

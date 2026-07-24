@@ -24,11 +24,7 @@ export default function Home() {
   return (
     <div className="p-2 flex flex-col gap-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2.5">
-        <div>
-          <div className="text-xl font-bold text-[var(--text)]">Overview</div>
-          <div className="text-[12.5px] text-[var(--text-faint)] mt-0.5">Real-time snapshot of workflow health</div>
-        </div>
+      <div className="flex items-center justify-end flex-wrap gap-2.5">
         <button
           onClick={() => navigate("/dashboard")}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-[9px] border border-[var(--border)] bg-[var(--surface)] text-[var(--accent)] text-[12.5px] font-semibold cursor-pointer hover:bg-[var(--hover)] transition-colors"

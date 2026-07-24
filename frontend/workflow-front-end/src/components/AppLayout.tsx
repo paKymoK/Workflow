@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { useState } from "react";
-import { App, Dropdown } from "antd";
+import { App, Layout, Menu, Badge, Button, Dropdown, Avatar } from "antd";
+import type { MenuProps } from "antd";
+import {
+  HomeOutlined, DashboardOutlined, MessageOutlined, SettingOutlined,
+  PlusOutlined, SunOutlined, MoonOutlined, BellOutlined, AppstoreOutlined, LogoutOutlined, DownOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import ChatWidget from "./ChatWidget";
 import CreateTicketModal from "./CreateTicketModal";
@@ -8,11 +14,10 @@ import { useChatSocket } from "../hooks/useChatSocket";
 import { useFcmSync } from "../hooks/useFcmSync";
 import { useNotifications } from "../hooks/useNotifications";
 import { BubbleBackground, useTheme, useAuth, useIsAdmin, api, unregisterDeviceToken } from "@takypok/shared";
-import { Icon, type IconName } from "./ui/Icon";
-import { SquareAvatar } from "./ui/SquareAvatar";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { fetchTickets } from "../api/ticketApi";
-import { dynamicStyle } from "../utils/dynamicStyle";
+import { fetchTickets, fetchUserBySub } from "../api/ticketApi";
+
+const { Sider, Header, Content } = Layout;
 
 const ROUTE_TITLES: Record<string, string> = {
   "/": "Overview",
@@ -21,12 +26,18 @@ const ROUTE_TITLES: Record<string, string> = {
   "/settings": "Settings",
 };
 
-const NAV_ITEMS: { path: string; icon: IconName; label: string }[] = [
-  { path: "/", icon: "home", label: "Home" },
-  { path: "/dashboard", icon: "grid", label: "Dashboard" },
-  { path: "/messages", icon: "message", label: "Messages" },
-  { path: "/settings", icon: "gear", label: "Settings" },
+const NAV_ITEMS: { path: string; icon: React.ReactNode; label: string }[] = [
+  { path: "/", icon: <HomeOutlined />, label: "Home" },
+  { path: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+  { path: "/messages", icon: <MessageOutlined />, label: "Messages" },
+  { path: "/settings", icon: <SettingOutlined />, label: "Settings" },
 ];
+
+const menuItems: MenuProps["items"] = NAV_ITEMS.map((item) => ({
+  key: item.path,
+  icon: item.icon,
+  label: item.label,
+}));
 
 type ServiceHealth = {
   service: string;
@@ -49,6 +60,15 @@ export default function AppLayout() {
   const fcmTokenRef = useFcmSync();
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
+
+  // Real avatar — the JWT doesn't carry display data, so fetch it live from
+  // employee-service, same as Settings.tsx does.
+  const mySub = user?.sub as string | undefined;
+  const { data: myProfile } = useQuery({
+    queryKey: ["user", mySub],
+    queryFn: () => fetchUserBySub(mySub!),
+    enabled: !!mySub,
+  });
 
   // Open ticket count for header badge
   const { data: countData } = useQuery({
@@ -138,12 +158,12 @@ export default function AppLayout() {
 
   const showOpenChip = openCount > 0 && (location.pathname === "/" || location.pathname === "/dashboard");
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps["items"] = [
     ...(isAdmin
       ? [
           {
             key: "admin",
-            icon: <Icon name="grid" size={14} />,
+            icon: <AppstoreOutlined />,
             label: "Admin Portal",
             onClick: () => navigate("/admin"),
           },
@@ -151,7 +171,7 @@ export default function AppLayout() {
       : []),
     {
       key: "logout",
-      icon: <Icon name="logout" size={14} />,
+      icon: <LogoutOutlined />,
       label: "Logout",
       danger: true,
       onClick: async () => {
@@ -167,91 +187,67 @@ export default function AppLayout() {
     <App>
       <BubbleBackground />
 
-      <div className="h-screen w-full flex overflow-hidden bg-[var(--bg)] text-[var(--text)]">
-        {/* ── Sidebar ───────────────────────────────────── */}
-        <div
-          className="flex-shrink-0 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col overflow-hidden transition-[width] duration-200 ease-in-out"
-          style={dynamicStyle({ width: collapsed ? 64 : 212 })}
+      <Layout className="h-screen overflow-hidden">
+        <Sider
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          width={252}
+          className="border-r border-[var(--border)]"
+          theme="light"
         >
           {/* Brand */}
-          <div className="h-[60px] flex-shrink-0 flex items-center gap-2.5 px-4 border-b border-[var(--border)]">
-            <div className="w-[30px] h-[30px] rounded-[9px] bg-[var(--accent)] flex-shrink-0 flex items-center justify-center text-white font-bold text-[15px]">
+          <div className="h-14 flex items-center gap-2.5 px-4 border-b border-[var(--border)] overflow-hidden">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex-shrink-0 flex items-center justify-center text-white font-bold text-sm">
               T
             </div>
             {!collapsed && (
-              <div className="flex flex-col leading-tight overflow-hidden whitespace-nowrap">
-                <span className="font-bold text-[14.5px] text-[var(--text)]">TAKYPOK</span>
-                <span className="text-[10.5px] text-[var(--text-faint)] tracking-[.02em]">Ops Console</span>
+              <div className="flex flex-col leading-tight whitespace-nowrap">
+                <span className="font-bold text-sm text-[var(--text)]">TAKYPOK</span>
+                <span className="text-[10px] text-[var(--text-faint)] tracking-wide">OPS CONSOLE</span>
               </div>
             )}
           </div>
 
-          {/* Navigation */}
-          <div className="flex-1 overflow-y-auto p-2.5">
-            {NAV_ITEMS.map((item) => {
-              const active = location.pathname === item.path;
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  title={item.label}
-                  className="w-full flex items-center gap-[11px] px-[11px] py-[9px] mb-[3px] rounded-[9px] border-none cursor-pointer text-left text-[13.5px] font-medium transition-colors"
-                  style={dynamicStyle({
-                    background: active ? "var(--accent-soft)" : "transparent",
-                    color: active ? "var(--accent)" : "var(--text-dim)",
-                  })}
-                >
-                  <Icon name={item.icon} size={18} stroke={1.8} className="flex-shrink-0" />
-                  {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
-                </button>
-              );
-            })}
-          </div>
+          <Menu
+            mode="inline"
+            theme="light"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+            className="!border-r-0"
+          />
+        </Sider>
 
-          {/* Collapse toggle — sign out lives in the user menu up in the header
-             instead of here, so it can't be fat-fingered while navigating. */}
-          <div className="flex-shrink-0 border-t border-[var(--border)] p-2">
-            <button
-              onClick={() => setCollapsed((c) => !c)}
-              className="w-full flex items-center justify-center py-[9px] rounded-[9px] border-none bg-transparent text-[var(--text-dim)] cursor-pointer hover:bg-[var(--hover)]"
-            >
-              <Icon
-                name="chevL"
-                size={17}
-                stroke={2}
-                style={dynamicStyle({ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .18s" })}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Main ──────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="h-14 flex-shrink-0 flex items-center justify-between px-5 bg-[var(--surface)] border-b border-[var(--border)]">
+        <Layout>
+          <Header className="!h-14 !bg-[var(--surface)] !px-5 border-b border-[var(--border)] flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-[15px] font-semibold text-[var(--text)]">{pageTitle}</span>
+              <div className="text-xs leading-none text-[var(--text-faint)] whitespace-nowrap">
+                <span>TAKYPOK</span>
+                <span className="mx-1.5">/</span>
+                <span className="text-[var(--text)] font-medium">{pageTitle}</span>
+              </div>
               {showOpenChip && (
-                <span className="text-[11.5px] font-semibold text-[var(--accent)] bg-[var(--accent-soft)] px-[9px] py-[3px] rounded-full">
+                <span className="text-[11.5px] leading-none font-semibold text-[var(--accent)] bg-[var(--accent-soft)] px-[9px] py-[3px] rounded-full">
                   {openCount} open
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => setCreateTicketOpen(true)}
-                className="flex items-center gap-[7px] px-[15px] py-2 rounded-[9px] border-none bg-[var(--accent)] text-white text-[13px] font-semibold cursor-pointer"
-              >
-                <Icon name="plus" size={14} stroke={2.2} />
+
+            <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateTicketOpen(true)}>
                 Create
-              </button>
-              <button
+              </Button>
+
+              <Button
+                type="text"
+                shape="circle"
+                className="!border !border-[var(--border)] !text-[var(--text-dim)]"
+                icon={isDark ? <SunOutlined /> : <MoonOutlined />}
                 onClick={toggleTheme}
                 title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                className="w-[34px] h-[34px] rounded-[9px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-dim)] flex items-center justify-center cursor-pointer"
-              >
-                <Icon name={isDark ? "sun" : "moon"} size={15} stroke={2} />
-              </button>
+              />
+
               <Dropdown
                 open={notifOpen}
                 onOpenChange={(next) => {
@@ -260,10 +256,10 @@ export default function AppLayout() {
                 }}
                 trigger={["click"]}
                 placement="bottomRight"
-                dropdownRender={() => (
-                  <div className="w-80 max-h-96 overflow-y-auto rounded-[9px] border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1.5">
-                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]">
-                      <span className="text-[13px] font-semibold text-[var(--text)]">Notifications</span>
+                popupRender={() => (
+                  <div className="w-80 max-h-96 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+                      <span className="text-sm font-semibold text-[var(--text)]">Notifications</span>
                       {notifications.length > 0 && (
                         <button
                           onClick={clearAll}
@@ -279,7 +275,7 @@ export default function AppLayout() {
                       </div>
                     ) : (
                       notifications.map((n) => (
-                        <div key={n.id} className="px-3 py-2.5 border-b border-[var(--border)] last:border-none">
+                        <div key={n.id} className="px-4 py-2.5 border-b border-[var(--border)] last:border-none">
                           <div className="text-[12.5px] font-semibold text-[var(--text)]">{n.title}</div>
                           {n.body && (
                             <div className="text-[12px] text-[var(--text-dim)] mt-0.5">{n.body}</div>
@@ -293,21 +289,25 @@ export default function AppLayout() {
                   </div>
                 )}
               >
-                <button
-                  title="Notifications"
-                  className="relative w-[34px] h-[34px] rounded-[9px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-dim)] flex items-center justify-center cursor-pointer"
-                >
-                  <Icon name="bell" size={15} stroke={2} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </button>
+                <Badge count={unreadCount} size="small">
+                  <Button
+                    type="text"
+                    shape="circle"
+                    className="!border !border-[var(--border)] !text-[var(--text-dim)]"
+                    icon={<BellOutlined />}
+                    title="Notifications"
+                  />
+                </Badge>
               </Dropdown>
+
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-                <div className="flex cursor-pointer items-center gap-[9px] pl-1.5 pr-3 py-[5px] rounded-[9px] border border-[var(--border)] hover:bg-[var(--hover)] transition-colors">
-                  <SquareAvatar name={displayName} size={26} variant="filled" />
+                <div className="flex cursor-pointer items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg border border-[var(--border)] hover:bg-[var(--hover)] transition-colors">
+                  <Avatar
+                    size={28}
+                    src={myProfile?.avatar ?? undefined}
+                    icon={!myProfile?.avatar ? <UserOutlined /> : undefined}
+                    className="!bg-[var(--accent)]"
+                  />
                   <div className="flex flex-col items-start leading-tight">
                     <span className="text-xs font-semibold text-[var(--text)]">{displayName}</span>
                     {displayRole && (
@@ -316,15 +316,15 @@ export default function AppLayout() {
                       </span>
                     )}
                   </div>
+                  <DownOutlined className="text-[10px] text-[var(--text-faint)]" />
                 </div>
               </Dropdown>
             </div>
-          </div>
+          </Header>
 
-          {/* Content */}
-          <div className="flex-1 min-h-0 overflow-auto p-5 bg-[var(--bg)]">
+          <Content className="p-5 overflow-y-auto bg-[var(--bg)]">
             <Outlet />
-          </div>
+          </Content>
 
           {/* Status bar */}
           <div className="h-7 flex-shrink-0 bg-[var(--accent)] flex items-center px-[18px] gap-5 text-white text-[11px] font-semibold">
@@ -342,8 +342,8 @@ export default function AppLayout() {
             {serviceListHint && <span className="hidden md:inline">{serviceListHint}</span>}
             <span className="ml-auto tabular-nums">{clock}</span>
           </div>
-        </div>
-      </div>
+        </Layout>
+      </Layout>
 
       <ChatWidget />
       <CreateTicketModal

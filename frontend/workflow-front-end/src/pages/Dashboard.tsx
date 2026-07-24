@@ -453,8 +453,7 @@ export default function Dashboard() {
   return (
     <>
       {/* Page header */}
-      <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
-        <div className="text-xl font-bold text-[var(--text)]">Ticket Queue</div>
+      <div className="flex justify-end items-center mb-5 flex-wrap gap-3">
         <Segmented<Layout>
           options={[
             { label: "Console", value: "console" },
