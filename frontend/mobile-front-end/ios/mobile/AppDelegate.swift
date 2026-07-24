@@ -15,8 +15,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
-    // Requires a real ios/mobile/GoogleService-Info.plist — see PLACEHOLDER file.
-    FirebaseApp.configure()
+    // Skips configuration until the PLACEHOLDER GoogleService-Info.plist is swapped for a real one —
+    // FirebaseApp.configure() aborts on the placeholder's malformed GOOGLE_APP_ID.
+    if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+       let options = FirebaseOptions(contentsOfFile: path),
+       let apiKey = options.apiKey,
+       !apiKey.hasPrefix("REPLACE_WITH") {
+      FirebaseApp.configure()
+    } else {
+      NSLog("⚠️ Firebase/FCM disabled: ios/mobile/GoogleService-Info.plist is still the PLACEHOLDER — push notifications won't work until it's replaced with the real file from the Firebase console.")
+    }
 
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
