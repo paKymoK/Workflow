@@ -176,15 +176,6 @@ export const surveysData = [
   { id: 6, title: "Safety Training Effectiveness Review", created: "Jul 8", closes: "Jul 25", responses: 12, total: 847, status: "draft" },
 ];
 
-export const trainingData = [
-  { id: 1, title: "New Employee Onboarding Guide", type: "Onboarding", format: "PDF", duration: "45 min", uploaded: "Jan 10, 2025", status: "active" },
-  { id: 2, title: "Machine Safety Operation — Line A", type: "Safety", format: "Video", duration: "32 min", uploaded: "Mar 5, 2025", status: "active" },
-  { id: 3, title: "Fire Drill & Emergency Procedures", type: "Safety", format: "PDF + Video", duration: "20 min", uploaded: "Feb 15, 2025", status: "active" },
-  { id: 4, title: "Quality Control Inspection Techniques", type: "Skills", format: "Video", duration: "60 min", uploaded: "Apr 1, 2025", status: "active" },
-  { id: 5, title: "Customer Communication for Buyer Visits", type: "Skills", format: "PDF", duration: "25 min", uploaded: "May 20, 2025", status: "active" },
-  { id: 6, title: "Ergonomics & Posture at Sewing Workstations", type: "Safety", format: "Video", duration: "18 min", uploaded: "Jun 10, 2025", status: "active" },
-];
-
 export const departments = [
   { id: 1, name: "Production Line A", head: "Le Thi Hoa", count: 142, factory: "Factory 1" },
   { id: 2, name: "Production Line B", head: "Vo Van Nam", count: 128, factory: "Factory 1" },

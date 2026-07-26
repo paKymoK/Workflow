@@ -1,14 +1,47 @@
-import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Download, Search, Eye, ChevronRight, Play } from 'lucide-react-native';
+import { ArrowLeft, Download, Search, ChevronRight, Play, Layers, FileText, CheckCircle, Sparkles } from 'lucide-react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Video from 'react-native-video';
 
 import { colors } from '@/src/theme/colors';
-import { TRAINING_CATS, TRAINING_DOCS, getFileIcon, type TrainingDoc } from '@/src/data/training';
+import { fetchTrainingMaterials, completeTrainingMaterial, type TrainingMaterial, type TrainingFormat } from '@/src/api/trainingApi';
+import { getVideoStreamUrl } from '@/src/api/mediaApi';
 
-function DocViewer({ doc, onBack }: { doc: TrainingDoc; onBack: () => void }) {
-  const fi = getFileIcon(doc.fileType);
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatBytes(bytes: number | null): string {
+  if (bytes == null) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFormatMeta(format: TrainingFormat) {
+  if (format === 'VIDEO') return { icon: Play, color: '#EF4444', bg: '#FEF2F2', label: 'VIDEO' };
+  if (format === 'SLIDES') return { icon: Layers, color: '#8B5CF6', bg: '#F5F3FF', label: 'SLIDES' };
+  return { icon: FileText, color: '#1558A8', bg: '#EEF3FA', label: 'PDF' };
+}
+
+function MaterialDetail({ material, onBack }: { material: TrainingMaterial; onBack: () => void }) {
+  const queryClient = useQueryClient();
+  const fm = getFormatMeta(material.format);
+  const meta = material.format === 'VIDEO' ? (material.duration ?? '—') : formatBytes(material.fileSize);
+
+  const completeMutation = useMutation({
+    mutationFn: () => completeTrainingMaterial(material.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['training-materials'] }),
+    onError: () => Alert.alert('Could not record completion', 'Please try again.'),
+  });
+
+  const openFile = () => {
+    if (material.fileUrl) Linking.openURL(material.fileUrl).catch(() => Alert.alert('Could not open file'));
+  };
+
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
       <View className="flex-row items-center gap-3 border-b border-gray-100 bg-white px-4 pb-3 pt-4">
@@ -16,62 +49,47 @@ function DocViewer({ doc, onBack }: { doc: TrainingDoc; onBack: () => void }) {
           <ArrowLeft size={18} color={colors.primary} />
         </Pressable>
         <View className="flex-1">
-          <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>
-            {doc.title}
+          <Text className="text-sm font-bold leading-tight text-gray-900" numberOfLines={1}>
+            {material.title}
           </Text>
           <Text className="text-[10px] text-gray-400">
-            {doc.meta} · {doc.date}
+            {meta} · {formatDate(material.createdAt)}
           </Text>
         </View>
-        <Pressable className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: colors.surface }}>
-          <Download size={16} color={colors.primary} />
-        </Pressable>
       </View>
 
       <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <View className="mx-4 mb-3 mt-4 overflow-hidden rounded-2xl shadow-sm" style={{ backgroundColor: doc.fileType === 'video' ? '#1A2740' : 'white' }}>
-          {doc.fileType === 'video' ? (
-            <View className="h-52 items-center justify-center px-6">
-              <View className="mb-3 h-16 w-16 items-center justify-center rounded-full bg-white/20">
-                <Play size={28} color="#fff" style={{ marginLeft: 3 }} />
+        {material.format === 'VIDEO' && material.videoId ? (
+          <View className="mx-4 mb-3 mt-4 overflow-hidden rounded-2xl bg-black shadow-sm">
+            <Video
+              source={{ uri: getVideoStreamUrl(material.videoId) }}
+              style={{ height: 208, width: '100%' }}
+              controls
+              resizeMode="contain"
+              paused={false}
+            />
+          </View>
+        ) : (
+          <View className="mx-4 mb-3 mt-4">
+            <Pressable onPress={openFile} className="flex-row items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+              <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: fm.bg }}>
+                <Download size={17} color={fm.color} />
               </View>
-              <Text className="text-center text-sm font-semibold text-white">{doc.title}</Text>
-              <Text className="mt-1 text-xs text-white/60">{doc.meta}</Text>
-            </View>
-          ) : (
-            <View className="p-5">
-              <View className="mb-5 flex-row items-center gap-3 border-b border-gray-100 pb-4">
-                <View className="h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: fi.bg }}>
-                  <fi.icon size={22} color={fi.color} />
-                </View>
-                <View>
-                  <Text className="text-sm font-bold text-gray-900">{doc.title}</Text>
-                  <Text className="mt-0.5 text-xs text-gray-400">
-                    {fi.label} · {doc.meta}
-                  </Text>
-                </View>
+              <View className="flex-1">
+                <Text className="text-sm font-semibold text-gray-800">{material.fileName ?? 'Open file'}</Text>
+                <Text className="text-[10px] text-gray-400">Tap to open</Text>
               </View>
-              <View className="gap-2.5">
-                {[1, 0.8, 1, 0.7, 0, 1, 0.85, 1, 0.6, 0, 1, 0.9].map((w, i) => (
-                  <View
-                    key={i}
-                    className={`h-2.5 rounded-full ${w === 0 ? 'mt-2' : ''}`}
-                    style={{ width: w ? `${w * 100}%` : 0, backgroundColor: w ? (i < 4 ? colors.border : colors.surface) : 'transparent' }}
-                  />
-                ))}
-              </View>
-            </View>
-          )}
-        </View>
+            </Pressable>
+          </View>
+        )}
 
         <View className="mx-4 mb-3 rounded-2xl bg-white p-4 shadow-sm">
-          <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Document Info</Text>
+          <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Material Info</Text>
           {[
-            ['Category', doc.cat],
-            ['Type', fi.label],
-            [doc.fileType === 'video' ? 'Duration' : 'File Size', doc.meta],
-            ['Uploaded', doc.date],
-            ['Uploaded by', 'HR Department'],
+            ['Category', material.category],
+            ['Format', fm.label],
+            [material.format === 'VIDEO' ? 'Duration' : 'File Size', meta],
+            ['Uploaded', formatDate(material.createdAt)],
           ].map(([k, v], i, arr) => (
             <View key={k} className={`flex-row justify-between py-2 ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
               <Text className="text-xs text-gray-400">{k}</Text>
@@ -81,10 +99,31 @@ function DocViewer({ doc, onBack }: { doc: TrainingDoc; onBack: () => void }) {
         </View>
 
         <View className="mx-4">
-          <Pressable className="flex-row items-center justify-center gap-2 rounded-2xl py-3.5" style={{ backgroundColor: colors.primary }}>
-            <Download size={16} color="#fff" />
-            <Text className="text-sm font-bold text-white">Download File</Text>
-          </Pressable>
+          {material.completedByMe ? (
+            <View className="flex-row items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
+              <CheckCircle size={20} color="#16A34A" />
+              <View>
+                <Text className="text-sm font-bold text-green-700">Completed</Text>
+                <Text className="text-xs text-green-600">You've completed this training</Text>
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => completeMutation.mutate()}
+              disabled={completeMutation.isPending}
+              className="flex-row items-center justify-center gap-2 rounded-2xl py-4"
+              style={{ backgroundColor: colors.primary, opacity: completeMutation.isPending ? 0.6 : 1 }}
+            >
+              {completeMutation.isPending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <CheckCircle size={17} color="#fff" />
+                  <Text className="text-sm font-bold text-white">Mark as Complete</Text>
+                </>
+              )}
+            </Pressable>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -93,16 +132,28 @@ function DocViewer({ doc, onBack }: { doc: TrainingDoc; onBack: () => void }) {
 
 export default function TrainingScreen() {
   const navigation = useNavigation();
-  const [cat, setCat] = useState('All');
+  const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
-  const [viewing, setViewing] = useState<TrainingDoc | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  if (viewing) return <DocViewer doc={viewing} onBack={() => setViewing(null)} />;
+  const { data: materials = [], isLoading } = useQuery({
+    queryKey: ['training-materials'],
+    queryFn: () => fetchTrainingMaterials(),
+  });
 
-  const filtered = TRAINING_DOCS.filter(
-    (d) => (cat === 'All' || d.cat === cat) && (!search || d.title.toLowerCase().includes(search.toLowerCase())),
+  const categories = useMemo(() => ['All', ...Array.from(new Set(materials.map((m) => m.category)))], [materials]);
+
+  const filtered = materials.filter(
+    (m) => (category === 'All' || m.category === category) && (!search || m.title.toLowerCase().includes(search.toLowerCase())),
   );
-  const recent = TRAINING_DOCS.filter((d) => d.recent);
+
+  const recentlyAdded = useMemo(
+    () => [...materials].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, 5),
+    [materials],
+  );
+
+  const selectedMaterial = selectedId != null ? (materials.find((m) => m.id === selectedId) ?? null) : null;
+  if (selectedMaterial) return <MaterialDetail material={selectedMaterial} onBack={() => setSelectedId(null)} />;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -116,7 +167,7 @@ export default function TrainingScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="text-base font-bold text-gray-900">Training & Documents</Text>
-          <Text className="text-xs text-gray-400">{TRAINING_DOCS.length} materials available</Text>
+          <Text className="text-xs text-gray-400">{materials.length} materials available</Text>
         </View>
       </View>
 
@@ -126,7 +177,7 @@ export default function TrainingScreen() {
             <Search size={15} color="#9CA3AF" />
             <TextInput
               className="flex-1 text-sm text-gray-700"
-              placeholder="Search documents..."
+              placeholder="Search training materials..."
               placeholderTextColor="#9CA3AF"
               value={search}
               onChangeText={setSearch}
@@ -135,86 +186,96 @@ export default function TrainingScreen() {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
-          {TRAINING_CATS.map((c) => (
+          {categories.map((c) => (
             <Pressable
               key={c}
-              onPress={() => setCat(c)}
+              onPress={() => setCategory(c)}
               className="rounded-full px-3 py-1.5"
               style={
-                cat === c ? { backgroundColor: colors.primary } : { backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border }
+                category === c ? { backgroundColor: colors.primary } : { backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border }
               }
             >
-              <Text className="text-xs font-bold" style={{ color: cat === c ? '#fff' : colors.textMuted }}>
+              <Text className="text-xs font-bold" style={{ color: category === c ? '#fff' : colors.textMuted }}>
                 {c}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
 
-        {!search && cat === 'All' && (
-          <View className="mb-3">
-            <View className="mb-2.5 flex-row items-center gap-2 px-4">
-              <Eye size={13} color={colors.primary} />
-              <Text className="text-xs font-bold text-gray-700">Recently Viewed</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 10, alignItems: 'center' }}>
-              {recent.map((doc) => {
-                const fi = getFileIcon(doc.fileType);
-                return (
-                  <Pressable key={doc.id} onPress={() => setViewing(doc)} className="rounded-2xl bg-white p-3 shadow-sm" style={{ width: 128 }}>
-                    <View className="mb-2 h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: fi.bg }}>
-                      <fi.icon size={16} color={fi.color} />
-                    </View>
-                    <Text className="text-[11px] font-semibold leading-tight text-gray-800" numberOfLines={2}>
-                      {doc.title}
-                    </Text>
-                    <Text className="mt-1 text-[9px] font-semibold text-gray-400">{fi.label}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+        {isLoading ? (
+          <View className="items-center py-10">
+            <ActivityIndicator color={colors.primary} />
           </View>
-        )}
-
-        <View className="px-4">
-          <Text className="mb-2.5 text-xs font-bold text-gray-700">
-            {search || cat !== 'All' ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}` : 'All Materials'}
-          </Text>
-          {filtered.length === 0 ? (
-            <View className="items-center rounded-2xl bg-white p-8 shadow-sm">
-              <Search size={28} color="#E5E7EB" />
-              <Text className="mt-2 text-sm font-semibold text-gray-400">No documents found</Text>
-              <Text className="mt-1 text-xs text-gray-300">Try a different search or category</Text>
-            </View>
-          ) : (
-            <View className="gap-2.5">
-              {filtered.map((doc) => {
-                const fi = getFileIcon(doc.fileType);
-                return (
-                  <Pressable key={doc.id} onPress={() => setViewing(doc)} className="flex-row items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
-                    <View className="h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: fi.bg }}>
-                      <fi.icon size={20} color={fi.color} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
-                        {doc.title}
-                      </Text>
-                      <View className="mt-1 flex-row items-center gap-2">
-                        <Text className="rounded px-1.5 py-0.5 text-[9px] font-bold" style={{ backgroundColor: fi.bg, color: fi.color }}>
-                          {fi.label}
+        ) : (
+          <>
+            {!search && category === 'All' && recentlyAdded.length > 0 && (
+              <View className="mb-3">
+                <View className="mb-2.5 flex-row items-center gap-2 px-4">
+                  <Sparkles size={13} color={colors.primary} />
+                  <Text className="text-xs font-bold text-gray-700">Recently Added</Text>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 10, alignItems: 'center' }}>
+                  {recentlyAdded.map((material) => {
+                    const fm = getFormatMeta(material.format);
+                    return (
+                      <Pressable key={material.id} onPress={() => setSelectedId(material.id)} className="rounded-2xl bg-white p-3 shadow-sm" style={{ width: 128 }}>
+                        <View className="mb-2 h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: fm.bg }}>
+                          <fm.icon size={16} color={fm.color} />
+                        </View>
+                        <Text className="text-[11px] font-semibold leading-tight text-gray-800" numberOfLines={2}>
+                          {material.title}
                         </Text>
-                        <Text className="text-[10px] text-gray-400">{doc.meta}</Text>
-                        <Text className="text-gray-200">·</Text>
-                        <Text className="text-[10px] text-gray-400">{doc.date}</Text>
-                      </View>
-                    </View>
-                    <ChevronRight size={15} color="#D1D5DB" />
-                  </Pressable>
-                );
-              })}
+                        <Text className="mt-1 text-[9px] font-semibold text-gray-400">{fm.label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            <View className="px-4">
+              <Text className="mb-2.5 text-xs font-bold text-gray-700">
+                {search || category !== 'All' ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}` : 'All Materials'}
+              </Text>
+              {filtered.length === 0 ? (
+                <View className="items-center rounded-2xl bg-white p-8 shadow-sm">
+                  <Search size={28} color="#E5E7EB" />
+                  <Text className="mt-2 text-sm font-semibold text-gray-400">No materials found</Text>
+                  <Text className="mt-1 text-xs text-gray-300">Try a different search or category</Text>
+                </View>
+              ) : (
+                <View className="gap-2.5">
+                  {filtered.map((material) => {
+                    const fm = getFormatMeta(material.format);
+                    const meta = material.format === 'VIDEO' ? (material.duration ?? '—') : formatBytes(material.fileSize);
+                    return (
+                      <Pressable key={material.id} onPress={() => setSelectedId(material.id)} className="flex-row items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+                        <View className="h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: fm.bg }}>
+                          <fm.icon size={20} color={fm.color} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+                            {material.title}
+                          </Text>
+                          <View className="mt-1 flex-row items-center gap-2">
+                            <Text className="rounded px-1.5 py-0.5 text-[9px] font-bold" style={{ backgroundColor: fm.bg, color: fm.color }}>
+                              {fm.label}
+                            </Text>
+                            <Text className="text-[10px] text-gray-400">{meta}</Text>
+                            <Text className="text-gray-200">·</Text>
+                            <Text className="text-[10px] text-gray-400">{formatDate(material.createdAt)}</Text>
+                            {material.completedByMe && <CheckCircle size={11} color="#16A34A" />}
+                          </View>
+                        </View>
+                        <ChevronRight size={15} color="#D1D5DB" />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

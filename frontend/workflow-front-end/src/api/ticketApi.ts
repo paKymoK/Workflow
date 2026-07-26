@@ -181,6 +181,26 @@ export async function fetchJobStatus(jobId: string) {
   return data;
 }
 
+const POLL_INTERVAL_MS = 2000;
+const POLL_TIMEOUT_MS = 5 * 60_000;
+
+/**
+ * Polls media-service's transcode job until it settles. Mirrors mobile's mediaApi.ts —
+ * callers should only ever persist a videoId once this resolves to DONE, since there's no
+ * endpoint to flip a saved record from PROCESSING to READY after the fact.
+ */
+export async function waitForVideoReady(jobId: string): Promise<VideoJobResponse> {
+  const start = Date.now();
+  for (;;) {
+    const status = await fetchJobStatus(jobId);
+    if (status.status === "DONE" || status.status === "FAILED") return status;
+    if (Date.now() - start > POLL_TIMEOUT_MS) {
+      throw new Error("Video processing timed out");
+    }
+    await new Promise<void>((resolve) => setTimeout(() => resolve(), POLL_INTERVAL_MS));
+  }
+}
+
 export async function uploadFile(file: File) {
     const form = new FormData();
     form.append("file", file);

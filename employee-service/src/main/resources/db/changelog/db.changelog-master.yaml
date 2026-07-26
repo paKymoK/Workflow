@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/v4/add-documents-feature.sql
   - include:
       file: db/changelog/seed/seed-documents.sql
+  - include:
+      file: db/changelog/v5/add-training-materials-feature.sql
