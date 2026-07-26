@@ -35,15 +35,11 @@ spring:
     show-sql: true
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:29092}
-    # auth-service is producer-only now (account.events, department.events, unit.events) — it no
-    # longer consumes anything (EmployeeEventConsumer was removed in Phase 7).
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       properties:
-        # employee-service deserializes into its own local AccountEvent DTO — a type
-        # header naming auth-service's class would be meaningless (and unresolvable) there.
         spring.json.add.type.headers: false
   config:
     import: 'classpath:management.yml'

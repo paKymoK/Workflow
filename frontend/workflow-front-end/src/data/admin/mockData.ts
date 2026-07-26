@@ -114,17 +114,6 @@ export const ticketResolutionTrend = [
   { month: "Jun", hours: 19.4 }, { month: "Jul", hours: 18.5 },
 ];
 
-export const announcements = [
-  { id: 1, title: "Ramadan Working Hours Update 2025", category: "Policy", date: "Jun 15, 2025", author: "HR Dept", status: "published", views: 423 },
-  { id: 2, title: "New Safety Protocol — Production Floor Zones A–C", category: "Safety", date: "Jun 20, 2025", author: "HSE Officer", status: "published", views: 389 },
-  { id: 3, title: "Annual Performance Review Schedule", category: "HR", date: "Jun 25, 2025", author: "HR Dept", status: "scheduled", views: 0 },
-  { id: 4, title: "Company Outing — Bali Trip Registration", category: "Events", date: "Jun 28, 2025", author: "Admin", status: "draft", views: 0 },
-  { id: 5, title: "Q2 Production Milestone Achievement", category: "Operations", date: "Jul 1, 2025", author: "COO Office", status: "published", views: 612 },
-  { id: 6, title: "Updated Medical Insurance Reimbursement Process", category: "Benefits", date: "Jul 3, 2025", author: "Finance", status: "published", views: 278 },
-  { id: 7, title: "New Uniform Distribution — Line B & C", category: "Operations", date: "Jul 8, 2025", author: "Admin", status: "published", views: 201 },
-  { id: 8, title: "IT System Maintenance — Weekend Downtime", category: "IT", date: "Jul 10, 2025", author: "IT Dept", status: "scheduled", views: 0 },
-];
-
 export const leaveRequestsInit = [
   { id: 1, employee: "Nguyen Thi Lan", dept: "HR", type: "Annual", from: "Jul 10", to: "Jul 14", days: 5, submitted: "Jul 1", status: "pending" },
   { id: 2, employee: "Tran Van Minh", dept: "IT", type: "Medical", from: "Jul 8", to: "Jul 9", days: 2, submitted: "Jul 7", status: "pending" },
@@ -185,17 +174,6 @@ export const surveysData = [
   { id: 4, title: "Remote Work Policy Assessment", created: "Jul 5", closes: "Jul 20", responses: 41, total: 420, status: "active" },
   { id: 5, title: "H1 2025 Engagement Pulse Check", created: "May 10", closes: "May 25", responses: 503, total: 847, status: "closed" },
   { id: 6, title: "Safety Training Effectiveness Review", created: "Jul 8", closes: "Jul 25", responses: 12, total: 847, status: "draft" },
-];
-
-export const documentsData = [
-  { id: 1, title: "Employee Handbook 2025", category: "HR Policy", version: "v3.2", uploaded: "Jan 15, 2025", size: "2.4 MB", status: "active" },
-  { id: 2, title: "Production Safety Guidelines", category: "Safety", version: "v5.0", uploaded: "Mar 1, 2025", size: "1.8 MB", status: "active" },
-  { id: 3, title: "Code of Conduct", category: "HR Policy", version: "v2.1", uploaded: "Jan 15, 2025", size: "890 KB", status: "active" },
-  { id: 4, title: "Fire Emergency Evacuation Plan", category: "Safety", version: "v4.1", uploaded: "Feb 20, 2025", size: "1.2 MB", status: "active" },
-  { id: 5, title: "Leave & Attendance Policy", category: "HR Policy", version: "v3.0", uploaded: "Jan 15, 2025", size: "650 KB", status: "active" },
-  { id: 6, title: "IT Security Policy", category: "IT", version: "v2.0", uploaded: "Apr 10, 2025", size: "780 KB", status: "active" },
-  { id: 7, title: "Supplier Code of Conduct", category: "Operations", version: "v1.5", uploaded: "May 5, 2025", size: "1.1 MB", status: "active" },
-  { id: 8, title: "Anti-Harassment & Discrimination Policy", category: "HR Policy", version: "v2.3", uploaded: "Jan 15, 2025", size: "420 KB", status: "active" },
 ];
 
 export const trainingData = [

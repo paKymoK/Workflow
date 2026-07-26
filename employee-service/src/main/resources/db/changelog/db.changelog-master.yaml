@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/seed/seed-news.sql
   - include:
       file: db/changelog/v3/add-device-tokens.sql
+  - include:
+      file: db/changelog/v4/add-documents-feature.sql
+  - include:
+      file: db/changelog/seed/seed-documents.sql
