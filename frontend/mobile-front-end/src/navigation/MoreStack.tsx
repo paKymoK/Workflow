@@ -7,6 +7,7 @@ import PoliciesScreen from '@/src/screens/more/PoliciesScreen';
 import SurveyScreen from '@/src/screens/more/SurveyScreen';
 import HelpdeskScreen from '@/src/screens/more/HelpdeskScreen';
 import SettingsScreen from '@/src/screens/more/SettingsScreen';
+import PdfViewerScreen from '@/src/screens/more/PdfViewerScreen';
 
 const Stack = createNativeStackNavigator<MoreStackParamList>();
 
@@ -19,6 +20,7 @@ export function MoreStack() {
       <Stack.Screen name="Survey" component={SurveyScreen} options={{ title: 'Internal Survey' }} />
       <Stack.Screen name="Helpdesk" component={HelpdeskScreen} options={{ title: 'IT Helpdesk' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+      <Stack.Screen name="PdfViewer" component={PdfViewerScreen} options={{ title: 'Document' }} />
     </Stack.Navigator>
   );
 }

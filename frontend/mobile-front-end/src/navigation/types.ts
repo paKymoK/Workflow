@@ -19,6 +19,7 @@ export type MoreStackParamList = {
   Survey: undefined;
   Helpdesk: undefined;
   Settings: undefined;
+  PdfViewer: { uri: string; title: string };
 };
 
 export type ChatStackParamList = {

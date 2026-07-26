@@ -8,7 +8,7 @@ import type { MoreStackParamList } from '@/src/navigation/types';
 import { colors } from '@/src/theme/colors';
 import { version as appVersion } from '@/package.json';
 
-const MORE_NAV: { icon: LucideIcon; label: string; screen: keyof MoreStackParamList }[] = [
+const MORE_NAV: { icon: LucideIcon; label: string; screen: Exclude<keyof MoreStackParamList, 'PdfViewer'> }[] = [
   { icon: BookOpen, label: 'Training Materials & Documents', screen: 'Training' },
   { icon: FileText, label: 'Company Policies', screen: 'Policies' },
   { icon: ClipboardList, label: 'Internal Survey', screen: 'Survey' },

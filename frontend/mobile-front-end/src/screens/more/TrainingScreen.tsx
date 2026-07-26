@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Download, Search, ChevronRight, Play, Layers, FileText, CheckCircle, Sparkles } from 'lucide-react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Video from 'react-native-video';
@@ -9,6 +10,7 @@ import Video from 'react-native-video';
 import { colors } from '@/src/theme/colors';
 import { fetchTrainingMaterials, completeTrainingMaterial, type TrainingMaterial, type TrainingFormat } from '@/src/api/trainingApi';
 import { getVideoStreamUrl } from '@/src/api/mediaApi';
+import type { MoreStackParamList } from '@/src/navigation/types';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -29,6 +31,7 @@ function getFormatMeta(format: TrainingFormat) {
 
 function MaterialDetail({ material, onBack }: { material: TrainingMaterial; onBack: () => void }) {
   const queryClient = useQueryClient();
+  const navigation = useNavigation<NativeStackNavigationProp<MoreStackParamList>>();
   const fm = getFormatMeta(material.format);
   const meta = material.format === 'VIDEO' ? (material.duration ?? '—') : formatBytes(material.fileSize);
 
@@ -39,7 +42,12 @@ function MaterialDetail({ material, onBack }: { material: TrainingMaterial; onBa
   });
 
   const openFile = () => {
-    if (material.fileUrl) Linking.openURL(material.fileUrl).catch(() => Alert.alert('Could not open file'));
+    if (!material.fileUrl) return;
+    if (material.fileName?.toLowerCase().endsWith('.pdf')) {
+      navigation.navigate('PdfViewer', { uri: material.fileUrl, title: material.title });
+    } else {
+      Linking.openURL(material.fileUrl).catch(() => Alert.alert('Could not open file'));
+    }
   };
 
   return (
@@ -209,20 +217,31 @@ export default function TrainingScreen() {
         ) : (
           <>
             {!search && category === 'All' && recentlyAdded.length > 0 && (
-              <View className="mb-3">
+              <View className="mb-6">
                 <View className="mb-2.5 flex-row items-center gap-2 px-4">
                   <Sparkles size={13} color={colors.primary} />
                   <Text className="text-xs font-bold text-gray-700">Recently Added</Text>
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 10, alignItems: 'center' }}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="px-4"
+                  style={{ flexGrow: 0 }}
+                  contentContainerStyle={{ gap: 10, alignItems: 'flex-start', paddingVertical: 6 }}
+                >
                   {recentlyAdded.map((material) => {
                     const fm = getFormatMeta(material.format);
                     return (
-                      <Pressable key={material.id} onPress={() => setSelectedId(material.id)} className="rounded-2xl bg-white p-3 shadow-sm" style={{ width: 128 }}>
+                      <Pressable
+                        key={material.id}
+                        onPress={() => setSelectedId(material.id)}
+                        className="rounded-2xl bg-white p-3 shadow-sm"
+                        style={{ width: 128 }}
+                      >
                         <View className="mb-2 h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: fm.bg }}>
                           <fm.icon size={16} color={fm.color} />
                         </View>
-                        <Text className="text-[11px] font-semibold leading-tight text-gray-800" numberOfLines={2}>
+                        <Text className="text-[11px] font-semibold leading-tight text-gray-800" numberOfLines={1}>
                           {material.title}
                         </Text>
                         <Text className="mt-1 text-[9px] font-semibold text-gray-400">{fm.label}</Text>

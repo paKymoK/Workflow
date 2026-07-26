@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ArrowLeft,
   Search,
@@ -16,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { colors } from '@/src/theme/colors';
 import { fetchDocuments, acknowledgeDocument, type DocumentPost } from '@/src/api/documentsApi';
+import type { MoreStackParamList } from '@/src/navigation/types';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -23,6 +25,7 @@ function formatDate(iso: string): string {
 
 function DocumentDetail({ doc, onBack }: { doc: DocumentPost; onBack: () => void }) {
   const queryClient = useQueryClient();
+  const navigation = useNavigation<NativeStackNavigationProp<MoreStackParamList>>();
 
   const ackMutation = useMutation({
     mutationFn: () => acknowledgeDocument(doc.id),
@@ -31,7 +34,12 @@ function DocumentDetail({ doc, onBack }: { doc: DocumentPost; onBack: () => void
   });
 
   const openFile = () => {
-    if (doc.fileUrl) Linking.openURL(doc.fileUrl).catch(() => Alert.alert('Could not open file'));
+    if (!doc.fileUrl) return;
+    if (doc.fileName?.toLowerCase().endsWith('.pdf')) {
+      navigation.navigate('PdfViewer', { uri: doc.fileUrl, title: doc.title });
+    } else {
+      Linking.openURL(doc.fileUrl).catch(() => Alert.alert('Could not open file'));
+    }
   };
 
   return (
