@@ -2,8 +2,6 @@
 # For local testing only — runs all services together
 
 include:
-  - infrastructure/postgres/docker-compose.yml
-  - infrastructure/kafka/docker-compose.yml
   - discovery-service/docker-compose.yml
   - auth-service/docker-compose.yml
   - workflow-service/docker-compose.yml

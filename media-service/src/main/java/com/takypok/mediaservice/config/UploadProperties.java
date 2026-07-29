@@ -11,5 +11,5 @@ import org.springframework.stereotype.Component;
 @Setter
 public class UploadProperties {
   private long maxImageSize = 10L * 1024 * 1024; // 10 MB
-  private long maxVideoSize = 200L * 1024 * 1024; // 200 MB
+  private long maxVideoSize = 512L * 1024 * 1024; // 512 MB
 }

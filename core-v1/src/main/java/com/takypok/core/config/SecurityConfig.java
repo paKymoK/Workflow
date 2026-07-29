@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -31,12 +32,16 @@ public class SecurityConfig {
                         "/actuator/**",
                         "/swagger-ui.html",
                         "/images/**",
-                        "/v1/videos/**",
                         "/v1/doc/swagger-ui.html",
                         "/v1/doc/swagger-ui/**",
                         "/docs/api-docs",
                         "/docs/api-docs/**",
                         "/webjars/**")
+                    .permitAll()
+                    // HLS playback only (master.m3u8/playlist/segment GETs) — players can't attach
+                    // an Authorization header, so this must stay public. Upload/delete on the same
+                    // /v1/videos prefix are POST/DELETE and fall through to .authenticated() below.
+                    .pathMatchers(HttpMethod.GET, "/v1/videos/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())
