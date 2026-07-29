@@ -7,6 +7,7 @@ import org.springframework.boot.actuate.autoconfigure.security.reactive.Endpoint
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -39,7 +40,6 @@ public class AuthenticationConfig {
                         "/workflow-service/web-socket/**",
                         "/chat-service/web-socket/**",
                         "/media-service/images/**",
-                        "/media-service/v1/videos/**",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/webjars/**",
@@ -47,6 +47,11 @@ public class AuthenticationConfig {
                         "/*/docs/api-docs",
                         "/api/health",
                         "/api/health/**")
+                    .permitAll()
+                    // HLS playback only (master.m3u8/playlist/segment GETs) — players can't attach
+                    // an Authorization header. Upload/delete on the same /media-service/v1/videos
+                    // prefix are POST/DELETE and must fall through to .authenticated() below.
+                    .pathMatchers(HttpMethod.GET, "/media-service/v1/videos/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())
