@@ -14,6 +14,15 @@ export const authConfig: AuthConfiguration = {
   redirectUrl: REDIRECT_URI,
   scopes: (SCOPES ?? 'openid profile offline_access').split(' '),
   usePKCE: true,
+  // Without this, AppAuth-Android falls back to AnyBrowserMatcher and launches the
+  // full Chrome app (address bar, tabs, menu) instead of an in-app sheet. Restricting
+  // to the Custom Tab variant makes it behave like iOS's SFSafariViewController.
+  androidAllowCustomBrowsers: ['chromeCustomTab'],
+  // AUTH_SERVER is plain HTTP in local dev (10.0.2.2). AppAuth-Android's
+  // DefaultConnectionBuilder hard-rejects non-https URLs and throws on a background
+  // thread, crashing the app instead of raising a JS error. This swaps in
+  // UnsafeConnectionBuilder so the token exchange can hit an http:// endpoint.
+  dangerouslyAllowInsecureHttpRequests: true,
   serviceConfiguration: {
     authorizationEndpoint: `${AUTH_SERVER}/oauth2/authorize`,
     tokenEndpoint: `${AUTH_SERVER}/oauth2/token`,
