@@ -11,3 +11,6 @@ datasources:
     jsonData:
       httpMethod: POST
       prometheusType: Prometheus
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo

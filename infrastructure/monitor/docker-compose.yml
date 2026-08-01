@@ -14,6 +14,9 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
       - '--web.enable-lifecycle'
+      - '--enable-feature=exemplar-storage'
+    networks:
+      - archive_default
     restart: unless-stopped
     logging:
       driver: json-file
@@ -37,6 +40,10 @@ services:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/spring-boot.json
     depends_on:
       - prometheus
+      - tempo
+      - loki
+    networks:
+      - archive_default
     restart: unless-stopped
     logging:
       driver: json-file
@@ -44,10 +51,80 @@ services:
         max-size: "100m"
         max-file: "1"
 
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: tempo
+    command:
+      - '-config.file=/etc/tempo/tempo.yaml'
+    ports:
+      - "3200:3200"   # Tempo query API (used by Grafana datasource)
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    networks:
+      - archive_default
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: loki
+    command:
+      - '-config.file=/etc/loki/loki-config.yaml'
+    ports:
+      - "3101:3100"   # Loki API (grafana's own UI already owns host 3100)
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - archive_default
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    container_name: promtail
+    command:
+      - '-config.file=/etc/promtail/promtail-config.yaml'
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+    networks:
+      - archive_default
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+networks:
+  archive_default:
+    external: true
+
 volumes:
   prometheus-data:
     name: prometheus_data
     driver: local
   grafana-data:
     name: grafana_data
+    driver: local
+  tempo-data:
+    name: tempo_data
+    driver: local
+  loki-data:
+    name: loki_data
     driver: local

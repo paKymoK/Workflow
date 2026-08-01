@@ -114,6 +114,14 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    enabled: true
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
 
 single-tab:
   redis-on-failure: ${SINGLE_TAB_REDIS_ON_FAILURE:FAIL_OPEN}
