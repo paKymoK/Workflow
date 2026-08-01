@@ -407,6 +407,51 @@
           { "matcher": { "id": "byName", "options": "Pending" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
         ]
       }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "JDBC Connection Pool (HikariCP)",
+      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_active{job=\"$service\", instance=\"$instance\"}", "legendFormat": "Active", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_pending{job=\"$service\", instance=\"$instance\"}", "legendFormat": "Pending", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_idle{job=\"$service\", instance=\"$instance\"}", "legendFormat": "Idle", "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_max{job=\"$service\", instance=\"$instance\"}", "legendFormat": "Max", "refId": "D" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_min{job=\"$service\", instance=\"$instance\"}", "legendFormat": "Min", "refId": "E" }
+      ],
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Max" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] },
+          { "matcher": { "id": "byName", "options": "Min" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [4, 4], "fill": "dash" } }] },
+          { "matcher": { "id": "byName", "options": "Pending" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Process RAM (JVM Heap + Non-Heap)",
+      "description": "Approximates the service's RAM footprint from JVM-tracked memory pools only (heap + metaspace/code cache/compressed class space). Runs everywhere, no extra infra needed. Undercounts true container RSS somewhat (thread stacks, JIT/native buffers outside JVM accounting aren't included) — for exact container RSS matching `docker stats`, use cAdvisor-based container_memory metrics instead (works on native Linux hosts; blocked on this machine by a Docker Desktop for Mac limitation, see conversation notes).",
+      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{job=\"$service\", instance=\"$instance\", area=\"heap\"})", "legendFormat": "Heap Used", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{job=\"$service\", instance=\"$instance\", area=\"nonheap\"})", "legendFormat": "Non-Heap Used", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{job=\"$service\", instance=\"$instance\"})", "legendFormat": "Total Used", "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_committed_bytes{job=\"$service\", instance=\"$instance\"})", "legendFormat": "Total Committed", "refId": "D" }
+      ],
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Total Used" }, "properties": [{ "id": "custom.lineWidth", "value": 3 }] },
+          { "matcher": { "id": "byName", "options": "Total Committed" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] }
+        ]
+      }
     }
   ]
 }

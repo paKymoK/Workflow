@@ -7,7 +7,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      AUTH_ISSUER_URI: http://192.168.1.16:9000
+      AUTH_ISSUER_URI: http://192.168.1.4:9000
       DB_HOST: postgres
       DB_PORT: 5432
       DB_SCHEMA: media
@@ -16,10 +16,11 @@ services:
       EUREKA_URI: http://discovery-service:8761/eureka
       JWK_URI: http://auth-service:9000/oauth2/jwks
     depends_on:
-      postgres:
-        condition: service_healthy
       discovery-service:
         condition: service_healthy
+    # postgres runs independently of this compose project (not in root include list) —
+    # reachable by container DNS name since it's already on the same "archive_default"
+    # network, just not health-gated here.
     logging:
       driver: json-file
       options:

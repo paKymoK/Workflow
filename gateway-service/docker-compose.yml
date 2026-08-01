@@ -6,11 +6,13 @@ services:
     container_name: gateway-service
     ports:
       - "8080:8080"
+      - "8090:8090"
     environment:
-      AUTH_ISSUER_URI: http://192.168.1.16:9000
+      AUTH_ISSUER_URI: http://192.168.1.4:9000
       EUREKA_URI: http://discovery-service:8761/eureka
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       discovery-service:
         condition: service_healthy

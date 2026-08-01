@@ -27,6 +27,18 @@
           "text": "All",
           "value": "$__all"
         }
+      },
+      {
+        "name": "level",
+        "type": "custom",
+        "query": "TRACE,DEBUG,INFO,WARN,ERROR",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
       }
     ]
   },
@@ -51,7 +63,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{container=~\"$container\"}",
+          "expr": "{container=~\"$container\", level=~\"$level\"}",
           "refId": "A"
         }
       ],
@@ -63,7 +75,7 @@
         "prettifyLogMessage": false,
         "enableLogDetails": true,
         "dedupStrategy": "none",
-        "sortOrder": "Descending"
+        "sortOrder": "Ascending"
       }
     }
   ]

@@ -15,6 +15,7 @@ services:
       - '--storage.tsdb.retention.time=15d'
       - '--web.enable-lifecycle'
       - '--enable-feature=exemplar-storage'
+      - '--web.enable-remote-write-receiver'
     networks:
       - archive_default
     restart: unless-stopped
@@ -91,17 +92,36 @@ services:
         max-size: "100m"
         max-file: "1"
 
-  promtail:
-    image: grafana/promtail:3.2.1
-    container_name: promtail
+  alloy:
+    image: grafana/alloy:v1.4.3
+    container_name: alloy
+    # privileged + host mounts below are cAdvisor's documented requirements for
+    # per-container metrics (prometheus.exporter.cadvisor in config.alloy). This only
+    # works correctly on a native Linux Docker host — on Docker Desktop for Mac/Windows,
+    # container storage is virtualized and cAdvisor can't resolve the overlayfs layer
+    # metadata it needs (fails with "failed to identify the read-write layer ID"),
+    # so per-container RAM/CPU/disk-IO metrics won't populate there. Host-level metrics
+    # (prometheus.exporter.unix) and log shipping work fine on both.
+    privileged: true
     command:
-      - '-config.file=/etc/promtail/promtail-config.yaml'
+      - 'run'
+      - '--server.http.listen-addr=0.0.0.0:12345'
+      - '--storage.path=/var/lib/alloy/data'
+      - '/etc/alloy/config.alloy'
+    ports:
+      - "12345:12345"   # Alloy's own live-debugging UI (component graph, live log/metric preview)
     volumes:
-      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /sys:/sys:ro
+      - /:/rootfs:ro
+      - /:/host:ro
     depends_on:
       - loki
+      - prometheus
     networks:
       - archive_default
     restart: unless-stopped
@@ -127,4 +147,7 @@ volumes:
     driver: local
   loki-data:
     name: loki_data
+    driver: local
+  alloy-data:
+    name: alloy_data
     driver: local

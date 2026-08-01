@@ -6,6 +6,8 @@ services:
     container_name: discovery-service
     ports:
       - "8761:8761"
+    environment:
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     logging:
       driver: json-file
       options:
