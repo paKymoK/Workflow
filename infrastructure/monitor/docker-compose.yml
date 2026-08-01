@@ -1,3 +1,9 @@
+# Pins the Compose project name for consistency with the other stacks sharing
+# "archive_default" (see docker-compose.yaml at repo root) — this file still requires
+# that network to already exist (external: true, below) since it's normally the last
+# stack started.
+name: archive
+
 services:
   prometheus:
     image: prom/prometheus:v2.54.1

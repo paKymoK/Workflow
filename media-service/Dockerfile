@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-alpine AS builder
+FROM amazoncorretto:21-alpine AS builder
 WORKDIR /app
 
 COPY gradlew .
@@ -13,7 +13,7 @@ COPY media-service media-service
 RUN chmod +x gradlew
 RUN ./gradlew :media-service:bootJar -x test --no-daemon
 
-FROM amazoncorretto:17-alpine
+FROM amazoncorretto:21-alpine
 RUN apk add --no-cache ffmpeg
 
 WORKDIR /app

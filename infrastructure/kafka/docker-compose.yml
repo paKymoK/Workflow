@@ -1,3 +1,7 @@
+# Pins the Compose project name so this lands on the shared "archive_default" network
+# regardless of the checkout folder name (see docker-compose.yaml at repo root).
+name: archive
+
 services:
   kafka:
     image: apache/kafka:3.8.0

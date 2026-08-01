@@ -8,12 +8,12 @@ COPY settings.gradle .
 
 COPY infrastructure infrastructure
 COPY core-v1 core-v1
-COPY auth-service auth-service
+COPY chat-service chat-service
 
 RUN chmod +x gradlew
-RUN ./gradlew :auth-service:bootJar -x test --no-daemon
+RUN ./gradlew :chat-service:bootJar -x test --no-daemon
 
 FROM amazoncorretto:21-alpine
 WORKDIR /app
-COPY --from=builder /app/auth-service/build/libs/*.jar app.jar
+COPY --from=builder /app/chat-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
