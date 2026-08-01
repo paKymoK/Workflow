@@ -3,6 +3,7 @@ services:
     build:
       context: ..
       dockerfile: workflow-service/Dockerfile
+    image: takypok/workflow-service
     container_name: workflow-service
     ports:
       - "8085:8085"
@@ -26,7 +27,7 @@ services:
       discovery-service:
         condition: service_healthy
     # postgres/kafka run independently of this compose project (not in root include list) —
-    # reachable by container DNS name since they're already on the same "archive_default"
+    # reachable by container DNS name since they're already on the same "takypok_default"
     # network, just not health-gated here.
     logging:
       driver: json-file

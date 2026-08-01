@@ -1,10 +1,12 @@
 # Root docker-compose.yml
 # For local testing only — runs all services together
 
-# Pins the Compose project name so the shared network is always "archive_default",
+# Pins the Compose project name so the shared network is always "takypok_default",
 # regardless of what the checkout folder is named (was previously relying on the
-# folder being named "archive" or always passing `-p archive`).
-name: archive
+# folder being named "takypok" or always passing `-p takypok`). Named distinctly from
+# the infra stacks (takypok-postgres, takypok-kafka, takypok-redis) that are started
+# independently, so this project only ever contains the app services + alloy + monitor.
+name: takypok-app
 
 include:
   - discovery-service/docker-compose.yml
@@ -14,5 +16,6 @@ include:
   - employee-service/docker-compose.yml
   - chat-service/docker-compose.yml
   - gateway-service/docker-compose.yml
+  - infrastructure/alloy/docker-compose.yml
   - infrastructure/monitor/docker-compose.yml
 

@@ -3,6 +3,7 @@ services:
     build:
       context: ..
       dockerfile: chat-service/Dockerfile
+    image: takypok/chat-service
     container_name: chat-service
     ports:
       - "8083:8083"
@@ -26,7 +27,7 @@ services:
       discovery-service:
         condition: service_healthy
     # postgres/kafka/redis run independently of this compose project (not in root include list) —
-    # reachable by container DNS name since they're already on the same "archive_default"
+    # reachable by container DNS name since they're already on the same "takypok_default"
     # network, just not health-gated here.
     logging:
       driver: json-file

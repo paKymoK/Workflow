@@ -3,6 +3,7 @@ services:
     build:
       context: ..        # ← root of project for multi-module gradle
       dockerfile: discovery-service/Dockerfile
+    image: takypok/discovery-service
     container_name: discovery-service
     ports:
       - "8761:8761"

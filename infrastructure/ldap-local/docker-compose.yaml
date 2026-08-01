@@ -1,3 +1,8 @@
+# Own project name so this stack's identity doesn't depend on the checkout folder name.
+# Reached via host.docker.internal (published ports), not the "takypok_default" network,
+# so no explicit network wiring is needed here.
+name: takypok-ldap
+
 services:
 
   openldap:

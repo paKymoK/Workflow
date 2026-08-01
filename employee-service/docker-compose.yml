@@ -3,6 +3,7 @@ services:
     build:
       context: ..
       dockerfile: employee-service/Dockerfile
+    image: takypok/employee-service
     container_name: employee-service
     ports:
       - "8086:8086"
@@ -23,7 +24,7 @@ services:
       discovery-service:
         condition: service_healthy
     # postgres/kafka run independently of this compose project (not in root include list) —
-    # reachable by container DNS name since they're already on the same "archive_default"
+    # reachable by container DNS name since they're already on the same "takypok_default"
     # network, just not health-gated here.
     logging:
       driver: json-file

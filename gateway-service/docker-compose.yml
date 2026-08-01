@@ -3,6 +3,7 @@ services:
     build:
       context: ..
       dockerfile: gateway-service/Dockerfile
+    image: takypok/gateway-service
     container_name: gateway-service
     ports:
       - "8080:8080"

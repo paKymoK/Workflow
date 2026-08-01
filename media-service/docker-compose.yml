@@ -3,6 +3,7 @@ services:
     build:
       context: ..
       dockerfile: media-service/Dockerfile
+    image: takypok/media-service
     container_name: media-service
     ports:
       - "8082:8082"
@@ -20,7 +21,7 @@ services:
       discovery-service:
         condition: service_healthy
     # postgres runs independently of this compose project (not in root include list) —
-    # reachable by container DNS name since it's already on the same "archive_default"
+    # reachable by container DNS name since it's already on the same "takypok_default"
     # network, just not health-gated here.
     logging:
       driver: json-file

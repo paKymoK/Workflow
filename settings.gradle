@@ -1,4 +1,4 @@
-rootProject.name = 'archive'
+rootProject.name = 'takypok'
 include 'core-v1',
         'infrastructure',
         'discovery-service',
