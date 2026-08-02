@@ -207,6 +207,7 @@ uploads/
 uploads/
 docs/
 
-# Firebase service-account keys (local-only, never committed)
 *firebase-adminsdk*.json
+
+.env
 

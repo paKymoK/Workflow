@@ -8,7 +8,7 @@ services:
     ports:
       - "8761:8761"
     environment:
-      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:-http://tempo:4318/v1/traces}
     logging:
       driver: json-file
       options:
@@ -19,3 +19,9 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+    networks:
+      - takypok_default
+
+networks:
+  takypok_default:
+    external: true

@@ -54,7 +54,7 @@ loki.process "containers" {
 
 loki.write "default" {
   endpoint {
-    url = "http://loki:3100/loki/api/v1/push"
+    url = sys.env("LOKI_URL")
   }
 }
 
@@ -80,8 +80,27 @@ prometheus.scrape "exporters" {
   scrape_interval = "15s"
 }
 
+discovery.relabel "app" {
+  targets = [
+    {"__address__" = sys.env("APP_SCRAPE_TARGET")},
+  ]
+
+  rule {
+    source_labels = ["__address__"]
+    regex         = "^$"
+    action        = "drop"
+  }
+}
+
+prometheus.scrape "app" {
+  targets         = discovery.relabel.app.output
+  metrics_path    = "/actuator/prometheus"
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+}
+
 prometheus.remote_write "default" {
   endpoint {
-    url = "http://prometheus:9090/api/v1/write"
+    url = sys.env("PROMETHEUS_REMOTE_WRITE_URL")
   }
 }

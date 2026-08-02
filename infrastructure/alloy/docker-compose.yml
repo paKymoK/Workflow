@@ -30,12 +30,10 @@ services:
       - /sys:/sys:ro
       - /:/rootfs:ro
       - /:/host:ro
-    # loki/prometheus live in infrastructure/monitor's compose file, but both are merged into
-    # the same "takypok" project via the root docker-compose.yaml include list, so this still
-    # resolves and gates alloy's startup on them being up first.
-    depends_on:
-      - loki
-      - prometheus
+    environment:
+      LOKI_URL: ${LOKI_URL:-http://loki:3100/loki/api/v1/push}
+      PROMETHEUS_REMOTE_WRITE_URL: ${PROMETHEUS_REMOTE_WRITE_URL:-http://prometheus:9090/api/v1/write}
+      APP_SCRAPE_TARGET: ${APP_SCRAPE_TARGET:-}
     networks:
       - takypok_default
     restart: unless-stopped

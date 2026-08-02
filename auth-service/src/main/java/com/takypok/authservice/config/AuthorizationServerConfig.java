@@ -11,6 +11,7 @@ import com.takypok.authservice.repository.ClientSessionPolicyRepository;
 import com.takypok.authservice.util.jose.Jwks;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -70,11 +71,15 @@ public class AuthorizationServerConfig {
   @Value("${auth.issuer-uri:http://127.0.0.1:9000}")
   private String issuerUri;
 
+  @Value("${auth.workflow-client.redirect-uris}")
+  private String[] workflowRedirectUris;
+
+  @Value("${auth.workflow-client.post-logout-redirect-uris}")
+  private String[] workflowPostLogoutRedirectUris;
+
   private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
   private static final String WORKFLOW_CLIENT_ID = "workflow";
   private static final String WORKFLOW_CLIENT_SECRET = "{noop}workflow-secret";
-  private static final String WORKFLOW_MOBILE_REDIRECT_URI =
-      "com.takypok.workflow://oauth2redirect";
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -166,12 +171,9 @@ public class AuthorizationServerConfig {
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .tokenSettings(tokenSettings)
-            .redirectUri("http://localhost:3000/callback")
-            .redirectUri("https://app.thaiha.website/callback")
-            .redirectUri("https://oauth.pstmn.io/v1/callback")
-            .redirectUri(WORKFLOW_MOBILE_REDIRECT_URI)
-            .postLogoutRedirectUri("http://localhost:3000/login")
-            .postLogoutRedirectUri("https://app.thaiha.website/login")
+            .redirectUris(uris -> uris.addAll(Arrays.asList(workflowRedirectUris)))
+            .postLogoutRedirectUris(
+                uris -> uris.addAll(Arrays.asList(workflowPostLogoutRedirectUris)))
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .scope("offline_access")

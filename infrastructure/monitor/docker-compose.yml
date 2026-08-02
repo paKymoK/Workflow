@@ -1,8 +1,4 @@
-# Only meaningful if this file is ever run standalone — normally it's merged into the
-# root docker-compose.yaml's "takypok-app" project via its include list, which wins.
-# Either way, it still requires "takypok_default" to already exist (external: true,
-# below) since one of the independent infra stacks (postgres/kafka/redis) owns creating it.
-name: takypok-app
+name: takypok-monitor
 
 services:
   prometheus:
