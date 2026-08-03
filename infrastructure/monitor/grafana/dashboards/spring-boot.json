@@ -159,7 +159,7 @@
       "id": 5,
       "type": "timeseries",
       "title": "JVM Heap Memory",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -193,7 +193,7 @@
       "id": 6,
       "type": "timeseries",
       "title": "GC Pause Duration",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -213,7 +213,7 @@
       "id": 7,
       "type": "timeseries",
       "title": "HTTP Request Rate",
-      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -233,7 +233,7 @@
       "id": 8,
       "type": "timeseries",
       "title": "HTTP Response Time",
-      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -259,7 +259,7 @@
       "id": 9,
       "type": "timeseries",
       "title": "CPU Usage",
-      "gridPos": { "x": 0, "y": 20, "w": 8, "h": 8 },
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -285,7 +285,7 @@
       "id": 10,
       "type": "timeseries",
       "title": "JVM Threads",
-      "gridPos": { "x": 8, "y": 20, "w": 8, "h": 8 },
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -319,7 +319,7 @@
       "id": 11,
       "type": "timeseries",
       "title": "JVM Buffer Pool",
-      "gridPos": { "x": 16, "y": 20, "w": 8, "h": 8 },
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -345,7 +345,7 @@
       "id": 12,
       "type": "timeseries",
       "title": "Non-Heap Memory",
-      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -371,7 +371,7 @@
       "id": 13,
       "type": "timeseries",
       "title": "R2DBC Connection Pool",
-      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -412,7 +412,7 @@
       "id": 14,
       "type": "timeseries",
       "title": "JDBC Connection Pool (HikariCP)",
-      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 44, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_active{job=\"$service\", instance=\"$instance\"}", "legendFormat": "Active", "refId": "A" },
@@ -432,24 +432,25 @@
       }
     },
     {
-      "id": 15,
+      "id": 16,
       "type": "timeseries",
-      "title": "Process RAM (JVM Heap + Non-Heap)",
-      "description": "Approximates the service's RAM footprint from JVM-tracked memory pools only (heap + metaspace/code cache/compressed class space). Runs everywhere, no extra infra needed. Undercounts true container RSS somewhat (thread stacks, JIT/native buffers outside JVM accounting aren't included) — for exact container RSS matching `docker stats`, use cAdvisor-based container_memory metrics instead (works on native Linux hosts; blocked on this machine by a Docker Desktop for Mac limitation, see conversation notes).",
-      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 8 },
+      "title": "RAM Usage",
+      "description": "Real container RSS as Docker/cAdvisor sees it — same numbers as `docker stats`. 'Working Set' is what docker stats' MEM USAGE shows (usage minus reclaimable page cache); 'Usage' includes that cache too. 'Container Limit' only shows if this service has an explicit memory cap set in its compose file (none currently do); otherwise the host's total RAM is the effective ceiling, shown as 'Host Total RAM'.",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{job=\"$service\", instance=\"$instance\", area=\"heap\"})", "legendFormat": "Heap Used", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{job=\"$service\", instance=\"$instance\", area=\"nonheap\"})", "legendFormat": "Non-Heap Used", "refId": "B" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{job=\"$service\", instance=\"$instance\"})", "legendFormat": "Total Used", "refId": "C" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_committed_bytes{job=\"$service\", instance=\"$instance\"})", "legendFormat": "Total Committed", "refId": "D" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(container_memory_working_set_bytes{container_label_com_docker_compose_service=\"$service\"})", "legendFormat": "Working Set (actual usage)", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(container_memory_usage_bytes{container_label_com_docker_compose_service=\"$service\"})", "legendFormat": "Usage (incl. cache)", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "max(container_spec_memory_limit_bytes{container_label_com_docker_compose_service=\"$service\"} > 0)", "legendFormat": "Container Limit", "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_memory_MemTotal_bytes", "legendFormat": "Host Total RAM", "refId": "D" }
       ],
       "options": { "tooltip": { "mode": "multi", "sort": "desc" }, "legend": { "displayMode": "list", "placement": "bottom" } },
       "fieldConfig": {
         "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Total Used" }, "properties": [{ "id": "custom.lineWidth", "value": 3 }] },
-          { "matcher": { "id": "byName", "options": "Total Committed" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] }
+          { "matcher": { "id": "byName", "options": "Working Set (actual usage)" }, "properties": [{ "id": "custom.lineWidth", "value": 3 }] },
+          { "matcher": { "id": "byName", "options": "Container Limit" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }, { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Host Total RAM" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [4, 4], "fill": "dash" } }, { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] }
         ]
       }
     }
