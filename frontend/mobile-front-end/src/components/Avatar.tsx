@@ -13,7 +13,7 @@ export function Avatar({
   size = 'md',
   uri,
 }: {
-  name: string;
+  name: string | null;
   size?: keyof typeof SIZES;
   uri?: string | null;
 }) {
@@ -28,13 +28,14 @@ export function Avatar({
     );
   }
 
-  const initials = name
+  const safeName = name?.trim() || '?';
+  const initials = safeName
     .split(' ')
     .map((w) => w[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
-  const color = AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+  const color = AVATAR_COLORS[safeName.charCodeAt(0) % AVATAR_COLORS.length];
 
   return (
     <View

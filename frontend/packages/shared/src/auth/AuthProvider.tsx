@@ -117,10 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const handleCallback = async (code: string, codeVerifier: string) => {
+  const handleCallback = useCallback(async (code: string, codeVerifier: string) => {
     const tokenResponse = await exchangeCodeForToken(code, codeVerifier);
     setTokenResponse(tokenResponse);
-  };
+  }, []);
 
   const logout = useCallback(() => {
     const idToken = sessionStorage.getItem("id_token") ?? undefined;

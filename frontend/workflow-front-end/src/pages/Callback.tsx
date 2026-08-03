@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Spin, Typography } from "antd";
@@ -19,6 +19,9 @@ export default function Callback() {
   const navigate = useNavigate();
   const { handleCallback } = useAuth();
   const [exchangeError, setExchangeError] = useState<string | null>(null);
+  // Authorization codes are single-use — guard against the effect re-running
+  // (dependency identity churn, StrictMode, etc.) and replaying the same code.
+  const exchangedCodeRef = useRef<string | null>(null);
 
   const validationError = useMemo(() => {
     // OAuth2 error response (e.g. access_denied, invalid_request)
@@ -70,6 +73,9 @@ export default function Callback() {
     }
 
     // Full-page redirect mode: exchange the code here as usual.
+    if (exchangedCodeRef.current === code) return;
+    exchangedCodeRef.current = code;
+
     const codeVerifier = sessionStorage.getItem("pkce_code_verifier")!;
     handleCallback(code, codeVerifier)
       .then(() => {

@@ -242,7 +242,7 @@ export interface MessageAttachment {
 
 export interface ChatSender {
   sub: string;
-  name: string;
+  name: string | null;
   email?: string;
   avatar?: string | null;
 }

@@ -824,7 +824,7 @@ export default function Messages() {
                                   mine ? "!bg-[var(--purple)]" : "!bg-[var(--accent)]"
                                 }`}
                               >
-                                {msg.sender.name.trim().charAt(0).toUpperCase() || "?"}
+                                {(msg.sender.name ?? "").trim().charAt(0).toUpperCase() || "?"}
                               </Avatar>
                             ) : (
                               <div className="w-[26px] flex-shrink-0" />
@@ -1093,7 +1093,7 @@ export default function Messages() {
                     src={reply.sender.avatar ?? undefined}
                     className="flex-shrink-0 !text-[9px] !font-semibold !text-white !bg-[var(--accent)]"
                   >
-                    {reply.sender.name.trim().charAt(0).toUpperCase() || "?"}
+                    {(reply.sender.name ?? "").trim().charAt(0).toUpperCase() || "?"}
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-1.5">
