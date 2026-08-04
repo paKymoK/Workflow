@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { View, Text, ScrollView, Pressable, Image, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -18,14 +18,33 @@ const logo = require('@/assets/images/logo.png');
 
 export default function HomeScreen() {
   const [slide, setSlide] = useState(0);
+  const [slideWidth, setSlideWidth] = useState(0);
   const [showBot, setShowBot] = useState(false);
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const PROFILE = useProfile();
+  const slidesRef = useRef<ScrollView>(null);
+
+  const goToSlide = (i: number) => {
+    setSlide(i);
+    slidesRef.current?.scrollTo({ x: i * slideWidth, animated: true });
+  };
 
   useEffect(() => {
-    const t = setInterval(() => setSlide((s) => (s + 1) % HOME_SLIDES.length), 4200);
+    if (!slideWidth) return;
+    const t = setInterval(() => {
+      setSlide((s) => {
+        const next = (s + 1) % HOME_SLIDES.length;
+        slidesRef.current?.scrollTo({ x: next * slideWidth, animated: true });
+        return next;
+      });
+    }, 4200);
     return () => clearInterval(t);
-  }, []);
+  }, [slideWidth]);
+
+  const onSlideScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!slideWidth) return;
+    setSlide(Math.round(e.nativeEvent.contentOffset.x / slideWidth));
+  };
 
   return (
     <View className="flex-1">
@@ -51,34 +70,44 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="mx-4 h-36 overflow-hidden rounded-2xl shadow-md">
-          {HOME_SLIDES.map((s, i) => (
-            <LinearGradient
-              key={s.tag}
-              colors={[...s.colors]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: i === slide ? 1 : 0,
-                paddingHorizontal: 20,
-                justifyContent: 'center',
-              }}
+        <View
+          className="mx-4 h-36 overflow-hidden rounded-2xl shadow-md"
+          onLayout={(e) => setSlideWidth(e.nativeEvent.layout.width)}
+        >
+          {slideWidth > 0 && (
+            <ScrollView
+              ref={slidesRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={onSlideScrollEnd}
+              contentOffset={{ x: slide * slideWidth, y: 0 }}
             >
-              <Image source={logo} style={{ height: 24, width: 112 }} resizeMode="contain" className="mb-2 opacity-90" />
-              <Text className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">{s.tag}</Text>
-              <Text className="max-w-[260px] text-sm font-semibold leading-snug text-white">{s.body}</Text>
-            </LinearGradient>
-          ))}
+              {HOME_SLIDES.map((s) => (
+                <LinearGradient
+                  key={s.tag}
+                  colors={[...s.colors]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: slideWidth,
+                    height: '100%',
+                    paddingHorizontal: 20,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Image source={logo} style={{ height: 24, width: 112 }} resizeMode="contain" className="mb-2 opacity-90" />
+                  <Text className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">{s.tag}</Text>
+                  <Text className="max-w-[260px] text-sm font-semibold leading-snug text-white">{s.body}</Text>
+                </LinearGradient>
+              ))}
+            </ScrollView>
+          )}
           <View className="absolute bottom-3 right-4 flex-row gap-1.5">
             {HOME_SLIDES.map((_, i) => (
               <Pressable
                 key={i}
-                onPress={() => setSlide(i)}
+                onPress={() => goToSlide(i)}
                 className={`h-1.5 rounded-full ${i === slide ? 'w-5 bg-white' : 'w-1.5 bg-white/40'}`}
               />
             ))}
