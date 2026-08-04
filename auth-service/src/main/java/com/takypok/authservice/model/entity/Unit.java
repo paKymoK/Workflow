@@ -27,4 +27,9 @@ public class Unit {
 
   @Column(name = "department_id", nullable = false)
   private Long departmentId;
+
+  /** Employee sub of the unit head, if assigned. */
+  private String head;
+
+  private String location;
 }

@@ -8,4 +8,6 @@ import lombok.Setter;
 @Setter
 public class DepartmentCreateRequest {
   @NotBlank private String name;
+  private String head;
+  private String location;
 }

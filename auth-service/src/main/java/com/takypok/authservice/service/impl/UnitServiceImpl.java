@@ -46,6 +46,8 @@ public class UnitServiceImpl implements UnitService {
     Unit unit = new Unit();
     unit.setName(request.getName());
     unit.setDepartmentId(request.getDepartmentId());
+    unit.setHead(request.getHead());
+    unit.setLocation(request.getLocation());
     Unit saved = unitRepository.save(unit);
     publish("CREATED", saved);
     return saved;
@@ -56,6 +58,8 @@ public class UnitServiceImpl implements UnitService {
     Unit unit = getById(request.getId());
     unit.setName(request.getName());
     unit.setDepartmentId(request.getDepartmentId());
+    unit.setHead(request.getHead());
+    unit.setLocation(request.getLocation());
     Unit saved = unitRepository.save(unit);
     publish("UPDATED", saved);
     return saved;
@@ -70,7 +74,13 @@ public class UnitServiceImpl implements UnitService {
 
   private void publish(String eventType, Unit unit) {
     UnitEvent event =
-        new UnitEvent(eventType, unit.getId(), unit.getName(), unit.getDepartmentId());
+        new UnitEvent(
+            eventType,
+            unit.getId(),
+            unit.getName(),
+            unit.getDepartmentId(),
+            unit.getHead(),
+            unit.getLocation());
     kafkaTemplate
         .send(topic, String.valueOf(unit.getId()), event)
         .whenComplete(

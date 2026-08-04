@@ -13,4 +13,6 @@ public class DepartmentEvent {
   private String eventType; // CREATED, UPDATED, DELETED
   private Long id;
   private String name;
+  private String head;
+  private String location;
 }

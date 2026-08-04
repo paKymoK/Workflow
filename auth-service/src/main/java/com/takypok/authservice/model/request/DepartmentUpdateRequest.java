@@ -10,4 +10,6 @@ import lombok.Setter;
 public class DepartmentUpdateRequest {
   @NotNull private Long id;
   @NotBlank private String name;
+  private String head;
+  private String location;
 }

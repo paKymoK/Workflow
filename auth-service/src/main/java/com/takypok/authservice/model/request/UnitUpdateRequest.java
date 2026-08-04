@@ -11,4 +11,6 @@ public class UnitUpdateRequest {
   @NotNull private Long id;
   @NotBlank private String name;
   @NotNull private Long departmentId;
+  private String head;
+  private String location;
 }

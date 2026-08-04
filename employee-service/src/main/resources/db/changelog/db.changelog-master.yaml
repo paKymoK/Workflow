@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/seed/seed-documents.sql
   - include:
       file: db/changelog/v5/add-training-materials-feature.sql
+  - include:
+      file: db/changelog/v6/add-department-unit-head-location.sql

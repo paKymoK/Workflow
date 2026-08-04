@@ -16,12 +16,16 @@ public class DepartmentEvent {
   private String eventType; // CREATED, UPDATED, DELETED
   private Long id;
   private String name;
+  private String head;
+  private String location;
   private ZonedDateTime occurredAt;
 
-  public DepartmentEvent(String eventType, Long id, String name) {
+  public DepartmentEvent(String eventType, Long id, String name, String head, String location) {
     this.eventType = eventType;
     this.id = id;
     this.name = name;
+    this.head = head;
+    this.location = location;
     this.occurredAt = ZonedDateTime.now();
   }
 }

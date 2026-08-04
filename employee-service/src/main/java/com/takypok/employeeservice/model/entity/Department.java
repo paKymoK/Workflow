@@ -13,4 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Department extends IdEntity {
   @NotBlank private String name;
+  private String head;
+  private String location;
 }

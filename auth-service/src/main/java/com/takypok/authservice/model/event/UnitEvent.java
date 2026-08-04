@@ -17,13 +17,18 @@ public class UnitEvent {
   private Long id;
   private String name;
   private Long departmentId;
+  private String head;
+  private String location;
   private ZonedDateTime occurredAt;
 
-  public UnitEvent(String eventType, Long id, String name, Long departmentId) {
+  public UnitEvent(
+      String eventType, Long id, String name, Long departmentId, String head, String location) {
     this.eventType = eventType;
     this.id = id;
     this.name = name;
     this.departmentId = departmentId;
+    this.head = head;
+    this.location = location;
     this.occurredAt = ZonedDateTime.now();
   }
 }

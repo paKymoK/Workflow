@@ -14,4 +14,6 @@ public class UnitEvent {
   private Long id;
   private String name;
   private Long departmentId;
+  private String head;
+  private String location;
 }

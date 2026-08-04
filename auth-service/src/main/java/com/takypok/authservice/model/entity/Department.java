@@ -24,4 +24,9 @@ public class Department {
 
   @Column(nullable = false, unique = true)
   private String name;
+
+  /** Employee sub of the department head, if assigned. */
+  private String head;
+
+  private String location;
 }

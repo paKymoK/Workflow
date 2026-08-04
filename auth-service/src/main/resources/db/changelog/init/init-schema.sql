@@ -83,8 +83,10 @@ CREATE TABLE IF NOT EXISTS authorities
 -- read-only Kafka-fed mirror of these two tables under the same names.
 CREATE TABLE IF NOT EXISTS department
 (
-    id   BIGSERIAL    NOT NULL,
-    name VARCHAR(200) NOT NULL,
+    id       BIGSERIAL    NOT NULL,
+    name     VARCHAR(200) NOT NULL,
+    head     VARCHAR(200),
+    location VARCHAR(200),
     CONSTRAINT department_pkey PRIMARY KEY (id),
     CONSTRAINT department_name_uq UNIQUE (name)
 );
@@ -94,6 +96,8 @@ CREATE TABLE IF NOT EXISTS unit
     id            BIGSERIAL    NOT NULL,
     name          VARCHAR(200) NOT NULL,
     department_id BIGINT       NOT NULL,
+    head          VARCHAR(200),
+    location      VARCHAR(200),
     CONSTRAINT unit_pkey PRIMARY KEY (id),
     CONSTRAINT fk_unit_department FOREIGN KEY (department_id) REFERENCES department (id),
     CONSTRAINT unit_department_name_uq UNIQUE (department_id, name)

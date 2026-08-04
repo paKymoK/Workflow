@@ -45,6 +45,8 @@ public class DepartmentServiceImpl implements DepartmentService {
   public Department create(DepartmentCreateRequest request) {
     Department department = new Department();
     department.setName(request.getName());
+    department.setHead(request.getHead());
+    department.setLocation(request.getLocation());
     Department saved = departmentRepository.save(department);
     publish("CREATED", saved);
     return saved;
@@ -54,6 +56,8 @@ public class DepartmentServiceImpl implements DepartmentService {
   public Department update(DepartmentUpdateRequest request) {
     Department department = getById(request.getId());
     department.setName(request.getName());
+    department.setHead(request.getHead());
+    department.setLocation(request.getLocation());
     Department saved = departmentRepository.save(department);
     publish("UPDATED", saved);
     return saved;
@@ -68,7 +72,12 @@ public class DepartmentServiceImpl implements DepartmentService {
 
   private void publish(String eventType, Department department) {
     DepartmentEvent event =
-        new DepartmentEvent(eventType, department.getId(), department.getName());
+        new DepartmentEvent(
+            eventType,
+            department.getId(),
+            department.getName(),
+            department.getHead(),
+            department.getLocation());
     kafkaTemplate
         .send(topic, String.valueOf(department.getId()), event)
         .whenComplete(

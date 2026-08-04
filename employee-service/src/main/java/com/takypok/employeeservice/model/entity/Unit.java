@@ -15,4 +15,6 @@ import lombok.Setter;
 public class Unit extends IdEntity {
   @NotBlank private String name;
   @NotNull private Long departmentId;
+  private String head;
+  private String location;
 }

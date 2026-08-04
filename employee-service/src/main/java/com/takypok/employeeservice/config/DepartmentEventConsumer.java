@@ -50,6 +50,8 @@ public class DepartmentEventConsumer {
               Department department = new Department();
               department.setId(event.getId());
               department.setName(event.getName());
+              department.setHead(event.getHead());
+              department.setLocation(event.getLocation());
               // `id` is set from the auth-service-assigned value, so repository.save() would
               // misread a genuinely new row as an update (same pattern as AccountEventConsumer).
               return exists
