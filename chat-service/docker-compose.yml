@@ -8,7 +8,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      AUTH_ISSUER_URI: ${AUTH_ISSUER_URI:-http://192.168.1.5:9000}
+      AUTH_ISSUER_URI: ${AUTH_ISSUER_URI:-http://auth-service:9000}
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
       DB_SCHEMA: chat

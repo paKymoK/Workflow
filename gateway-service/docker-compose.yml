@@ -9,7 +9,7 @@ services:
       - "8080:8080"
       - "8090:8090"
     environment:
-      AUTH_ISSUER_URI: ${AUTH_ISSUER_URI:-http://192.168.1.5:9000}
+      AUTH_ISSUER_URI: ${AUTH_ISSUER_URI:-http://auth-service:9000}
       EUREKA_URI: ${EUREKA_URI:-http://discovery-service:8761/eureka}
       SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
       SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT:-6379}
