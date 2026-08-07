@@ -39,8 +39,10 @@ export interface OrgChartNode {
   sub: string;
   name: string;
   title?: string | null;
-  isManager: boolean;
-  isSelf: boolean;
+  // Jackson serializes Lombok's `isManager`/`isSelf` boolean getters by stripping the "is"
+  // prefix, so the wire format is `manager`/`self`, not `isManager`/`isSelf`.
+  manager: boolean;
+  self: boolean;
 }
 
 export interface OrgChart {

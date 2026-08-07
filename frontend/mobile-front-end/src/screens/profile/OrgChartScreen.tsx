@@ -77,8 +77,8 @@ export default function OrgChartScreen() {
     orgChart?.chain.map((n) => ({
       name: n.name,
       role: n.title ?? '',
-      isSelf: n.isSelf,
-      isManager: n.isManager,
+      isSelf: n.self,
+      isManager: n.manager,
     })) ?? [];
   const reports = orgChart?.reports.map((n) => ({ name: n.name, role: n.title ?? '' })) ?? [];
 
