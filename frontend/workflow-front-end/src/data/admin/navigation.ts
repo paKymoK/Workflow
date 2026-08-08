@@ -21,13 +21,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { key: "/admin/training", label: "Training Materials" },
     ],
   },
-  {
-    key: "approvals", label: "Approvals", icon: "approvals",
-    children: [
-      { key: "/admin/leave-approvals", label: "Leave Requests" },
-      { key: "/admin/overtime-approvals", label: "Overtime Requests" },
-    ],
-  },
+  { key: "overtime-approvals", label: "Overtime Requests", icon: "approvals", path: "/admin/overtime-approvals" },
   { key: "surveys", label: "Survey Management", icon: "surveys", path: "/admin/surveys" },
   { key: "helpdesk", label: "IT Helpdesk", icon: "helpdesk", path: "/admin/helpdesk" },
   {
@@ -54,7 +48,6 @@ export const PAGE_TITLES: Record<string, string> = {
   "/admin/announcements": "Announcements / News",
   "/admin/documents": "Documents & Policies",
   "/admin/training": "Training Materials",
-  "/admin/leave-approvals": "Leave Requests",
   "/admin/overtime-approvals": "Overtime Requests",
   "/admin/surveys": "Survey Management",
   "/admin/helpdesk": "IT Helpdesk",

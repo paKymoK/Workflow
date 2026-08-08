@@ -7,18 +7,21 @@ import com.takypok.core.model.ResultMessage;
 import com.takypok.core.model.authentication.Roles;
 import com.takypok.core.util.AuthenticationUtil;
 import com.takypok.employeeservice.model.entity.EmployeeContract;
+import com.takypok.employeeservice.model.entity.EmployeeLeaveBalance;
 import com.takypok.employeeservice.model.entity.EmployeePersonal;
 import com.takypok.employeeservice.model.request.AvatarUpdateRequest;
 import com.takypok.employeeservice.model.request.ContractCreateRequest;
 import com.takypok.employeeservice.model.request.ContractUpdateRequest;
 import com.takypok.employeeservice.model.request.EmployeePersonalRequest;
 import com.takypok.employeeservice.model.request.FilterEmployeeRequest;
+import com.takypok.employeeservice.model.request.LeaveBalanceIncrementRequest;
 import com.takypok.employeeservice.model.request.ManagerUpdateRequest;
 import com.takypok.employeeservice.model.request.StatusUpdateRequest;
 import com.takypok.employeeservice.model.request.UpdateEmployeeRequest;
 import com.takypok.employeeservice.model.response.EmployeeResponse;
 import com.takypok.employeeservice.model.response.OrgChartResponse;
 import com.takypok.employeeservice.service.EmployeeContractService;
+import com.takypok.employeeservice.service.EmployeeLeaveBalanceService;
 import com.takypok.employeeservice.service.EmployeePersonalService;
 import com.takypok.employeeservice.service.EmployeeService;
 import jakarta.validation.Valid;
@@ -35,6 +38,7 @@ public class EmployeeController {
   private final EmployeeService employeeService;
   private final EmployeePersonalService employeePersonalService;
   private final EmployeeContractService employeeContractService;
+  private final EmployeeLeaveBalanceService employeeLeaveBalanceService;
 
   // No create endpoint — rows only come into existence via AccountEventConsumer; PUT below is
   // strictly update-only (404s if the shell doesn't exist yet).
@@ -115,6 +119,28 @@ public class EmployeeController {
         .map(ResultMessage::success);
   }
 
+  @GetMapping("/{sub}/leave-balance")
+  public Mono<ResultMessage<List<EmployeeLeaveBalance>>> getLeaveBalance(@PathVariable String sub) {
+    return employeeLeaveBalanceService.getBalances(sub).collectList().map(ResultMessage::success);
+  }
+
+  /**
+   * Called by workflow-service's Leave-approval postFunction, on behalf of the approving manager,
+   * when a leave request transitions to Approved. Not self-service — an employee never increments
+   * their own balance directly.
+   */
+  @PatchMapping("/{sub}/leave-balance/increment")
+  public Mono<ResultMessage<EmployeeLeaveBalance>> incrementLeaveBalance(
+      @PathVariable String sub,
+      @RequestBody @Valid LeaveBalanceIncrementRequest request,
+      Authentication authentication) {
+    return requireManagerOrAdmin(sub, authentication)
+        .then(
+            employeeLeaveBalanceService.incrementUsedDays(
+                sub, request.getLeaveType(), request.getDays()))
+        .map(ResultMessage::success);
+  }
+
   @GetMapping("/{sub}/contracts")
   public Mono<ResultMessage<List<EmployeeContract>>> getContracts(@PathVariable String sub) {
     return employeeContractService.getBySub(sub).map(ResultMessage::success);
@@ -158,5 +184,24 @@ public class EmployeeController {
     return Mono.error(
         new ApplicationException(
             Message.Application.ERROR, "Not allowed to update this employee's avatar"));
+  }
+
+  /** Leave-balance increments are driven by the target employee's live org-chart manager. */
+  private Mono<Void> requireManagerOrAdmin(String sub, Authentication authentication) {
+    if (AuthenticationUtil.getRoles(authentication).contains(Roles.ADMIN)) {
+      return Mono.empty();
+    }
+    return employeeService
+        .getBySub(sub)
+        .flatMap(
+            employee -> {
+              if (authentication.getName().equals(employee.getManagerSub())) {
+                return Mono.<Void>empty();
+              }
+              return Mono.<Void>error(
+                  new ApplicationException(
+                      Message.Application.ERROR,
+                      "Only this employee's manager can update their leave balance"));
+            });
   }
 }

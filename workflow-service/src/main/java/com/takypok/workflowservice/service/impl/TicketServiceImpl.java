@@ -67,8 +67,12 @@ public class TicketServiceImpl implements TicketService {
     Long projectId = request.getProjectId();
     String application = normalize(request.getApplication());
     // Plain requesters only see the tickets they reported; staff see everything (subject to
-    // the request's own filters).
-    String reporterSub = actor.hasAnyElevatedRole() ? null : actor.sub();
+    // the request's own filters). myTeamOnly is a separate, server-resolved scope (never
+    // client-supplied) for "tickets reported by my direct reports" — e.g. a manager reviewing
+    // their team's pending leave requests, who has no elevated role of their own.
+    boolean myTeamOnly = Boolean.TRUE.equals(request.getMyTeamOnly());
+    String reporterSub = !myTeamOnly && !actor.hasAnyElevatedRole() ? actor.sub() : null;
+    String reporterManagerSub = myTeamOnly ? actor.sub() : null;
     boolean sortByResolution = "resolutionPercent".equals(request.getSortBy());
     boolean sortAsc = "asc".equalsIgnoreCase(request.getSortDir());
     Flux<TicketSla> query =
@@ -82,6 +86,7 @@ public class TicketServiceImpl implements TicketService {
                 assigneeSub,
                 sortAsc,
                 reporterSub,
+                reporterManagerSub,
                 issueTypeId,
                 projectId,
                 application)
@@ -93,6 +98,7 @@ public class TicketServiceImpl implements TicketService {
                 priorityId,
                 assigneeSub,
                 reporterSub,
+                reporterManagerSub,
                 issueTypeId,
                 projectId,
                 application);
@@ -104,6 +110,7 @@ public class TicketServiceImpl implements TicketService {
                 priorityId,
                 assigneeSub,
                 reporterSub,
+                reporterManagerSub,
                 issueTypeId,
                 projectId,
                 application))

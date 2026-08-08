@@ -40,6 +40,13 @@ public class FilterTicketRequest {
   @Size(max = 255)
   private String application;
 
+  /**
+   * When true, scope results to tickets reported by the caller's direct reports (resolved
+   * server-side from {@code employee_directory.manager_sub}, never client-supplied) instead of the
+   * default "tickets I reported" scope non-elevated actors otherwise get.
+   */
+  private Boolean myTeamOnly;
+
   @Pattern(
       regexp = "^(resolutionPercent|id|status|issueType|project|priority|assignee|summary)?$",
       message = "sortBy must be a valid sort field or empty")

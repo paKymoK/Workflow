@@ -174,6 +174,7 @@ export interface TransitionRequest {
   transitionName: string;
   pendingReason?: PendingReason;
   pendingDescription?: string;
+  rejectionNote?: string;
 }
 
 export interface StatisticItem {

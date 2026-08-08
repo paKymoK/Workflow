@@ -13,6 +13,8 @@ export interface FilterTicketRequest {
     assigneeSub?: string;
     sortBy?: "resolutionPercent" | "id" | "status" | "issueType" | "project" | "priority" | "assignee" | "summary";
     sortDir?: "asc" | "desc";
+    /** Server-resolved scope: tickets reported by the caller's direct reports, e.g. leave requests pending my approval. */
+    myTeamOnly?: boolean;
 }
 
 export async function fetchTickets(params: FilterTicketRequest) {

@@ -15,11 +15,11 @@ import Callback from "../pages/Callback";
 import Settings from "../pages/Settings";
 import WorkflowDetail from "../pages/WorkflowDetail";
 import Diary from "../pages/Diary";
+import LeaveApprovals from "../pages/LeaveApprovals";
 import AdminDashboard from "../pages/admin/Dashboard";
 import AdminAnnouncements from "../pages/admin/Announcements";
 import AdminDocuments from "../pages/admin/Documents";
 import AdminTraining from "../pages/admin/Training";
-import AdminLeaveApprovals from "../pages/admin/LeaveApprovals";
 import AdminOvertime from "../pages/admin/Overtime";
 import AdminSurveys from "../pages/admin/Surveys";
 import AdminHelpdesk from "../pages/admin/Helpdesk";
@@ -49,6 +49,7 @@ export default function AppRouter() {
               <Route path="/dashboard/:id" element={<TicketDetail />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/workflow/:id" element={<WorkflowDetail />} />
+              <Route path="/leave-approvals" element={<LeaveApprovals />} />
             </Route>
 
             <Route path="/admin" element={<AdminGate />}>
@@ -57,7 +58,6 @@ export default function AppRouter() {
                 <Route path="announcements" element={<AdminAnnouncements />} />
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="training" element={<AdminTraining />} />
-                <Route path="leave-approvals" element={<AdminLeaveApprovals />} />
                 <Route path="overtime-approvals" element={<AdminOvertime />} />
                 <Route path="surveys" element={<AdminSurveys />} />
                 <Route path="helpdesk" element={<AdminHelpdesk />} />

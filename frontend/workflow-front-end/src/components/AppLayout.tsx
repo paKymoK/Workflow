@@ -5,7 +5,7 @@ import type { MenuProps } from "antd";
 import {
   HomeOutlined, DashboardOutlined, MessageOutlined, SettingOutlined,
   PlusOutlined, SunOutlined, MoonOutlined, BellOutlined, AppstoreOutlined, LogoutOutlined, DownOutlined,
-  UserOutlined,
+  UserOutlined, CheckSquareOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import ChatWidget from "./ChatWidget";
@@ -24,12 +24,14 @@ const ROUTE_TITLES: Record<string, string> = {
   "/dashboard": "Ticket Queue",
   "/messages": "Messages",
   "/settings": "Settings",
+  "/leave-approvals": "My Team's Leave",
 };
 
 const NAV_ITEMS: { path: string; icon: React.ReactNode; label: string }[] = [
   { path: "/", icon: <HomeOutlined />, label: "Home" },
   { path: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
   { path: "/messages", icon: <MessageOutlined />, label: "Messages" },
+  { path: "/leave-approvals", icon: <CheckSquareOutlined />, label: "My Team's Leave" },
   { path: "/settings", icon: <SettingOutlined />, label: "Settings" },
 ];
 
