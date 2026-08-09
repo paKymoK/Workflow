@@ -1,11 +1,16 @@
 package com.takypok.chatservice.service;
 
 import com.takypok.chatservice.model.AnswerResponse;
+import com.takypok.chatservice.model.assistant.AssistantTurn;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,7 +31,17 @@ public class AssistantService {
     return response.replaceAll("(?s)<think>.*?</think>", "").trim();
   }
 
-  public Mono<AnswerResponse> ask(String question) {
+  private List<Message> toSpringAiMessages(List<AssistantTurn> history) {
+    return history.stream()
+        .map(
+            turn ->
+                turn.getRole() == AssistantTurn.Role.USER
+                    ? (Message) new UserMessage(turn.getContent())
+                    : new AssistantMessage(turn.getContent()))
+        .toList();
+  }
+
+  public Mono<AnswerResponse> ask(String question, List<AssistantTurn> history) {
     return Mono.fromCallable(
             () -> {
               List<Document> docs =
@@ -39,7 +54,12 @@ public class AssistantService {
                       .distinct()
                       .toList();
 
-              var prompt = chatClient.prompt().user(question);
+              var prompt =
+                  chatClient
+                      .prompt()
+                      .options(OllamaChatOptions.builder().disableThinking().build())
+                      .messages(toSpringAiMessages(history))
+                      .user(question);
 
               String raw =
                   docs.isEmpty()
