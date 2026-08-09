@@ -3,6 +3,7 @@ package com.takypok.chatservice.controller;
 import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
 
 import com.takypok.chatservice.model.AnswerResponse;
+import com.takypok.chatservice.model.IngestRequest;
 import com.takypok.chatservice.model.IngestResponse;
 import com.takypok.chatservice.model.QuestionRequest;
 import com.takypok.chatservice.model.assistant.AssistantTurn;
@@ -10,6 +11,10 @@ import com.takypok.chatservice.model.response.AssistantSessionResponse;
 import com.takypok.chatservice.service.AssistantService;
 import com.takypok.chatservice.service.AssistantSessionService;
 import com.takypok.chatservice.service.IngestionService;
+import com.takypok.core.exception.ApplicationException;
+import com.takypok.core.model.Message;
+import com.takypok.core.model.authentication.Roles;
+import com.takypok.core.util.AuthenticationUtil;
 import java.time.ZonedDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -81,13 +86,26 @@ public class AssistantController {
   }
 
   @PostMapping("/ingest")
-  public Mono<ResponseEntity<IngestResponse>> ingest() {
-    return ingestionService.ingestFolder().map(ResponseEntity::ok);
+  public Mono<ResponseEntity<IngestResponse>> ingest(
+      @RequestBody(required = false) IngestRequest request, Authentication authentication) {
+    return requireAdmin(authentication)
+        .then(ingestionService.ingest(request))
+        .map(ResponseEntity::ok);
   }
 
   @GetMapping("/health")
   public Mono<ResponseEntity<String>> health() {
     return Mono.just(ResponseEntity.ok("OK"));
+  }
+
+  /**
+   * Ingest wipes/rewrites the shared knowledge base — restricted to admins, unlike ask/sessions.
+   */
+  private Mono<Void> requireAdmin(Authentication authentication) {
+    if (AuthenticationUtil.getRoles(authentication).contains(Roles.ADMIN)) {
+      return Mono.empty();
+    }
+    return Mono.error(new ApplicationException(Message.Application.ERROR, "Admin role required"));
   }
 
   private Mono<Void> persistTurns(

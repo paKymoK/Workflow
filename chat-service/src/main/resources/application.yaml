@@ -19,7 +19,7 @@ spring:
       - 'classpath:management.yml'
   ai:
     ollama:
-      base-url: http://localhost:11434
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         model: qwen3.5:4b
         options:
@@ -29,10 +29,15 @@ spring:
         model: bge-m3
     vectorstore:
       qdrant:
-        host: localhost
-        port: 6334
+        host: ${QDRANT_HOST:localhost}
+        port: ${QDRANT_PORT:6334}
         collection-name: crm_vi
         initialize-schema: ${ai.rag.enabled:false}
+
+ingest:
+  python:
+    bin: ${INGEST_PYTHON_BIN:python3}
+    script: ${INGEST_PYTHON_SCRIPT:scripts/ingest.py}
 
 ai:
   rag:

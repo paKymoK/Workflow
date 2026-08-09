@@ -20,6 +20,12 @@ services:
       JWK_URI: ${JWK_URI:-http://auth-service:9000/oauth2/jwks}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       MANAGEMENT_OTLP_TRACING_ENDPOINT: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:-http://tempo:4318/v1/traces}
+      # Qdrant/Ollama aren't part of this compose stack yet; defaults below only work if
+      # they're reachable at localhost from inside the container (e.g. host networking).
+      # Override with real hosts/URLs once those services are deployed.
+      QDRANT_HOST: ${QDRANT_HOST:-localhost}
+      QDRANT_PORT: ${QDRANT_PORT:-6334}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://localhost:11434}
     depends_on:
       discovery-service:
         condition: service_healthy

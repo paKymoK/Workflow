@@ -13,7 +13,16 @@ COPY chat-service chat-service
 RUN chmod +x gradlew
 RUN ./gradlew :chat-service:bootJar -x test --no-daemon
 
-FROM amazoncorretto:21-alpine
+# glibc base (not -alpine): unstructured/langchain pull in packages like numba/llvmlite that
+# only ship manylinux wheels — on musl (Alpine) pip has to compile them from source, which
+# fails without a build toolchain.
+FROM amazoncorretto:21
 WORKDIR /app
+
+# python3 runtime for IngestionService's docx/xlsx/pptx delegation (scripts/ingest.py)
+RUN dnf install -y python3 python3-pip && dnf clean all
+COPY chat-service/scripts scripts
+RUN pip3 install --no-cache-dir -r scripts/requirements.txt
+
 COPY --from=builder /app/chat-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
