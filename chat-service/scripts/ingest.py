@@ -19,6 +19,7 @@ QDRANT_URL      = os.getenv("QDRANT_URL",      "http://localhost:6334")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION","crm_vi")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL",  "http://localhost:11434")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL",  "bge-m3")
+DOCUMENT_APPLICATION = os.getenv("DOCUMENT_APPLICATION", "uncategorized")
 
 # ── Loaders ───────────────────────────────────────────────────────────────────
 LOADERS = {
@@ -57,6 +58,7 @@ def ingest(filepath: str):
     docs = loader_fn(filepath).load()
     for doc in docs:
         doc.metadata["source"] = Path(filepath).name
+        doc.metadata["application"] = DOCUMENT_APPLICATION
 
     # Split — mirrors Spring AI TokenTextSplitter(400, 60, 5, 10000, true)
     chunks = splitter.split_documents(docs)

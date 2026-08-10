@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -75,77 +76,142 @@ public class IngestionService {
   private static final Set<String> PYTHON_EXTENSIONS = Set.of(".docx", ".xlsx", ".pptx");
   private static final Set<String> JAVA_EXTENSIONS = Set.of(".pdf", ".txt", ".md");
 
+  // Bucket for files sitting directly under documents/ with no application subfolder.
+  private static final String UNCATEGORIZED = "uncategorized";
+
   /**
-   * Ingests either a single file (incremental — replaces just that file's vectors) or, when no
-   * fileName is given, the whole documents folder (full wipe-and-reload, unchanged behavior).
+   * Ingests, in order of precedence: a single file (incremental — replaces just that file's
+   * vectors), an entire application's folder (wipe-and-reload of just that application), or, when
+   * neither is given, the whole documents folder (full wipe-and-reload of every application).
    */
   public Mono<IngestResponse> ingest(IngestRequest request) {
     String targetFileName =
         request == null ? null : StringUtils.trimWhitespace(request.getFileName());
+    String application =
+        request == null ? null : StringUtils.trimWhitespace(request.getApplication());
 
     if (StringUtils.hasText(targetFileName)) {
-      return ingestSingleFile(targetFileName);
+      return ingestSingleFile(targetFileName, application);
+    }
+    if (StringUtils.hasText(application)) {
+      return ingestApplicationFolder(application);
     }
     return ingestFolder();
+  }
+
+  /** Lists the applications available to choose from — the top-level folders under documents/. */
+  public Mono<List<String>> listApplications() {
+    return Mono.fromCallable(
+            () -> {
+              File[] dirs = documentsRoot().listFiles(File::isDirectory);
+              if (dirs == null) {
+                return List.<String>of();
+              }
+              return Arrays.stream(dirs).map(File::getName).sorted().toList();
+            })
+        .subscribeOn(Schedulers.boundedElastic());
   }
 
   private Mono<IngestResponse> ingestFolder() {
     return Mono.fromCallable(
             () -> {
               nukeCollection();
-
-              File folder = new ClassPathResource("documents").getFile();
-
-              List<String> ingested = new ArrayList<>();
-              List<String> duplicates = new ArrayList<>();
-              List<String> failed = new ArrayList<>();
-              Map<String, Integer> chunkCounts = new HashMap<>();
-              Map<String, String> errors = new HashMap<>();
-              Set<String> seenNames = new HashSet<>();
-
-              try (Stream<Path> paths = Files.walk(folder.toPath())) {
-                paths
-                    .filter(Files::isRegularFile)
-                    .forEach(
-                        path -> {
-                          String fileName = path.getFileName().toString();
-
-                          if (!seenNames.add(fileName)) {
-                            log.warn("Duplicate filename skipped: {}", fileName);
-                            duplicates.add(fileName);
-                            return;
-                          }
-
-                          try {
-                            int chunks = ingestFile(path.toFile());
-                            ingested.add(fileName);
-                            chunkCounts.put(fileName, chunks);
-                          } catch (Exception e) {
-                            log.error("Failed to ingest {}: {}", fileName, e.getMessage());
-                            failed.add(fileName);
-                            errors.put(fileName, e.getMessage());
-                          }
-                        });
-              }
-
-              return IngestResponse.builder()
-                  .ingested(ingested)
-                  .duplicates(duplicates)
-                  .failed(failed)
-                  .chunkCounts(chunkCounts)
-                  .errors(errors)
-                  .build();
+              File root = documentsRoot();
+              return walkAndIngest(root, root);
             })
         .subscribeOn(Schedulers.boundedElastic());
   }
 
-  private Mono<IngestResponse> ingestSingleFile(String targetFileName) {
+  private Mono<IngestResponse> ingestApplicationFolder(String application) {
     return Mono.fromCallable(
             () -> {
-              File folder = new ClassPathResource("documents").getFile();
+              File root = documentsRoot();
+              File appDir = new File(root, application);
+              if (!appDir.isDirectory()) {
+                return IngestResponse.builder()
+                    .ingested(List.of())
+                    .duplicates(List.of())
+                    .failed(List.of(application))
+                    .chunkCounts(Map.of())
+                    .errors(Map.of(application, "Application folder not found: " + application))
+                    .build();
+              }
+
+              deleteByApplication(application);
+              return walkAndIngest(root, appDir);
+            })
+        .subscribeOn(Schedulers.boundedElastic());
+  }
+
+  private IngestResponse walkAndIngest(File root, File startDir) throws IOException {
+    List<String> ingested = new ArrayList<>();
+    List<String> duplicates = new ArrayList<>();
+    List<String> failed = new ArrayList<>();
+    Map<String, Integer> chunkCounts = new HashMap<>();
+    Map<String, String> errors = new HashMap<>();
+    Set<String> seenKeys = new HashSet<>();
+
+    try (Stream<Path> paths = Files.walk(startDir.toPath())) {
+      paths
+          .filter(Files::isRegularFile)
+          .forEach(
+              path -> {
+                String fileName = path.getFileName().toString();
+                String application = resolveApplication(root, path);
+                String key = application + "/" + fileName;
+
+                if (!seenKeys.add(key)) {
+                  log.warn("Duplicate file skipped: {}", key);
+                  duplicates.add(key);
+                  return;
+                }
+
+                try {
+                  int chunks = ingestFile(path.toFile(), application);
+                  ingested.add(key);
+                  chunkCounts.put(key, chunks);
+                } catch (Exception e) {
+                  log.error("Failed to ingest {}: {}", key, e.getMessage());
+                  failed.add(key);
+                  errors.put(key, e.getMessage());
+                }
+              });
+    }
+
+    return IngestResponse.builder()
+        .ingested(ingested)
+        .duplicates(duplicates)
+        .failed(failed)
+        .chunkCounts(chunkCounts)
+        .errors(errors)
+        .build();
+  }
+
+  private Mono<IngestResponse> ingestSingleFile(
+      String targetFileName, String requestedApplication) {
+    return Mono.fromCallable(
+            () -> {
+              File root = documentsRoot();
+              File searchRoot =
+                  StringUtils.hasText(requestedApplication)
+                      ? new File(root, requestedApplication)
+                      : root;
+
+              if (!searchRoot.isDirectory()) {
+                return IngestResponse.builder()
+                    .ingested(List.of())
+                    .duplicates(List.of())
+                    .failed(List.of(targetFileName))
+                    .chunkCounts(Map.of())
+                    .errors(
+                        Map.of(
+                            targetFileName,
+                            "Application folder not found: " + requestedApplication))
+                    .build();
+              }
 
               Optional<Path> match;
-              try (Stream<Path> paths = Files.walk(folder.toPath())) {
+              try (Stream<Path> paths = Files.walk(searchRoot.toPath())) {
                 match =
                     paths
                         .filter(Files::isRegularFile)
@@ -163,39 +229,68 @@ public class IngestionService {
                     .build();
               }
 
+              String application = resolveApplication(root, match.get());
+              String key = application + "/" + targetFileName;
+
               // Replace semantics: drop any vectors previously ingested for this file before
               // re-adding, so re-ingesting a single file stays idempotent without a full wipe.
-              deleteBySource(targetFileName);
+              deleteBySource(targetFileName, application);
 
               try {
-                int chunks = ingestFile(match.get().toFile());
+                int chunks = ingestFile(match.get().toFile(), application);
                 return IngestResponse.builder()
-                    .ingested(List.of(targetFileName))
+                    .ingested(List.of(key))
                     .duplicates(List.of())
                     .failed(List.of())
-                    .chunkCounts(Map.of(targetFileName, chunks))
+                    .chunkCounts(Map.of(key, chunks))
                     .errors(Map.of())
                     .build();
               } catch (Exception e) {
-                log.error("Failed to ingest {}: {}", targetFileName, e.getMessage());
+                log.error("Failed to ingest {}: {}", key, e.getMessage());
                 return IngestResponse.builder()
                     .ingested(List.of())
                     .duplicates(List.of())
-                    .failed(List.of(targetFileName))
+                    .failed(List.of(key))
                     .chunkCounts(Map.of())
-                    .errors(Map.of(targetFileName, e.getMessage()))
+                    .errors(Map.of(key, e.getMessage()))
                     .build();
               }
             })
         .subscribeOn(Schedulers.boundedElastic());
   }
 
-  private void deleteBySource(String fileName) {
+  /**
+   * application = the top-level folder a file lives under; UNCATEGORIZED if directly in documents/.
+   */
+  private String resolveApplication(File root, Path filePath) {
+    Path relative = root.toPath().relativize(filePath);
+    return relative.getNameCount() > 1 ? relative.getName(0).toString() : UNCATEGORIZED;
+  }
+
+  private File documentsRoot() throws IOException {
+    return new ClassPathResource("documents").getFile();
+  }
+
+  private void deleteBySource(String fileName, String application) {
     try {
-      vectorStore.delete(filterBuilder.eq("source", fileName).build());
-      log.info("Cleared existing vectors for source: {}", fileName);
+      vectorStore.delete(
+          filterBuilder
+              .and(
+                  filterBuilder.eq("source", fileName),
+                  filterBuilder.eq("application", application))
+              .build());
+      log.info("Cleared existing vectors for {}/{}", application, fileName);
     } catch (Exception e) {
-      log.warn("No existing vectors to clear for source {}: {}", fileName, e.getMessage());
+      log.warn("No existing vectors to clear for {}/{}: {}", application, fileName, e.getMessage());
+    }
+  }
+
+  private void deleteByApplication(String application) {
+    try {
+      vectorStore.delete(filterBuilder.eq("application", application).build());
+      log.info("Cleared existing vectors for application: {}", application);
+    } catch (Exception e) {
+      log.warn("No existing vectors to clear for application {}: {}", application, e.getMessage());
     }
   }
 
@@ -208,13 +303,13 @@ public class IngestionService {
     }
   }
 
-  private int ingestFile(File file) throws IOException, InterruptedException {
+  private int ingestFile(File file, String application) throws IOException, InterruptedException {
     String ext = getExtension(file.getName());
 
     if (PYTHON_EXTENSIONS.contains(ext)) {
-      return ingestViaPython(file);
+      return ingestViaPython(file, application);
     } else if (JAVA_EXTENSIONS.contains(ext)) {
-      return ingestViaJava(file);
+      return ingestViaJava(file, application);
     } else {
       log.warn("Skipping unsupported file type: {}", file.getName());
       throw new IllegalArgumentException("Unsupported file type: " + ext);
@@ -222,8 +317,9 @@ public class IngestionService {
   }
 
   // ── Python path: docx / xlsx / pptx ─────────────────────────────────────
-  private int ingestViaPython(File file) throws IOException, InterruptedException {
-    log.info("Delegating to Python: {}", file.getName());
+  private int ingestViaPython(File file, String application)
+      throws IOException, InterruptedException {
+    log.info("Delegating to Python: {}/{}", application, file.getName());
 
     ProcessBuilder pb = new ProcessBuilder(pythonBin, pythonScript, file.getAbsolutePath());
     pb.redirectErrorStream(false);
@@ -234,6 +330,7 @@ public class IngestionService {
     env.put("QDRANT_COLLECTION", collectionName);
     env.put("OLLAMA_BASE_URL", ollamaBaseUrl);
     env.put("EMBEDDING_MODEL", embeddingModel);
+    env.put("DOCUMENT_APPLICATION", application);
 
     Process process = pb.start();
     String stdout = new String(process.getInputStream().readAllBytes());
@@ -263,8 +360,8 @@ public class IngestionService {
   }
 
   // ── Java path: pdf / txt / md ────────────────────────────────────────────
-  private int ingestViaJava(File file) throws IOException {
-    log.info("Ingesting via Java: {}", file.getName());
+  private int ingestViaJava(File file, String application) throws IOException {
+    log.info("Ingesting via Java: {}/{}", application, file.getName());
     List<Document> docs;
 
     if (file.getName().endsWith(".pdf")) {
@@ -274,10 +371,14 @@ public class IngestionService {
       docs = List.of(new Document(content, Map.of("source", file.getName())));
     }
 
-    docs.forEach(d -> d.getMetadata().put("source", file.getName()));
+    docs.forEach(
+        d -> {
+          d.getMetadata().put("source", file.getName());
+          d.getMetadata().put("application", application);
+        });
     List<Document> chunks = splitter.apply(docs);
     vectorStore.add(chunks);
-    log.info("Added {} chunks from {}", chunks.size(), file.getName());
+    log.info("Added {} chunks from {}/{}", chunks.size(), application, file.getName());
     return chunks.size();
   }
 

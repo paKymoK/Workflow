@@ -4,13 +4,25 @@ import {
   createSession,
   deleteSession,
   getSessionMessages,
+  listApplications,
   listSessions,
 } from "../api/chatApi";
 
 export const assistantKeys = {
   sessions: ["assistant", "sessions"] as const,
   messages: (sessionId: string) => ["assistant", "sessions", sessionId, "messages"] as const,
+  applications: ["assistant", "applications"] as const,
 };
+
+/** Applications available to scope a new chat session to. */
+export function useAssistantApplications(enabled = true) {
+  return useQuery({
+    queryKey: assistantKeys.applications,
+    queryFn: listApplications,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 /** List of the current user's AI assistant chat threads, most-recent-first. */
 export function useAssistantSessions(enabled = true) {
@@ -34,7 +46,7 @@ export function useAssistantMessages(sessionId: string | null) {
 export function useCreateAssistantSession() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createSession,
+    mutationFn: (application: string) => createSession(application),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assistantKeys.sessions, exact: true });
     },

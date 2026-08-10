@@ -7,11 +7,14 @@ import {
   HistoryOutlined,
   PlusOutlined,
   DeleteOutlined,
+  ExpandOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { AssistantTurn } from "../api/chatApi";
 import {
   useAskInSession,
+  useAssistantApplications,
   useAssistantMessages,
   useAssistantSessions,
   useCreateAssistantSession,
@@ -23,8 +26,16 @@ interface Message {
   text: string;
 }
 
-const GREETING: Message = { role: "ai", text: "Hello! Ask me anything about your workflow." };
 const ACTIVE_SESSION_KEY = "assistant.activeSessionId";
+
+function greetingFor(application: string | null): Message {
+  return {
+    role: "ai",
+    text: application
+      ? `Hello! Ask me anything about ${application}.`
+      : "Hello! Ask me anything.",
+  };
+}
 
 const BUTTON_SIZE = 48;
 const PANEL_WIDTH  = 360;
@@ -42,13 +53,19 @@ function turnToMessage(turn: AssistantTurn): Message {
 }
 
 export default function ChatWidget() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [open,     setOpen]     = useState(false);
-  const [messages, setMessages] = useState<Message[]>([GREETING]);
+  const [messages, setMessages] = useState<Message[]>([greetingFor(null)]);
   const [input,    setInput]    = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() =>
     localStorage.getItem(ACTIVE_SESSION_KEY),
   );
+  // Known only once a session is picked/selected this visit — a page-reload restoring a
+  // sessionId from localStorage won't have it until the sessions list loads, which is fine
+  // since the greeting only shows for sessions with zero messages.
+  const [activeApplication, setActiveApplication] = useState<string | null>(null);
   const bottomRef               = useRef<HTMLDivElement>(null);
 
   // null = default CSS bottom-right; after first drag, top-left of button in viewport px
@@ -59,6 +76,7 @@ export default function ChatWidget() {
   const dragOffset = useRef({ x: 0, y: 0 });
 
   const sessionsQuery = useAssistantSessions(open);
+  const applicationsQuery = useAssistantApplications(open);
   const messagesQuery = useAssistantMessages(activeSessionId);
   const createSession = useCreateAssistantSession();
   const deleteSession = useDeleteAssistantSession();
@@ -68,27 +86,21 @@ export default function ChatWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // No session yet (first-ever open, or the stored one expired) — mint one as soon as the
-  // widget is opened, so there's always somewhere for the first question to land.
-  useEffect(() => {
-    if (!open || activeSessionId || createSession.isPending) return;
-    createSession.mutate(undefined, { onSuccess: (session) => selectSession(session.id) });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, activeSessionId]);
-
   // The two reconciliations below react to query results rather than to props/state this
   // component owns, so they're done as guarded render-time state adjustments (comparing
   // against the previous value in a ref) instead of useEffect — see
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  /* eslint-disable react-hooks/refs -- intentional render-time ref reconciliation per the doc above */
 
   // The stored sessionId no longer exists server-side (Redis TTL expired) — drop it so the
-  // "mint a session" effect above creates a fresh one.
+  // render below falls back to the application picker instead of a dead session.
   const prevMessagesErrorRef = useRef(false);
   if (messagesQuery.isError !== prevMessagesErrorRef.current) {
     prevMessagesErrorRef.current = messagesQuery.isError;
     if (messagesQuery.isError && activeSessionId) {
       localStorage.removeItem(ACTIVE_SESSION_KEY);
       setActiveSessionId(null);
+      setActiveApplication(null);
     }
   }
 
@@ -99,19 +111,32 @@ export default function ChatWidget() {
     prevMessagesDataRef.current = messagesQuery.data;
     if (messagesQuery.data) {
       setMessages(
-        messagesQuery.data.length > 0 ? messagesQuery.data.map(turnToMessage) : [GREETING],
+        messagesQuery.data.length > 0
+          ? messagesQuery.data.map(turnToMessage)
+          : [greetingFor(activeApplication)],
       );
     }
   }
+  /* eslint-enable react-hooks/refs */
 
-  function selectSession(id: string) {
+  function selectSession(id: string, application: string) {
     setActiveSessionId(id);
+    setActiveApplication(application);
     localStorage.setItem(ACTIVE_SESSION_KEY, id);
     setHistoryOpen(false);
   }
 
   function startNewChat() {
-    createSession.mutate(undefined, { onSuccess: (session) => selectSession(session.id) });
+    setActiveSessionId(null);
+    setActiveApplication(null);
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
+    setHistoryOpen(false);
+  }
+
+  function chooseApplication(application: string) {
+    createSession.mutate(application, {
+      onSuccess: (session) => selectSession(session.id, session.application),
+    });
   }
 
   function removeSession(id: string, e: React.MouseEvent) {
@@ -121,6 +146,7 @@ export default function ChatWidget() {
         if (id === activeSessionId) {
           localStorage.removeItem(ACTIVE_SESSION_KEY);
           setActiveSessionId(null);
+          setActiveApplication(null);
         }
       },
     });
@@ -209,6 +235,9 @@ export default function ChatWidget() {
     return { position: "fixed", top: py, left: px, width: PANEL_WIDTH, height: PANEL_HEIGHT };
   })();
 
+  // The full-screen page already shows the same assistant — don't double it up.
+  if (location.pathname === "/assistant") return null;
+
   return (
     <>
       {/* ── Chat panel ─────────────────────────────────────────── */}
@@ -246,6 +275,17 @@ export default function ChatWidget() {
               <Button
                 type="text"
                 size="small"
+                icon={<ExpandOutlined />}
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/assistant");
+                }}
+                title="Open full screen"
+                className="!text-[var(--text-faint)]"
+              />
+              <Button
+                type="text"
+                size="small"
                 icon={<CloseOutlined />}
                 onClick={() => setOpen(false)}
                 className="!text-[var(--text-faint)]"
@@ -264,7 +304,7 @@ export default function ChatWidget() {
               {sessionsQuery.data?.map((s) => (
                 <div
                   key={s.id}
-                  onClick={() => selectSession(s.id)}
+                  onClick={() => selectSession(s.id, s.application)}
                   className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer ${
                     s.id === activeSessionId
                       ? "bg-[var(--hover)]"
@@ -276,7 +316,7 @@ export default function ChatWidget() {
                       {s.title}
                     </div>
                     <div className="text-[10px] text-[var(--text-faint)]">
-                      {dayjs(s.updatedAt).format("MMM D, HH:mm")}
+                      {s.application} · {dayjs(s.updatedAt).format("MMM D, HH:mm")}
                     </div>
                   </div>
                   <button
@@ -287,6 +327,31 @@ export default function ChatWidget() {
                     <DeleteOutlined />
                   </button>
                 </div>
+              ))}
+            </div>
+          ) : !activeSessionId ? (
+            /* ── Application picker — required before a session can be created ──── */
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+              <div className="text-xs text-[var(--text-faint)] mb-1">
+                Choose an application to ask about:
+              </div>
+              {applicationsQuery.isLoading && (
+                <div className="text-xs text-[var(--text-faint)] text-center py-6">Loading…</div>
+              )}
+              {applicationsQuery.data?.length === 0 && (
+                <div className="text-xs text-[var(--text-faint)] text-center py-6">
+                  No applications available
+                </div>
+              )}
+              {applicationsQuery.data?.map((app) => (
+                <button
+                  key={app}
+                  onClick={() => chooseApplication(app)}
+                  disabled={createSession.isPending}
+                  className="text-left px-3 py-2.5 rounded-lg text-xs font-medium text-[var(--text)] bg-[var(--hover)] hover:bg-[var(--accent)] hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {app}
+                </button>
               ))}
             </div>
           ) : (

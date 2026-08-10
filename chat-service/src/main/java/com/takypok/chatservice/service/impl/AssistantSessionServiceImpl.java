@@ -44,13 +44,15 @@ public class AssistantSessionServiceImpl implements AssistantSessionService {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Mono<AssistantSessionResponse> createSession(String sub) {
+  public Mono<AssistantSessionResponse> createSession(String sub, String application) {
     String id = UUID.randomUUID().toString();
     ZonedDateTime now = ZonedDateTime.now();
     Map<String, String> meta =
         Map.of(
             "ownerSub",
             sub,
+            "application",
+            application,
             "title",
             DEFAULT_TITLE,
             "createdAt",
@@ -62,7 +64,12 @@ public class AssistantSessionServiceImpl implements AssistantSessionService {
         .putAll(metaKey(id), meta)
         .then(redisTemplate.expire(metaKey(id), SESSION_TTL))
         .then(redisTemplate.opsForZSet().add(indexKey(sub), id, now.toInstant().toEpochMilli()))
-        .thenReturn(new AssistantSessionResponse(id, DEFAULT_TITLE, now, now));
+        .thenReturn(new AssistantSessionResponse(id, application, DEFAULT_TITLE, now, now));
+  }
+
+  @Override
+  public Mono<String> getApplication(String sessionId, String sub) {
+    return requireOwnedSession(sessionId, sub).map(meta -> meta.get("application"));
   }
 
   @Override
@@ -175,6 +182,7 @@ public class AssistantSessionServiceImpl implements AssistantSessionService {
   private AssistantSessionResponse toResponse(String id, Map<String, String> meta) {
     return new AssistantSessionResponse(
         id,
+        meta.get("application"),
         meta.get("title"),
         ZonedDateTime.parse(meta.get("createdAt")),
         ZonedDateTime.parse(meta.get("updatedAt")));

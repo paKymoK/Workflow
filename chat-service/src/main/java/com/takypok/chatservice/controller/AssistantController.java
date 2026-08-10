@@ -3,6 +3,7 @@ package com.takypok.chatservice.controller;
 import static com.takypok.core.util.AuthenticationUtil.getUserInfo;
 
 import com.takypok.chatservice.model.AnswerResponse;
+import com.takypok.chatservice.model.CreateSessionRequest;
 import com.takypok.chatservice.model.IngestRequest;
 import com.takypok.chatservice.model.IngestResponse;
 import com.takypok.chatservice.model.QuestionRequest;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -40,10 +42,20 @@ public class AssistantController {
 
   @PostMapping("/sessions")
   public Mono<ResponseEntity<AssistantSessionResponse>> createSession(
-      Authentication authentication) {
-    return assistantSessionService
-        .createSession(getUserInfo(authentication).getSub())
-        .map(ResponseEntity::ok);
+      @RequestBody CreateSessionRequest request, Authentication authentication) {
+    String application =
+        request == null ? null : StringUtils.trimWhitespace(request.getApplication());
+
+    return validateApplication(application)
+        .then(
+            assistantSessionService
+                .createSession(getUserInfo(authentication).getSub(), application)
+                .map(ResponseEntity::ok));
+  }
+
+  @GetMapping("/applications")
+  public Mono<ResponseEntity<List<String>>> listApplications() {
+    return ingestionService.listApplications().map(ResponseEntity::ok);
   }
 
   @GetMapping("/sessions")
@@ -71,8 +83,12 @@ public class AssistantController {
     String question = request.getQuestion();
 
     return assistantSessionService
-        .loadRecentTurns(sessionId, sub, PROMPT_WINDOW_MESSAGES)
-        .flatMap(history -> assistantService.ask(question, history))
+        .getApplication(sessionId, sub)
+        .flatMap(
+            application ->
+                assistantSessionService
+                    .loadRecentTurns(sessionId, sub, PROMPT_WINDOW_MESSAGES)
+                    .flatMap(history -> assistantService.ask(question, history, application)))
         .flatMap(answer -> persistTurns(sessionId, sub, question, answer).thenReturn(answer))
         .map(ResponseEntity::ok);
   }
@@ -106,6 +122,22 @@ public class AssistantController {
       return Mono.empty();
     }
     return Mono.error(new ApplicationException(Message.Application.ERROR, "Admin role required"));
+  }
+
+  private Mono<Void> validateApplication(String application) {
+    if (!StringUtils.hasText(application)) {
+      return Mono.error(
+          new ApplicationException(Message.Application.ERROR, "Application is required"));
+    }
+    return ingestionService
+        .listApplications()
+        .flatMap(
+            applications ->
+                applications.contains(application)
+                    ? Mono.<Void>empty()
+                    : Mono.error(
+                        new ApplicationException(
+                            Message.Application.ERROR, "Unknown application: " + application)));
   }
 
   private Mono<Void> persistTurns(

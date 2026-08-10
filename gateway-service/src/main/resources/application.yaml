@@ -78,6 +78,15 @@ spring:
                 - Path=/chat-service/web-socket/**
               filters:
                 - RewritePath=/chat-service/(?<segment>.*), /${segment}
+            - id: chatbot-ingest
+              uri: lb://chat-service
+              predicates:
+                - Path=/chat-service/assist/ingest
+              filters:
+                - RewritePath=/chat-service/(?<segment>.*), /${segment}
+              metadata:
+                response-timeout: 300000
+                connect-timeout: 10000
             - id: chatbot
               uri: lb://chat-service
               predicates:

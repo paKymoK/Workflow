@@ -13,6 +13,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -25,6 +26,7 @@ public class AssistantService {
 
   private final ChatClient chatClient;
   private final VectorStore vectorStore;
+  private final FilterExpressionBuilder filterBuilder = new FilterExpressionBuilder();
 
   private String stripThinkingTokens(String response) {
     if (response == null) return "";
@@ -41,12 +43,19 @@ public class AssistantService {
         .toList();
   }
 
-  public Mono<AnswerResponse> ask(String question, List<AssistantTurn> history) {
+  public Mono<AnswerResponse> ask(
+      String question, List<AssistantTurn> history, String application) {
     return Mono.fromCallable(
             () -> {
+              var filterExpression = filterBuilder.eq("application", application).build();
+
               List<Document> docs =
                   vectorStore.similaritySearch(
-                      SearchRequest.builder().query(question).topK(4).build());
+                      SearchRequest.builder()
+                          .query(question)
+                          .topK(4)
+                          .filterExpression(filterExpression)
+                          .build());
 
               List<String> sources =
                   docs.stream()
@@ -68,7 +77,11 @@ public class AssistantService {
                           .advisors(
                               QuestionAnswerAdvisor.builder(vectorStore)
                                   .searchRequest(
-                                      SearchRequest.builder().query(question).topK(4).build())
+                                      SearchRequest.builder()
+                                          .query(question)
+                                          .topK(4)
+                                          .filterExpression(filterExpression)
+                                          .build())
                                   .build())
                           .call()
                           .content();

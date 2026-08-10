@@ -7,9 +7,12 @@ import reactor.core.publisher.Mono;
 
 public interface AssistantSessionService {
 
-  Mono<AssistantSessionResponse> createSession(String sub);
+  Mono<AssistantSessionResponse> createSession(String sub, String application);
 
   Mono<List<AssistantSessionResponse>> listSessions(String sub);
+
+  /** The application a session was scoped to at creation — used to filter retrieval on ask. */
+  Mono<String> getApplication(String sessionId, String sub);
 
   Mono<List<AssistantTurn>> loadTurns(String sessionId, String sub);
 

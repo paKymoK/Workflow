@@ -11,6 +11,7 @@ export interface AssistantTurn {
 
 export interface AssistantSession {
   id: string;
+  application: string;
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -21,8 +22,15 @@ export interface AskResult {
   sources: string[];
 }
 
-export async function createSession(): Promise<AssistantSession> {
-  const { data } = await api.post<AssistantSession>("/chat-service/assist/sessions");
+export async function listApplications(): Promise<string[]> {
+  const { data } = await api.get<string[]>("/chat-service/assist/applications");
+  return data;
+}
+
+export async function createSession(application: string): Promise<AssistantSession> {
+  const { data } = await api.post<AssistantSession>("/chat-service/assist/sessions", {
+    application,
+  });
   return data;
 }
 

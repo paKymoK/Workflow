@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AssistantSessionResponse {
   private String id;
+  private String application;
   private String title;
   private ZonedDateTime createdAt;
   private ZonedDateTime updatedAt;
