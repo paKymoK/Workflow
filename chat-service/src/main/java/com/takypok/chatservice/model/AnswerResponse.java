@@ -9,4 +9,5 @@ import lombok.Data;
 public class AnswerResponse {
   private String answer;
   private List<String> sources;
+  private List<ImageRef> images;
 }

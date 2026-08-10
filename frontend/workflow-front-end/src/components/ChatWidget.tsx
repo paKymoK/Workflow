@@ -11,7 +11,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
-import type { AssistantTurn } from "../api/chatApi";
+import type { AssistantImageRef, AssistantTurn } from "../api/chatApi";
 import {
   useAskInSession,
   useAssistantApplications,
@@ -24,6 +24,7 @@ import {
 interface Message {
   role: "user" | "ai";
   text: string;
+  images?: AssistantImageRef[] | null;
 }
 
 const ACTIVE_SESSION_KEY = "assistant.activeSessionId";
@@ -49,7 +50,7 @@ const dotDelays = [
 ] as const;
 
 function turnToMessage(turn: AssistantTurn): Message {
-  return { role: turn.role === "USER" ? "user" : "ai", text: turn.content };
+  return { role: turn.role === "USER" ? "user" : "ai", text: turn.content, images: turn.images };
 }
 
 export default function ChatWidget() {
@@ -161,7 +162,10 @@ export default function ChatWidget() {
       { sessionId: activeSessionId, question },
       {
         onSuccess: (result) =>
-          setMessages((prev) => [...prev, { role: "ai", text: result.answer }]),
+          setMessages((prev) => [
+            ...prev,
+            { role: "ai", text: result.answer, images: result.images },
+          ]),
         onError: () =>
           setMessages((prev) => [
             ...prev,
@@ -361,7 +365,7 @@ export default function ChatWidget() {
                 {messages.map((msg, i) => (
                   <div
                     key={i}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex flex-col gap-1.5 ${msg.role === "user" ? "items-end" : "items-start"}`}
                   >
                     <div
                       className={`max-w-[80%] px-3 py-2 rounded-[13px] text-xs leading-[1.6] whitespace-pre-wrap break-words ${
@@ -372,6 +376,19 @@ export default function ChatWidget() {
                     >
                       {msg.text}
                     </div>
+                    {!!msg.images?.length && (
+                      <div className="max-w-[80%] flex flex-col gap-1.5">
+                        {msg.images.map((img) => (
+                          <img
+                            key={img.url}
+                            src={img.url}
+                            alt={img.alt}
+                            loading="lazy"
+                            className="max-w-full max-h-48 rounded-[10px] border border-[var(--border)] object-contain"
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
 

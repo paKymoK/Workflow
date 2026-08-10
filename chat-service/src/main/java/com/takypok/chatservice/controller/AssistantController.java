@@ -143,12 +143,13 @@ public class AssistantController {
   private Mono<Void> persistTurns(
       String sessionId, String sub, String question, AnswerResponse answer) {
     AssistantTurn userTurn =
-        new AssistantTurn(AssistantTurn.Role.USER, question, null, ZonedDateTime.now());
+        new AssistantTurn(AssistantTurn.Role.USER, question, null, null, ZonedDateTime.now());
     AssistantTurn assistantTurn =
         new AssistantTurn(
             AssistantTurn.Role.ASSISTANT,
             answer.getAnswer(),
             answer.getSources(),
+            answer.getImages(),
             ZonedDateTime.now());
 
     return assistantSessionService

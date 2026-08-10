@@ -2,10 +2,16 @@ import { api } from "@takypok/shared";
 
 export type AssistantRole = "USER" | "ASSISTANT";
 
+export interface AssistantImageRef {
+  url: string;
+  alt: string;
+}
+
 export interface AssistantTurn {
   role: AssistantRole;
   content: string;
   sources: string[] | null;
+  images: AssistantImageRef[] | null;
   ts: string;
 }
 
@@ -20,6 +26,7 @@ export interface AssistantSession {
 export interface AskResult {
   answer: string;
   sources: string[];
+  images: AssistantImageRef[] | null;
 }
 
 export async function listApplications(): Promise<string[]> {
