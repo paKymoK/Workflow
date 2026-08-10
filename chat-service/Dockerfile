@@ -18,7 +18,11 @@ FROM amazoncorretto:21
 WORKDIR /app
 
 # python3 runtime for IngestionService's docx/xlsx/pptx delegation (scripts/ingest.py)
-RUN dnf install -y python3 python3-pip && dnf clean all
+# --setopt=sslverify=false: on private networks that TLS-inspect traffic, dnf's
+# mirrorlist fetch against cdn.amazonlinux.com fails PKIX validation because we
+# don't have that network's inspecting CA to import. Scoped to this one install;
+# pip/PyPI below isn't affected since that CDN isn't behind the same inspection.
+RUN dnf install -y --setopt=sslverify=false python3 python3-pip && dnf clean all
 COPY chat-service/scripts scripts
 RUN pip3 install --no-cache-dir -r scripts/requirements.txt
 
