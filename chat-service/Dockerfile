@@ -1,7 +1,6 @@
-FROM amazoncorretto:21-alpine AS builder
+FROM gradle:8.14.3-jdk21-alpine AS builder
 WORKDIR /app
 
-COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
@@ -10,8 +9,7 @@ COPY infrastructure infrastructure
 COPY core-v1 core-v1
 COPY chat-service chat-service
 
-RUN chmod +x gradlew
-RUN ./gradlew :chat-service:bootJar -x test --no-daemon
+RUN gradle :chat-service:bootJar -x test --no-daemon
 
 # glibc base (not -alpine): unstructured/langchain pull in packages like numba/llvmlite that
 # only ship manylinux wheels — on musl (Alpine) pip has to compile them from source, which

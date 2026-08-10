@@ -1,7 +1,6 @@
-FROM amazoncorretto:21-alpine AS builder
+FROM gradle:8.14.3-jdk21-alpine AS builder
 WORKDIR /app
 
-COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
@@ -10,8 +9,7 @@ COPY infrastructure infrastructure
 COPY core-v1 core-v1
 COPY workflow-service workflow-service
 
-RUN chmod +x gradlew
-RUN ./gradlew :workflow-service:bootJar -x test --no-daemon
+RUN gradle :workflow-service:bootJar -x test --no-daemon
 
 FROM amazoncorretto:21-alpine
 WORKDIR /app
