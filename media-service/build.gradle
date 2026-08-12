@@ -63,3 +63,9 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('bootRun') {
+    // Windows maps the Vietnam zone to the legacy IANA alias "Asia/Saigon", which the local
+    // Postgres container's tzdata doesn't recognize (only the canonical "Asia/Ho_Chi_Minh").
+    jvmArgs += ['-Duser.timezone=Asia/Ho_Chi_Minh']
+}

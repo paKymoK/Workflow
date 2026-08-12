@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Input } from "antd";
 import { SendOutlined, PlusOutlined, DeleteOutlined, RobotOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import type { AssistantTurn } from "../api/chatApi";
+import type { AssistantImageRef, AssistantTurn } from "../api/chatApi";
 import {
   useAskInSession,
   useAssistantApplications,
@@ -15,6 +15,7 @@ import {
 interface Message {
   role: "user" | "ai";
   text: string;
+  images?: AssistantImageRef[] | null;
 }
 
 // Shared with ChatWidget.tsx — picking up (or continuing) the same active session lets the
@@ -31,7 +32,7 @@ function greetingFor(application: string | null): Message {
 }
 
 function turnToMessage(turn: AssistantTurn): Message {
-  return { role: turn.role === "USER" ? "user" : "ai", text: turn.content };
+  return { role: turn.role === "USER" ? "user" : "ai", text: turn.content, images: turn.images };
 }
 
 const dotDelays = [
@@ -127,7 +128,10 @@ export default function Assistant() {
       { sessionId: activeSessionId, question },
       {
         onSuccess: (result) =>
-          setMessages((prev) => [...prev, { role: "ai", text: result.answer }]),
+          setMessages((prev) => [
+            ...prev,
+            { role: "ai", text: result.answer, images: result.images },
+          ]),
         onError: () =>
           setMessages((prev) => [
             ...prev,
@@ -224,7 +228,7 @@ export default function Assistant() {
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex flex-col gap-1.5 ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
                     className={`max-w-[65%] px-4 py-2.5 rounded-2xl text-[13px] leading-[1.6] whitespace-pre-wrap break-words ${
@@ -235,6 +239,19 @@ export default function Assistant() {
                   >
                     {msg.text}
                   </div>
+                  {!!msg.images?.length && (
+                    <div className="max-w-[65%] flex flex-col gap-1.5">
+                      {msg.images.map((img) => (
+                        <img
+                          key={img.url}
+                          src={img.url}
+                          alt={img.alt}
+                          loading="lazy"
+                          className="max-w-full max-h-64 rounded-2xl border border-[var(--border)] object-contain"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
 

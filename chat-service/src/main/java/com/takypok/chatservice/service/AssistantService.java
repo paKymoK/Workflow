@@ -3,12 +3,19 @@ package com.takypok.chatservice.service;
 import com.takypok.chatservice.model.AnswerResponse;
 import com.takypok.chatservice.model.ImageRef;
 import com.takypok.chatservice.model.assistant.AssistantTurn;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -20,14 +27,19 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "ai.rag.enabled", havingValue = "true", matchIfMissing = false)
 public class AssistantService {
+
+  // Matches IngestionService's bucket name for files sitting directly under documents/.
+  private static final String UNCATEGORIZED = "uncategorized";
 
   private final ChatClient chatClient;
   private final VectorStore vectorStore;
@@ -41,17 +53,50 @@ public class AssistantService {
     return response.replaceAll("(?s)<think>.*?</think>", "").trim();
   }
 
-  /** Pulls markdown image references (`![alt](url)`) out of retrieved chunks, deduped by URL. */
-  private List<ImageRef> extractImages(List<Document> docs) {
+  /**
+   * Pulls markdown image references (`![alt](url)`) out of the retrieved sources, deduped by URL.
+   * Reads each source file's full, unsplit text from disk rather than the retrieved chunk text:
+   * TokenTextSplitter's chunk boundaries don't respect markdown syntax, and can even drop a
+   * character during its token encode/decode round-trip right at the split point — so a chunk
+   * fragment alone can't be trusted to contain an intact `![alt](url)` reference.
+   */
+  private List<ImageRef> extractImages(List<String> sources, String application) {
     Map<String, ImageRef> images = new LinkedHashMap<>();
-    for (Document doc : docs) {
-      Matcher matcher = MARKDOWN_IMAGE_PATTERN.matcher(doc.getText());
+    for (String source : sources) {
+      String content = readSourceFile(application, source);
+      if (content == null) continue;
+      Matcher matcher = MARKDOWN_IMAGE_PATTERN.matcher(content);
       while (matcher.find()) {
         String url = matcher.group(2);
         images.putIfAbsent(url, new ImageRef(url, matcher.group(1)));
       }
     }
     return List.copyOf(images.values());
+  }
+
+  private String readSourceFile(String application, String fileName) {
+    try {
+      File root = new ClassPathResource("documents").getFile();
+      File searchRoot = UNCATEGORIZED.equals(application) ? root : new File(root, application);
+      if (!searchRoot.isDirectory()) return null;
+
+      try (Stream<Path> paths = Files.walk(searchRoot.toPath())) {
+        Optional<Path> match =
+            paths
+                .filter(Files::isRegularFile)
+                .filter(path -> path.getFileName().toString().equals(fileName))
+                .findFirst();
+        if (match.isEmpty()) return null;
+        return Files.readString(match.get());
+      }
+    } catch (IOException e) {
+      log.warn(
+          "Could not read source file {}/{} for image extraction: {}",
+          application,
+          fileName,
+          e.getMessage());
+      return null;
+    }
   }
 
   private List<Message> toSpringAiMessages(List<AssistantTurn> history) {
@@ -84,7 +129,7 @@ public class AssistantService {
                       .distinct()
                       .toList();
 
-              List<ImageRef> images = extractImages(docs);
+              List<ImageRef> images = extractImages(sources, application);
 
               var prompt =
                   chatClient
