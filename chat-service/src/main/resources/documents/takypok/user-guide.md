@@ -4,6 +4,8 @@ Tài liệu này mô tả các tính năng chính của ứng dụng TAKYPOK (n�
 
 ## Đăng nhập và tài khoản
 
+![Màn hình đăng nhập — Sign in to your workspace](http://localhost:8080/media-service/images/e6b22d85-40f7-40fa-a99e-b631b3f96bc1.jpg)
+
 Người dùng đăng nhập bằng tài khoản thư mục nội bộ (LDAP) thông qua màn hình **Sign in to your workspace**. Có hai lựa chọn:
 
 - **Continue with SSO**: đăng nhập bằng tài khoản LDAP hiện có, thông qua luồng OAuth2 Authorization Code kèm PKCE do `auth-service` cung cấp. Nếu `auth-service` đang gặp sự cố (không "UP"), nút này sẽ bị vô hiệu hóa tạm thời.
@@ -25,6 +27,8 @@ Phía trên cùng còn có: nút **Create** để tạo ticket nhanh, chuông th
 
 ## Trang chủ (Home)
 
+![Trang chủ Home — tổng quan vận hành](http://localhost:8080/media-service/images/2fc3f651-c7e5-42c6-b05d-b2f0968503e1.jpg)
+
 Trang Home hiển thị các chỉ số vận hành theo thời gian thực (tự cập nhật qua kết nối trực tiếp khi có sự kiện SLA mới):
 
 - **Total Queue**: tổng số ticket đang mở.
@@ -35,6 +39,8 @@ Trang Home hiển thị các chỉ số vận hành theo thời gian thực (t�
 Ngoài ra còn có biểu đồ tình trạng ứng dụng (Application Health), biểu đồ tuân thủ SLA, bảng phân bổ ticket theo trạng thái/loại/dự án, thời gian xử lý trung bình, và nhật ký hoạt động trực tiếp (Live Activity Feed).
 
 ## Quản lý Ticket (Dashboard)
+
+![Màn hình Dashboard — hàng đợi ticket dạng bảng (Console)](http://localhost:8080/media-service/images/d31ecbef-694d-4fd3-9c5f-9b5024bf3336.jpg)
 
 Đây là màn hình chính để xử lý công việc. Có hai kiểu hiển thị: dạng bảng (**Console**) hoặc dạng bảng Kanban kéo-thả (**Board**).
 
@@ -56,6 +62,8 @@ Ngoài ra còn có biểu đồ tình trạng ứng dụng (Application Health),
 
 ## Nhắn tin (Messages)
 
+![Màn hình Messages — trò chuyện trực tiếp](http://localhost:8080/media-service/images/2235ae23-c0aa-4b8b-9e39-826709d0b715.jpg)
+
 Tính năng chat nội bộ hỗ trợ:
 
 - Trò chuyện riêng (Direct) hoặc theo nhóm (Group); có thể đổi tên nhóm, thêm/xóa thành viên.
@@ -69,6 +77,8 @@ Tính năng chat nội bộ hỗ trợ:
 
 ## Nghỉ phép của nhóm (My Team's Leave)
 
+![Màn hình My Team's Leave — danh sách đơn nghỉ phép](http://localhost:8080/media-service/images/d14cd844-2ea3-4d42-a0da-0a59770cf889.jpg)
+
 Đơn nghỉ phép trong hệ thống thực chất là một loại ticket đặc biệt (thuộc dự án nội bộ dành cho nhân sự), không phải một màn hình riêng biệt về mặt dữ liệu. Màn hình "My Team's Leave" dành cho quản lý để:
 
 - Xem danh sách đơn nghỉ phép của các nhân viên **trực thuộc quyền quản lý trực tiếp** của mình (không thấy đơn của nhân viên ngoài nhóm).
@@ -79,11 +89,15 @@ Mỗi đơn nghỉ phép gồm: loại nghỉ phép (phép năm, ốm, việc ri
 
 ## Cài đặt (Settings)
 
+![Màn hình Settings — hồ sơ, giao diện và cấu hình workflow](http://localhost:8080/media-service/images/bb9705d7-31e2-4804-98f2-d7f07f86db20.jpg)
+
 Ở cấp người dùng: đổi ảnh đại diện (có tự động cắt/resize), chuyển giao diện sáng/tối.
 
 Ngoài ra Settings còn có các tab cấu hình quy trình làm việc dùng chung cho cả hệ thống: Workflows (sơ đồ và luồng chuyển trạng thái), Statuses (danh sách trạng thái), Priorities (mức ưu tiên), Projects (dự án), Issue Types (loại công việc), và Team Org (cơ cấu đội hỗ trợ).
 
 ## Cổng quản trị (Admin Portal)
+
+![Màn hình Admin Portal — Dashboard quản trị](http://localhost:8080/media-service/images/da89bd8c-3e62-4f07-9b58-903175da997b.jpg)
 
 Chỉ hiển thị và truy cập được với tài khoản có quyền quản trị. Các mục đã kết nối dữ liệu thực tế gồm:
 
