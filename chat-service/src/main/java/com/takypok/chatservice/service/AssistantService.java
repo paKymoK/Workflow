@@ -1,8 +1,13 @@
 package com.takypok.chatservice.service;
 
 import com.takypok.chatservice.model.AnswerResponse;
+import com.takypok.chatservice.model.ImageRef;
 import com.takypok.chatservice.model.assistant.AssistantTurn;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
@@ -28,9 +33,25 @@ public class AssistantService {
   private final VectorStore vectorStore;
   private final FilterExpressionBuilder filterBuilder = new FilterExpressionBuilder();
 
+  private static final Pattern MARKDOWN_IMAGE_PATTERN =
+      Pattern.compile("!\\[([^\\]]*)\\]\\(([^)\\s]+)\\)");
+
   private String stripThinkingTokens(String response) {
     if (response == null) return "";
     return response.replaceAll("(?s)<think>.*?</think>", "").trim();
+  }
+
+  /** Pulls markdown image references (`![alt](url)`) out of retrieved chunks, deduped by URL. */
+  private List<ImageRef> extractImages(List<Document> docs) {
+    Map<String, ImageRef> images = new LinkedHashMap<>();
+    for (Document doc : docs) {
+      Matcher matcher = MARKDOWN_IMAGE_PATTERN.matcher(doc.getText());
+      while (matcher.find()) {
+        String url = matcher.group(2);
+        images.putIfAbsent(url, new ImageRef(url, matcher.group(1)));
+      }
+    }
+    return List.copyOf(images.values());
   }
 
   private List<Message> toSpringAiMessages(List<AssistantTurn> history) {
@@ -63,6 +84,8 @@ public class AssistantService {
                       .distinct()
                       .toList();
 
+              List<ImageRef> images = extractImages(docs);
+
               var prompt =
                   chatClient
                       .prompt()
@@ -89,6 +112,7 @@ public class AssistantService {
               return AnswerResponse.builder()
                   .answer(stripThinkingTokens(raw))
                   .sources(sources)
+                  .images(images)
                   .build();
             })
         .subscribeOn(Schedulers.boundedElastic());
