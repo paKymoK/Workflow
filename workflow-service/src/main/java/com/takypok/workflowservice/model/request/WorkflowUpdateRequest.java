@@ -15,6 +15,7 @@ import lombok.*;
 public class WorkflowUpdateRequest {
   @NotNull private Long id;
   @NotNull private String name;
+  @NotNull private Long version;
   @NotEmpty private List<@Valid WorkflowNode> statuses;
   @NotEmpty private List<@Valid WorkflowTransitionRequest> transitions;
 }

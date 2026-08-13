@@ -44,3 +44,15 @@ databaseChangeLog:
                 FROM jsonb_array_elements(w.transitions) WITH ORDINALITY AS t(elem, ord)
               )
               WHERE w.name = 'Service Request';
+
+  - changeSet:
+      id: add-workflow-version-column
+      author: system
+      comment: >
+        Optimistic-locking version column for workflow. The workflow editor sends a full
+        statuses/transitions replace on every save with no conflict detection today, so two
+        admins editing the same workflow concurrently silently clobber each other.
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE workflow ADD COLUMN IF NOT EXISTS version bigint NOT NULL DEFAULT 0;

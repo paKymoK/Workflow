@@ -4,6 +4,7 @@ import com.takypok.core.model.IdEntity;
 import com.takypok.workflowservice.model.entity.custom.ListTransition;
 import com.takypok.workflowservice.model.entity.custom.ListWorkflowNode;
 import lombok.*;
+import org.springframework.data.annotation.Version;
 
 @Getter
 @Setter
@@ -14,4 +15,5 @@ public class Workflow extends IdEntity {
   private String name;
   private ListWorkflowNode statuses;
   private ListTransition transitions;
+  @Version private Long version;
 }

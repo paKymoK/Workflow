@@ -19,6 +19,7 @@ public abstract class WorkflowMapper {
   @Mapping(target = "name", source = "name")
   @Mapping(target = "statuses", source = "statues")
   @Mapping(target = "transitions", source = "transitions")
+  @Mapping(target = "version", source = "version")
   public abstract Workflow mapToEntity(
-      Long id, String name, ListWorkflowNode statues, ListTransition transitions);
+      Long id, String name, ListWorkflowNode statues, ListTransition transitions, Long version);
 }

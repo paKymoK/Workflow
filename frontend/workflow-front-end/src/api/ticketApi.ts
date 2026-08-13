@@ -389,6 +389,7 @@ export async function fetchWorkflowById(id: string | number) {
 export interface WorkflowUpdatePayload {
   id: number;
   name: string;
+  version: number;
   statuses: { id: number; name: string; color: string; group: string; x: number; y: number }[];
   transitions: { name: string; from: number; to: number; validator: string[]; postFunctions: string[] }[];
 }

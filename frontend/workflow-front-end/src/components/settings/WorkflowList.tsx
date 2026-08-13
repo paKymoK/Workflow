@@ -35,13 +35,18 @@ export default function WorkflowList() {
       messageApi.error("Workflow must include at least one TODO status.");
       return;
     }
-    await createMutation.mutateAsync({
-      name:        values.name,
-      statuses:    values.statuses,
-      transitions: [],
-    });
-    messageApi.success("Workflow created");
-    setOpen(false);
+    try {
+      await createMutation.mutateAsync({
+        name:        values.name,
+        statuses:    values.statuses,
+        transitions: [],
+      });
+      messageApi.success("Workflow created");
+      setOpen(false);
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { status?: { message?: string } } } };
+      messageApi.error(axiosError?.response?.data?.status?.message ?? "Failed to create workflow");
+    }
   };
 
   const columns: ColumnsType<Workflow> = [

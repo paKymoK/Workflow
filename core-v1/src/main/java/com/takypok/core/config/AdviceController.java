@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -47,6 +48,17 @@ public class AdviceController {
     log.error("DuplicateKeyException: {}", getExceptionMessageChain(ex));
     return ResultMessage.error(
         Message.get(Message.Application.ERROR, ex.getRootCause().getMessage()));
+  }
+
+  @ExceptionHandler(OptimisticLockingFailureException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ResultMessage<?> handleOptimisticLockingFailureException(
+      OptimisticLockingFailureException ex) {
+    log.error("OptimisticLockingFailureException: {}", getExceptionMessageChain(ex));
+    return ResultMessage.error(
+        Message.get(
+            Message.Application.ERROR,
+            "This record was changed by someone else. Please reload and try again."));
   }
 
   @ExceptionHandler(MethodNotAllowedException.class)

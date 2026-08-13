@@ -455,13 +455,24 @@ export default function WorkflowDetail() {
     }));
 
     try {
-      await updateMutation.mutateAsync({ id: workflow.id, name: workflow.name, statuses, transitions });
+      await updateMutation.mutateAsync({
+        id: workflow.id, name: workflow.name, version: workflow.version, statuses, transitions,
+      });
       setIsDirty(false);
       messageApi.success("Workflow saved");
-    } catch {
-      messageApi.error("Failed to save workflow");
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { status?: { message?: string } } } };
+      messageApi.error(axiosError?.response?.data?.status?.message ?? "Failed to save workflow");
     }
   }, [id, workflow, updateMutation, messageApi]);
+
+  // ── Warn before losing unsaved edits ──────────────────────────────────────
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -525,9 +536,23 @@ export default function WorkflowDetail() {
       <div className="flex flex-col h-full">
         <div className="pt-3 pb-4 flex items-end justify-between">
           <div>
-            <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate("/settings")} className="!pl-0 !mb-2">
-              Back to Settings
-            </Button>
+            {isDirty ? (
+              <Popconfirm
+                title="Discard unsaved changes?"
+                description="Your edits to this workflow haven't been saved."
+                okText="Discard"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => navigate("/settings")}
+              >
+                <Button icon={<ArrowLeftOutlined />} type="text" className="!pl-0 !mb-2">
+                  Back to Settings
+                </Button>
+              </Popconfirm>
+            ) : (
+              <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate("/settings")} className="!pl-0 !mb-2">
+                Back to Settings
+              </Button>
+            )}
             <Title level={3} className="!m-0">{workflow.name}</Title>
           </div>
           <div className="flex items-center gap-2">

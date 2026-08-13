@@ -138,6 +138,7 @@ export interface Workflow {
   name: string;
   statuses: WorkflowStatus[];
   transitions: WorkflowTransition[];
+  version: number;
 }
 
 export interface FunctionResponse {

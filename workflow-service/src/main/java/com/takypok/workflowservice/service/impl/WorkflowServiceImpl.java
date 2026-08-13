@@ -58,23 +58,40 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public Mono<Workflow> create(WorkflowCreateRequest request) {
-    return statusRepository
-        .findAllById(request.getStatuses())
-        .collectList()
+    validateNoDuplicateStatusIds(request.getStatuses());
+    return workflowRepository
+        .existsByName(request.getName())
         .flatMap(
-            statuses ->
-                workflowRepository.save(
-                    workflowMapper.mapToEntity(
-                        request.getName(),
-                        new ListWorkflowNode(validatedWorkflowNode(request, statuses)),
-                        new ListTransition(
-                            validatedTransition(request.getTransitions(), statuses)))));
+            nameTaken -> {
+              if (nameTaken) {
+                return Mono.error(
+                    new ApplicationException(
+                        Message.Application.ERROR,
+                        "Workflow name '" + request.getName() + "' already exists !"));
+              }
+              return statusRepository
+                  .findAllById(request.getStatuses())
+                  .collectList()
+                  .flatMap(
+                      statuses ->
+                          workflowRepository.save(
+                              workflowMapper.mapToEntity(
+                                  request.getName(),
+                                  new ListWorkflowNode(validatedWorkflowNode(request, statuses)),
+                                  new ListTransition(
+                                      validatedTransition(request.getTransitions(), statuses)))));
+            });
   }
 
   @Override
   public Mono<Workflow> update(WorkflowUpdateRequest request) {
+    if (request.getStatuses().stream().anyMatch(s -> s.getId() == null)) {
+      throw new ApplicationException(Message.Application.ERROR, "Status id must not be null !");
+    }
+
     List<Long> statusIds =
         request.getStatuses().stream().map(IdEntity::getId).collect(Collectors.toList());
+    validateNoDuplicateStatusIds(statusIds);
 
     return workflowRepository
         .findById(request.getId())
@@ -83,30 +100,53 @@ public class WorkflowServiceImpl implements WorkflowService {
                 new ApplicationException(Message.Application.ERROR, "Workflow không tồn tại !")))
         .flatMap(
             existing ->
-                statusRepository
-                    .findAllById(statusIds)
-                    .collectList()
+                workflowRepository
+                    .existsByNameAndIdNot(request.getName(), request.getId())
                     .flatMap(
-                        dbStatuses -> {
-                          if (dbStatuses.size() != statusIds.size()) {
+                        nameTaken -> {
+                          if (nameTaken) {
                             return Mono.error(
                                 new ApplicationException(
                                     Message.Application.ERROR,
-                                    findStatusNotExist(
-                                        statusIds,
-                                        dbStatuses.stream()
-                                            .map(IdEntity::getId)
-                                            .collect(Collectors.toList()))));
+                                    "Workflow name '" + request.getName() + "' already exists !"));
                           }
-                          return workflowRepository.save(
-                              workflowMapper.mapToEntity(
-                                  request.getId(),
-                                  request.getName(),
-                                  new ListWorkflowNode(request.getStatuses()),
-                                  new ListTransition(
-                                      validatedTransition(
-                                          request.getTransitions(), request.getStatuses()))));
+                          return statusRepository
+                              .findAllById(statusIds)
+                              .collectList()
+                              .flatMap(
+                                  dbStatuses -> {
+                                    if (dbStatuses.size() != statusIds.size()) {
+                                      return Mono.error(
+                                          new ApplicationException(
+                                              Message.Application.ERROR,
+                                              findStatusNotExist(
+                                                  statusIds,
+                                                  dbStatuses.stream()
+                                                      .map(IdEntity::getId)
+                                                      .collect(Collectors.toList()))));
+                                    }
+                                    return workflowRepository.save(
+                                        workflowMapper.mapToEntity(
+                                            request.getId(),
+                                            request.getName(),
+                                            new ListWorkflowNode(request.getStatuses()),
+                                            new ListTransition(
+                                                validatedTransition(
+                                                    request.getTransitions(),
+                                                    request.getStatuses())),
+                                            request.getVersion()));
+                                  });
                         }));
+  }
+
+  private void validateNoDuplicateStatusIds(List<Long> statusIds) {
+    Set<Long> seen = new HashSet<>();
+    Set<Long> duplicates =
+        statusIds.stream().filter(id -> !seen.add(id)).collect(Collectors.toSet());
+    if (!duplicates.isEmpty()) {
+      throw new ApplicationException(
+          Message.Application.ERROR, "Duplicate status id(s) : " + duplicates);
+    }
   }
 
   private String findStatusNotExist(List<Long> request, List<Long> database) {
