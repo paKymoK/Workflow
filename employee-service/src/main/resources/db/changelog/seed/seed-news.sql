@@ -1,6 +1,6 @@
 -- ============================================================
 -- Seed: test/dev-only News & Events posts, ported from the mobile app's old
--- local mock (frontend/mobile-front-end/src/data/news.ts) so the feed has
+-- local mock (frontend/mobile-frontend/src/data/news.ts) so the feed has
 -- real content, attributed to real seeded employees
 -- (seed/seed-fake-employees.sql). Two posts are marked anonymous so that
 -- rendering path has real test data too. Raw SQL is fine here — unlike

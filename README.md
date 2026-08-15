@@ -8,7 +8,7 @@ This repository combines identity, API gateway, service discovery, workflow orch
 
 ## Architecture at a glance
 
-- **Frontend**: `workflow-front-end` (React 19, TypeScript, Vite, Ant Design, TanStack Query)
+- **Frontend**: `takypok-frontend` (React 19, TypeScript, Vite, Ant Design, TanStack Query)
 - **API Gateway**: `gateway-service` (Spring Cloud Gateway, WebFlux, OAuth2)
 - **Service Discovery**: `discovery-service` (Netflix Eureka)
 - **Identity/Auth**: `auth-service` (Spring Security, OAuth2 Authorization Server, LDAP, PostgreSQL)
@@ -36,7 +36,7 @@ This repository combines identity, API gateway, service discovery, workflow orch
 ├─ media-service/
 ├─ shop-service/
 ├─ workflow-service/
-├─ workflow-front-end/
+├─ takypok-frontend/
 ├─ postgres/                # local PostgreSQL container config
 ├─ ldap-local/              # local LDAP + phpLDAPadmin config
 ├─ build.gradle             # multi-module Gradle build
@@ -128,7 +128,7 @@ Default ports from current configs:
 ### 3) Run frontend
 
 ```bash
-cd workflow-front-end
+cd takypok-frontend
 npm install
 npm run dev
 ```
@@ -163,7 +163,7 @@ From root:
 Frontend:
 
 ```bash
-cd workflow-front-end
+cd takypok-frontend
 npm run build
 npm run lint
 ```

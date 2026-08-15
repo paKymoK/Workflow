@@ -1,6 +1,6 @@
 packages:
   - "packages/*"
-  - "workflow-front-end"
+  - "takypok-frontend"
   - "iam-front-end"
 onlyBuiltDependencies:
   - esbuild

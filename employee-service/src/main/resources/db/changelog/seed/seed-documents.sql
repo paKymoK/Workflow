@@ -1,6 +1,6 @@
 -- ============================================================
 -- Seed: test/dev-only Documents & Policies, ported from the mobile app's old local mock
--- (frontend/mobile-front-end/src/data/policies.ts) so the feed has real content on first run.
+-- (frontend/mobile-frontend/src/data/policies.ts) so the feed has real content on first run.
 -- Raw SQL is fine here — like News, nothing downstream consumes documents via Kafka.
 -- ============================================================
 

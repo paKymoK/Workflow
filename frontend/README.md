@@ -6,7 +6,7 @@ pnpm workspace containing two React apps that share a common library.
 frontend/
 ├── packages/
 │   └── shared/          # Shared auth, API client, theme, components
-├── workflow-front-end/  # Workflow & ticket management app  (port 3000)
+├── takypok-frontend/  # Workflow & ticket management app  (port 3000)
 └── shop-front-end/      # Shop & cart app                  (port 3000)
 ```
 
@@ -42,10 +42,10 @@ pnpm install
 
 Each app reads its own `.env` file at startup. Create one from the example below inside each app's folder.
 
-### workflow-front-end
+### takypok-frontend
 
 ```bash
-# frontend/workflow-front-end/.env
+# frontend/takypok-frontend/.env
 VITE_AUTH_SERVER=http://127.0.0.1:9000
 VITE_CLIENT_ID=workflow-frontend
 VITE_REDIRECT_URI=http://localhost:3000/callback
@@ -80,7 +80,7 @@ Both apps share the same port default (3000). Start only one at a time, or chang
 
 ```bash
 # Start the workflow app
-pnpm --filter workflow-front-end dev
+pnpm --filter takypok-frontend dev
 
 # Start the shop app
 pnpm --filter shop-front-end dev
@@ -89,7 +89,7 @@ pnpm --filter shop-front-end dev
 Or `cd` into the app folder and run directly:
 
 ```bash
-cd frontend/workflow-front-end
+cd frontend/takypok-frontend
 pnpm dev
 ```
 
@@ -99,7 +99,7 @@ pnpm dev
 
 ```bash
 # Build one app
-pnpm --filter workflow-front-end build
+pnpm --filter takypok-frontend build
 pnpm --filter shop-front-end build
 
 # Build all packages and apps at once

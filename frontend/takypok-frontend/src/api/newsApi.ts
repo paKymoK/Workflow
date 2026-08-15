@@ -1,7 +1,7 @@
 import type { PageResponse, ResultMessage } from "./types.ts";
 import { api } from "@takypok/shared";
 
-// Mirrors employee-service's NewsType enum — see frontend/mobile-front-end/src/api/newsApi.ts
+// Mirrors employee-service's NewsType enum — see frontend/mobile-frontend/src/api/newsApi.ts
 // for the mobile-side twin of this file (same backend, same contract).
 export type NewsType = "NEWS" | "EVENTS" | "UNION" | "RECOGNITION";
 
