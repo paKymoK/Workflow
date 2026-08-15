@@ -134,10 +134,10 @@ const SKILLS_GROUPED: SkillGroup[] = [
   {
     group: "FRONTEND", accentVar: A.cyan,
     skills: [
-      { name: "React.js",   years: "4y", pct: 90 },
-      { name: "TypeScript", years: "3y", pct: 82 },
-      { name: "Angular",    years: "1y", pct: 48 },
-      { name: "Vue",        years: "1y", pct: 42 },
+      { name: "React.js",       years: "4y", pct: 90 },
+      { name: "TypeScript",     years: "3y", pct: 82 },
+      { name: "React Native",   years: "2y", pct: 60 },
+      { name: "Android (Java)", years: "1y", pct: 42 },
     ],
   },
   {
@@ -153,8 +153,8 @@ const SKILLS_GROUPED: SkillGroup[] = [
     group: "DATA + OPS", accentVar: A.pink,
     skills: [
       { name: "PostgreSQL", years: "4y", pct: 80 },
-      { name: "MySQL",      years: "2y", pct: 66 },
-      { name: "Redis",      years: "1y", pct: 50 },
+      { name: "MySQL",      years: "3y", pct: 66 },
+      { name: "Redis",      years: "3y", pct: 66 },
       { name: "Jenkins",    years: "2y", pct: 55 },
     ],
   },
