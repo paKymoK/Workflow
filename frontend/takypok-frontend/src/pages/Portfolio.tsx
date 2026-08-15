@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import avatar from "../assets/avatar.jpeg";
 import { useTheme } from "@takypok/shared";
-import { SunOutlined, MoonOutlined, GithubOutlined, FacebookOutlined } from "@ant-design/icons";
+import { SunOutlined, MoonOutlined, GithubOutlined, FacebookOutlined, LinkedinOutlined } from "@ant-design/icons";
 
 const PARTICLE_COLORS_DARK  = ["#00CFFF", "#48CAE4", "#90E0EF", "#ADE8F4", "#00F5C4"];
 const PARTICLE_COLORS_LIGHT = ["#0055AA", "#0066CC", "#0055AA", "#0066CC", "#0055AA"];
@@ -13,6 +13,7 @@ const A = {
   yellow: "var(--pf-yellow)",
   cyan:   "var(--pf-cyan)",
   orange: "var(--pf-orange)",
+  red:    "var(--pf-red)",
 };
 
 type Status = "NDA" | "INTERNAL" | "PRIVATE" | "LIVE";
@@ -20,7 +21,7 @@ interface Project {
   id: string; title: string; tag: string; year: string;
   accentVar: string; status: Status;
   githubUrl: string | null; liveUrl: string | null;
-  desc: string; problem: string; whatIBuilt: string; result: string;
+  desc: string; problem: string; whatIBuilt: string;
   techStack: string[]; responsibilities: string[];
 }
 interface TlEntry {
@@ -34,13 +35,28 @@ interface SkillGroup {
 
 const PROJECTS: Project[] = [
   {
-    id: "001", title: "AION", tag: "WEB APP", year: "DEC 2025 — MAR 2026",
+    id: "001", title: "AMS", tag: "ITSM", year: "MAR 2026 — NOW",
+    accentVar: A.red, status: "INTERNAL",
+    githubUrl: null, liveUrl: null,
+    desc: "Application Management Service — L3 technical support across ~20 aging internal systems with heavy tech debt and thin observability.",
+    problem: "About 20 legacy internal systems had accumulated years of tech debt with little to no monitoring, so incidents were often caught by users first and root causes took days to trace through undocumented code.",
+    whatIBuilt: "Acted as the last line of technical escalation — root-causing production incidents across the systems, shipping fixes directly in their Java, React, Vue, and C# codebases, and writing L2-facing instructions so recurring issues could be resolved without escalating to L3.",
+    techStack: ["Java", "React.js", "Vue.js", "C#", "ITSM"],
+    responsibilities: [
+      "Root-cause investigation for L3-escalated incidents across ~20 legacy systems",
+      "Direct incident fixes across Java, React, Vue, and C# codebases",
+      "Wrote L2 handling instructions/runbooks to reduce repeat escalations",
+      "Reviewed code for change requests and production hotfixes before release",
+      "Owned last-line technical escalation for the application",
+    ],
+  },
+  {
+    id: "002", title: "AION", tag: "WEB APP", year: "DEC 2025 — MAR 2026",
     accentVar: A.pink, status: "NDA",
     githubUrl: null, liveUrl: null,
     desc: "Internal KPI tracking back-office system for HDBank, enabling managers to monitor employee performance across departments in real time.",
     problem: "HDBank's monthly KPI reporting relied on Excel sheets shared over email — each cycle took 4+ hours to compile, was error-prone, and gave managers no live visibility into department performance.",
-    whatIBuilt: "A React + TypeScript dashboard with real-time KPI completion rings per employee, department-level roll-up views, date-range selectors, and a manager approval flow — connected to a Spring Boot REST API.",
-    result: "Reporting time cut from 4h → ~20min per cycle. 200+ employees onboarded across 6 departments. Manager sign-off rate increased to 97% in the first month.",
+    whatIBuilt: "A React + TypeScript dashboard with real-time KPI completion rings per employee, department-level roll-up views, date-range selectors, and a manager approval flow.",
     techStack: ["React.js", "TypeScript", "Ant Design", "REST API", "Spring Boot"],
     responsibilities: [
       "Built and maintained the KPI tracking dashboard UI",
@@ -50,13 +66,12 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: "002", title: "HDBANK MOBILE", tag: "MOBILE APP", year: "DEC 2024 — NOV 2025",
+    id: "003", title: "HDBANK MOBILE", tag: "MOBILE APP", year: "DEC 2024 — NOV 2025",
     accentVar: A.green, status: "NDA",
     githubUrl: null, liveUrl: null,
     desc: "Mobile banking application for HDBank customers — React Native frontend with a Spring Boot WebFlux backend for high-throughput transaction processing.",
-    problem: "The bank's existing mobile app had p95 API latency over 900ms on payment flows, causing user drop-off on high-value transfers during peak hours.",
-    whatIBuilt: "Redesigned the Payment Service and Voucher Service backend using Spring WebFlux reactive streams. Added DB index tuning and a Redis cache layer for repeat voucher queries.",
-    result: "p95 payment API latency down from 920ms → 180ms. Voucher service throughput increased 4×. App store rating improved from 3.6 → 4.2 after the backend update shipped.",
+    problem: "HDBank had no dedicated mobile channel for customer payments and voucher-based promotions — it needed to be built from scratch to handle high-throughput transaction processing at launch scale.",
+    whatIBuilt: "Built the Payment Service and Voucher Service backend from the ground up using Spring WebFlux reactive streams, with DB index tuning and a Redis cache layer for repeat voucher queries, alongside the React Native frontend.",
     techStack: ["Java", "Spring Boot", "WebFlux", "React Native", "TypeScript", "Redis", "PostgreSQL"],
     responsibilities: [
       "Backend: Payment Service and Voucher Service",
@@ -66,13 +81,12 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: "003", title: "C-TICKET", tag: "WEB APP", year: "JUN 2024 — NOV 2024",
+    id: "004", title: "C-TICKET", tag: "WEB APP", year: "JUN 2024 — NOV 2024",
     accentVar: A.yellow, status: "INTERNAL",
     githubUrl: null, liveUrl: null,
-    desc: "Internal web-based ticketing system with real-time SLA calculation — the predecessor to the TakyPok system you're reading this on.",
+    desc: "Internal web-based ticketing system with real-time SLA calculation.",
     problem: "The company's support team was tracking tickets in a shared spreadsheet with no SLA enforcement, no assignment logic, and no visibility for requesters.",
     whatIBuilt: "Full-stack: React.js frontend with a live SLA countdown, WebSocket push for status changes, and a Spring Boot backend with configurable SLA rules per priority level.",
-    result: "SLA breach rate dropped 38% in the first quarter. Support team response time average: 4h → 1.2h. Used by 80+ internal users daily.",
     techStack: ["Java", "Spring Boot", "React.js", "WebSocket", "PostgreSQL"],
     responsibilities: [
       "Full-stack development — React frontend + Spring Boot backend",
@@ -80,13 +94,12 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: "004", title: "C-NOW", tag: "JIRA PLUGIN", year: "SEP 2023 — NOV 2024",
+    id: "005", title: "C-NOW", tag: "JIRA PLUGIN", year: "SEP 2023 — NOV 2024",
     accentVar: A.cyan, status: "INTERNAL",
     githubUrl: null, liveUrl: null,
     desc: "Custom Jira Server plugin extending the platform's workflow engine for the finance team's internal paperwork and approval chain.",
     problem: "Finance paperwork was routed via email with no tracking, no SLA, and no single source of truth. Approvals were lost, duplicated, or delayed for weeks.",
     whatIBuilt: "A full Jira Server plugin: custom workflow states mapped to finance approval stages, a REST API bridge to internal services, and a jQuery-based UI panel embedded directly in Jira tickets.",
-    result: "Approval cycle time reduced by ~60%. 100% audit trail coverage for compliance. Still in production 2 years later with zero critical bugs.",
     techStack: ["Java", "Spring Core", "JavaScript", "jQuery", "Jira Server SDK", "REST API"],
     responsibilities: [
       "End-to-end plugin development (Java backend + JS frontend)",
@@ -96,13 +109,12 @@ const PROJECTS: Project[] = [
     ],
   },
   {
-    id: "005", title: "WAREHOUSE CONTROL", tag: "WCS", year: "MAY 2022 — AUG 2023",
+    id: "006", title: "WAREHOUSE CONTROL", tag: "WCS", year: "MAY 2022 — AUG 2023",
     accentVar: A.orange, status: "PRIVATE",
     githubUrl: null, liveUrl: null,
     desc: "Warehouse Control System for an automated fulfillment center — real-time inventory visualization and integration with Autostore robotic systems.",
     problem: "The warehouse had no live visibility into bin states or robot positions, causing picking errors and manual reconciliation delays that cost ~2h per shift.",
     whatIBuilt: "An Eclipse RCP backend for inbound/outbound flow management and a D3.js real-time visualization layer showing live bin occupancy, robot positions, and exception queues. WebSocket bridge to the Autostore API.",
-    result: "Picking error rate cut by 72%. Manual reconciliation eliminated. System processed 1,200+ transactions/day at peak without incident.",
     techStack: ["Eclipse RCP", "Java", "Node.js", "WebSocket", "PostgreSQL"],
     responsibilities: [
       "Backend: business logic and database management",
@@ -161,7 +173,7 @@ const SKILLS_GROUPED: SkillGroup[] = [
 ];
 
 const STATS = [
-  { num: "5+",  label: "PROJECTS"        },
+  { num: "6+",  label: "PROJECTS"        },
   { num: "6",   label: "YRS EXP"         },
   { num: "2",   label: "COMPANIES"       },
 ];
@@ -185,15 +197,14 @@ function StatusChip({ status }: { status: Status }) {
 }
 
 // ── CaseStudy ─────────────────────────────────────────────────
-function CaseStudy({ problem, whatIBuilt, result, accentVar }: {
-  problem: string; whatIBuilt: string; result: string; accentVar: string;
+function CaseStudy({ problem, whatIBuilt, accentVar }: {
+  problem: string; whatIBuilt: string; accentVar: string;
 }) {
   return (
     <div className="pf2-case" style={{ "--card-accent": accentVar } as React.CSSProperties}>
       {[
         { label: "// PROBLEM",      text: problem    },
         { label: "// WHAT I BUILT", text: whatIBuilt },
-        { label: "// RESULT",       text: result     },
       ].map(({ label, text }) => (
         <div key={label} className="pf2-case-block">
           <div className="pf2-case-label">{label}</div>
@@ -236,7 +247,7 @@ function ProjectCard({ p, open, onToggle }: {
           {p.githubUrl ? (
             <a href={p.githubUrl} target="_blank" rel="noopener noreferrer" className="pf2-card-link">GH</a>
           ) : (
-            <span className="pf2-card-link nda">{p.status === "NDA" ? "NDA" : "PRIVATE"}</span>
+            <span className="pf2-card-link nda">{p.status}</span>
           )}
           {p.liveUrl && (
             <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="pf2-card-link">LIVE</a>
@@ -258,7 +269,6 @@ function ProjectCard({ p, open, onToggle }: {
           <CaseStudy
             problem={p.problem}
             whatIBuilt={p.whatIBuilt}
-            result={p.result}
             accentVar={p.accentVar}
           />
 
@@ -559,7 +569,7 @@ export default function Portfolio() {
               <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
                 <div className="pf2-avail">
                   <span className="pf2-avail-dot" />
-                  AVAILABLE · JUN 2026
+                  AVAILABLE · AUG 2026
                 </div>
                 <a href="/cv-tqthai.pdf" download className="pf2-cv-btn">↓ CV</a>
               </div>
@@ -616,11 +626,19 @@ export default function Portfolio() {
                   >
                     <FacebookOutlined />
                   </a>
+                  <a
+                    href="https://www.linkedin.com/in/th%C3%A1i-quang-243987152"
+                    target="_blank" rel="noopener noreferrer"
+                    className="pf-social-link"
+                    style={{ color: "var(--pf-pink)", borderColor: "var(--pf-pink)" }}
+                  >
+                    <LinkedinOutlined />
+                  </a>
                 </div>
               </div>
               <div className="pf2-avail" style={{ alignSelf: "flex-start" }}>
                 <span className="pf2-avail-dot" />
-                OPEN TO WORK · JUN 2026
+                OPEN TO WORK · AUG 2026
               </div>
             </div>
 

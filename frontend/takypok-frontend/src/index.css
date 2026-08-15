@@ -499,6 +499,7 @@ input:focus-within ~ .focus-bar { width: 100%; }
   --pf-yellow: #00CFFF;
   --pf-cyan:   #48CAE4;
   --pf-orange: #F72585;
+  --pf-red:    #FF4B4B;
   --pf-bg:     #020B18;
   --pf-fg:     #C8F0FF;
   --pf-border: rgba(0, 207, 255, 0.1);
@@ -512,6 +513,7 @@ input:focus-within ~ .focus-bar { width: 100%; }
   --pf-yellow: #0055AA;
   --pf-cyan:   #0088BB;
   --pf-orange: #C03050;
+  --pf-red:    #B3261E;
   --pf-bg:     #DDE1E7;
   --pf-fg:     #0A2540;
   --pf-border: rgba(0, 85, 170, 0.15);
@@ -939,7 +941,7 @@ body.pf-active { cursor: none !important; overflow-x: hidden; }
 
 /* ── Case study grid ────────────────────────────────────── */
 .pf2-case {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
   background: var(--pf-border); margin: 0 0 20px;
 }
 .pf2-case-block {
