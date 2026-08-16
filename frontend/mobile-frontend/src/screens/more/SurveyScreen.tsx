@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Star, Clock, Calendar, CheckCircle, ChevronUp, ChevronDown } from 'lucide-react-native';
@@ -91,11 +91,11 @@ function SurveyForm({ survey, onBack }: { survey: SurveyItem; onBack: () => void
                   key={opt}
                   onPress={() => setMc(opt)}
                   className="flex-row items-center gap-3 rounded-xl border-2 p-4"
-                  style={mc === opt ? { borderColor: colors.primary, backgroundColor: colors.surface } : { borderColor: colors.border, backgroundColor: '#F8FAFC' }}
+                  style={mc === opt ? styles.mcOptionSelected : styles.mcOptionUnselected}
                 >
                   <View
                     className="h-5 w-5 items-center justify-center rounded-full border-2"
-                    style={{ borderColor: mc === opt ? '#2563EB' : '#D1D5DB' }}
+                    style={mc === opt ? styles.mcDotSelected : styles.mcDotUnselected}
                   >
                     {mc === opt && <View className="h-2.5 w-2.5 rounded-full bg-blue-600" />}
                   </View>
@@ -114,7 +114,7 @@ function SurveyForm({ survey, onBack }: { survey: SurveyItem; onBack: () => void
               placeholder="Type your answer here..."
               placeholderTextColor="#9CA3AF"
               className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-800"
-              style={{ textAlignVertical: 'top', minHeight: 120 }}
+              style={styles.textAnswerInput}
             />
           )}
         </View>
@@ -131,7 +131,7 @@ function SurveyForm({ survey, onBack }: { survey: SurveyItem; onBack: () => void
             <Text className="text-sm font-bold text-white">Next</Text>
           </Pressable>
         ) : (
-          <Pressable onPress={() => setDone(true)} className="flex-1 items-center rounded-2xl py-3.5" style={{ backgroundColor: '#10B981' }}>
+          <Pressable onPress={() => setDone(true)} className="flex-1 items-center rounded-2xl py-3.5" style={styles.submitButton}>
             <Text className="text-sm font-bold text-white">Submit Survey</Text>
           </Pressable>
         )}
@@ -165,7 +165,7 @@ export default function SurveyScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="gap-3 px-4 pt-4">
           <Text className="text-xs font-bold uppercase tracking-widest text-gray-500">Active</Text>
           {ACTIVE_SURVEYS.map((s) => {
@@ -232,3 +232,30 @@ export default function SurveyScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  mcOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  mcOptionUnselected: {
+    borderColor: colors.border,
+    backgroundColor: '#F8FAFC',
+  },
+  mcDotSelected: {
+    borderColor: '#2563EB',
+  },
+  mcDotUnselected: {
+    borderColor: '#D1D5DB',
+  },
+  textAnswerInput: {
+    textAlignVertical: 'top',
+    minHeight: 120,
+  },
+  submitButton: {
+    backgroundColor: '#10B981',
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+});

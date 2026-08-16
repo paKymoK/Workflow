@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -146,14 +147,14 @@ function NewsComposeScreen({
           {submitMutation.isPending ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Text className="text-sm font-bold" style={{ color: canSubmit ? colors.primary : '#D1D5DB' }}>
+            <Text className="text-sm font-bold" style={canSubmit ? styles.composeSubmitActive : styles.composeSubmitInactive}>
               {isEdit ? 'Save' : 'Post'}
             </Text>
           )}
         </Pressable>
       </View>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingVertical: 16, gap: 14 }}>
+        <ScrollView className="flex-1 px-4" contentContainerStyle={styles.composeScrollContent}>
           <View>
             <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">Category</Text>
             <Pressable
@@ -180,7 +181,7 @@ function NewsComposeScreen({
             <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">Body</Text>
             <TextInput
               className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800"
-              style={{ minHeight: 140, textAlignVertical: 'top' }}
+              style={styles.bodyInput}
               placeholder="Write your post..."
               placeholderTextColor="#9CA3AF"
               value={body}
@@ -193,7 +194,7 @@ function NewsComposeScreen({
             <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">Photo (optional)</Text>
             {imageUrl ? (
               <View className="relative">
-                <Image source={{ uri: imageUrl }} style={{ width: '100%', height: 160, borderRadius: 12 }} resizeMode="cover" />
+                <Image source={{ uri: imageUrl }} style={styles.composeImagePreview} resizeMode="cover" />
                 <Pressable
                   onPress={() => setImageUrl(null)}
                   className="absolute right-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-black/60"
@@ -307,8 +308,8 @@ function NewsDetailScreen({
           </View>
         }
       />
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
-        {post.imageUrl && <Image source={{ uri: post.imageUrl }} style={{ width: '100%', height: 220 }} resizeMode="cover" />}
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.detailScrollContent}>
+        {post.imageUrl && <Image source={{ uri: post.imageUrl }} style={styles.detailHeaderImage} resizeMode="cover" />}
 
         <View className="bg-white px-5 pb-4 pt-5">
           {post.pinned && (
@@ -355,7 +356,7 @@ function NewsDetailScreen({
             onPress={() => (showReactionPicker ? setShowReactionPicker(false) : handleReaction('like'))}
           >
             <Text className="text-base leading-none">{activeReaction ? activeReaction.emoji : '👍'}</Text>
-            <Text className="text-xs font-semibold" style={{ color: post.myReaction ? colors.primary : '#6B7A8D' }}>
+            <Text className="text-xs font-semibold" style={post.myReaction ? styles.reactTextActive : styles.reactTextInactive}>
               {activeReaction ? activeReaction.label : 'React'}
             </Text>
           </Pressable>
@@ -388,7 +389,7 @@ function NewsDetailScreen({
                     <Text className="text-[10px] text-gray-400">{timeAgo(c.createdAt)}</Text>
                     <Pressable onPress={() => commentLikeMutation.mutate(c.id)} className="flex-row items-center gap-1">
                       <Heart size={11} fill={c.likedByMe ? colors.primary : 'none'} color={c.likedByMe ? colors.primary : '#9CA3AF'} />
-                      <Text className="text-[10px] font-semibold" style={{ color: c.likedByMe ? colors.primary : '#9CA3AF' }}>
+                      <Text className="text-[10px] font-semibold" style={c.likedByMe ? styles.commentLikeTextActive : styles.commentLikeTextInactive}>
                         {c.likeCount > 0 ? `${c.likeCount} ` : ''}Like
                       </Text>
                     </Pressable>
@@ -474,19 +475,15 @@ export default function NewsScreen() {
         <Text className="text-xs text-gray-400">Company updates & announcements</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3" style={styles.filterScroll} contentContainerStyle={styles.filterScrollContent}>
         {NEWS_FILTERS.map((f) => (
           <Pressable
             key={f}
             onPress={() => setFilter(f)}
             className="rounded-full px-4 py-1.5"
-            style={
-              filter === f
-                ? { backgroundColor: colors.primary }
-                : { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border }
-            }
+            style={filter === f ? styles.filterChipActive : styles.filterChipInactive}
           >
-            <Text className="text-xs font-semibold" style={{ color: filter === f ? '#fff' : '#6B7A8D' }}>
+            <Text className="text-xs font-semibold" style={filter === f ? styles.filterTextActive : styles.filterTextInactive}>
               {f}
             </Text>
           </Pressable>
@@ -502,7 +499,7 @@ export default function NewsScreen() {
           <Text className="text-sm text-gray-400">No posts yet.</Text>
         </View>
       ) : (
-        <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 24, gap: 12 }}>
+        <ScrollView className="flex-1 px-4" contentContainerStyle={styles.feedScrollContent}>
           {posts.map((post) => {
             const tc = TYPE_COLORS[TYPE_TO_LABEL[post.type]] ?? TYPE_COLORS.News;
             return (
@@ -539,7 +536,7 @@ export default function NewsScreen() {
                       {post.body}
                     </Text>
                   </View>
-                  {post.imageUrl && <Image source={{ uri: post.imageUrl }} style={{ width: '100%', height: 160 }} resizeMode="cover" />}
+                  {post.imageUrl && <Image source={{ uri: post.imageUrl }} style={styles.feedImage} resizeMode="cover" />}
                 </Pressable>
                 <View className="flex-row items-center gap-5 border-t border-gray-50 px-4 py-3">
                   <Pressable onPress={() => reactMutation.mutate(post.id)} className="flex-row items-center gap-1.5">
@@ -575,3 +572,73 @@ export default function NewsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  composeSubmitActive: {
+    color: colors.primary,
+  },
+  composeSubmitInactive: {
+    color: '#D1D5DB',
+  },
+  composeScrollContent: {
+    paddingVertical: 16,
+    gap: 14,
+  },
+  bodyInput: {
+    minHeight: 140,
+    textAlignVertical: 'top',
+  },
+  composeImagePreview: {
+    width: '100%',
+    height: 160,
+    borderRadius: 12,
+  },
+  detailScrollContent: {
+    paddingBottom: 24,
+  },
+  detailHeaderImage: {
+    width: '100%',
+    height: 220,
+  },
+  reactTextActive: {
+    color: colors.primary,
+  },
+  reactTextInactive: {
+    color: '#6B7A8D',
+  },
+  commentLikeTextActive: {
+    color: colors.primary,
+  },
+  commentLikeTextInactive: {
+    color: '#9CA3AF',
+  },
+  filterScroll: {
+    flexGrow: 0,
+  },
+  filterScrollContent: {
+    gap: 8,
+    alignItems: 'center',
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary,
+  },
+  filterChipInactive: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterTextActive: {
+    color: '#fff',
+  },
+  filterTextInactive: {
+    color: '#6B7A8D',
+  },
+  feedScrollContent: {
+    paddingBottom: 24,
+    gap: 12,
+  },
+  feedImage: {
+    width: '100%',
+    height: 160,
+  },
+});

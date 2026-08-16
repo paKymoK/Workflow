@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { ArrowLeft, UserMinus } from 'lucide-react-native';
@@ -27,7 +27,9 @@ export default function ChatMembersScreen() {
 
   const { data: conversations = [] } = useConversations();
   const conversation = conversations.find((c) => c.id === conversationId) ?? null;
-  const participantSubs = conversation?.participantSubs ?? [];
+  // Memoized so `?? []` doesn't hand useMemo/useEffect below a fresh array
+  // identity on every render when there's no conversation yet.
+  const participantSubs = useMemo(() => conversation?.participantSubs ?? [], [conversation?.participantSubs]);
 
   useSyncParticipantNames(participantSubs);
   const nameBySub = useParticipantNamesMap();
@@ -72,7 +74,7 @@ export default function ChatMembersScreen() {
         <Text className="text-sm font-bold text-gray-900">Members ({participantSubs.length})</Text>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={styles.scrollContent}>
         {conversation?.owner && (
           <View className="mb-4">
             <TextInput
@@ -122,3 +124,9 @@ export default function ChatMembersScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+});

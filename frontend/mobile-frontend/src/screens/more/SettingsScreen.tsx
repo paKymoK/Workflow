@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -53,7 +53,7 @@ export default function SettingsScreen() {
         <Text className="text-base font-bold text-gray-900">Settings</Text>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="gap-5 px-4 pt-4">
           <View>
             <Text className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Account</Text>
@@ -62,14 +62,14 @@ export default function SettingsScreen() {
                 {PROFILE.avatarUrl ? (
                   <Image
                     source={{ uri: PROFILE.avatarUrl }}
-                    style={{ height: 48, width: 48, borderRadius: 24 }}
+                    style={styles.avatarImage}
                   />
                 ) : (
                   <LinearGradient
                     colors={[colors.primary, colors.primaryLight]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={{ height: 48, width: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
+                    style={styles.avatarGradient}
                   >
                     <Text className="font-bold text-white">{PROFILE.initials}</Text>
                   </LinearGradient>
@@ -181,7 +181,7 @@ export default function SettingsScreen() {
       </ScrollView>
 
       {showLogout && (
-        <View className="absolute inset-0 justify-end" style={{ backgroundColor: 'rgba(10,24,48,0.5)' }}>
+        <View className="absolute inset-0 justify-end" style={styles.logoutBackdrop}>
           <Pressable className="absolute inset-0" onPress={() => setShowLogout(false)} />
           <View className="rounded-t-3xl bg-white p-6 shadow-2xl">
             <View className="mb-4 h-12 w-12 items-center justify-center self-center rounded-full bg-red-100">
@@ -205,3 +205,24 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  avatarImage: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+  },
+  avatarGradient: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutBackdrop: {
+    backgroundColor: 'rgba(10,24,48,0.5)',
+  },
+});

@@ -35,15 +35,20 @@
   },
   "devDependencies": {
     "@react-native-community/cli": "latest",
+    "@react-native/eslint-config": "0.86.0",
     "@react-native/typescript-config": "0.86.0",
     "@types/react": "~19.2.2",
     "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^8.57.1",
+    "prettier": "^3.9.6",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "react-native start",
     "android": "react-native run-android",
-    "ios": "react-native run-ios"
+    "ios": "react-native run-ios",
+    "lint": "eslint .",
+    "tsc": "tsc --noEmit"
   },
   "private": true
 }

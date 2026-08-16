@@ -10,34 +10,38 @@ import { MoreStack } from './MoreStack';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
+type TabIconProps = { color: string; size: number };
+
+// Defined at module scope (not inline in options) so React Navigation sees a
+// stable component identity across renders instead of remounting the icon.
+function HomeTabIcon({ color, size }: TabIconProps) {
+  return <Home color={color} size={size} />;
+}
+function NewsTabIcon({ color, size }: TabIconProps) {
+  return <Newspaper color={color} size={size} />;
+}
+function ChatTabIcon({ color, size }: TabIconProps) {
+  return <MessageCircle color={color} size={size} />;
+}
+function ProfileTabIcon({ color, size }: TabIconProps) {
+  return <User color={color} size={size} />;
+}
+function MoreTabIcon({ color, size }: TabIconProps) {
+  return <Menu color={color} size={size} />;
+}
+
 export function RootTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: '#2563eb' }}>
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: 'Home', tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
-      />
-      <Tab.Screen
-        name="News"
-        component={NewsScreen}
-        options={{ title: 'News', tabBarIcon: ({ color, size }) => <Newspaper color={color} size={size} /> }}
-      />
-      <Tab.Screen
-        name="Chat"
-        component={ChatStack}
-        options={{ title: 'Chat', tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} /> }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home', tabBarIcon: HomeTabIcon }} />
+      <Tab.Screen name="News" component={NewsScreen} options={{ title: 'News', tabBarIcon: NewsTabIcon }} />
+      <Tab.Screen name="Chat" component={ChatStack} options={{ title: 'Chat', tabBarIcon: ChatTabIcon }} />
       <Tab.Screen
         name="Profile"
         component={ProfileStack}
-        options={{ title: 'Profile', tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
+        options={{ title: 'Profile', tabBarIcon: ProfileTabIcon }}
       />
-      <Tab.Screen
-        name="More"
-        component={MoreStack}
-        options={{ title: 'More', tabBarIcon: ({ color, size }) => <Menu color={color} size={size} /> }}
-      />
+      <Tab.Screen name="More" component={MoreStack} options={{ title: 'More', tabBarIcon: MoreTabIcon }} />
     </Tab.Navigator>
   );
 }

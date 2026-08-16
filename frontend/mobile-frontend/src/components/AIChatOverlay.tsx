@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, Animated } from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView, Animated, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Bot, X, Send } from 'lucide-react-native';
 
@@ -80,9 +80,9 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <View className="absolute inset-0 z-50 justify-end" style={{ backgroundColor: 'rgba(10,24,48,0.5)' }}>
+    <View className="absolute inset-0 z-50 justify-end" style={styles.overlayBackdrop}>
       <Pressable className="absolute inset-0" onPress={onClose} />
-      <View className="rounded-t-3xl bg-white shadow-2xl" style={{ height: '76%' }}>
+      <View className="rounded-t-3xl bg-white shadow-2xl" style={styles.sheetContainer}>
         <View className="items-center pb-1 pt-3">
           <View className="h-1 w-10 rounded-full bg-gray-200" />
         </View>
@@ -92,7 +92,7 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
             colors={[colors.primary, colors.primaryLight]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}
+            style={styles.headerAvatarGradient}
           >
             <Bot size={20} color="#fff" />
           </LinearGradient>
@@ -105,7 +105,7 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
           </Pressable>
         </View>
 
-        <ScrollView className="flex-1 px-5 py-4" style={{ backgroundColor: colors.background }} contentContainerStyle={{ gap: 16 }}>
+        <ScrollView className="flex-1 px-5 py-4" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.messagesContent}>
           {msgs.map((msg) => (
             <View key={msg.id} className={`flex-row gap-2 ${msg.self ? 'justify-end' : 'justify-start'}`}>
               {!msg.self && (
@@ -113,12 +113,12 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
                   colors={[colors.primary, colors.primaryLight]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={{ height: 28, width: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}
+                  style={styles.messageBotAvatar}
                 >
                   <Bot size={13} color="#fff" />
                 </LinearGradient>
               )}
-              <View style={{ maxWidth: '82%' }}>
+              <View style={styles.messageBubbleWrap}>
                 <View
                   className={`rounded-2xl px-4 py-3 ${msg.self ? '' : 'bg-white shadow-sm'}`}
                   style={msg.self ? { backgroundColor: colors.primary } : undefined}
@@ -139,7 +139,7 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
                 colors={[colors.primary, colors.primaryLight]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ height: 28, width: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}
+                style={styles.typingAvatar}
               >
                 <Bot size={13} color="#fff" />
               </LinearGradient>
@@ -156,15 +156,15 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="border-t border-gray-50 bg-white px-5 py-2"
-          style={{ maxHeight: 44, flexGrow: 0, flexShrink: 0 }}
-          contentContainerStyle={{ gap: 8, alignItems: 'center' }}
+          style={styles.suggestionsScroll}
+          contentContainerStyle={styles.suggestionsContent}
         >
           {SUGGESTIONS.map((q) => (
             <Pressable
               key={q}
               onPress={() => setInput(q)}
               className="rounded-full border px-3 py-1.5"
-              style={{ borderColor: '#D1DEF0', backgroundColor: colors.surface }}
+              style={styles.suggestionChip}
             >
               <Text className="text-[11px] font-semibold" style={{ color: colors.primary }}>
                 {q}
@@ -192,3 +192,53 @@ export function AIChatOverlay({ onClose }: { onClose: () => void }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlayBackdrop: {
+    backgroundColor: 'rgba(10,24,48,0.5)',
+  },
+  sheetContainer: {
+    height: '76%',
+  },
+  headerAvatarGradient: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messagesContent: {
+    gap: 16,
+  },
+  messageBotAvatar: {
+    height: 28,
+    width: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  messageBubbleWrap: {
+    maxWidth: '82%',
+  },
+  typingAvatar: {
+    height: 28,
+    width: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  suggestionsScroll: {
+    maxHeight: 44,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  suggestionsContent: {
+    gap: 8,
+    alignItems: 'center',
+  },
+  suggestionChip: {
+    borderColor: '#D1DEF0',
+    backgroundColor: colors.surface,
+  },
+});

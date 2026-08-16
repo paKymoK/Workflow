@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Package, User, Building } from 'lucide-react-native';
@@ -32,9 +32,9 @@ export default function ScheduleScreen() {
               key={v}
               onPress={() => setView(v)}
               className="px-3 py-1.5"
-              style={view === v ? { backgroundColor: colors.primary } : { backgroundColor: '#fff' }}
+              style={view === v ? styles.viewToggleActive : styles.viewToggleInactive}
             >
-              <Text className="text-xs font-semibold capitalize" style={{ color: view === v ? '#fff' : colors.textMuted }}>
+              <Text className="text-xs font-semibold capitalize" style={view === v ? styles.viewToggleTextActive : styles.viewToggleTextInactive}>
                 {v}
               </Text>
             </Pressable>
@@ -42,7 +42,7 @@ export default function ScheduleScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scheduleScrollContent}>
         <View className="flex-row items-center justify-between px-4 pb-3 pt-4">
           <Pressable className="h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
             <ChevronLeft size={17} color="#4B5563" />
@@ -64,11 +64,11 @@ export default function ScheduleScreen() {
                 key={day}
                 onPress={() => setSelected(isSel ? null : i)}
                 className="flex-row items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm"
-                style={{ borderWidth: 2, borderColor: isSel ? colors.primary : 'transparent' }}
+                style={isSel ? styles.dayRowSelected : styles.dayRowUnselected}
               >
                 <View className="w-10 items-center">
                   <Text className="text-[10px] font-semibold text-gray-400">{day}</Text>
-                  <Text className="text-lg font-bold" style={{ color: isToday ? colors.primary : '#1F2937' }}>
+                  <Text className="text-lg font-bold" style={isToday ? styles.dayNumberToday : styles.dayNumberNormal}>
                     {WEEK_DATES_NUMS[i]}
                   </Text>
                   {isToday && <View className="mt-0.5 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.primary }} />}
@@ -86,7 +86,7 @@ export default function ScheduleScreen() {
         </View>
 
         {selected !== null && WEEK_SCHEDULE[selected] !== 'off' && (
-          <View className="mx-4 mb-4 rounded-2xl bg-white p-4 shadow-sm" style={{ borderWidth: 1.5, borderColor: '#DBEAFE' }}>
+          <View className="mx-4 mb-4 rounded-2xl bg-white p-4 shadow-sm" style={styles.shiftDetailCard}>
             <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">
               Shift Details — Jul {WEEK_DATES_NUMS[selected]}
             </Text>
@@ -119,3 +119,39 @@ export default function ScheduleScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  viewToggleActive: {
+    backgroundColor: colors.primary,
+  },
+  viewToggleInactive: {
+    backgroundColor: '#fff',
+  },
+  viewToggleTextActive: {
+    color: '#fff',
+  },
+  viewToggleTextInactive: {
+    color: colors.textMuted,
+  },
+  scheduleScrollContent: {
+    paddingBottom: 24,
+  },
+  dayRowSelected: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  dayRowUnselected: {
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  dayNumberToday: {
+    color: colors.primary,
+  },
+  dayNumberNormal: {
+    color: '#1F2937',
+  },
+  shiftDetailCard: {
+    borderWidth: 1.5,
+    borderColor: '#DBEAFE',
+  },
+});

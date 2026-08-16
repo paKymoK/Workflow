@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -107,10 +108,15 @@ export default function ChatThreadScreen() {
     return 'Several people are typing…';
   }, [typingUsers]);
 
+  // latestMessageId isn't read in the body — it's only here to force this
+  // callback's identity to change (and thus re-run) when a new message
+  // arrives while the screen stays focused, so it gets marked read too.
+  const latestMessageId = messages[0]?.id;
   useFocusEffect(
     useCallback(() => {
       if (conversationId) markRead(conversationId);
-    }, [conversationId, messages[0]?.id, markRead]),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversationId, latestMessageId, markRead]),
   );
 
   function handleChangeInput(text: string) {
@@ -229,7 +235,7 @@ export default function ChatThreadScreen() {
             data={messages}
             inverted
             keyExtractor={(m) => String(m.id)}
-            contentContainerStyle={{ padding: 16, gap: 4 }}
+            contentContainerStyle={styles.messagesList}
             style={{ backgroundColor: colors.background }}
             onEndReachedThreshold={0.4}
             onEndReached={() => {
@@ -249,10 +255,10 @@ export default function ChatThreadScreen() {
 
               return (
                 <View className={`flex-row gap-2 ${mine ? 'justify-end' : 'justify-start'} ${startOfGroup ? 'mt-3' : 'mt-0.5'}`}>
-                  {!mine && (endOfGroup ? <Avatar name={msg.sender.name} size="sm" /> : <View style={{ width: 32 }} />)}
+                  {!mine && (endOfGroup ? <Avatar name={msg.sender.name} size="sm" /> : <View style={styles.avatarSpacer} />)}
                   <Pressable
                     onLongPress={() => setReactionTarget(msg)}
-                    style={{ maxWidth: '74%' }}
+                    style={styles.messageBubbleWrapper}
                   >
                     {startOfGroup && !mine && (
                       <Text className="ml-1 mb-1 text-[10px] text-gray-500">{msg.sender.name}</Text>
@@ -273,7 +279,7 @@ export default function ChatThreadScreen() {
                               <Image
                                 key={i}
                                 source={{ uri: att.url ?? undefined }}
-                                style={{ height: 160, width: 220, borderRadius: 8 }}
+                                style={styles.attachmentImage}
                                 resizeMode="cover"
                               />
                             ) : (
@@ -292,12 +298,12 @@ export default function ChatThreadScreen() {
                               key={r.emoji}
                               onPress={() => toggleReaction({ messageId: msg.id, emoji: r.emoji })}
                               className="rounded-full border px-2 py-0.5"
-                              style={{
-                                borderColor: mineReacted ? colors.primary : colors.border,
-                                backgroundColor: mineReacted ? colors.surface : 'transparent',
-                              }}
+                              style={mineReacted ? styles.reactionPillActive : styles.reactionPillInactive}
                             >
-                              <Text className="text-[11px]" style={{ color: mineReacted ? colors.primary : '#6B7280' }}>
+                              <Text
+                                className="text-[11px]"
+                                style={mineReacted ? styles.reactionTextActive : styles.reactionTextInactive}
+                              >
                                 {r.emoji} {r.subs.length}
                               </Text>
                             </Pressable>
@@ -347,7 +353,7 @@ export default function ChatThreadScreen() {
             onPress={handleSend}
             disabled={sending || !canSend}
             className="h-9 w-9 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.primary, opacity: sending || !canSend ? 0.5 : 1 }}
+            style={sending || !canSend ? styles.sendButtonDisabled : styles.sendButtonEnabled}
           >
             <Send size={15} color="#fff" />
           </Pressable>
@@ -371,3 +377,16 @@ export default function ChatThreadScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  messagesList: { padding: 16, gap: 4 },
+  avatarSpacer: { width: 32 },
+  messageBubbleWrapper: { maxWidth: '74%' },
+  attachmentImage: { height: 160, width: 220, borderRadius: 8 },
+  reactionPillActive: { borderColor: colors.primary, backgroundColor: colors.surface },
+  reactionPillInactive: { borderColor: colors.border, backgroundColor: 'transparent' },
+  reactionTextActive: { color: colors.primary },
+  reactionTextInactive: { color: '#6B7280' },
+  sendButtonEnabled: { backgroundColor: colors.primary, opacity: 1 },
+  sendButtonDisabled: { backgroundColor: colors.primary, opacity: 0.5 },
+});

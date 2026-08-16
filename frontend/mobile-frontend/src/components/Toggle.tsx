@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { colors } from '@/src/theme/colors';
 
@@ -7,7 +7,7 @@ export function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) 
     <Pressable
       onPress={onToggle}
       className="justify-center rounded-full p-0.5"
-      style={{ width: 44, height: 24, backgroundColor: on ? colors.primary : '#D1D5DB' }}
+      style={on ? styles.trackOn : styles.trackOff}
     >
       <View
         className="h-5 w-5 rounded-full bg-white shadow"
@@ -16,3 +16,16 @@ export function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) 
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  trackOn: {
+    width: 44,
+    height: 24,
+    backgroundColor: colors.primary,
+  },
+  trackOff: {
+    width: 44,
+    height: 24,
+    backgroundColor: '#D1D5DB',
+  },
+});

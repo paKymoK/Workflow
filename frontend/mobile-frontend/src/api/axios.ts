@@ -3,7 +3,6 @@ import { API_BASE_URL } from '@env';
 
 import { loadTokens } from '@/src/auth/tokenStorage';
 import { refreshTokenIfPossible } from '@/src/auth/refreshSingleton';
-import { notifyLogout } from '@/src/auth/tokenSync';
 
 export const api = axios.create({
   baseURL: API_BASE_URL ?? 'http://localhost:8080',
@@ -34,7 +33,10 @@ api.interceptors.response.use(
         config.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(config);
       }
-      notifyLogout();
+      // Null here can mean "biometric gate hasn't unlocked the vault yet" or
+      // "session is momentarily locked", not necessarily a dead session — a
+      // definitively dead refresh token triggers notifyLogout() itself, from
+      // inside refreshTokenIfPossible(). Just let this one request fail.
     }
 
     return Promise.reject(error);

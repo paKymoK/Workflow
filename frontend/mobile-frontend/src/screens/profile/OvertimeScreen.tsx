@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus, Timer, CheckCircle } from 'lucide-react-native';
@@ -51,7 +51,7 @@ export default function OvertimeScreen() {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="mx-4 mb-3 mt-4 rounded-2xl bg-white p-4 shadow-sm">
           <View className="mb-3 flex-row items-center justify-between">
             <View>
@@ -121,7 +121,7 @@ export default function OvertimeScreen() {
                 placeholder="Describe the work during OT..."
                 placeholderTextColor="#9CA3AF"
                 className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800"
-                style={{ textAlignVertical: 'top', minHeight: 56 }}
+                style={styles.taskInput}
               />
             </View>
 
@@ -162,3 +162,13 @@ export default function OvertimeScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  taskInput: {
+    textAlignVertical: 'top',
+    minHeight: 56,
+  },
+});

@@ -2,9 +2,10 @@ import * as Keychain from 'react-native-keychain';
 
 const SERVICE = 'com.takypok.workflow.auth';
 
+// Refresh token lives in its own biometric-gated item — see refreshTokenVault.ts.
+// This item is read on every outgoing request/WS reconnect, so it must stay ungated.
 export type StoredTokens = {
   accessToken: string;
-  refreshToken?: string;
   idToken?: string;
 };
 

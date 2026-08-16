@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Video from 'react-native-video';
 import { PlayCircle } from 'lucide-react-native';
 
@@ -46,10 +46,14 @@ export function LazyVideoAttachment({ attachment }: { attachment: MessageAttachm
   return (
     <Video
       source={{ uri: getVideoStreamUrl(attachment.mediaAssetId) }}
-      style={{ height: 112, width: 224, borderRadius: 8, backgroundColor: '#000' }}
+      style={styles.video}
       controls
       resizeMode="contain"
       paused={false}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  video: { height: 112, width: 224, borderRadius: 8, backgroundColor: '#000' },
+});

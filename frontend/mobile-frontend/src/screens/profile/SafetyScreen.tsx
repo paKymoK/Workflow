@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -28,13 +28,13 @@ export default function SafetyScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 12, borderRadius: 16, padding: 16, overflow: 'hidden' }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.emergencyCard}>
           <LinearGradient
             colors={['#991B1B', '#EF4444']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            style={styles.gradientFill}
           />
           <View className="mb-3 flex-row items-center gap-2">
             <View className="h-7 w-7 items-center justify-center rounded-full bg-white/20">
@@ -44,7 +44,7 @@ export default function SafetyScreen() {
           </View>
           <View className="flex-row flex-wrap gap-y-2">
             {EMERGENCY_CONTACTS.map((c) => (
-              <View key={c.label} style={{ width: '50%' }}>
+              <View key={c.label} style={styles.contactItem}>
                 <Text className="text-[9px] text-red-200">{c.label}</Text>
                 <Text className="text-xs font-bold text-white">{c.number}</Text>
               </View>
@@ -84,3 +84,27 @@ export default function SafetyScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  emergencyCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    padding: 16,
+    overflow: 'hidden',
+  },
+  gradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  contactItem: {
+    width: '50%',
+  },
+});

@@ -1,4 +1,4 @@
-import { View, Image, Pressable, ActivityIndicator, Text } from 'react-native';
+import { View, Image, Pressable, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react-native';
 
 import type { MessageAttachment } from '@/src/api/chatTypes';
@@ -26,7 +26,7 @@ export function MessageComposerAttachments({
       {items.map((item) => (
         <View key={item.key} className="relative h-14 w-14 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
           {item.previewUri ? (
-            <Image source={{ uri: item.previewUri }} style={{ height: 56, width: 56 }} resizeMode="cover" />
+            <Image source={{ uri: item.previewUri }} style={styles.preview} resizeMode="cover" />
           ) : item.kind === 'video' ? (
             <VideoIcon size={18} color="#9CA3AF" />
           ) : (
@@ -56,3 +56,7 @@ export function MessageComposerAttachments({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  preview: { height: 56, width: 56 },
+});

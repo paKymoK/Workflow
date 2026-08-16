@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { View, Text, ScrollView, Pressable, Image, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, StyleSheet, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -49,7 +49,7 @@ export default function HomeScreen() {
   return (
     <View className="flex-1">
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView className="flex-1" contentContainerStyle={styles.scrollContent}>
         <View className="flex-row items-center justify-between px-4 pb-3 pt-2">
           <View>
             <Text className="text-xs text-gray-500">{getGreeting()},</Text>
@@ -89,6 +89,7 @@ export default function HomeScreen() {
                   colors={[...s.colors]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
+                  // eslint-disable-next-line react-native/no-inline-styles -- width is computed at runtime from measured layout, not a fixed constant
                   style={{
                     width: slideWidth,
                     height: '100%',
@@ -96,7 +97,7 @@ export default function HomeScreen() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Image source={logo} style={{ height: 24, width: 112 }} resizeMode="contain" className="mb-2 opacity-90" />
+                  <Image source={logo} style={styles.logoImage} resizeMode="contain" className="mb-2 opacity-90" />
                   <Text className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/60">{s.tag}</Text>
                   <Text className="max-w-[260px] text-sm font-semibold leading-snug text-white">{s.body}</Text>
                 </LinearGradient>
@@ -163,7 +164,7 @@ export default function HomeScreen() {
           <View className="mb-2.5 flex-row items-center justify-between">
             <Text className="text-sm font-bold text-gray-900">Announcements</Text>
             <Pressable>
-              <Text className="text-xs font-semibold" style={{ color: '#1558A8' }}>
+              <Text className="text-xs font-semibold" style={styles.viewAllText}>
                 View all
               </Text>
             </Pressable>
@@ -197,9 +198,9 @@ export default function HomeScreen() {
                 key={link.label}
                 onPress={() => (navigation as any).navigate(link.tab, { screen: link.screen })}
                 className="items-center gap-2 rounded-2xl bg-white py-4 shadow-sm"
-                style={{ width: '31%' }}
+                style={styles.quickLinkCard}
               >
-                <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: '#EEF3FA' }}>
+                <View className="h-10 w-10 items-center justify-center rounded-xl" style={styles.quickLinkIconBg}>
                   <link.icon size={20} color="#1558A8" />
                 </View>
                 <Text className="text-center text-[10px] leading-tight text-gray-600">{link.label}</Text>
@@ -214,21 +215,13 @@ export default function HomeScreen() {
       <Pressable
         onPress={() => setShowBot(true)}
         className="absolute"
-        style={{
-          bottom: 96,
-          right: 16,
-          shadowColor: colors.primary,
-          shadowOpacity: 0.45,
-          shadowRadius: 20,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
-        }}
+        style={styles.chatFab}
       >
         <LinearGradient
           colors={[colors.primary, colors.primaryLight]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ height: 56, width: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}
+          style={styles.chatFabGradient}
         >
           <Bot size={24} color="#fff" />
         </LinearGradient>
@@ -254,7 +247,7 @@ function WidgetCard({
   children: ReactNode;
 }) {
   return (
-    <View className="rounded-2xl bg-white p-4 shadow-sm" style={{ width: '48%' }}>
+    <View className="rounded-2xl bg-white p-4 shadow-sm" style={styles.widgetCard}>
       <View className="mb-3 flex-row items-center gap-2">
         <View className="h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: iconBg }}>
           <Icon size={15} color={iconColor} />
@@ -265,3 +258,41 @@ function WidgetCard({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  logoImage: {
+    height: 24,
+    width: 112,
+  },
+  viewAllText: {
+    color: '#1558A8',
+  },
+  quickLinkCard: {
+    width: '31%',
+  },
+  quickLinkIconBg: {
+    backgroundColor: '#EEF3FA',
+  },
+  chatFab: {
+    bottom: 96,
+    right: 16,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  chatFabGradient: {
+    height: 56,
+    width: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  widgetCard: {
+    width: '48%',
+  },
+});

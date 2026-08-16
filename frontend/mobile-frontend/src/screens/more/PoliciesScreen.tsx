@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -54,7 +54,7 @@ function DocumentDetail({ doc, onBack }: { doc: DocumentPost; onBack: () => void
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         {doc.fileUrl && (
           <View className="mx-4 mb-3 mt-4">
             <Pressable
@@ -103,7 +103,7 @@ function DocumentDetail({ doc, onBack }: { doc: DocumentPost; onBack: () => void
               onPress={() => ackMutation.mutate()}
               disabled={ackMutation.isPending}
               className="flex-row items-center justify-center gap-2 rounded-2xl py-4"
-              style={{ backgroundColor: colors.primary, opacity: ackMutation.isPending ? 0.6 : 1 }}
+              style={ackMutation.isPending ? styles.ackButtonDisabled : styles.ackButtonEnabled}
             >
               {ackMutation.isPending ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -169,7 +169,7 @@ export default function PoliciesScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="px-4 pb-3 pt-4">
           <View className="flex-row items-center gap-2 rounded-xl bg-white px-3 py-2.5 shadow-sm">
             <Search size={15} color="#9CA3AF" />
@@ -218,7 +218,7 @@ export default function PoliciesScreen() {
                         >
                           <View
                             className="mt-2.5 h-1.5 w-1.5 rounded-full"
-                            style={{ backgroundColor: doc.acknowledgedByMe ? '#16A34A' : colors.primary }}
+                            style={doc.acknowledgedByMe ? styles.docDotAcknowledged : styles.docDotPending}
                           />
                           <View className="flex-1">
                             <Text className="text-sm font-medium text-gray-800">{doc.title}</Text>
@@ -226,7 +226,7 @@ export default function PoliciesScreen() {
                               Updated: {formatDate(doc.modifiedAt ?? doc.createdAt)}
                             </Text>
                           </View>
-                          <ChevronRight size={14} color="#D1D5DB" style={{ marginTop: 4 }} />
+                          <ChevronRight size={14} color="#D1D5DB" style={styles.chevronSpacing} />
                         </Pressable>
                       ))}
                     </View>
@@ -240,3 +240,12 @@ export default function PoliciesScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: { paddingBottom: 24 },
+  ackButtonEnabled: { backgroundColor: colors.primary, opacity: 1 },
+  ackButtonDisabled: { backgroundColor: colors.primary, opacity: 0.6 },
+  docDotAcknowledged: { backgroundColor: '#16A34A' },
+  docDotPending: { backgroundColor: colors.primary },
+  chevronSpacing: { marginTop: 4 },
+});

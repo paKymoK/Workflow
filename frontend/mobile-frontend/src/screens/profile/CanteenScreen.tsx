@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, AlertTriangle, Utensils, CheckCircle } from 'lucide-react-native';
@@ -46,9 +46,9 @@ export default function CanteenScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.canteenScrollContent}>
         <View className="mx-4 mb-3 mt-4 flex-row items-start gap-2.5 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
-          <AlertTriangle size={14} color="#F59E0B" style={{ marginTop: 2 }} />
+          <AlertTriangle size={14} color="#F59E0B" style={styles.warningIcon} />
           <Text className="flex-1 text-xs font-medium leading-snug text-amber-700">
             Book meals by <Text className="font-bold">8:00 PM the day before</Text>. Late bookings subject to availability.
           </Text>
@@ -60,7 +60,7 @@ export default function CanteenScreen() {
             <Text className="text-sm font-bold text-gray-900">Today's Menu · Mon Jul 7</Text>
           </View>
           {TODAYS_MENU.map((item, i, arr) => (
-            <View key={item.meal} className={`rounded-xl px-3 py-2.5 ${i < arr.length - 1 ? 'mb-2' : ''}`} style={{ backgroundColor: '#F8FAFC' }}>
+            <View key={item.meal} className={`rounded-xl px-3 py-2.5 ${i < arr.length - 1 ? 'mb-2' : ''}`} style={styles.menuItemRow}>
               <Text className="text-[10px] font-semibold text-gray-400">{item.meal}</Text>
               <Text className="mt-0.5 text-xs text-gray-700">{item.menu}</Text>
             </View>
@@ -86,7 +86,7 @@ export default function CanteenScreen() {
                     <Pressable
                       onPress={() => toggle(day, col.key)}
                       className="h-8 w-8 items-center justify-center rounded-full"
-                      style={{ borderWidth: 2, backgroundColor: active ? colors.primary : '#fff', borderColor: active ? colors.primary : '#D1D5DB' }}
+                      style={active ? styles.mealToggleActive : styles.mealToggleInactive}
                     >
                       {active && <CheckCircle size={14} color="#fff" />}
                     </Pressable>
@@ -117,3 +117,25 @@ export default function CanteenScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  canteenScrollContent: {
+    paddingBottom: 24,
+  },
+  warningIcon: {
+    marginTop: 2,
+  },
+  menuItemRow: {
+    backgroundColor: '#F8FAFC',
+  },
+  mealToggleActive: {
+    borderWidth: 2,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  mealToggleInactive: {
+    borderWidth: 2,
+    backgroundColor: '#fff',
+    borderColor: '#D1D5DB',
+  },
+});

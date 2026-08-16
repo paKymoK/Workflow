@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -124,7 +124,7 @@ export default function LeaveScreen() {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="mb-3 flex-row gap-2 px-4 pt-4">
           {balances.map((b) => {
             const color = BALANCE_COLORS[b.leaveType];
@@ -206,7 +206,7 @@ export default function LeaveScreen() {
                 placeholder="Brief reason for leave..."
                 placeholderTextColor="#9CA3AF"
                 className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800"
-                style={{ textAlignVertical: 'top', minHeight: 56 }}
+                style={styles.reasonInput}
               />
             </View>
 
@@ -223,7 +223,7 @@ export default function LeaveScreen() {
                 onPress={() => submitMutation.mutate()}
                 disabled={submitMutation.isPending}
                 className="flex-1 items-center rounded-xl py-3"
-                style={{ backgroundColor: colors.primary, opacity: submitMutation.isPending ? 0.6 : 1 }}
+                style={submitMutation.isPending ? styles.submitButtonPending : styles.submitButtonActive}
               >
                 <Text className="text-sm font-semibold text-white">
                   {submitMutation.isPending ? 'Submitting...' : 'Submit'}
@@ -269,3 +269,21 @@ export default function LeaveScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  reasonInput: {
+    textAlignVertical: 'top',
+    minHeight: 56,
+  },
+  submitButtonPending: {
+    backgroundColor: colors.primary,
+    opacity: 0.6,
+  },
+  submitButtonActive: {
+    backgroundColor: colors.primary,
+    opacity: 1,
+  },
+});

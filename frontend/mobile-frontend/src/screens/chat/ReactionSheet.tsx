@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MessageCircle } from 'lucide-react-native';
 
 import { colors } from '@/src/theme/colors';
@@ -15,7 +15,7 @@ export function ReactionSheet({
   onClose: () => void;
 }) {
   return (
-    <View className="absolute inset-0 z-50 justify-end" style={{ backgroundColor: 'rgba(10,24,48,0.5)' }}>
+    <View className="absolute inset-0 z-50 justify-end" style={styles.backdrop}>
       <Pressable className="absolute inset-0" onPress={onClose} />
       <View className="rounded-t-3xl bg-white p-5 shadow-2xl">
         <View className="mb-5 flex-row justify-around">
@@ -33,3 +33,7 @@ export function ReactionSheet({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: { backgroundColor: 'rgba(10,24,48,0.5)' },
+});

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Linking, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -66,12 +66,12 @@ function MaterialDetail({ material, onBack }: { material: TrainingMaterial; onBa
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         {material.format === 'VIDEO' && material.videoId ? (
           <View className="mx-4 mb-3 mt-4 overflow-hidden rounded-2xl bg-black shadow-sm">
             <Video
               source={{ uri: getVideoStreamUrl(material.videoId) }}
-              style={{ height: 208, width: '100%' }}
+              style={styles.videoPlayer}
               controls
               resizeMode="contain"
               paused={false}
@@ -120,7 +120,7 @@ function MaterialDetail({ material, onBack }: { material: TrainingMaterial; onBa
               onPress={() => completeMutation.mutate()}
               disabled={completeMutation.isPending}
               className="flex-row items-center justify-center gap-2 rounded-2xl py-4"
-              style={{ backgroundColor: colors.primary, opacity: completeMutation.isPending ? 0.6 : 1 }}
+              style={completeMutation.isPending ? styles.completeButtonDisabled : styles.completeButtonEnabled}
             >
               {completeMutation.isPending ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -179,7 +179,7 @@ export default function TrainingScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="px-4 pb-3 pt-4">
           <View className="flex-row items-center gap-2 rounded-xl bg-white px-3 py-2.5 shadow-sm">
             <Search size={15} color="#9CA3AF" />
@@ -193,17 +193,15 @@ export default function TrainingScreen() {
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3" style={styles.categoryScroll} contentContainerStyle={styles.categoryScrollContent}>
           {categories.map((c) => (
             <Pressable
               key={c}
               onPress={() => setCategory(c)}
               className="rounded-full px-3 py-1.5"
-              style={
-                category === c ? { backgroundColor: colors.primary } : { backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border }
-              }
+              style={category === c ? styles.categoryPillActive : styles.categoryPillInactive}
             >
-              <Text className="text-xs font-bold" style={{ color: category === c ? '#fff' : colors.textMuted }}>
+              <Text className="text-xs font-bold" style={category === c ? styles.categoryTextActive : styles.categoryTextInactive}>
                 {c}
               </Text>
             </Pressable>
@@ -226,8 +224,8 @@ export default function TrainingScreen() {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   className="px-4"
-                  style={{ flexGrow: 0 }}
-                  contentContainerStyle={{ gap: 10, alignItems: 'flex-start', paddingVertical: 6 }}
+                  style={styles.recentScroll}
+                  contentContainerStyle={styles.recentScrollContent}
                 >
                   {recentlyAdded.map((material) => {
                     const fm = getFormatMeta(material.format);
@@ -236,7 +234,7 @@ export default function TrainingScreen() {
                         key={material.id}
                         onPress={() => setSelectedId(material.id)}
                         className="rounded-2xl bg-white p-3 shadow-sm"
-                        style={{ width: 128 }}
+                        style={styles.recentCard}
                       >
                         <View className="mb-2 h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: fm.bg }}>
                           <fm.icon size={16} color={fm.color} />
@@ -299,3 +297,53 @@ export default function TrainingScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  videoPlayer: {
+    height: 208,
+    width: '100%',
+  },
+  completeButtonEnabled: {
+    backgroundColor: colors.primary,
+    opacity: 1,
+  },
+  completeButtonDisabled: {
+    backgroundColor: colors.primary,
+    opacity: 0.6,
+  },
+  categoryScroll: {
+    flexGrow: 0,
+  },
+  categoryScrollContent: {
+    gap: 8,
+    alignItems: 'center',
+  },
+  categoryPillActive: {
+    backgroundColor: colors.primary,
+  },
+  categoryPillInactive: {
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  categoryTextActive: {
+    color: '#fff',
+  },
+  categoryTextInactive: {
+    color: colors.textMuted,
+  },
+  recentScroll: {
+    flexGrow: 0,
+  },
+  recentScrollContent: {
+    gap: 10,
+    alignItems: 'flex-start',
+    paddingVertical: 6,
+  },
+  recentCard: {
+    width: 128,
+  },
+});

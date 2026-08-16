@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { View, Text, FlatList, Pressable, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -58,7 +68,7 @@ export default function ChatThreadRepliesScreen() {
           <FlatList
             data={replies}
             keyExtractor={(m) => String(m.id)}
-            contentContainerStyle={{ padding: 16, gap: 12 }}
+            contentContainerStyle={styles.repliesListContent}
             style={{ backgroundColor: colors.background }}
             renderItem={({ item: reply }) => (
               <View className="flex-row gap-2">
@@ -91,7 +101,7 @@ export default function ChatThreadRepliesScreen() {
             onPress={handleSend}
             disabled={sending || !input.trim()}
             className="h-9 w-9 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.primary, opacity: sending || !input.trim() ? 0.5 : 1 }}
+            style={sending || !input.trim() ? styles.sendButtonDisabled : styles.sendButtonEnabled}
           >
             <Send size={15} color="#fff" />
           </Pressable>
@@ -100,3 +110,18 @@ export default function ChatThreadRepliesScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  repliesListContent: {
+    padding: 16,
+    gap: 12,
+  },
+  sendButtonEnabled: {
+    backgroundColor: colors.primary,
+    opacity: 1,
+  },
+  sendButtonDisabled: {
+    backgroundColor: colors.primary,
+    opacity: 0.5,
+  },
+});

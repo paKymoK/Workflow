@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import LinearGradient from 'react-native-linear-gradient';
 import { ArrowLeft, Camera, Building, Package, MapPin, Clock, User, Phone, Mail } from 'lucide-react-native';
@@ -29,27 +29,23 @@ function OrgNode({
   return (
     <View
       className={`flex-row items-center gap-2.5 rounded-xl border ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
-      style={{
-        backgroundColor: isSelf ? colors.primary : isManager ? colors.surface : '#F8FAFC',
-        borderColor: isSelf ? colors.primary : colors.border,
-        borderWidth: 1.5,
-      }}
+      style={isSelf ? styles.nodeSelf : isManager ? styles.nodeManager : styles.nodeDefault}
     >
       <View
         className={`items-center justify-center rounded-full ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
-        style={{ backgroundColor: isSelf ? 'rgba(255,255,255,0.25)' : colors.primary }}
+        style={isSelf ? styles.avatarBgSelf : styles.avatarBgOther}
       >
         <Text className={`font-bold text-white ${compact ? 'text-[10px]' : 'text-xs'}`}>{initials}</Text>
       </View>
       <View className="min-w-0 flex-1">
         <Text
           className={`font-bold ${compact ? 'text-[11px]' : 'text-sm'}`}
-          style={{ color: isSelf ? 'white' : '#1A2740' }}
+          style={isSelf ? styles.nameTextSelf : styles.nameTextOther}
           numberOfLines={1}
         >
           {name}
         </Text>
-        <Text className={compact ? 'text-[9px]' : 'text-[10px]'} style={{ color: isSelf ? 'rgba(255,255,255,0.7)' : colors.textMuted }} numberOfLines={1}>
+        <Text className={compact ? 'text-[9px]' : 'text-[10px]'} style={isSelf ? styles.roleTextSelf : styles.roleTextOther} numberOfLines={1}>
           {role}
         </Text>
       </View>
@@ -84,18 +80,18 @@ export default function OrgChartScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 20 }}>
+      <View style={styles.headerContainer}>
         <LinearGradient
           colors={[colors.primaryDark, colors.primary, colors.primaryMid]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.6, y: 1 }}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={styles.headerGradientFill}
         />
         <View className="mb-4 flex-row items-center gap-2">
           <Pressable
             onPress={() => navigation.goBack()}
             className="h-8 w-8 items-center justify-center rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+            style={styles.backButtonBg}
           >
             <ArrowLeft size={17} color="#fff" />
           </Pressable>
@@ -107,12 +103,12 @@ export default function OrgChartScreen() {
               <Image
                 source={{ uri: PROFILE.avatarUrl }}
                 className="h-[72px] w-[72px] rounded-full"
-                style={{ borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)' }}
+                style={styles.avatarImageBorder}
               />
             ) : (
               <View
                 className="h-[72px] w-[72px] items-center justify-center rounded-full"
-                style={{ backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)' }}
+                style={styles.avatarPlaceholder}
               >
                 <Text className="text-xl font-bold text-white">{PROFILE.initials}</Text>
               </View>
@@ -143,9 +139,9 @@ export default function OrgChartScreen() {
               key={t}
               onPress={() => setTab(t)}
               className="rounded-full px-5 py-1.5"
-              style={tab === t ? { backgroundColor: 'white' } : { backgroundColor: 'rgba(255,255,255,0.15)' }}
+              style={tab === t ? styles.tabActive : styles.tabInactive}
             >
-              <Text className="text-xs font-bold" style={{ color: tab === t ? colors.primary : 'rgba(255,255,255,0.85)' }}>
+              <Text className="text-xs font-bold" style={tab === t ? styles.tabTextActive : styles.tabTextInactive}>
                 {t === 'info' ? 'Profile Info' : 'Org Chart'}
               </Text>
             </Pressable>
@@ -153,7 +149,7 @@ export default function OrgChartScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 12 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         {tab === 'info' ? (
           <>
             <View className="rounded-2xl bg-white p-4 shadow-sm">
@@ -223,3 +219,80 @@ export default function OrgChartScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  nodeSelf: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    borderWidth: 1.5,
+  },
+  nodeManager: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1.5,
+  },
+  nodeDefault: {
+    backgroundColor: '#F8FAFC',
+    borderColor: colors.border,
+    borderWidth: 1.5,
+  },
+  avatarBgSelf: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  avatarBgOther: {
+    backgroundColor: colors.primary,
+  },
+  nameTextSelf: {
+    color: 'white',
+  },
+  nameTextOther: {
+    color: '#1A2740',
+  },
+  roleTextSelf: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  roleTextOther: {
+    color: colors.textMuted,
+  },
+  headerContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+  headerGradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  backButtonBg: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  avatarImageBorder: {
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  avatarPlaceholder: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  tabActive: {
+    backgroundColor: 'white',
+  },
+  tabInactive: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  tabTextActive: {
+    color: colors.primary,
+  },
+  tabTextInactive: {
+    color: 'rgba(255,255,255,0.85)',
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 24,
+    gap: 12,
+  },
+});

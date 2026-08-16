@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -40,13 +40,13 @@ export default function ProfileMenuScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 20 }}>
+      <ScrollView className="flex-1" contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
           <LinearGradient
             colors={[colors.primaryDark, colors.primary, colors.primaryMid]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0.6, y: 1 }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            style={styles.headerGradient}
           />
           <View className="flex-row items-center gap-4">
             <View className="relative">
@@ -54,12 +54,12 @@ export default function ProfileMenuScreen() {
                 <Image
                   source={{ uri: PROFILE.avatarUrl }}
                   className="h-16 w-16 rounded-full"
-                  style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+                  style={styles.avatarImageBorder}
                 />
               ) : (
                 <View
                   className="h-16 w-16 items-center justify-center rounded-full"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}
+                  style={styles.avatarPlaceholder}
                 >
                   <Text className="text-2xl font-bold text-white">{PROFILE.initials}</Text>
                 </View>
@@ -93,7 +93,7 @@ export default function ProfileMenuScreen() {
               <View
                 key={s.label}
                 className="flex-1 items-center rounded-xl px-2 py-2"
-                style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                style={styles.statPill}
               >
                 <Text className="text-[9px] font-medium text-blue-200">{s.label}</Text>
                 <Text className="mt-0.5 text-xs font-bold text-white">{s.value}</Text>
@@ -119,11 +119,7 @@ export default function ProfileMenuScreen() {
               {item.badge && (
                 <Text
                   className="rounded-full px-2.5 py-1 text-[10px] font-bold"
-                  style={
-                    item.badge === 'Open'
-                      ? { backgroundColor: '#DCFCE7', color: '#15803D' }
-                      : { backgroundColor: '#EFF6FF', color: '#1D4ED8' }
-                  }
+                  style={item.badge === 'Open' ? styles.badgeOpen : styles.badgeDefault}
                 >
                   {item.badge}
                 </Text>
@@ -136,3 +132,14 @@ export default function ProfileMenuScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: { paddingBottom: 24 },
+  header: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 20 },
+  headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  avatarImageBorder: { borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  avatarPlaceholder: { backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  statPill: { backgroundColor: 'rgba(255,255,255,0.12)' },
+  badgeOpen: { backgroundColor: '#DCFCE7', color: '#15803D' },
+  badgeDefault: { backgroundColor: '#EFF6FF', color: '#1D4ED8' },
+});

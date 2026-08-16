@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Linking, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { ArrowLeft, FileX } from 'lucide-react-native';
@@ -40,7 +40,7 @@ export default function PdfViewerScreen() {
       ) : (
         <Pdf
           source={{ uri, cache: true }}
-          style={{ flex: 1, backgroundColor: colors.background }}
+          style={styles.pdf}
           onError={() => setFailed(true)}
           renderActivityIndicator={() => <ActivityIndicator color={colors.primary} />}
         />
@@ -48,3 +48,7 @@ export default function PdfViewerScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  pdf: { flex: 1, backgroundColor: colors.background },
+});

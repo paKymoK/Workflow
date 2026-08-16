@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -35,32 +35,28 @@ export default function PerformanceScreen() {
         <Award size={18} color={colors.primary} />
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3 pt-4" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3 pt-4" style={styles.periodScroll} contentContainerStyle={styles.periodScrollContent}>
           {PERIODS.map((p) => (
             <Pressable
               key={p}
               onPress={() => setPeriod(p)}
               className="rounded-full px-4 py-2"
-              style={
-                period === p
-                  ? { backgroundColor: colors.primary }
-                  : { backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border }
-              }
+              style={period === p ? styles.periodPillActive : styles.periodPillInactive}
             >
-              <Text className="text-xs font-bold" style={{ color: period === p ? '#fff' : colors.textMuted }}>
+              <Text className="text-xs font-bold" style={period === p ? styles.periodTextActive : styles.periodTextInactive}>
                 {p}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
 
-        <View style={{ marginHorizontal: 16, marginBottom: 12, borderRadius: 16, overflow: 'hidden' }}>
+        <View style={styles.gradientCard}>
           <LinearGradient
             colors={[colors.primaryDark, colors.primary, colors.primaryMid]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            style={styles.gradientFill}
           />
           <View className="flex-row items-center gap-5 px-5 pb-4 pt-5">
             <View className="items-center">
@@ -87,7 +83,7 @@ export default function PerformanceScreen() {
               <Text className="text-[10px] text-blue-300">84 / 100</Text>
             </View>
             <View className="h-2 w-full overflow-hidden rounded-full bg-white/20">
-              <View className="h-full rounded-full bg-white/80" style={{ width: '84%' }} />
+              <View className="h-full rounded-full bg-white/80" style={styles.scoreBarFill} />
             </View>
           </View>
         </View>
@@ -99,12 +95,12 @@ export default function PerformanceScreen() {
               const aboveTarget = kpi.up ? kpi.value >= kpi.target : kpi.value <= kpi.target;
               const pct = Math.min(100, (kpi.up ? kpi.value / kpi.target : kpi.target / kpi.value) * 100);
               return (
-                <View key={kpi.label} className="rounded-2xl bg-white p-4 shadow-sm" style={{ width: '48%' }}>
+                <View key={kpi.label} className="rounded-2xl bg-white p-4 shadow-sm" style={styles.kpiCard}>
                   <View className="mb-2 flex-row items-center justify-between">
                     <Text className="flex-1 text-[10px] font-semibold leading-tight text-gray-400">{kpi.label}</Text>
                     <Text
                       className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
-                      style={{ backgroundColor: aboveTarget ? '#DCFCE7' : '#FEF3C7', color: aboveTarget ? '#15803D' : '#B45309' }}
+                      style={aboveTarget ? styles.kpiBadgeAbove : styles.kpiBadgeBelow}
                     >
                       {aboveTarget ? '✓' : '!'}
                     </Text>
@@ -137,8 +133,8 @@ export default function PerformanceScreen() {
             curved
             dataPointsColor={colors.primary}
             dataPointsRadius={4}
-            yAxisTextStyle={{ fontSize: 10, color: '#9CA3AF' }}
-            xAxisLabelTextStyle={{ fontSize: 10, color: '#9CA3AF' }}
+            yAxisTextStyle={styles.chartAxisLabel}
+            xAxisLabelTextStyle={styles.chartAxisLabel}
             xAxisColor="#F0F0F0"
             yAxisColor="#F0F0F0"
             rulesColor="#F0F0F0"
@@ -169,7 +165,7 @@ export default function PerformanceScreen() {
               <View key={i} className="flex-row items-start gap-3">
                 <View
                   className="mt-0.5 h-5 w-5 items-center justify-center rounded-full"
-                  style={{ backgroundColor: g.done ? '#DCFCE7' : '#F3F4F6' }}
+                  style={g.done ? styles.goalIconDone : styles.goalIconPending}
                 >
                   {g.done ? <CheckCircle size={13} color="#16A34A" /> : <View className="h-2 w-2 rounded-full bg-gray-300" />}
                 </View>
@@ -198,7 +194,7 @@ export default function PerformanceScreen() {
                 <Text className="text-[10px] text-gray-400">Jun 30, 2025</Text>
               </View>
               <Text className="mb-2 text-[10px] text-gray-400">Production Manager</Text>
-              <View className="rounded-xl px-3 py-3" style={{ backgroundColor: '#F8FAFC', borderWidth: 1.5, borderColor: colors.border }}>
+              <View className="rounded-xl px-3 py-3" style={styles.reviewQuoteBox}>
                 <Text className="text-xs leading-relaxed text-gray-700">
                   &ldquo;Lan consistently exceeds expectations in quality control. Her defect rate is the lowest on Line B this
                   quarter. I&apos;d like to see her take on more mentoring responsibilities in Q3 to develop the newer
@@ -221,3 +217,72 @@ export default function PerformanceScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  periodScroll: {
+    flexGrow: 0,
+  },
+  periodScrollContent: {
+    gap: 8,
+    alignItems: 'center',
+  },
+  periodPillActive: {
+    backgroundColor: colors.primary,
+  },
+  periodPillInactive: {
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  periodTextActive: {
+    color: '#fff',
+  },
+  periodTextInactive: {
+    color: colors.textMuted,
+  },
+  gradientCard: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  gradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  scoreBarFill: {
+    width: '84%',
+  },
+  kpiCard: {
+    width: '48%',
+  },
+  kpiBadgeAbove: {
+    backgroundColor: '#DCFCE7',
+    color: '#15803D',
+  },
+  kpiBadgeBelow: {
+    backgroundColor: '#FEF3C7',
+    color: '#B45309',
+  },
+  chartAxisLabel: {
+    fontSize: 10,
+    color: '#9CA3AF',
+  },
+  goalIconDone: {
+    backgroundColor: '#DCFCE7',
+  },
+  goalIconPending: {
+    backgroundColor: '#F3F4F6',
+  },
+  reviewQuoteBox: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+});

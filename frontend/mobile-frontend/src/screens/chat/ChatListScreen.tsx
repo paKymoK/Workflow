@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -54,7 +54,7 @@ function ConversationRow({
         {peerSub && (
           <View
             className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white"
-            style={{ backgroundColor: peerOnline ? '#4ADE80' : '#D1D5DB' }}
+            style={peerOnline ? styles.presenceDotOnline : styles.presenceDotOffline}
           />
         )}
       </View>
@@ -192,3 +192,12 @@ export default function ChatListScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  presenceDotOnline: {
+    backgroundColor: '#4ADE80',
+  },
+  presenceDotOffline: {
+    backgroundColor: '#D1D5DB',
+  },
+});

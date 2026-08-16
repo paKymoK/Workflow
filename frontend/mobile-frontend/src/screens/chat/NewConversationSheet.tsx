@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { Hash, X } from 'lucide-react-native';
 
 import { Avatar } from '@/src/components/Avatar';
@@ -89,9 +89,9 @@ export function NewConversationSheet({
   }
 
   return (
-    <View className="absolute inset-0 z-50 justify-end" style={{ backgroundColor: 'rgba(10,24,48,0.5)' }}>
+    <View className="absolute inset-0 z-50 justify-end" style={styles.backdrop}>
       <Pressable className="absolute inset-0" onPress={onClose} />
-      <View className="rounded-t-3xl bg-white shadow-2xl" style={{ height: '72%' }}>
+      <View className="rounded-t-3xl bg-white shadow-2xl" style={styles.sheet}>
         <View className="flex-row items-center justify-between border-b border-gray-100 px-5 py-3.5">
           <Text className="text-base font-bold text-gray-900">New</Text>
           <Pressable onPress={onClose} className="h-8 w-8 items-center justify-center rounded-full bg-gray-100">
@@ -107,7 +107,10 @@ export function NewConversationSheet({
               className="rounded-full px-3.5 py-1.5"
               style={{ backgroundColor: tab === t.key ? colors.primary : colors.surface }}
             >
-              <Text className="text-xs font-bold" style={{ color: tab === t.key ? '#fff' : colors.primary }}>
+              <Text
+                className="text-xs font-bold"
+                style={tab === t.key ? styles.tabTextActive : styles.tabTextInactive}
+              >
                 {t.label}
               </Text>
             </Pressable>
@@ -165,7 +168,7 @@ export function NewConversationSheet({
               onPress={handleCreateChannel}
               disabled={!channelName.trim() || creating}
               className="items-center rounded-2xl py-3.5"
-              style={{ backgroundColor: colors.primary, opacity: !channelName.trim() || creating ? 0.5 : 1 }}
+              style={!channelName.trim() || creating ? styles.createButtonDisabled : styles.createButtonEnabled}
             >
               <Text className="text-sm font-bold text-white">{creating ? 'Creating...' : 'Create Channel'}</Text>
             </Pressable>
@@ -210,3 +213,12 @@ export function NewConversationSheet({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: { backgroundColor: 'rgba(10,24,48,0.5)' },
+  sheet: { height: '72%' },
+  tabTextActive: { color: '#fff' },
+  tabTextInactive: { color: colors.primary },
+  createButtonEnabled: { backgroundColor: colors.primary, opacity: 1 },
+  createButtonDisabled: { backgroundColor: colors.primary, opacity: 0.5 },
+});

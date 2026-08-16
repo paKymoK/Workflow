@@ -2,6 +2,7 @@ const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 
 // React Native / Hermes has no built-in atob, so JWT payloads are base64url-decoded by hand
 // instead of relying on a browser global that may not exist on device.
+/* eslint-disable no-bitwise -- bit-packing is inherent to base64 decoding, not a bug */
 function base64Decode(input: string): string {
   const str = input.replace(/-/g, '+').replace(/_/g, '/');
   let output = '';
@@ -20,6 +21,7 @@ function base64Decode(input: string): string {
   }
   return output;
 }
+/* eslint-enable no-bitwise */
 
 export interface UserInfoClaim {
   name: string;

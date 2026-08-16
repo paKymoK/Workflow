@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookOpen, FileText, ClipboardList, Headphones, Settings, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +21,7 @@ export default function MoreMenuScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" contentContainerStyle={styles.scrollContent}>
         <View className="px-4 pb-3 pt-4">
           <Text className="text-lg font-bold text-gray-900">More</Text>
           <Text className="text-xs text-gray-400">Resources & settings</Text>
@@ -53,3 +53,9 @@ export default function MoreMenuScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 24,
+  },
+});

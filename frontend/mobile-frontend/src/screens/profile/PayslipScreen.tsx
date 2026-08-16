@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -34,32 +34,31 @@ export default function PayslipScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3 pt-4" style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 pb-3 pt-4" style={styles.monthScroll} contentContainerStyle={styles.monthScrollContent}>
           {PAYSLIP_MONTHS.map((m) => (
             <Pressable
               key={m}
               onPress={() => setMonth(m)}
               className="rounded-full px-4 py-2"
-              style={
-                month === m
-                  ? { backgroundColor: colors.primary }
-                  : { backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border }
-              }
+              style={month === m ? styles.monthChipActive : styles.monthChipInactive}
             >
-              <Text className="text-xs font-bold" style={{ color: month === m ? '#fff' : colors.textMuted }}>
+              <Text
+                className="text-xs font-bold"
+                style={month === m ? styles.monthChipTextActive : styles.monthChipTextInactive}
+              >
                 {m} 2025
               </Text>
             </Pressable>
           ))}
         </ScrollView>
 
-        <View style={{ marginHorizontal: 16, marginBottom: 12, borderRadius: 16, padding: 20, overflow: 'hidden' }}>
+        <View style={styles.summaryCard}>
           <LinearGradient
             colors={[colors.primaryDark, colors.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            style={styles.summaryCardGradient}
           />
           <Text className="mb-1 text-xs font-semibold text-blue-200">{month} 2025 · Net Take-Home</Text>
           <Text className="mb-4 text-4xl font-bold text-white">{fmtVND(data.net)}</Text>
@@ -130,3 +129,15 @@ export default function PayslipScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: { paddingBottom: 24 },
+  monthScroll: { flexGrow: 0 },
+  monthScrollContent: { gap: 8, alignItems: 'center' },
+  monthChipActive: { backgroundColor: colors.primary },
+  monthChipInactive: { backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border },
+  monthChipTextActive: { color: '#fff' },
+  monthChipTextInactive: { color: colors.textMuted },
+  summaryCard: { marginHorizontal: 16, marginBottom: 12, borderRadius: 16, padding: 20, overflow: 'hidden' },
+  summaryCardGradient: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+});

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Plus, CheckCircle, Camera, Send, Headphones } from 'lucide-react-native';
@@ -73,7 +73,7 @@ function TicketDetail({ ticket, onBack }: { ticket: TicketData; onBack: () => vo
                   <Text className="text-[10px] font-bold text-white">IT</Text>
                 </View>
               )}
-              <View style={{ maxWidth: '78%' }}>
+              <View style={styles.messageBubbleWrap}>
                 {!msg.self && <Text className="ml-1 mb-1 text-[10px] text-gray-500">IT Support</Text>}
                 <View
                   className={`rounded-2xl px-4 py-3 ${msg.self ? 'rounded-tr-sm' : 'rounded-tl-sm bg-white shadow-sm'}`}
@@ -170,7 +170,7 @@ export default function HelpdeskScreen() {
           <Text className="text-base font-bold text-gray-900">New Support Ticket</Text>
         </View>
 
-        <ScrollView className="flex-1 px-4 pt-4" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24, gap: 16 }}>
+        <ScrollView className="flex-1 px-4 pt-4" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.createScrollContent}>
           <View className="rounded-2xl bg-white p-4 shadow-sm">
             <Text className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Category</Text>
             <View className="flex-row flex-wrap justify-between gap-y-2">
@@ -179,11 +179,7 @@ export default function HelpdeskScreen() {
                   key={c.label}
                   onPress={() => setCategory(c.label)}
                   className="items-center gap-1.5 rounded-xl border-2 px-2 py-3"
-                  style={{
-                    width: '31%',
-                    borderColor: category === c.label ? colors.primary : colors.border,
-                    backgroundColor: category === c.label ? colors.surface : '#F8FAFC',
-                  }}
+                  style={category === c.label ? styles.categoryCardActive : styles.categoryCardInactive}
                 >
                   <c.icon size={18} color={category === c.label ? colors.primary : colors.textMuted} />
                   <Text
@@ -208,7 +204,7 @@ export default function HelpdeskScreen() {
                     key={p}
                     onPress={() => setPriority(p)}
                     className="flex-1 items-center rounded-xl border-2 py-2.5"
-                    style={active ? { borderColor: pc.sel, backgroundColor: pc.bg } : { borderColor: colors.border, backgroundColor: '#F8FAFC' }}
+                    style={active ? { borderColor: pc.sel, backgroundColor: pc.bg } : styles.priorityPillInactive}
                   >
                     <Text className="text-xs font-bold" style={{ color: active ? pc.sel : colors.textMuted }}>
                       {p}
@@ -229,7 +225,7 @@ export default function HelpdeskScreen() {
               placeholder="Describe your issue in detail..."
               placeholderTextColor="#9CA3AF"
               className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm leading-relaxed text-gray-800"
-              style={{ textAlignVertical: 'top', minHeight: 96 }}
+              style={styles.descriptionInput}
             />
           </View>
 
@@ -280,7 +276,7 @@ export default function HelpdeskScreen() {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
         <View className="mb-3 flex-row gap-2 px-4 pt-4">
           {[
             { label: 'Open', count: counts.Open, color: '#1D4ED8' },
@@ -349,3 +345,34 @@ export default function HelpdeskScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  messageBubbleWrap: {
+    maxWidth: '78%',
+  },
+  createScrollContent: {
+    paddingBottom: 24,
+    gap: 16,
+  },
+  categoryCardActive: {
+    width: '31%',
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  categoryCardInactive: {
+    width: '31%',
+    borderColor: colors.border,
+    backgroundColor: '#F8FAFC',
+  },
+  priorityPillInactive: {
+    borderColor: colors.border,
+    backgroundColor: '#F8FAFC',
+  },
+  descriptionInput: {
+    textAlignVertical: 'top',
+    minHeight: 96,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+});

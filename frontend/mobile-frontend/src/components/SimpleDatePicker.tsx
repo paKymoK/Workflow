@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Modal } from 'react-native';
+import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 import { colors } from '@/src/theme/colors';
@@ -104,11 +104,17 @@ export function SimpleDatePicker({
                         disabled={isDisabled}
                         onPress={() => pick(day)}
                         className="h-8 w-8 items-center justify-center rounded-full"
-                        style={{ backgroundColor: isSelected ? colors.primary : 'transparent' }}
+                        style={isSelected ? styles.dayCellSelected : styles.dayCellUnselected}
                       >
                         <Text
                           className="text-xs font-medium"
-                          style={{ color: isDisabled ? '#D1D5DB' : isSelected ? '#fff' : '#374151' }}
+                          style={
+                            isDisabled
+                              ? styles.dayTextDisabled
+                              : isSelected
+                                ? styles.dayTextSelected
+                                : styles.dayTextDefault
+                          }
                         >
                           {day}
                         </Text>
@@ -124,3 +130,21 @@ export function SimpleDatePicker({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  dayCellSelected: {
+    backgroundColor: colors.primary,
+  },
+  dayCellUnselected: {
+    backgroundColor: 'transparent',
+  },
+  dayTextDisabled: {
+    color: '#D1D5DB',
+  },
+  dayTextSelected: {
+    color: '#fff',
+  },
+  dayTextDefault: {
+    color: '#374151',
+  },
+});
