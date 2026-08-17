@@ -20,14 +20,13 @@ should.
 ## Example worth watching in this codebase
 
 `chat-service/src/main/java/com/takypok/chatservice/service/IngestionService.java` currently
-combines: directory walking and application-folder resolution, per-file-type ingestion strategy
-selection (Java path vs. delegating to a Python subprocess), Python process lifecycle management
-(building the command, wiring env vars, parsing its stdout protocol), and vector-store mutation
-(delete-by-filter, full collection wipe). None of these individually is wrong, and the class isn't
-unmanageable yet — but each new document type or new deletion policy added here makes the class a
-little more of a shared bottleneck. If it keeps growing, it's a candidate to split along those
-seams (e.g. a dedicated component for "run the Python ingest subprocess and parse its output",
-separate from the folder-walking/orchestration logic).
+combines: directory walking and application-folder resolution, per-file-type document parsing
+(PDF vs. plain text/markdown), and vector-store mutation (delete-by-filter, full collection wipe).
+None of these individually is wrong, and the class isn't unmanageable yet — but each new document
+type or new deletion policy added here makes the class a little more of a shared bottleneck. If it
+keeps growing (e.g. once AST-aware code chunking is added for the code-review knowledge base), it's
+a candidate to split along those seams — a dedicated parser-selection component separate from the
+folder-walking/orchestration logic.
 
 ## Detection heuristic
 
