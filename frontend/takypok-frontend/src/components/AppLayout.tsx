@@ -26,6 +26,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/settings": "Settings",
   "/leave-approvals": "My Team's Leave",
   "/assistant": "AI Assistant",
+  "/assistant/code-review": "Code Review",
 };
 
 const NAV_ITEMS: { path: string; icon: React.ReactNode; label: string }[] = [

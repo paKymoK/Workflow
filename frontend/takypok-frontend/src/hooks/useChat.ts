@@ -6,6 +6,7 @@ import {
   getSessionMessages,
   listApplications,
   listSessions,
+  reviewDiff,
 } from "../api/chatApi";
 
 export const assistantKeys = {
@@ -73,5 +74,12 @@ export function useDeleteAssistantSession() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assistantKeys.sessions, exact: true });
     },
+  });
+}
+
+/** Reviews a raw git diff against the code-review anti-pattern rule set. Stateless — no session. */
+export function useReviewDiff() {
+  return useMutation({
+    mutationFn: (diffText: string) => reviewDiff(diffText),
   });
 }

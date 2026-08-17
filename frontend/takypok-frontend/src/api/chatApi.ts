@@ -63,3 +63,15 @@ export async function askInSession(sessionId: string, question: string): Promise
 export async function deleteSession(sessionId: string): Promise<void> {
   await api.delete(`/chat-service/assist/sessions/${sessionId}`);
 }
+
+export interface CodeReviewResult {
+  review: string;
+  rulesConsidered: string[];
+}
+
+export async function reviewDiff(diffText: string): Promise<CodeReviewResult> {
+  const { data } = await api.post<CodeReviewResult>("/chat-service/code-review", diffText, {
+    headers: { "Content-Type": "text/plain" },
+  });
+  return data;
+}

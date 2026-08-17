@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button, Input } from "antd";
-import { SendOutlined, PlusOutlined, DeleteOutlined, RobotOutlined } from "@ant-design/icons";
+import {
+  SendOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  RobotOutlined,
+  CodeOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { AssistantImageRef, AssistantTurn } from "../api/chatApi";
 import {
@@ -154,14 +161,19 @@ export default function Assistant() {
       <div className="w-72 flex-shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--border)]">
           <span className="text-[14px] font-bold text-[var(--text)]">AI Assistant</span>
-          <Button
-            type="text"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={startNewChat}
-            title="New chat"
-            className="!text-[var(--accent)]"
-          />
+          <div className="flex items-center gap-1">
+            <Link to="/assistant/code-review" title="Code Review">
+              <Button type="text" size="small" icon={<CodeOutlined />} className="!text-[var(--accent)]" />
+            </Link>
+            <Button
+              type="text"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={startNewChat}
+              title="New chat"
+              className="!text-[var(--accent)]"
+            />
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
           {sessionsQuery.data?.length === 0 && (
