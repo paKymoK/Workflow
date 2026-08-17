@@ -3,6 +3,7 @@ package com.takypok.chatservice.service;
 import com.takypok.chatservice.model.AnswerResponse;
 import com.takypok.chatservice.model.ImageRef;
 import com.takypok.chatservice.model.assistant.AssistantTurn;
+import com.takypok.chatservice.util.TextUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,11 +65,6 @@ public class AssistantService {
 
   // similaritySearch results are ordered best-match-first; only these count toward images.
   private static final int IMAGE_CANDIDATE_LIMIT = 1;
-
-  private String stripThinkingTokens(String response) {
-    if (response == null) return "";
-    return response.replaceAll("(?s)<think>.*?</think>", "").trim();
-  }
 
   /**
    * Pulls markdown image references (`![alt](url)`) out of the sections of each retrieved source's
@@ -237,7 +233,7 @@ public class AssistantService {
                           .content();
 
               return AnswerResponse.builder()
-                  .answer(stripThinkingTokens(raw))
+                  .answer(TextUtils.stripThinkingTokens(raw))
                   .sources(sources)
                   .images(images)
                   .build();

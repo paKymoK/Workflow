@@ -1,9 +1,10 @@
 package com.takypok.chatservice.service;
 
 import com.takypok.chatservice.model.CodeReviewResponse;
-import java.io.File;
+import com.takypok.chatservice.util.TextUtils;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -13,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
@@ -30,7 +33,12 @@ public class CodeReviewService {
   // diff, so retrieval would add ingestion/embedding machinery for no accuracy benefit yet.
   // Revisit (real similaritySearch, like AssistantService does against crm_vi) once the rule
   // corpus grows past what fits in context.
-  private static final String RULES_DIR = "documents/code-review/anti-patterns";
+  //
+  // Loaded via the classpath*: resolver (not ClassPathResource#getFile) because this directory
+  // lives inside the packaged jar in every deployed environment, where getFile() has no real
+  // filesystem path to return.
+  private static final String RULES_LOCATION_PATTERN =
+      "classpath:documents/code-review/anti-patterns/*.md";
 
   private static final String SYSTEM_PROMPT =
       """
@@ -56,15 +64,28 @@ public class CodeReviewService {
 
   private final ChatClient chatClient;
 
+  // Rule docs are static for the lifetime of the running jar (they only change on redeploy), so
+  // they're read once at startup instead of on every request.
+  private List<RuleDoc> rules = List.of();
+
+  @PostConstruct
+  void loadRules() {
+    rules = readRuleDocs();
+  }
+
   public Mono<CodeReviewResponse> review(String diffText) {
+    if (!StringUtils.hasText(diffText)) {
+      return Mono.just(
+          CodeReviewResponse.builder()
+              .review("No diff provided.")
+              .rulesConsidered(List.of())
+              .build());
+    }
+
     return Mono.fromCallable(
             () -> {
-              List<File> rules = ruleFiles();
               String rulesContext =
-                  rules.stream()
-                      .map(this::readFileQuietly)
-                      .filter(StringUtils::hasText)
-                      .collect(Collectors.joining("\n\n---\n\n"));
+                  rules.stream().map(RuleDoc::content).collect(Collectors.joining("\n\n---\n\n"));
 
               String userMessage =
                   "## Anti-pattern rules\n"
@@ -83,37 +104,38 @@ public class CodeReviewService {
                       .content();
 
               return CodeReviewResponse.builder()
-                  .review(stripThinkingTokens(raw))
-                  .rulesConsidered(rules.stream().map(File::getName).toList())
+                  .review(TextUtils.stripThinkingTokens(raw))
+                  .rulesConsidered(rules.stream().map(RuleDoc::name).toList())
                   .build();
             })
         .subscribeOn(Schedulers.boundedElastic());
   }
 
-  private String stripThinkingTokens(String response) {
-    if (response == null) return "";
-    return response.replaceAll("(?s)<think>.*?</think>", "").trim();
-  }
+  private record RuleDoc(String name, String content) {}
 
-  private List<File> ruleFiles() {
+  private List<RuleDoc> readRuleDocs() {
     try {
-      File dir = new ClassPathResource(RULES_DIR).getFile();
-      File[] files =
-          dir.listFiles((d, name) -> name.endsWith(".md") && !name.equalsIgnoreCase("README.md"));
-      if (files == null) return List.of();
-      return Arrays.stream(files).sorted(Comparator.comparing(File::getName)).toList();
+      ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+      Resource[] resources = resolver.getResources(RULES_LOCATION_PATTERN);
+      return Arrays.stream(resources)
+          .filter(r -> !"README.md".equalsIgnoreCase(r.getFilename()))
+          .sorted(Comparator.comparing(Resource::getFilename))
+          .map(this::readResourceQuietly)
+          .filter(doc -> StringUtils.hasText(doc.content()))
+          .toList();
     } catch (IOException e) {
       log.error("Failed to list code-review rule docs: {}", e.getMessage(), e);
       return List.of();
     }
   }
 
-  private String readFileQuietly(File file) {
-    try {
-      return Files.readString(file.toPath());
+  private RuleDoc readResourceQuietly(Resource resource) {
+    try (var in = resource.getInputStream()) {
+      return new RuleDoc(
+          resource.getFilename(), new String(in.readAllBytes(), StandardCharsets.UTF_8));
     } catch (IOException e) {
-      log.warn("Failed to read rule doc {}: {}", file.getName(), e.getMessage());
-      return "";
+      log.warn("Failed to read rule doc {}: {}", resource.getFilename(), e.getMessage());
+      return new RuleDoc(resource.getFilename(), "");
     }
   }
 }
