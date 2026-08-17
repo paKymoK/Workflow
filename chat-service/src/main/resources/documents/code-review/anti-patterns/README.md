@@ -14,6 +14,7 @@ the actual codebase's idioms (WebFlux/Reactor, Lombok, this repo's shared `core-
 | `unsynchronized-shared-mutable-state.md` | performance | high | real good example — `ChatSessionRegistry` |
 | `optional-and-null-misuse.md` | convention | medium | synthetic |
 | `god-class-mixed-responsibilities.md` | convention | medium | real discussion case — `IngestionService` |
+| `third-party-or-long-io-in-transactional.md` | performance | high | real — `UserServiceImpl.create`/`updateProfile` (Kafka publish inside `@Transactional`) |
 
 `process-stream-deadlock.md` was removed: it was grounded in `IngestionService`'s Python-subprocess
 delegation for `.docx/.xlsx/.pptx`, which was dropped entirely (see below) — the risk no longer
