@@ -45,24 +45,6 @@ public class IngestionService {
   @Value("${spring.ai.vectorstore.qdrant.collection-name}")
   private String collectionName;
 
-  @Value("${spring.ai.vectorstore.qdrant.host}")
-  private String qdrantHost;
-
-  @Value("${spring.ai.vectorstore.qdrant.port}")
-  private int qdrantPort;
-
-  @Value("${spring.ai.ollama.base-url}")
-  private String ollamaBaseUrl;
-
-  @Value("${spring.ai.ollama.embedding.model}")
-  private String embeddingModel;
-
-  @Value("${ingest.python.bin:python3}")
-  private String pythonBin;
-
-  @Value("${ingest.python.script:scripts/ingest.py}")
-  private String pythonScript;
-
   private final TokenTextSplitter splitter =
       TokenTextSplitter.builder()
           .withChunkSize(400)
@@ -72,9 +54,10 @@ public class IngestionService {
           .withKeepSeparator(true)
           .build();
 
-  // ── Supported by Python ──────────────────────────────────────────────────
-  private static final Set<String> PYTHON_EXTENSIONS = Set.of(".docx", ".xlsx", ".pptx");
-  private static final Set<String> JAVA_EXTENSIONS = Set.of(".pdf", ".txt", ".md");
+  // Text-based documents only — .docx/.xlsx/.pptx support was dropped along with the Python
+  // delegation path (scripts/ingest.py): the local LLM wasn't handling that extracted content
+  // well, and text formats cover the knowledge base's actual needs.
+  private static final Set<String> SUPPORTED_EXTENSIONS = Set.of(".pdf", ".txt", ".md");
 
   // Bucket for files sitting directly under documents/ with no application subfolder.
   private static final String UNCATEGORIZED = "uncategorized";
@@ -303,68 +286,15 @@ public class IngestionService {
     }
   }
 
-  private int ingestFile(File file, String application) throws IOException, InterruptedException {
+  private int ingestFile(File file, String application) throws IOException {
     String ext = getExtension(file.getName());
-
-    if (PYTHON_EXTENSIONS.contains(ext)) {
-      return ingestViaPython(file, application);
-    } else if (JAVA_EXTENSIONS.contains(ext)) {
-      return ingestViaJava(file, application);
-    } else {
+    if (!SUPPORTED_EXTENSIONS.contains(ext)) {
       log.warn("Skipping unsupported file type: {}", file.getName());
       throw new IllegalArgumentException("Unsupported file type: " + ext);
     }
-  }
 
-  // ── Python path: docx / xlsx / pptx ─────────────────────────────────────
-  private int ingestViaPython(File file, String application)
-      throws IOException, InterruptedException {
-    log.info("Delegating to Python: {}/{}", application, file.getName());
-
-    ProcessBuilder pb = new ProcessBuilder(pythonBin, pythonScript, file.getAbsolutePath());
-    pb.redirectErrorStream(false);
-
-    // Pass required env vars to the Python process
-    Map<String, String> env = pb.environment();
-    env.put("QDRANT_URL", "http://" + qdrantHost + ":" + qdrantPort);
-    env.put("QDRANT_COLLECTION", collectionName);
-    env.put("OLLAMA_BASE_URL", ollamaBaseUrl);
-    env.put("EMBEDDING_MODEL", embeddingModel);
-    env.put("DOCUMENT_APPLICATION", application);
-
-    Process process = pb.start();
-    String stdout = new String(process.getInputStream().readAllBytes());
-    String stderr = new String(process.getErrorStream().readAllBytes());
-    int exitCode = process.waitFor();
-
-    if (exitCode != 0) {
-      throw new RuntimeException("Python ingest failed for " + file.getName() + ": " + stderr);
-    }
-
-    return parseChunkCount(stdout.trim(), file.getName());
-  }
-
-  // stdout format: "OK:{chunks}:{filename}"
-  private int parseChunkCount(String stdout, String fileName) {
-    String[] parts = stdout.split(":", 3);
-    if (parts.length < 2 || !"OK".equals(parts[0])) {
-      log.warn("Unexpected Python ingest output for {}: {}", fileName, stdout);
-      return 0;
-    }
-    try {
-      return Integer.parseInt(parts[1].trim());
-    } catch (NumberFormatException e) {
-      log.warn("Could not parse chunk count from Python output for {}: {}", fileName, stdout);
-      return 0;
-    }
-  }
-
-  // ── Java path: pdf / txt / md ────────────────────────────────────────────
-  private int ingestViaJava(File file, String application) throws IOException {
-    log.info("Ingesting via Java: {}/{}", application, file.getName());
     List<Document> docs;
-
-    if (file.getName().endsWith(".pdf")) {
+    if (ext.equals(".pdf")) {
       docs = new PagePdfDocumentReader("file:" + file.getAbsolutePath()).get();
     } else {
       String content = Files.readString(file.toPath());
