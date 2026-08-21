@@ -408,7 +408,8 @@ export default function Portfolio() {
   const submitForm = () => {
     if (!form.name.trim() || !form.message.trim()) return;
     const subject = encodeURIComponent(`Portfolio contact from ${form.name}`);
-    const body    = encodeURIComponent(`Hi Thai,\n\n${form.message}\n\n— ${form.name}`);
+    const replyTo = form.email.trim() ? `\nReply to: ${form.email.trim()}` : "";
+    const body    = encodeURIComponent(`Hi Thai,\n\n${form.message}\n\n— ${form.name}${replyTo}`);
     window.location.href = `mailto:thaimeo0210@gmail.com?subject=${subject}&body=${body}`;
     setSent(true);
     setTimeout(() => setSent(false), 4000);
@@ -511,7 +512,7 @@ export default function Portfolio() {
                   <span className="pf2-tl-role">/ {e.role}</span>
                   <span className="pf2-tl-dates">{e.dates}</span>
                 </div>
-                <p className="pf2-tl-desc">{e.desc}</p>
+                {e.desc && <p className="pf2-tl-desc">{e.desc}</p>}
                 <div className="pf2-tl-tags">
                   {e.tags.map((t) => (
                     <span key={t} className="pf2-tl-tag" style={{ "--dot-color": e.accentVar } as React.CSSProperties}>
@@ -563,7 +564,7 @@ export default function Portfolio() {
               <p>
                 HEY — I'M THAI. A HANOI-BASED FULL-STACK DEVELOPER WHO BUILDS THINGS THAT REFUSE TO BLEND IN.<br /><br />
                 I SPECIALIZE IN PERFORMANT WEB APPS, REACTIVE BACKENDS, AND INTERFACES THAT SCALE.
-                FOUR YEARS IN THE INDUSTRY — SHIPPING AT BANKS, ROBOTICS COMPANIES, AND AI STARTUPS ACROSS VIETNAM.<br /><br />
+                SIX YEARS IN THE INDUSTRY — SHIPPING AT BANKS, ROBOTICS COMPANIES, AND AI STARTUPS ACROSS VIETNAM.<br /><br />
                 I'M CURRENTLY OPEN TO FULL-TIME AND CONTRACT WORK. IF YOUR PROJECT NEEDS TO STAND OUT — NOT JUST SHOW UP — LET'S TALK.
               </p>
               <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
