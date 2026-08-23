@@ -1,0 +1,23 @@
+services:
+  takypok-frontend:
+    build:
+      context: ..
+      dockerfile: takypok-frontend/Dockerfile
+    image: takypok/frontend
+    container_name: takypok-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway-service
+    networks:
+      - takypok_default
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "1"
+    restart: unless-stopped
+
+networks:
+  takypok_default:
+    external: true

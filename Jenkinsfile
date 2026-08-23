@@ -115,6 +115,7 @@ pipeline {
     post {
         success {
             echo "Build #${env.BUILD_NUMBER} thành công — các service đã được (re)start."
+            echo "Giao diện web (takypok-frontend) truy cập tại: http://localhost:3000"
         }
         failure {
             echo "Build #${env.BUILD_NUMBER} thất bại — chạy 'docker compose logs --tail=100' trên VPS để xem chi tiết."
