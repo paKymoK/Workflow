@@ -50,12 +50,23 @@ public class CodeReviewService {
       the diff actually adds or changes (lines starting with '+'), using the rule documents as
       your sole source of truth — never invent a rule that isn't listed.
 
+      Output ONLY the final findings below, in the exact format given — no reasoning, no
+      deliberation, no "let's check rule X" or "let's re-read rule Y" narration, no weighing of
+      alternatives out loud. Decide silently; the response contains nothing but the answer.
+
       For each rule that is clearly violated, output a finding with:
       - rule: the rule's id (from its front matter)
       - file: the file path from the diff, if identifiable
-      - explanation: one or two sentences tied to the specific diff content, not the rule's
-        generic description
-      - suggestedFix: a short, concrete fix
+      - explanation: one or two sentences tied to the specific diff content (not the rule's
+        generic description), naming exactly which added line(s) or symbol trigger it
+
+      This is a flag-only review, not a fix-it review — never include a suggested fix, refactor,
+      or code change. Only report what's wrong and why; the reader decides how to address it.
+
+      Only cite a rule when the diff's actual code matches that rule's specific detection
+      heuristic — a thematic or superficial resemblance (e.g. "this file touches reactive code")
+      is not enough on its own. If you are not confident a rule is violated, omit it entirely
+      rather than including it with a hedge ("might be", "if this were", "assuming").
 
       Skip any rule that does not apply — do not list rules the diff doesn't violate. If no
       provided rule is violated, respond with exactly: "No anti-patterns found in the provided

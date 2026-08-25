@@ -24,7 +24,10 @@ spring:
         model: qwen3.5:4b
         options:
           temperature: 0.1
-          num-ctx: 8192
+          # Rules corpus alone is ~11k tokens (25 docs) once the auth/perf/convention batch was
+          # added; bumped from 8192 to leave headroom for the system prompt, the diff under
+          # review, and the model's own response.
+          num-ctx: 32768
       embedding:
         model: bge-m3
     vectorstore:
