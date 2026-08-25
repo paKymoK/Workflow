@@ -21,18 +21,35 @@
 // 4. Jenkins đang chạy DƯỚI DẠNG 1 CONTAINER trên chính máy có Docker Desktop, nên container Jenkins
 //    đó PHẢI được mount socket của Docker Desktop vào bên trong thì các lệnh `docker`/`docker compose`
 //    ở dưới mới điều khiển đúng Docker Engine mà Docker Desktop đang quản lý — khi đó container nào
-//    được tạo ra sẽ tự động hiện trong giao diện Docker Desktop, không cần thêm bước nào khác:
+//    được tạo ra sẽ tự động hiện trong giao diện Docker Desktop, không cần thêm bước nào khác. Container
+//    Jenkins CŨNG PHẢI mount thêm đúng đường dẫn workspace thật trên host (xem lý do ở `customWorkspace`
+//    phía trên) — thiếu mount này thì mọi service dùng bind mount tương đối trong docker-compose.yml
+//    (postgres, ...) sẽ nhận nhầm thư mục rỗng và crash-loop:
 //      docker run -d --name jenkins \
 //        -v /var/run/docker.sock:/var/run/docker.sock \
 //        -v jenkins_home:/var/jenkins_home \
-//        -p 8080:8080 jenkins/jenkins:lts
+//        -v /Users/panchew/jenkins-workspace:/Users/panchew/jenkins-workspace \
+//        -p 8080:8080 -p 50000:50000 jenkins-with-docker
 //    (trên Windows dùng Docker Desktop, đường dẫn socket vẫn là /var/run/docker.sock nhờ WSL2 backend)
 //    Container Jenkins cũng cần có sẵn docker CLI để chạy được các lệnh `sh 'docker ...'` — image
 //    jenkins/jenkins gốc KHÔNG có sẵn, cần build lại image Jenkins có cài thêm docker-ce-cli
 //    (hoặc dùng plugin "Docker Pipeline" kết hợp Dockerfile riêng cho Jenkins).
 
 pipeline {
-    agent any
+    // Jenkins chạy trong container, dùng chung socket Docker Desktop với host — mọi bind mount
+    // tương đối trong docker-compose.yml (vd: "./postgresql.conf:...") được daemon Docker Desktop
+    // (chạy NGOÀI container Jenkins) diễn giải theo đường dẫn HOST thật, không phải đường dẫn bên
+    // trong container Jenkins. Nếu workspace nằm ở /var/jenkins_home/workspace/... (chỉ tồn tại
+    // bên trong container) thì Docker Desktop sẽ không tìm thấy path đó trên host thật và tự tạo
+    // nhầm 1 thư mục rỗng để mount vào, khiến ví dụ Postgres đọc "config file" rỗng rồi crash-loop.
+    // => Ép workspace ra đúng /Users/panchew/jenkins-workspace/takypok-workflow, path này PHẢI được
+    // mount vào container Jenkins ở đúng cùng đường dẫn khi chạy `docker run` (xem ghi chú #4).
+    agent {
+        node {
+            label ''
+            customWorkspace '/Users/panchew/jenkins-workspace/takypok-workflow'
+        }
+    }
 
     options {
         timestamps()
