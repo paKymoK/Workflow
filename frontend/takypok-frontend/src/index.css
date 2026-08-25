@@ -496,7 +496,7 @@ input:focus-within ~ .focus-bar { width: 100%; }
 [data-theme="dark"] {
   --pf-pink:   #9B5DE5;
   --pf-green:  #00F5C4;
-  --pf-yellow: #00CFFF;
+  --pf-yellow: #FFD60A;
   --pf-cyan:   #48CAE4;
   --pf-orange: #F72585;
   --pf-red:    #FF4B4B;
@@ -510,7 +510,7 @@ input:focus-within ~ .focus-bar { width: 100%; }
 [data-theme="light"] {
   --pf-pink:   #7B2D8B;
   --pf-green:  #007A70;
-  --pf-yellow: #0055AA;
+  --pf-yellow: #8A6D00;
   --pf-cyan:   #0088BB;
   --pf-orange: #C03050;
   --pf-red:    #B3261E;
