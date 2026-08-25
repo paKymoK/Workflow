@@ -6,9 +6,12 @@
 //    image qua registry nào cả. Agent cần có sẵn Docker + Docker Compose v2 (`docker compose ...`).
 // 2. Mạng "takypok_default" phải tồn tại TRƯỚC khi chạy job này — mạng này do các stack hạ tầng
 //    (infrastructure/postgres, infrastructure/redis, infrastructure/kafka) tự tạo khi chạy
-//    `docker compose up -d` trong từng thư mục đó. Nếu infra chưa chạy, bước "Docker Compose Up"
-//    ở dưới sẽ lỗi vì network chưa tồn tại (network được khai báo `external: true` trong
-//    docker-compose.yaml gốc). Chạy infra 1 lần trước, hoặc bật INCLUDE_INFRA bên dưới.
+//    `docker compose up -d` trong từng thư mục đó, và discovery-service/docker-compose.yml cũng
+//    khai báo mạng này là `external: true`. Chạy infra 1 lần trước (hoặc bật INCLUDE_INFRA bên
+//    dưới), hoặc để stage "Ensure Docker network" tự tạo mạng rỗng nếu chưa có ai tạo.
+// 2b. Pipeline này ĐANG SCOPE HẸP: chỉ build/chạy discovery-service (để test trước khi mở rộng ra
+//    toàn bộ docker-compose.yaml gốc). Khi cần build lại full stack, đổi lệnh ở stage
+//    "Build discovery-service" thành `docker compose up -d --build` (chạy ở thư mục gốc repo).
 // 3. Stage Checkout bên dưới tự pull code bằng credential "jenkins-tocken" (đã tạo sẵn trong
 //    Manage Jenkins > Credentials), nên có thể dán thẳng file này vào job kiểu "Pipeline script"
 //    (paste trực tiếp, không cần cấu hình SCM riêng cho job) — chỉ cần bấm "Build Now" là chạy.
@@ -51,7 +54,7 @@ pipeline {
 
                 // Pull code tường minh bằng bước `git` — không phụ thuộc job phải cấu hình sẵn SCM,
                 // nên copy nguyên Jenkinsfile này vào job kiểu "Pipeline script" (dán trực tiếp) vẫn chạy được.
-                git branch: 'master',
+                git branch: 'UAT',
                     url: 'https://github.com/paKymoK/Workflow.git',
                     credentialsId: 'jenkins-tocken'
 
@@ -90,19 +93,34 @@ pipeline {
             }
         }
 
-        stage('Docker Compose Up') {
+        stage('Ensure Docker network') {
             steps {
-                // --build: build lại image nào có code đổi (Docker cache tự bỏ qua service không đổi)
-                // -d: chạy nền
-                sh 'docker compose up -d --build'
+                // discovery-service/docker-compose.yml khai báo mạng "takypok_default" là external.
+                // Nếu INCLUDE_INFRA=false (postgres/redis/kafka chưa chạy để tự tạo mạng này),
+                // tạo mạng rỗng ở đây để bước build dưới không lỗi "network not found".
+                sh '''
+                    docker network inspect takypok_default >/dev/null 2>&1 || docker network create takypok_default
+                '''
+            }
+        }
+
+        stage('Build discovery-service') {
+            steps {
+                // Chỉ build/chạy discovery-service (đang test riêng service này trước) —
+                // muốn build full stack thì đổi sang `docker compose up -d --build` ở thư mục gốc.
+                sh '''
+                    cd discovery-service
+                    docker compose up -d --build
+                '''
             }
         }
 
         stage('Status') {
             steps {
                 sh '''
-                    echo "== Container của project takypok-app vừa build =="
-                    docker compose ps
+                    echo "== Container discovery-service vừa build =="
+                    cd discovery-service && docker compose ps
+                    cd ..
 
                     echo ""
                     echo "== TOÀN BỘ container hiện có trên Docker Desktop (đúng những gì thấy trong giao diện) =="
@@ -114,11 +132,11 @@ pipeline {
 
     post {
         success {
-            echo "Build #${env.BUILD_NUMBER} thành công — các service đã được (re)start."
-            echo "Giao diện web (takypok-frontend) truy cập tại: http://localhost:3000"
+            echo "Build #${env.BUILD_NUMBER} thành công — discovery-service đã được (re)start."
+            echo "Eureka dashboard: http://localhost:8761"
         }
         failure {
-            echo "Build #${env.BUILD_NUMBER} thất bại — chạy 'docker compose logs --tail=100' trên VPS để xem chi tiết."
+            echo "Build #${env.BUILD_NUMBER} thất bại — chạy 'cd discovery-service && docker compose logs --tail=100' để xem chi tiết."
         }
     }
 }
