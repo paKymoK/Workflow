@@ -38,6 +38,14 @@ ai:
   rag:
     enabled: true
 
+gitlab:
+  base-url: ${GITLAB_BASE_URL:}
+  token: ${GITLAB_TOKEN:}
+
+github:
+  base-url: ${GITHUB_BASE_URL:https://github.com}
+  token: ${GITHUB_TOKEN:}
+
 eureka:
   client:
     service-url:

@@ -40,3 +40,8 @@ folder-walking/orchestration logic.
 - This is a judgment call, not a hard rule — flag it as a discussion point ("this class is taking
   on N responsibilities, worth splitting?"), not a required fix, since splitting too early is its
   own cost.
+- A diff that *adds* a new method to an existing class where the new method's concern is unrelated
+  to the class's existing ones is the clearest trigger — e.g. adding image/thumbnail rendering or
+  chat/alert notification logic (Slack, email) to a class whose existing methods are about
+  ingestion, parsing, or data-store mutation. Don't wait for the class to already look bloated;
+  flag the responsibility creep at the point the unrelated method is introduced.

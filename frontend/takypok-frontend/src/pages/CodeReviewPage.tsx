@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button, Input, Tag } from "antd";
+import { Button, Input, Segmented, Tag } from "antd";
 import { ArrowLeftOutlined, SendOutlined } from "@ant-design/icons";
-import { useReviewDiff } from "../hooks/useChat";
+import { useReviewDiff, useReviewRemoteDiff } from "../hooks/useChat";
 
 interface Preset {
   label: string;
@@ -169,17 +169,35 @@ index 1111111..2222222 100644
   },
 ];
 
+type ReviewMode = "diff" | "remote";
+
 export default function CodeReviewPage() {
+  const [mode, setMode] = useState<ReviewMode>("diff");
   const [diff, setDiff] = useState("");
-  const { mutate: review, data, isPending, isError, reset } = useReviewDiff();
+  const [remoteUrl, setRemoteUrl] = useState("");
+  const diffReview = useReviewDiff();
+  const remoteReview = useReviewRemoteDiff();
+
+  const { data, isPending, isError, error } = mode === "diff" ? diffReview : remoteReview;
+  const axiosError = error as { response?: { data?: { status?: { message?: string } } } } | null;
+
+  function switchMode(next: ReviewMode) {
+    diffReview.reset();
+    remoteReview.reset();
+    setMode(next);
+  }
 
   function submit() {
     if (isPending) return;
-    review(diff);
+    if (mode === "diff") {
+      diffReview.mutate(diff);
+    } else {
+      remoteReview.mutate(remoteUrl);
+    }
   }
 
   function loadPreset(preset: Preset) {
-    reset();
+    switchMode("diff");
     setDiff(preset.diff);
   }
 
@@ -195,35 +213,62 @@ export default function CodeReviewPage() {
         <span className="text-[14px] font-bold text-[var(--text)] ml-2">Code Review (RAG)</span>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {PRESETS.map((p) => (
-          <Button key={p.label} size="small" onClick={() => loadPreset(p)}>
-            {p.label}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex flex-wrap gap-1.5">
+          {PRESETS.map((p) => (
+            <Button key={p.label} size="small" onClick={() => loadPreset(p)}>
+              {p.label}
+            </Button>
+          ))}
+          <Button
+            size="small"
+            danger
+            onClick={() => {
+              switchMode("diff");
+              setDiff("");
+            }}
+          >
+            Blank diff
           </Button>
-        ))}
-        <Button
+        </div>
+        <Segmented
           size="small"
-          danger
-          onClick={() => {
-            reset();
-            setDiff("");
-          }}
-        >
-          Blank diff
-        </Button>
+          value={mode}
+          onChange={(v) => switchMode(v as ReviewMode)}
+          options={[
+            { label: "Paste diff", value: "diff" },
+            { label: "PR / MR URL", value: "remote" },
+          ]}
+        />
       </div>
 
       <div className="flex-1 min-h-0 flex gap-3.5">
         <div className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] flex flex-col overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[var(--border)] text-xs font-semibold text-[var(--text)]">
-            Diff under review
+            {mode === "diff" ? "Diff under review" : "Pull / merge request"}
           </div>
-          <Input.TextArea
-            value={diff}
-            onChange={(e) => setDiff(e.target.value)}
-            placeholder="Paste a git diff, or pick a preset above..."
-            className="!flex-1 !h-full !text-[12px] !font-mono !resize-none !border-none !rounded-none"
-          />
+          {mode === "diff" ? (
+            <Input.TextArea
+              value={diff}
+              onChange={(e) => setDiff(e.target.value)}
+              placeholder="Paste a git diff, or pick a preset above..."
+              className="!flex-1 !h-full !text-[12px] !font-mono !resize-none !border-none !rounded-none"
+            />
+          ) : (
+            <div className="flex-1 p-4">
+              <Input
+                value={remoteUrl}
+                onChange={(e) => setRemoteUrl(e.target.value)}
+                placeholder="https://github.com/org/repo/pull/45 or https://gitlab.example.com/group/project/-/merge_requests/45"
+                className="!text-[12px] !font-mono"
+                onPressEnter={submit}
+              />
+              <div className="mt-2 text-[11.5px] text-[var(--text-faint)]">
+                Fetches the diff server-side using the configured GitHub/GitLab token — no need
+                to paste it yourself.
+              </div>
+            </div>
+          )}
           <div className="px-4 py-3 border-t border-[var(--border)] flex justify-end">
             <Button type="primary" icon={<SendOutlined />} onClick={submit} loading={isPending}>
               Review
@@ -237,7 +282,9 @@ export default function CodeReviewPage() {
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {isError && (
-              <div className="text-[13px] text-red-500">Error: could not reach the AI service.</div>
+              <div className="text-[13px] text-red-500">
+                Error: {axiosError?.response?.data?.status?.message ?? "could not reach the AI service."}
+              </div>
             )}
             {isPending && (
               <div className="text-[13px] text-[var(--text-faint)]">Reviewing…</div>
@@ -258,7 +305,9 @@ export default function CodeReviewPage() {
             )}
             {!data && !isPending && !isError && (
               <div className="text-[13px] text-[var(--text-faint)]">
-                Pick a preset or paste a diff, then click Review.
+                {mode === "diff"
+                  ? "Pick a preset or paste a diff, then click Review."
+                  : "Paste a GitHub PR or GitLab MR URL, then click Review."}
               </div>
             )}
           </div>

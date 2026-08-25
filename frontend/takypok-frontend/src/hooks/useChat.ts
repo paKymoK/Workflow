@@ -7,6 +7,7 @@ import {
   listApplications,
   listSessions,
   reviewDiff,
+  reviewRemoteDiff,
 } from "../api/chatApi";
 
 export const assistantKeys = {
@@ -81,5 +82,12 @@ export function useDeleteAssistantSession() {
 export function useReviewDiff() {
   return useMutation({
     mutationFn: (diffText: string) => reviewDiff(diffText),
+  });
+}
+
+/** Reviews a GitHub PR or GitLab MR's diff, fetched server-side. Stateless — no session. */
+export function useReviewRemoteDiff() {
+  return useMutation({
+    mutationFn: (url: string) => reviewRemoteDiff(url),
   });
 }

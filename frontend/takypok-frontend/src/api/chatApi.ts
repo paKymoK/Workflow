@@ -75,3 +75,9 @@ export async function reviewDiff(diffText: string): Promise<CodeReviewResult> {
   });
   return data;
 }
+
+/** Fetches the diff for a GitHub pull request or GitLab merge request URL, server-side, and reviews it. */
+export async function reviewRemoteDiff(url: string): Promise<CodeReviewResult> {
+  const { data } = await api.post<CodeReviewResult>("/chat-service/code-review/remote", { url });
+  return data;
+}
