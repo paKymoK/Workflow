@@ -106,6 +106,7 @@ pipeline {
                     cd infrastructure/postgres && docker compose up -d
                     cd ../redis && docker compose up -d
                     cd ../kafka && docker compose up -d
+                    cd ../monitor && docker compose up -d
                 '''
             }
         }
