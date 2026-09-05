@@ -1,0 +1,11 @@
+name: docker-dashboard
+
+services:
+  docker-dashboard:
+    build: .
+    container_name: docker-dashboard
+    ports:
+      - "4000:4000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<title>Docker Dashboard</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; background: #0f172a; color: #e2e8f0; }
+  h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+  th { color: #94a3b8; font-weight: 600; }
+  .state-running { color: #4ade80; }
+  .state-exited { color: #f87171; }
+  .state-other { color: #facc15; }
+  #updated { color: #64748b; font-size: 0.8rem; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+  <h1>Container trên Docker Desktop</h1>
+  <div id="updated">Đang tải...</div>
+  <table>
+    <thead>
+      <tr><th>Tên</th><th>Image</th><th>Trạng thái</th><th>Ports</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    function stateClass(state) {
+      if (state === "running") return "state-running";
+      if (state === "exited") return "state-exited";
+      return "state-other";
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch("/api/containers");
+        const containers = await res.json();
+        const rows = document.getElementById("rows");
+        rows.innerHTML = containers
+          .map(
+            (c) => `
+              <tr>
+                <td>${c.name}</td>
+                <td>${c.image}</td>
+                <td class="${stateClass(c.state)}">${c.status}</td>
+                <td>${c.ports.join(", ") || "-"}</td>
+              </tr>`
+          )
+          .join("");
+        document.getElementById("updated").textContent =
+          "Cập nhật lúc " + new Date().toLocaleTimeString();
+      } catch (err) {
+        document.getElementById("updated").textContent = "Lỗi: " + err.message;
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>
