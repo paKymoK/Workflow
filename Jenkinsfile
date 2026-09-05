@@ -73,7 +73,7 @@ pipeline {
                 // nên copy nguyên Jenkinsfile này vào job kiểu "Pipeline script" (dán trực tiếp) vẫn chạy được.
                 git branch: 'UAT',
                     url: 'https://github.com/paKymoK/Workflow.git',
-                    credentialsId: 'jenkins-tocken'
+                    credentialsId: 'jenkins-git'
 
                 // Ghi lại commit vừa pull để log/debug (xem ai đẩy code gì lên trước khi build)
                 script {
