@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Upload, Progress, List, Typography, Tag, message } from "antd";
+import { Upload, Progress, List, Typography, Tag, Input, Button, message } from "antd";
 import { InboxOutlined, FileDoneOutlined } from "@ant-design/icons";
 import type { UploadProps } from "antd";
 import { getChunkedFileUrl, listChunkedFiles, type ChunkedUploadedFile } from "../api/chunkedUploadApi";
-import { uploadFileChunkedEncrypted, type ChunkedUploadProgress } from "../lib/chunkedUpload";
+import { uploadFileChunkedEncrypted, decryptPastedFile, type ChunkedUploadProgress } from "../lib/chunkedUpload";
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 interface InFlightUpload {
     name: string;
@@ -27,6 +28,9 @@ export default function ChunkedUpload() {
     const [inFlight, setInFlight] = useState<InFlightUpload[]>([]);
     const [files, setFiles] = useState<ChunkedUploadedFile[]>([]);
     const [loadingFiles, setLoadingFiles] = useState(true);
+    const [encFilename, setEncFilename] = useState("");
+    const [encText, setEncText] = useState("");
+    const [encSubmitting, setEncSubmitting] = useState(false);
 
     const refreshFiles = async () => {
         try {
@@ -43,30 +47,64 @@ export default function ChunkedUpload() {
         refreshFiles();
     }, []);
 
+    const uploadAndTrack = async (file: File) => {
+        setInFlight((prev) => [
+            ...prev,
+            { name: file.name, progress: { sentChunks: 0, totalChunks: 1, percent: 0 } },
+        ]);
+        try {
+            await uploadFileChunkedEncrypted(file, (progress) => {
+                setInFlight((prev) =>
+                    prev.map((entry) => (entry.name === file.name ? { ...entry, progress } : entry)),
+                );
+            });
+            await refreshFiles();
+        } catch (err) {
+            console.error(err);
+            message.error(`Failed to upload ${file.name}`);
+        } finally {
+            setInFlight((prev) => prev.filter((entry) => entry.name !== file.name));
+        }
+    };
+
     const draggerProps: UploadProps = {
         name: "file",
         multiple: true,
         showUploadList: false,
         beforeUpload: async (file) => {
-            setInFlight((prev) => [
-                ...prev,
-                { name: file.name, progress: { sentChunks: 0, totalChunks: 1, percent: 0 } },
-            ]);
-            try {
-                await uploadFileChunkedEncrypted(file, (progress) => {
-                    setInFlight((prev) =>
-                        prev.map((entry) => (entry.name === file.name ? { ...entry, progress } : entry)),
-                    );
-                });
-                await refreshFiles();
-            } catch (err) {
-                console.error(err);
-                message.error(`Failed to upload ${file.name}`);
-            } finally {
-                setInFlight((prev) => prev.filter((entry) => entry.name !== file.name));
-            }
+            await uploadAndTrack(file);
             return false;
         },
+    };
+
+    const submitEncrypted = async () => {
+        if (!encFilename.trim()) {
+            message.error("Enter a filename (with extension)");
+            return;
+        }
+        if (!encText.trim()) {
+            message.error("Paste the encrypted text from encrypt-file.bat");
+            return;
+        }
+
+        let file: File;
+        try {
+            const bytes = await decryptPastedFile(encText);
+            file = new File([bytes], encFilename.trim());
+        } catch (err) {
+            console.error(err);
+            message.error("Couldn't decrypt that text — make sure it's unedited output from encrypt-file.bat");
+            return;
+        }
+
+        setEncSubmitting(true);
+        try {
+            await uploadAndTrack(file);
+            setEncFilename("");
+            setEncText("");
+        } finally {
+            setEncSubmitting(false);
+        }
     };
 
     return (
@@ -89,6 +127,30 @@ export default function ChunkedUpload() {
                 <p className="ant-upload-text !text-sm !m-0">Click or drag a file here to upload</p>
                 <p className="ant-upload-hint !text-[11px]">Any file type; large files are chunked automatically</p>
             </Upload.Dragger>
+
+            <div className="flex flex-col gap-2 rounded-lg border border-[var(--border)] p-3">
+                <Text strong className="text-[13px]">Upload from encrypted text</Text>
+                <Text className="text-[12px] text-[var(--text-muted)]">
+                    Run <code>scripts\encrypt-file\encrypt-file.bat your-file.xlsx</code> and paste the
+                    contents of the <code>.b64.txt</code> it produces below — the browser decrypts it
+                    with the same key and uploads it normally. Useful when a network blocks the file
+                    itself before it ever reaches this page.
+                </Text>
+                <Input
+                    placeholder="Filename with extension, e.g. report.xlsx"
+                    value={encFilename}
+                    onChange={(e) => setEncFilename(e.target.value)}
+                />
+                <TextArea
+                    placeholder="Paste the contents of the .b64.txt file here"
+                    autoSize={{ minRows: 3, maxRows: 8 }}
+                    value={encText}
+                    onChange={(e) => setEncText(e.target.value)}
+                />
+                <Button type="primary" onClick={submitEncrypted} loading={encSubmitting} className="self-end">
+                    Upload
+                </Button>
+            </div>
 
             {inFlight.length > 0 && (
                 <div className="flex flex-col gap-3">

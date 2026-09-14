@@ -1,7 +1,6 @@
 import {
     startChunkedUpload,
     uploadChunk,
-    uploadChunkBase64,
     uploadChunkEncrypted,
     finishChunkedUpload,
 } from "../api/chunkedUploadApi";
@@ -12,10 +11,10 @@ const CONCURRENCY = 25;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
 
-// Shared with the backend default in ChunkedUploadProperties#encryptionKeyBase64. Not a
-// confidentiality boundary (it ships in the client bundle) - only meant to make ciphertext
-// indistinguishable from random bytes so content-inspecting network proxies can't signature-match
-// the original file format.
+// Shared with the backend default in ChunkedUploadProperties#encryptionKeyBase64 and
+// scripts/encrypt-file/EncryptFile.java. Not a confidentiality boundary (it ships in the client
+// bundle) - only meant to make ciphertext indistinguishable from random bytes so
+// content-inspecting network proxies can't signature-match the original file format.
 const ENCRYPTION_KEY_B64 = "UUF1mzp0rKSFTi8GEiS9P4kVJN6VaFfwZuZ5EPevtLA=";
 const GCM_IV_LENGTH_BYTES = 12;
 
@@ -23,7 +22,7 @@ let cachedKey: Promise<CryptoKey> | null = null;
 function getEncryptionKey(): Promise<CryptoKey> {
     if (!cachedKey) {
         const raw = Uint8Array.from(atob(ENCRYPTION_KEY_B64), (c) => c.charCodeAt(0));
-        cachedKey = crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt"]);
+        cachedKey = crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
     }
     return cachedKey;
 }
@@ -40,20 +39,7 @@ function sleep(ms: number) {
     return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-async function blobToBase64(blob: Blob): Promise<string> {
-    const buffer = await blob.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-}
-
 const sendBinary: ChunkSender = (sessionId, index, chunk) => uploadChunk(sessionId, index, chunk);
-
-const sendBase64: ChunkSender = async (sessionId, index, chunk) =>
-    uploadChunkBase64(sessionId, index, await blobToBase64(chunk));
 
 async function encryptChunk(chunk: Blob): Promise<Blob> {
     const key = await getEncryptionKey();
@@ -65,6 +51,25 @@ async function encryptChunk(chunk: Blob): Promise<Blob> {
 
 const sendEncrypted: ChunkSender = async (sessionId, index, chunk) =>
     uploadChunkEncrypted(sessionId, index, await encryptChunk(chunk));
+
+/**
+ * Decrypts a whole-file blob produced by scripts/encrypt-file/EncryptFile.java (base64 of a
+ * 12-byte GCM IV + ciphertext + tag) back into plaintext bytes, using the same shared key. Pairs
+ * with that offline tool: it exists so a network that blocks the raw file never sees it — the
+ * user encrypts it themselves out of band, pastes the result in, and this recovers the original
+ * bytes client-side so they can be re-chunked and re-encrypted per chunk like any other upload.
+ */
+export async function decryptPastedFile(base64: string): Promise<ArrayBuffer> {
+    const cleaned = base64.trim().replace(/\s+/g, "");
+    const wire = Uint8Array.from(atob(cleaned), (c) => c.charCodeAt(0));
+    if (wire.length <= GCM_IV_LENGTH_BYTES) {
+        throw new Error("Encrypted text is too short");
+    }
+    const iv = wire.slice(0, GCM_IV_LENGTH_BYTES);
+    const ciphertext = wire.slice(GCM_IV_LENGTH_BYTES);
+    const key = await getEncryptionKey();
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+}
 
 async function sendChunkWithRetry(sessionId: string, index: number, chunk: Blob, send: ChunkSender) {
     let attempt = 0;
@@ -133,25 +138,12 @@ export async function uploadFileChunked(
 }
 
 /**
- * Same as {@link uploadFileChunked}, but sends each chunk base64-encoded inside a JSON body
- * instead of raw binary. Some networks (corporate proxies, security gateways) content-inspect
- * raw octet-stream bodies and block ones matching a recognizable binary signature — e.g. the ZIP
- * header at the start of an .xlsx/.docx file. Base64 text sidesteps that at the cost of ~33%
- * extra bytes on the wire.
- */
-export async function uploadFileChunkedBase64(
-    file: File,
-    onProgress?: (progress: ChunkedUploadProgress) => void,
-): Promise<UploadFile> {
-    return runChunkedUpload(file, sendBase64, onProgress);
-}
-
-/**
- * Same idea as {@link uploadFileChunkedBase64}, but each chunk is AES-GCM encrypted (random IV
- * per chunk) instead of just base64-re-encoded. Base64 is a reversible *encoding* — a proxy that
- * decodes it can still fingerprint the original bytes. AES-GCM ciphertext has no such structure:
- * without the key it's indistinguishable from random data, so it survives gateways that inspect
- * decoded/decompressed payloads too.
+ * Same as {@link uploadFileChunked}, but each chunk is AES-GCM encrypted (random IV per chunk)
+ * before it's sent. Some networks (corporate proxies, security gateways) content-inspect raw
+ * octet-stream bodies and block ones matching a recognizable binary signature — e.g. the ZIP
+ * header at the start of an .xlsx/.docx file. AES-GCM ciphertext has no such structure: without
+ * the key it's indistinguishable from random data, so it survives inspection even if the gateway
+ * decodes/unwraps the payload — unlike plain base64, which is just a reversible encoding.
  */
 export async function uploadFileChunkedEncrypted(
     file: File,
