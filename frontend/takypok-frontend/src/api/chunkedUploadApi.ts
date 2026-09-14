@@ -13,6 +13,12 @@ export interface ChunkAckResponse {
     totalBytesReceivedSoFar: number;
 }
 
+export interface ChunkedUploadedFile {
+    name: string;
+    sizeBytes: number;
+    modifiedAt: string;
+}
+
 export async function startChunkedUpload(sessionId: string, filename: string, totalSizeBytes: number) {
     const { data } = await api.post<StartChunkedUploadResponse>(
         "/media-service/v1/upload/chunked/start",
@@ -36,4 +42,13 @@ export async function finishChunkedUpload(sessionId: string, totalChunks: number
         { totalChunks },
     );
     return data;
+}
+
+export async function listChunkedFiles() {
+    const { data } = await api.get<ChunkedUploadedFile[]>("/media-service/v1/upload/chunked/files");
+    return data;
+}
+
+export function getChunkedFileUrl(name: string) {
+    return `${import.meta.env.VITE_API_BASE_URL}/media-service/files/${name}`;
 }

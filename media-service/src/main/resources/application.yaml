@@ -39,6 +39,7 @@ storage:
   images-dir: ./uploads/images
   raw-dir: ./uploads/raw
   hls-dir: ./uploads/hls
+  files-dir: ./uploads/files
 
 ffmpeg:
   path: ""

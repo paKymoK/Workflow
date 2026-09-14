@@ -99,7 +99,7 @@ public class UploadSessionRegistry {
 
   private UploadSession open(String sessionId, StartChunkedUploadRequest request) {
     String extension = getFileExtension(request.filename());
-    Path partPath = Path.of(storageProperties.getImagesDir(), sessionId + ".part");
+    Path partPath = Path.of(storageProperties.getFilesDir(), sessionId + ".part");
     try {
       AsynchronousFileChannel channel =
           AsynchronousFileChannel.open(

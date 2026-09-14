@@ -43,7 +43,7 @@ class ChunkedUploadServiceImplTest {
   @BeforeEach
   void setUp() {
     StorageProperties storageProperties = new StorageProperties();
-    storageProperties.setImagesDir(tempDir.toString());
+    storageProperties.setFilesDir(tempDir.toString());
 
     properties = new ChunkedUploadProperties();
     properties.setChunkSizeBytes(8);
@@ -108,6 +108,26 @@ class ChunkedUploadServiceImplTest {
     assertThat(result.getId()).isNotNull();
     byte[] written = Files.readAllBytes(tempDir.resolve(result.getId() + ".txt"));
     assertThat(written).isEqualTo(data);
+  }
+
+  @Test
+  void listFiles_returnsFinishedFilesButNotInProgressSessions() throws Exception {
+    byte[] data = "ABCDEFGH".getBytes(StandardCharsets.UTF_8); // exactly one chunk
+    String finishedSessionId = startSession(data.length);
+    writeChunk(finishedSessionId, 0, data);
+    UploadFile finished =
+        service.finish(finishedSessionId, new FinishChunkedUploadRequest(1)).block();
+
+    // A second session left mid-upload: its ".part" file must not show up as an uploaded file.
+    String inProgressSessionId = startSession(data.length);
+    writeChunk(inProgressSessionId, 0, data);
+
+    List<com.takypok.mediaservice.model.dto.ChunkedUploadedFile> files =
+        service.listFiles().block();
+
+    assertThat(files).hasSize(1);
+    assertThat(files.get(0).name()).isEqualTo(finished.getId() + ".txt");
+    assertThat(files.get(0).sizeBytes()).isEqualTo(data.length);
   }
 
   @Test

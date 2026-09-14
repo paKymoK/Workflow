@@ -6,6 +6,7 @@ import com.takypok.mediaservice.config.ChunkedUploadProperties;
 import com.takypok.mediaservice.config.StorageProperties;
 import com.takypok.mediaservice.model.UploadSession;
 import com.takypok.mediaservice.model.dto.ChunkAckResponse;
+import com.takypok.mediaservice.model.dto.ChunkedUploadedFile;
 import com.takypok.mediaservice.model.dto.FinishChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadResponse;
@@ -15,12 +16,18 @@ import com.takypok.mediaservice.repository.UploadFileRepository;
 import com.takypok.mediaservice.service.ChunkedUploadService;
 import com.takypok.mediaservice.service.UploadSessionRegistry;
 import com.takypok.mediaservice.util.UploadSizeLimiter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -29,6 +36,7 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Component
 @RequiredArgsConstructor
@@ -213,7 +221,7 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
                           session.getChannel().close();
                           Path finalPath =
                               Path.of(
-                                  storageProperties.getImagesDir(),
+                                  storageProperties.getFilesDir(),
                                   uploadFile.getId() + session.getExtension());
                           Files.move(
                               session.getPartPath(),
@@ -233,5 +241,37 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
             log.warn("Failed to clean up partial chunked upload {}: {}", path, e.getMessage());
           }
         });
+  }
+
+  @Override
+  public Mono<List<ChunkedUploadedFile>> listFiles() {
+    Path dir = Path.of(storageProperties.getFilesDir());
+    return Mono.fromCallable(
+            () -> {
+              if (!Files.isDirectory(dir)) {
+                return List.<ChunkedUploadedFile>of();
+              }
+              // ".part" files are sessions still in flight or abandoned mid-upload — not
+              // finished files, so they're excluded from what's shown as "uploaded".
+              try (Stream<Path> entries = Files.list(dir)) {
+                return entries
+                    .filter(Files::isRegularFile)
+                    .filter(path -> !path.getFileName().toString().endsWith(".part"))
+                    .map(this::toUploadedFile)
+                    .sorted(Comparator.comparing(ChunkedUploadedFile::modifiedAt).reversed())
+                    .toList();
+              }
+            })
+        .subscribeOn(Schedulers.boundedElastic());
+  }
+
+  private ChunkedUploadedFile toUploadedFile(Path path) {
+    try {
+      BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+      return new ChunkedUploadedFile(
+          path.getFileName().toString(), attrs.size(), attrs.lastModifiedTime().toInstant());
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }

@@ -24,6 +24,7 @@ public class VideoStorageService {
     Files.createDirectories(Path.of(props.getImagesDir()));
     Files.createDirectories(Path.of(props.getRawDir()));
     Files.createDirectories(Path.of(props.getHlsDir()));
+    Files.createDirectories(Path.of(props.getFilesDir()));
     log.info("Storage directories ready: {}", props.getBaseDir());
   }
 

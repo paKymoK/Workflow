@@ -26,7 +26,7 @@ class UploadSessionRegistryTest {
   @BeforeEach
   void setUp() {
     StorageProperties storageProperties = new StorageProperties();
-    storageProperties.setImagesDir(tempDir.toString());
+    storageProperties.setFilesDir(tempDir.toString());
     ChunkedUploadProperties properties = new ChunkedUploadProperties();
     properties.setMaxActiveSessions(2);
     registry = new UploadSessionRegistry(storageProperties, properties);

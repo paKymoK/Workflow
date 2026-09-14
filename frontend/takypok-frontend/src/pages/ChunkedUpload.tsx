@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Upload, Progress, List, Typography, Tag, message } from "antd";
 import { InboxOutlined, FileDoneOutlined } from "@ant-design/icons";
 import type { UploadProps } from "antd";
-import type { UploadFile } from "../api/types";
-import { getFileUrl } from "../api/ticketApi";
+import { getChunkedFileUrl, listChunkedFiles, type ChunkedUploadedFile } from "../api/chunkedUploadApi";
 import { uploadFileChunked, type ChunkedUploadProgress } from "../lib/chunkedUpload";
 
 const { Title, Text, Paragraph } = Typography;
@@ -13,6 +12,12 @@ interface InFlightUpload {
     progress: ChunkedUploadProgress;
 }
 
+function formatSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 /**
  * Standalone screen for the chunked-upload flow: a file is split into fixed-size pieces and
  * sent with bounded concurrency and per-chunk retry. Intentionally separate from the ticket
@@ -20,7 +25,23 @@ interface InFlightUpload {
  */
 export default function ChunkedUpload() {
     const [inFlight, setInFlight] = useState<InFlightUpload[]>([]);
-    const [uploaded, setUploaded] = useState<UploadFile[]>([]);
+    const [files, setFiles] = useState<ChunkedUploadedFile[]>([]);
+    const [loadingFiles, setLoadingFiles] = useState(true);
+
+    const refreshFiles = async () => {
+        try {
+            setFiles(await listChunkedFiles());
+        } catch (err) {
+            console.error(err);
+            message.error("Failed to load uploaded files");
+        } finally {
+            setLoadingFiles(false);
+        }
+    };
+
+    useEffect(() => {
+        refreshFiles();
+    }, []);
 
     const draggerProps: UploadProps = {
         name: "file",
@@ -32,12 +53,12 @@ export default function ChunkedUpload() {
                 { name: file.name, progress: { sentChunks: 0, totalChunks: 1, percent: 0 } },
             ]);
             try {
-                const result = await uploadFileChunked(file, (progress) => {
+                await uploadFileChunked(file, (progress) => {
                     setInFlight((prev) =>
                         prev.map((entry) => (entry.name === file.name ? { ...entry, progress } : entry)),
                     );
                 });
-                setUploaded((prev) => [result, ...prev]);
+                await refreshFiles();
             } catch (err) {
                 console.error(err);
                 message.error(`Failed to upload ${file.name}`);
@@ -54,7 +75,8 @@ export default function ChunkedUpload() {
                 <Title level={4} className="!mb-1">Chunked Upload</Title>
                 <Paragraph className="!mb-0 text-[var(--text-muted)]">
                     Splits large files into 8KB pieces and uploads them with bounded concurrency and
-                    per-chunk retry — useful for large attachments over unreliable connections.
+                    per-chunk retry — useful for large attachments over unreliable connections. Files are
+                    stored in the server's <code>uploads/files</code> folder.
                 </Paragraph>
             </div>
 
@@ -77,29 +99,32 @@ export default function ChunkedUpload() {
                 </div>
             )}
 
-            {uploaded.length > 0 && (
-                <List
-                    header={<Text strong>Uploaded files</Text>}
-                    bordered
-                    dataSource={uploaded}
-                    renderItem={(item) => (
-                        <List.Item>
-                            <div className="flex items-center gap-2 w-full">
-                                <FileDoneOutlined className="text-green-500" />
-                                <a
-                                    href={getFileUrl(item.id, item.extension)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-1 truncate"
-                                >
-                                    {item.name}
-                                </a>
-                                <Tag>{item.extension.replace(".", "").toUpperCase()}</Tag>
-                            </div>
-                        </List.Item>
-                    )}
-                />
-            )}
+            <List
+                header={<Text strong>Files in storage</Text>}
+                bordered
+                loading={loadingFiles}
+                dataSource={files}
+                locale={{ emptyText: "No files uploaded yet" }}
+                renderItem={(item) => (
+                    <List.Item>
+                        <div className="flex items-center gap-2 w-full">
+                            <FileDoneOutlined className="text-green-500" />
+                            <a
+                                href={getChunkedFileUrl(item.name)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 truncate"
+                            >
+                                {item.name}
+                            </a>
+                            <Text className="text-[12px] text-[var(--text-muted)]">
+                                {formatSize(item.sizeBytes)}
+                            </Text>
+                            <Tag>{(item.name.split(".").pop() ?? "").toUpperCase()}</Tag>
+                        </div>
+                    </List.Item>
+                )}
+            />
         </div>
     );
 }

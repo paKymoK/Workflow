@@ -23,5 +23,12 @@ public class WebConfig implements WebFluxConfigurer {
         .addResourceHandler("/images/**")
         .addResourceLocations(imagesLocation)
         .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable());
+
+    String filesLocation = "file:" + storageProperties.getFilesDir() + "/";
+    // Same content-addressed/immutable reasoning as /images/** above, for chunked uploads.
+    registry
+        .addResourceHandler("/files/**")
+        .addResourceLocations(filesLocation)
+        .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable());
   }
 }

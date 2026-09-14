@@ -1,15 +1,18 @@
 package com.takypok.mediaservice.controller;
 
 import com.takypok.mediaservice.model.dto.ChunkAckResponse;
+import com.takypok.mediaservice.model.dto.ChunkedUploadedFile;
 import com.takypok.mediaservice.model.dto.FinishChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadResponse;
 import com.takypok.mediaservice.model.entity.UploadFile;
 import com.takypok.mediaservice.service.ChunkedUploadService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,5 +50,10 @@ public class ChunkedUploadController {
   public Mono<UploadFile> finish(
       @PathVariable String sessionId, @RequestBody FinishChunkedUploadRequest request) {
     return chunkedUploadService.finish(sessionId, request);
+  }
+
+  @GetMapping("/files")
+  public Mono<List<ChunkedUploadedFile>> listFiles() {
+    return chunkedUploadService.listFiles();
   }
 }

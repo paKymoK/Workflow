@@ -14,4 +14,5 @@ public class StorageProperties {
   private String imagesDir = "./uploads/images";
   private String rawDir = "./uploads/raw";
   private String hlsDir = "./uploads/hls";
+  private String filesDir = "./uploads/files";
 }
