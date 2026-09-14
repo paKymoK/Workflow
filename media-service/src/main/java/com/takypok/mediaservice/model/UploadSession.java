@@ -51,6 +51,9 @@ public class UploadSession {
   }
 
   public boolean isIdleSince(Instant threshold) {
-    return lastActivityAt.isBefore(threshold);
+    // Not strict isBefore(): on a coarse-resolution clock, back-to-back Instant.now() calls can
+    // land on the same instant, which would make a session created just before the threshold
+    // check never count as idle.
+    return !lastActivityAt.isAfter(threshold);
   }
 }

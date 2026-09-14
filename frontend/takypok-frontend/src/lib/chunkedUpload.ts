@@ -1,7 +1,7 @@
 import { startChunkedUpload, uploadChunk, finishChunkedUpload } from "../api/chunkedUploadApi";
 import type { UploadFile } from "../api/types";
 
-const CONCURRENCY = 4;
+const CONCURRENCY = 25;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
 
