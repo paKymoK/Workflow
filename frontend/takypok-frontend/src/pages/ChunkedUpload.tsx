@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Upload, Progress, List, Typography, Tag, message } from "antd";
+import { Upload, Progress, List, Typography, Tag, Switch, message } from "antd";
 import { InboxOutlined, FileDoneOutlined } from "@ant-design/icons";
 import type { UploadProps } from "antd";
 import { getChunkedFileUrl, listChunkedFiles, type ChunkedUploadedFile } from "../api/chunkedUploadApi";
-import { uploadFileChunked, type ChunkedUploadProgress } from "../lib/chunkedUpload";
+import { uploadFileChunked, uploadFileChunkedBase64, type ChunkedUploadProgress } from "../lib/chunkedUpload";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -27,6 +27,7 @@ export default function ChunkedUpload() {
     const [inFlight, setInFlight] = useState<InFlightUpload[]>([]);
     const [files, setFiles] = useState<ChunkedUploadedFile[]>([]);
     const [loadingFiles, setLoadingFiles] = useState(true);
+    const [useBase64, setUseBase64] = useState(false);
 
     const refreshFiles = async () => {
         try {
@@ -53,7 +54,8 @@ export default function ChunkedUpload() {
                 { name: file.name, progress: { sentChunks: 0, totalChunks: 1, percent: 0 } },
             ]);
             try {
-                await uploadFileChunked(file, (progress) => {
+                const upload = useBase64 ? uploadFileChunkedBase64 : uploadFileChunked;
+                await upload(file, (progress) => {
                     setInFlight((prev) =>
                         prev.map((entry) => (entry.name === file.name ? { ...entry, progress } : entry)),
                     );
@@ -78,6 +80,13 @@ export default function ChunkedUpload() {
                     per-chunk retry — useful for large attachments over unreliable connections. Files are
                     stored in the server's <code>uploads/files</code> folder.
                 </Paragraph>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <Switch size="small" checked={useBase64} onChange={setUseBase64} />
+                <Text className="text-[13px]">
+                    Encode chunks as base64 (use on networks that block raw binary uploads)
+                </Text>
             </div>
 
             <Upload.Dragger {...draggerProps} className="!rounded-lg">

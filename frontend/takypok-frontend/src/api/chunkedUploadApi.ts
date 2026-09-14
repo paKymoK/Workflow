@@ -36,6 +36,14 @@ export async function uploadChunk(sessionId: string, index: number, chunk: Blob)
     return data;
 }
 
+export async function uploadChunkBase64(sessionId: string, index: number, base64Data: string) {
+    const { data } = await api.post<ChunkAckResponse>(
+        `/media-service/v1/upload/chunked/${sessionId}/chunks/${index}/base64`,
+        { data: base64Data },
+    );
+    return data;
+}
+
 export async function finishChunkedUpload(sessionId: string, totalChunks: number) {
     const { data } = await api.post<UploadFile>(
         `/media-service/v1/upload/chunked/${sessionId}/finish`,

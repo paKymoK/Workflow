@@ -1,5 +1,6 @@
 package com.takypok.mediaservice.controller;
 
+import com.takypok.mediaservice.model.dto.Base64ChunkRequest;
 import com.takypok.mediaservice.model.dto.ChunkAckResponse;
 import com.takypok.mediaservice.model.dto.ChunkedUploadedFile;
 import com.takypok.mediaservice.model.dto.FinishChunkedUploadRequest;
@@ -44,6 +45,16 @@ public class ChunkedUploadController {
   public Mono<ChunkAckResponse> uploadChunk(
       @PathVariable String sessionId, @PathVariable int index, @RequestBody Flux<DataBuffer> body) {
     return chunkedUploadService.writeChunk(sessionId, index, body);
+  }
+
+  @PostMapping(
+      value = "/{sessionId}/chunks/{index}/base64",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  public Mono<ChunkAckResponse> uploadChunkBase64(
+      @PathVariable String sessionId,
+      @PathVariable int index,
+      @RequestBody Base64ChunkRequest request) {
+    return chunkedUploadService.writeChunkBase64(sessionId, index, request);
   }
 
   @PostMapping("/{sessionId}/finish")

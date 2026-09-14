@@ -5,6 +5,7 @@ import com.takypok.core.model.Message;
 import com.takypok.mediaservice.config.ChunkedUploadProperties;
 import com.takypok.mediaservice.config.StorageProperties;
 import com.takypok.mediaservice.model.UploadSession;
+import com.takypok.mediaservice.model.dto.Base64ChunkRequest;
 import com.takypok.mediaservice.model.dto.ChunkAckResponse;
 import com.takypok.mediaservice.model.dto.ChunkedUploadedFile;
 import com.takypok.mediaservice.model.dto.FinishChunkedUploadRequest;
@@ -25,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -42,6 +45,8 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 @Slf4j
 public class ChunkedUploadServiceImpl implements ChunkedUploadService {
+  private static final DefaultDataBufferFactory BUFFER_FACTORY = new DefaultDataBufferFactory();
+
   private final UploadSessionRegistry registry;
   private final ChunkedUploadProperties properties;
   private final StorageProperties storageProperties;
@@ -66,17 +71,7 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
 
   @Override
   public Mono<ChunkAckResponse> writeChunk(String sessionId, int index, Flux<DataBuffer> body) {
-    UploadSession session = registry.require(sessionId);
-    if (session.getFinishing().get()) {
-      return Mono.error(
-          new ApplicationException(
-              Message.Application.ERROR,
-              "Upload session is finalizing; cannot accept more chunks"));
-    }
-    if (index < 0) {
-      return Mono.error(
-          new ApplicationException(Message.Application.ERROR, "Chunk index must not be negative"));
-    }
+    UploadSession session = requireWritableSession(sessionId, index);
     return DataBufferUtils.join(body, (int) properties.getChunkSizeBytes())
         .onErrorMap(
             DataBufferLimitException.class,
@@ -87,6 +82,49 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
                         + (properties.getChunkSizeBytes() / 1024)
                         + "KB"))
         .flatMap(buffer -> writeToChannel(session, index, buffer));
+  }
+
+  @Override
+  public Mono<ChunkAckResponse> writeChunkBase64(
+      String sessionId, int index, Base64ChunkRequest request) {
+    UploadSession session = requireWritableSession(sessionId, index);
+    return decodeBase64(request.data()).flatMap(buffer -> writeToChannel(session, index, buffer));
+  }
+
+  private UploadSession requireWritableSession(String sessionId, int index) {
+    UploadSession session = registry.require(sessionId);
+    if (session.getFinishing().get()) {
+      throw new ApplicationException(
+          Message.Application.ERROR, "Upload session is finalizing; cannot accept more chunks");
+    }
+    if (index < 0) {
+      throw new ApplicationException(Message.Application.ERROR, "Chunk index must not be negative");
+    }
+    return session;
+  }
+
+  private Mono<DataBuffer> decodeBase64(String base64Data) {
+    return Mono.fromCallable(
+        () -> {
+          if (base64Data == null || base64Data.isBlank()) {
+            throw new ApplicationException(Message.Application.ERROR, "Chunk data is required");
+          }
+          byte[] decoded;
+          try {
+            decoded = Base64.getDecoder().decode(base64Data);
+          } catch (IllegalArgumentException e) {
+            throw new ApplicationException(
+                Message.Application.ERROR, "Chunk data is not valid base64");
+          }
+          if (decoded.length > properties.getChunkSizeBytes()) {
+            throw new ApplicationException(
+                Message.Application.ERROR,
+                "Chunk exceeds maximum allowed size of "
+                    + (properties.getChunkSizeBytes() / 1024)
+                    + "KB");
+          }
+          return BUFFER_FACTORY.wrap(decoded);
+        });
   }
 
   private Mono<ChunkAckResponse> writeToChannel(

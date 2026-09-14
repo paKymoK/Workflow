@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.takypok.core.exception.ApplicationException;
 import com.takypok.mediaservice.config.ChunkedUploadProperties;
 import com.takypok.mediaservice.config.StorageProperties;
+import com.takypok.mediaservice.model.dto.Base64ChunkRequest;
 import com.takypok.mediaservice.model.dto.FinishChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadResponse;
@@ -20,6 +21,7 @@ import com.takypok.mediaservice.service.UploadSessionRegistry;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,6 +130,48 @@ class ChunkedUploadServiceImplTest {
     assertThat(files).hasSize(1);
     assertThat(files.get(0).name()).isEqualTo(finished.getId() + ".txt");
     assertThat(files.get(0).sizeBytes()).isEqualTo(data.length);
+  }
+
+  @Test
+  void writeChunkBase64_decodesAndAssemblesByteIdentical() throws Exception {
+    byte[] data = "ABCDEFGHIJKLMNOPQRST".getBytes(StandardCharsets.UTF_8); // 20 bytes, chunkSize=8
+    String sessionId = startSession(data.length);
+
+    service
+        .writeChunkBase64(
+            sessionId,
+            0,
+            new Base64ChunkRequest(Base64.getEncoder().encodeToString(sliceOf(data, 0, 8))))
+        .block();
+    service
+        .writeChunkBase64(
+            sessionId,
+            1,
+            new Base64ChunkRequest(Base64.getEncoder().encodeToString(sliceOf(data, 8, 16))))
+        .block();
+    service
+        .writeChunkBase64(
+            sessionId,
+            2,
+            new Base64ChunkRequest(Base64.getEncoder().encodeToString(sliceOf(data, 16, 20))))
+        .block();
+
+    UploadFile result = service.finish(sessionId, new FinishChunkedUploadRequest(3)).block();
+
+    byte[] written = Files.readAllBytes(tempDir.resolve(result.getId() + ".txt"));
+    assertThat(written).isEqualTo(data);
+  }
+
+  @Test
+  void writeChunkBase64_rejectsInvalidBase64() {
+    String sessionId = startSession(8);
+
+    assertThatThrownBy(
+            () ->
+                service
+                    .writeChunkBase64(sessionId, 0, new Base64ChunkRequest("not-valid-base64!!"))
+                    .block())
+        .isInstanceOf(ApplicationException.class);
   }
 
   @Test
