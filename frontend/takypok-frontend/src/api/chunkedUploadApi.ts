@@ -44,6 +44,15 @@ export async function uploadChunkBase64(sessionId: string, index: number, base64
     return data;
 }
 
+export async function uploadChunkEncrypted(sessionId: string, index: number, encrypted: Blob) {
+    const { data } = await api.post<ChunkAckResponse>(
+        `/media-service/v1/upload/chunked/${sessionId}/chunks/${index}/encrypted`,
+        encrypted,
+        { headers: { "Content-Type": "application/octet-stream" } },
+    );
+    return data;
+}
+
 export async function finishChunkedUpload(sessionId: string, totalChunks: number) {
     const { data } = await api.post<UploadFile>(
         `/media-service/v1/upload/chunked/${sessionId}/finish`,

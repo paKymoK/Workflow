@@ -1,10 +1,32 @@
-import { startChunkedUpload, uploadChunk, uploadChunkBase64, finishChunkedUpload } from "../api/chunkedUploadApi";
+import {
+    startChunkedUpload,
+    uploadChunk,
+    uploadChunkBase64,
+    uploadChunkEncrypted,
+    finishChunkedUpload,
+} from "../api/chunkedUploadApi";
 import type { ChunkAckResponse } from "../api/chunkedUploadApi";
 import type { UploadFile } from "../api/types";
 
 const CONCURRENCY = 25;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
+
+// Shared with the backend default in ChunkedUploadProperties#encryptionKeyBase64. Not a
+// confidentiality boundary (it ships in the client bundle) - only meant to make ciphertext
+// indistinguishable from random bytes so content-inspecting network proxies can't signature-match
+// the original file format.
+const ENCRYPTION_KEY_B64 = "UUF1mzp0rKSFTi8GEiS9P4kVJN6VaFfwZuZ5EPevtLA=";
+const GCM_IV_LENGTH_BYTES = 12;
+
+let cachedKey: Promise<CryptoKey> | null = null;
+function getEncryptionKey(): Promise<CryptoKey> {
+    if (!cachedKey) {
+        const raw = Uint8Array.from(atob(ENCRYPTION_KEY_B64), (c) => c.charCodeAt(0));
+        cachedKey = crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt"]);
+    }
+    return cachedKey;
+}
 
 export interface ChunkedUploadProgress {
     sentChunks: number;
@@ -32,6 +54,17 @@ const sendBinary: ChunkSender = (sessionId, index, chunk) => uploadChunk(session
 
 const sendBase64: ChunkSender = async (sessionId, index, chunk) =>
     uploadChunkBase64(sessionId, index, await blobToBase64(chunk));
+
+async function encryptChunk(chunk: Blob): Promise<Blob> {
+    const key = await getEncryptionKey();
+    const iv = crypto.getRandomValues(new Uint8Array(GCM_IV_LENGTH_BYTES));
+    const plaintext = await chunk.arrayBuffer();
+    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+    return new Blob([iv, ciphertext]);
+}
+
+const sendEncrypted: ChunkSender = async (sessionId, index, chunk) =>
+    uploadChunkEncrypted(sessionId, index, await encryptChunk(chunk));
 
 async function sendChunkWithRetry(sessionId: string, index: number, chunk: Blob, send: ChunkSender) {
     let attempt = 0;
@@ -111,4 +144,18 @@ export async function uploadFileChunkedBase64(
     onProgress?: (progress: ChunkedUploadProgress) => void,
 ): Promise<UploadFile> {
     return runChunkedUpload(file, sendBase64, onProgress);
+}
+
+/**
+ * Same idea as {@link uploadFileChunkedBase64}, but each chunk is AES-GCM encrypted (random IV
+ * per chunk) instead of just base64-re-encoded. Base64 is a reversible *encoding* — a proxy that
+ * decodes it can still fingerprint the original bytes. AES-GCM ciphertext has no such structure:
+ * without the key it's indistinguishable from random data, so it survives gateways that inspect
+ * decoded/decompressed payloads too.
+ */
+export async function uploadFileChunkedEncrypted(
+    file: File,
+    onProgress?: (progress: ChunkedUploadProgress) => void,
+): Promise<UploadFile> {
+    return runChunkedUpload(file, sendEncrypted, onProgress);
 }

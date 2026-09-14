@@ -21,9 +21,13 @@ import com.takypok.mediaservice.service.UploadSessionRegistry;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -172,6 +176,50 @@ class ChunkedUploadServiceImplTest {
                     .writeChunkBase64(sessionId, 0, new Base64ChunkRequest("not-valid-base64!!"))
                     .block())
         .isInstanceOf(ApplicationException.class);
+  }
+
+  @Test
+  void writeChunkEncrypted_decryptsAndAssemblesByteIdentical() throws Exception {
+    byte[] data = "ABCDEFGHIJKLMNOPQRST".getBytes(StandardCharsets.UTF_8); // 20 bytes, chunkSize=8
+    String sessionId = startSession(data.length);
+
+    service
+        .writeChunkEncrypted(sessionId, 0, Flux.just(buffer(encryptGcm(sliceOf(data, 0, 8)))))
+        .block();
+    service
+        .writeChunkEncrypted(sessionId, 1, Flux.just(buffer(encryptGcm(sliceOf(data, 8, 16)))))
+        .block();
+    service
+        .writeChunkEncrypted(sessionId, 2, Flux.just(buffer(encryptGcm(sliceOf(data, 16, 20)))))
+        .block();
+
+    UploadFile result = service.finish(sessionId, new FinishChunkedUploadRequest(3)).block();
+
+    byte[] written = Files.readAllBytes(tempDir.resolve(result.getId() + ".txt"));
+    assertThat(written).isEqualTo(data);
+  }
+
+  @Test
+  void writeChunkEncrypted_rejectsGarbageCiphertext() {
+    String sessionId = startSession(8);
+    byte[] garbage = "not-real-gcm-ciphertext!".getBytes(StandardCharsets.UTF_8);
+
+    assertThatThrownBy(
+            () -> service.writeChunkEncrypted(sessionId, 0, Flux.just(buffer(garbage))).block())
+        .isInstanceOf(ApplicationException.class);
+  }
+
+  private static byte[] encryptGcm(byte[] plaintext) throws Exception {
+    byte[] key = Base64.getDecoder().decode(new ChunkedUploadProperties().getEncryptionKeyBase64());
+    byte[] iv = new byte[12];
+    new SecureRandom().nextBytes(iv);
+    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
+    byte[] ciphertext = cipher.doFinal(plaintext);
+    byte[] wire = new byte[iv.length + ciphertext.length];
+    System.arraycopy(iv, 0, wire, 0, iv.length);
+    System.arraycopy(ciphertext, 0, wire, iv.length, ciphertext.length);
+    return wire;
   }
 
   @Test

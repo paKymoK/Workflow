@@ -25,6 +25,15 @@ public interface ChunkedUploadService {
    */
   Mono<ChunkAckResponse> writeChunkBase64(String sessionId, int index, Base64ChunkRequest request);
 
+  /**
+   * Same as {@link #writeChunk}, but the body is AES-GCM ciphertext (12-byte IV + ciphertext +
+   * 16-byte tag) encrypted client-side with a key shared out of band with the frontend. Unlike
+   * {@link #writeChunkBase64}, this isn't just re-encoding — a proxy that decodes/inspects the
+   * payload still sees indistinguishable-from-random bytes, not the original file signature, so it
+   * survives content-inspecting gateways that base64 alone does not.
+   */
+  Mono<ChunkAckResponse> writeChunkEncrypted(String sessionId, int index, Flux<DataBuffer> body);
+
   Mono<UploadFile> finish(String sessionId, FinishChunkedUploadRequest request);
 
   Mono<List<ChunkedUploadedFile>> listFiles();

@@ -57,6 +57,14 @@ public class ChunkedUploadController {
     return chunkedUploadService.writeChunkBase64(sessionId, index, request);
   }
 
+  @PostMapping(
+      value = "/{sessionId}/chunks/{index}/encrypted",
+      consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public Mono<ChunkAckResponse> uploadChunkEncrypted(
+      @PathVariable String sessionId, @PathVariable int index, @RequestBody Flux<DataBuffer> body) {
+    return chunkedUploadService.writeChunkEncrypted(sessionId, index, body);
+  }
+
   @PostMapping("/{sessionId}/finish")
   public Mono<UploadFile> finish(
       @PathVariable String sessionId, @RequestBody FinishChunkedUploadRequest request) {

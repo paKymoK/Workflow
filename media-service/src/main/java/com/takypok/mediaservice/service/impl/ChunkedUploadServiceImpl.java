@@ -26,10 +26,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -46,6 +51,9 @@ import reactor.core.scheduler.Schedulers;
 @Slf4j
 public class ChunkedUploadServiceImpl implements ChunkedUploadService {
   private static final DefaultDataBufferFactory BUFFER_FACTORY = new DefaultDataBufferFactory();
+  private static final String AES_GCM_ALGORITHM = "AES/GCM/NoPadding";
+  private static final int GCM_IV_LENGTH_BYTES = 12;
+  private static final int GCM_TAG_LENGTH_BITS = 128;
 
   private final UploadSessionRegistry registry;
   private final ChunkedUploadProperties properties;
@@ -89,6 +97,51 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
       String sessionId, int index, Base64ChunkRequest request) {
     UploadSession session = requireWritableSession(sessionId, index);
     return decodeBase64(request.data()).flatMap(buffer -> writeToChannel(session, index, buffer));
+  }
+
+  @Override
+  public Mono<ChunkAckResponse> writeChunkEncrypted(
+      String sessionId, int index, Flux<DataBuffer> body) {
+    UploadSession session = requireWritableSession(sessionId, index);
+    // Wire payload is: 12-byte GCM IV + ciphertext + 16-byte GCM tag, so it's larger than the
+    // plaintext chunk it decrypts to.
+    int joinLimit =
+        (int) properties.getChunkSizeBytes() + GCM_IV_LENGTH_BYTES + (GCM_TAG_LENGTH_BITS / 8);
+    return DataBufferUtils.join(body, joinLimit)
+        .onErrorMap(
+            DataBufferLimitException.class,
+            e ->
+                new ApplicationException(
+                    Message.Application.ERROR, "Encrypted chunk exceeds maximum allowed size"))
+        .flatMap(this::decryptGcm)
+        .flatMap(buffer -> writeToChannel(session, index, buffer));
+  }
+
+  private Mono<DataBuffer> decryptGcm(DataBuffer encryptedBuffer) {
+    return Mono.fromCallable(
+        () -> {
+          ByteBuffer wire = encryptedBuffer.asByteBuffer();
+          byte[] payload = new byte[wire.remaining()];
+          wire.get(payload);
+          DataBufferUtils.release(encryptedBuffer);
+
+          if (payload.length <= GCM_IV_LENGTH_BYTES) {
+            throw new ApplicationException(
+                Message.Application.ERROR, "Encrypted chunk is too short");
+          }
+          byte[] iv = Arrays.copyOfRange(payload, 0, GCM_IV_LENGTH_BYTES);
+          byte[] ciphertext = Arrays.copyOfRange(payload, GCM_IV_LENGTH_BYTES, payload.length);
+          try {
+            SecretKeySpec key =
+                new SecretKeySpec(
+                    Base64.getDecoder().decode(properties.getEncryptionKeyBase64()), "AES");
+            Cipher cipher = Cipher.getInstance(AES_GCM_ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
+            return BUFFER_FACTORY.wrap(cipher.doFinal(ciphertext));
+          } catch (GeneralSecurityException e) {
+            throw new ApplicationException(Message.Application.ERROR, "Failed to decrypt chunk");
+          }
+        });
   }
 
   private UploadSession requireWritableSession(String sessionId, int index) {
