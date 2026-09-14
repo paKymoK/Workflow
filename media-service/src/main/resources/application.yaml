@@ -52,6 +52,12 @@ media:
   upload:
     max-image-size: ${MEDIA_MAX_IMAGE_SIZE:10485760}   # 10 MB
     max-video-size: ${MEDIA_MAX_VIDEO_SIZE:536870912}  # 512 MB
+  chunked-upload:
+    chunk-size-bytes: ${MEDIA_CHUNK_SIZE:8192}                    # 8 KB
+    max-total-size-bytes: ${MEDIA_CHUNK_MAX_TOTAL:209715200}      # 200 MB
+    session-idle-timeout-seconds: ${MEDIA_CHUNK_IDLE_TIMEOUT:900} # 15 min
+    sweep-interval-seconds: ${MEDIA_CHUNK_SWEEP_INTERVAL:60}
+    max-active-sessions: ${MEDIA_CHUNK_MAX_SESSIONS:200}
 
 logging:
   config: classpath:log4j2-spring.xml
