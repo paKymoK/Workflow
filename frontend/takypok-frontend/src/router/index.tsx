@@ -18,6 +18,7 @@ import Settings from "../pages/Settings";
 import WorkflowDetail from "../pages/WorkflowDetail";
 import Diary from "../pages/Diary";
 import LeaveApprovals from "../pages/LeaveApprovals";
+import ChunkedUpload from "../pages/ChunkedUpload";
 import AdminDashboard from "../pages/admin/Dashboard";
 import AdminAnnouncements from "../pages/admin/Announcements";
 import AdminDocuments from "../pages/admin/Documents";
@@ -54,6 +55,7 @@ export default function AppRouter() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/workflow/:id" element={<WorkflowDetail />} />
               <Route path="/leave-approvals" element={<LeaveApprovals />} />
+              <Route path="/chunked-upload" element={<ChunkedUpload />} />
             </Route>
 
             <Route path="/admin" element={<AdminGate />}>

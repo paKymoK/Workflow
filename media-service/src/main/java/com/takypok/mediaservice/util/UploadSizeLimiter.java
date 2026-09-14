@@ -19,18 +19,29 @@ public class UploadSizeLimiter {
     AtomicLong total = new AtomicLong();
     return content.handle(
         (buffer, sink) -> {
-          if (total.addAndGet(buffer.readableByteCount()) > maxBytes) {
+          try {
+            total.set(checkWithinLimit(total.get(), buffer.readableByteCount(), maxBytes, label));
+          } catch (ApplicationException e) {
             DataBufferUtils.release(buffer);
-            sink.error(
-                new ApplicationException(
-                    Message.Application.ERROR,
-                    label
-                        + " exceeds maximum allowed size of "
-                        + (maxBytes / (1024 * 1024))
-                        + "MB"));
+            sink.error(e);
             return;
           }
           sink.next(buffer);
         });
+  }
+
+  /**
+   * Adds {@code incoming} to {@code totalSoFar} and throws if the result exceeds {@code maxBytes},
+   * otherwise returns the new running total. Shared by {@link #enforce} (one continuous stream) and
+   * callers tracking a running total across separate requests (e.g. chunked uploads).
+   */
+  public static long checkWithinLimit(long totalSoFar, long incoming, long maxBytes, String label) {
+    long newTotal = totalSoFar + incoming;
+    if (newTotal > maxBytes) {
+      throw new ApplicationException(
+          Message.Application.ERROR,
+          label + " exceeds maximum allowed size of " + (maxBytes / (1024 * 1024)) + "MB");
+    }
+    return newTotal;
   }
 }

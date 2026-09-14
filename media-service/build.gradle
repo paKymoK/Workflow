@@ -58,6 +58,7 @@ dependencies {
     } else {
         implementation "org.bytedeco:ffmpeg:6.1.1-1.5.10:${ffmpegClassifier}"
     }
+    testImplementation 'io.projectreactor:reactor-test'
 }
 
 tasks.named('test') {

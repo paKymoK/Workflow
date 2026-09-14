@@ -1,0 +1,51 @@
+package com.takypok.mediaservice.controller;
+
+import com.takypok.mediaservice.model.dto.ChunkAckResponse;
+import com.takypok.mediaservice.model.dto.FinishChunkedUploadRequest;
+import com.takypok.mediaservice.model.dto.StartChunkedUploadRequest;
+import com.takypok.mediaservice.model.dto.StartChunkedUploadResponse;
+import com.takypok.mediaservice.model.entity.UploadFile;
+import com.takypok.mediaservice.service.ChunkedUploadService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+/**
+ * Standalone chunked-upload API, separate from {@link UploadFileController}'s single-shot multipart
+ * endpoints. A client slices a large file into fixed-size pieces (see the {@code chunkSizeBytes}
+ * returned by {@code /start}) and sends each with independent retry.
+ */
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+@RequestMapping("/v1/upload/chunked")
+public class ChunkedUploadController {
+  private final ChunkedUploadService chunkedUploadService;
+
+  @PostMapping("/start")
+  public Mono<StartChunkedUploadResponse> start(@RequestBody StartChunkedUploadRequest request) {
+    return chunkedUploadService.start(request);
+  }
+
+  @PostMapping(
+      value = "/{sessionId}/chunks/{index}",
+      consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public Mono<ChunkAckResponse> uploadChunk(
+      @PathVariable String sessionId, @PathVariable int index, @RequestBody Flux<DataBuffer> body) {
+    return chunkedUploadService.writeChunk(sessionId, index, body);
+  }
+
+  @PostMapping("/{sessionId}/finish")
+  public Mono<UploadFile> finish(
+      @PathVariable String sessionId, @RequestBody FinishChunkedUploadRequest request) {
+    return chunkedUploadService.finish(sessionId, request);
+  }
+}
