@@ -143,7 +143,7 @@ export default function ChunkedUpload() {
                 />
                 <TextArea
                     placeholder="Paste the contents of the .b64.txt file here"
-                    autoSize={{ minRows: 3, maxRows: 8 }}
+                    rows={6}
                     value={encText}
                     onChange={(e) => setEncText(e.target.value)}
                 />
