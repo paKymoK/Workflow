@@ -40,6 +40,7 @@ public class AuthenticationConfig {
                         "/workflow-service/web-socket/**",
                         "/chat-service/web-socket/**",
                         "/media-service/images/**",
+                        "/media-service/files/**",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/webjars/**",
