@@ -406,4 +406,64 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
   }
 
   private record OnDiskFile(String diskName, UUID id, long sizeBytes, Instant modifiedAt) {}
+
+  @Override
+  public Mono<Void> deleteFile(String name) {
+    Path path = resolveFilePath(name);
+    UUID id = parseIdPrefix(name);
+    Mono<Void> deleteDbRow = id != null ? uploadFileRepository.deleteById(id) : Mono.empty();
+    return deleteDbRow.then(
+        Mono.fromRunnable(() -> deleteFileFromDisk(path))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then());
+  }
+
+  @Override
+  public Mono<Void> deleteAllFiles() {
+    Path dir = Path.of(storageProperties.getFilesDir());
+    return Mono.fromCallable(() -> listOnDiskFiles(dir))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(
+            files -> {
+              List<UUID> ids = files.stream().map(OnDiskFile::id).filter(Objects::nonNull).toList();
+              return uploadFileRepository
+                  .deleteAllById(ids)
+                  .then(
+                      Mono.fromRunnable(
+                              () ->
+                                  files.forEach(
+                                      file ->
+                                          deleteFileFromDisk(
+                                              Path.of(
+                                                  storageProperties.getFilesDir(),
+                                                  file.diskName()))))
+                          .subscribeOn(Schedulers.boundedElastic())
+                          .then());
+            });
+  }
+
+  /**
+   * Resolves a client-supplied on-disk file name to an absolute path within the files directory,
+   * rejecting anything that isn't a plain file name (no path separators, no {@code ..}) so this
+   * can't be used to delete files outside {@code uploads/files}.
+   */
+  private Path resolveFilePath(String name) {
+    if (name == null || name.isBlank() || name.contains("/") || name.contains("\\")) {
+      throw new ApplicationException(Message.Application.ERROR, "Invalid file name");
+    }
+    Path dir = Path.of(storageProperties.getFilesDir()).toAbsolutePath().normalize();
+    Path resolved = dir.resolve(name).normalize();
+    if (!resolved.startsWith(dir)) {
+      throw new ApplicationException(Message.Application.ERROR, "Invalid file name");
+    }
+    return resolved;
+  }
+
+  private void deleteFileFromDisk(Path path) {
+    try {
+      Files.deleteIfExists(path);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
 }

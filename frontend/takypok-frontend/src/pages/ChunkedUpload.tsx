@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { Upload, Progress, List, Typography, Tag, Input, Button, message } from "antd";
-import { InboxOutlined, FileDoneOutlined } from "@ant-design/icons";
+import { Upload, Progress, List, Typography, Tag, Input, Button, Checkbox, Popconfirm, message } from "antd";
+import { InboxOutlined, FileDoneOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { UploadProps } from "antd";
-import { getChunkedFileUrl, listChunkedFiles, type ChunkedUploadedFile } from "../api/chunkedUploadApi";
+import {
+    getChunkedFileUrl,
+    listChunkedFiles,
+    deleteChunkedFile,
+    deleteAllChunkedFiles,
+    type ChunkedUploadedFile,
+} from "../api/chunkedUploadApi";
 import { uploadFileChunkedEncrypted, decryptPastedFile, type ChunkedUploadProgress } from "../lib/chunkedUpload";
 
 const { Title, Text, Paragraph } = Typography;
@@ -31,10 +37,15 @@ export default function ChunkedUpload() {
     const [encFilename, setEncFilename] = useState("");
     const [encText, setEncText] = useState("");
     const [encSubmitting, setEncSubmitting] = useState(false);
+    const [selectedNames, setSelectedNames] = useState<string[]>([]);
+    const [deleting, setDeleting] = useState(false);
 
     const refreshFiles = async () => {
         try {
-            setFiles(await listChunkedFiles());
+            const result = await listChunkedFiles();
+            setFiles(result);
+            const stillPresent = new Set(result.map((file) => file.name));
+            setSelectedNames((prev) => prev.filter((name) => stillPresent.has(name)));
         } catch (err) {
             console.error(err);
             message.error("Failed to load uploaded files");
@@ -107,6 +118,50 @@ export default function ChunkedUpload() {
         }
     };
 
+    const toggleSelected = (name: string, checked: boolean) => {
+        setSelectedNames((prev) => (checked ? [...prev, name] : prev.filter((n) => n !== name)));
+    };
+
+    const deleteOne = async (name: string) => {
+        setDeleting(true);
+        try {
+            await deleteChunkedFile(name);
+            await refreshFiles();
+        } catch (err) {
+            console.error(err);
+            message.error("Failed to delete file");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const deleteSelected = async () => {
+        setDeleting(true);
+        try {
+            await Promise.all(selectedNames.map((name) => deleteChunkedFile(name)));
+            await refreshFiles();
+        } catch (err) {
+            console.error(err);
+            message.error("Failed to delete some of the selected files");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const deleteAll = async () => {
+        setDeleting(true);
+        try {
+            await deleteAllChunkedFiles();
+            setSelectedNames([]);
+            await refreshFiles();
+        } catch (err) {
+            console.error(err);
+            message.error("Failed to clear files");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4 max-w-2xl mx-auto p-4">
             <div>
@@ -164,7 +219,36 @@ export default function ChunkedUpload() {
             )}
 
             <List
-                header={<Text strong>Files in storage</Text>}
+                header={
+                    <div className="flex items-center justify-between gap-2">
+                        <Text strong>Files in storage</Text>
+                        <div className="flex items-center gap-2">
+                            {selectedNames.length > 0 && (
+                                <Popconfirm
+                                    title={`Delete ${selectedNames.length} selected file(s)?`}
+                                    onConfirm={deleteSelected}
+                                    okButtonProps={{ danger: true }}
+                                >
+                                    <Button size="small" danger loading={deleting}>
+                                        Delete selected ({selectedNames.length})
+                                    </Button>
+                                </Popconfirm>
+                            )}
+                            {files.length > 0 && (
+                                <Popconfirm
+                                    title="Delete every file in storage?"
+                                    description="This can't be undone."
+                                    onConfirm={deleteAll}
+                                    okButtonProps={{ danger: true }}
+                                >
+                                    <Button size="small" danger loading={deleting}>
+                                        Clear all
+                                    </Button>
+                                </Popconfirm>
+                            )}
+                        </div>
+                    </div>
+                }
                 bordered
                 loading={loadingFiles}
                 dataSource={files}
@@ -172,6 +256,10 @@ export default function ChunkedUpload() {
                 renderItem={(item) => (
                     <List.Item>
                         <div className="flex items-center gap-2 w-full">
+                            <Checkbox
+                                checked={selectedNames.includes(item.name)}
+                                onChange={(e) => toggleSelected(item.name, e.target.checked)}
+                            />
                             <FileDoneOutlined className="text-green-500" />
                             <a
                                 href={getChunkedFileUrl(item.name)}
@@ -185,6 +273,9 @@ export default function ChunkedUpload() {
                                 {formatSize(item.sizeBytes)}
                             </Text>
                             <Tag>{(item.originalName.split(".").pop() ?? "").toUpperCase()}</Tag>
+                            <Popconfirm title="Delete this file?" onConfirm={() => deleteOne(item.name)}>
+                                <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+                            </Popconfirm>
                         </div>
                     </List.Item>
                 )}

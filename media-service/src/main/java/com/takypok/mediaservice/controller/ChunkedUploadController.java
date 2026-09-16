@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,5 +75,15 @@ public class ChunkedUploadController {
   @GetMapping("/files")
   public Mono<List<ChunkedUploadedFile>> listFiles() {
     return chunkedUploadService.listFiles();
+  }
+
+  @DeleteMapping("/files/{name}")
+  public Mono<Void> deleteFile(@PathVariable String name) {
+    return chunkedUploadService.deleteFile(name);
+  }
+
+  @DeleteMapping("/files")
+  public Mono<Void> deleteAllFiles() {
+    return chunkedUploadService.deleteAllFiles();
   }
 }

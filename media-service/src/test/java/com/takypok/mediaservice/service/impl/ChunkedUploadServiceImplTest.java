@@ -1,6 +1,7 @@
 package com.takypok.mediaservice.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -90,6 +92,19 @@ class ChunkedUploadServiceImplTest {
               found.removeIf(java.util.Objects::isNull);
               return Flux.fromIterable(found);
             });
+    when(uploadFileRepository.deleteById(any(UUID.class)))
+        .thenAnswer(
+            inv -> {
+              savedFiles.remove((UUID) inv.getArgument(0));
+              return Mono.empty();
+            });
+    when(uploadFileRepository.deleteAllById(any(Iterable.class)))
+        .thenAnswer(
+            inv -> {
+              Iterable<UUID> ids = inv.getArgument(0);
+              ids.forEach(savedFiles::remove);
+              return Mono.empty();
+            });
 
     service =
         new ChunkedUploadServiceImpl(
@@ -149,6 +164,53 @@ class ChunkedUploadServiceImplTest {
     assertThat(files.get(0).name()).isEqualTo(finished.getId() + ".txt");
     assertThat(files.get(0).originalName()).isEqualTo("test.txt");
     assertThat(files.get(0).sizeBytes()).isEqualTo(data.length);
+  }
+
+  @Test
+  void deleteFile_removesFileAndDbRow() throws Exception {
+    byte[] data = "ABCDEFGH".getBytes(StandardCharsets.UTF_8);
+    String sessionId = startSession(data.length);
+    writeChunk(sessionId, 0, data);
+    UploadFile uploaded = service.finish(sessionId, new FinishChunkedUploadRequest(1)).block();
+    String diskName = uploaded.getId() + ".txt";
+
+    service.deleteFile(diskName).block();
+
+    assertThat(Files.exists(tempDir.resolve(diskName))).isFalse();
+    assertThat(service.listFiles().block()).isEmpty();
+  }
+
+  @Test
+  void deleteFile_isIdempotentForAlreadyMissingFile() {
+    assertThatCode(() -> service.deleteFile(UUID.randomUUID() + ".txt").block())
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  void deleteFile_rejectsPathTraversalName() {
+    assertThatThrownBy(() -> service.deleteFile("../evil.txt").block())
+        .isInstanceOf(ApplicationException.class);
+  }
+
+  @Test
+  void deleteAllFiles_removesEveryFinishedFile() throws Exception {
+    byte[] data = "ABCDEFGH".getBytes(StandardCharsets.UTF_8);
+    String session1 = startSession(data.length);
+    writeChunk(session1, 0, data);
+    service.finish(session1, new FinishChunkedUploadRequest(1)).block();
+
+    String session2 = startSession(data.length);
+    writeChunk(session2, 0, data);
+    service.finish(session2, new FinishChunkedUploadRequest(1)).block();
+
+    assertThat(service.listFiles().block()).hasSize(2);
+
+    service.deleteAllFiles().block();
+
+    assertThat(service.listFiles().block()).isEmpty();
+    try (Stream<Path> remaining = Files.list(tempDir)) {
+      assertThat(remaining.toList()).isEmpty();
+    }
   }
 
   @Test

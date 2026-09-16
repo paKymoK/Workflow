@@ -72,3 +72,11 @@ export async function listChunkedFiles() {
 export function getChunkedFileUrl(name: string) {
     return `${import.meta.env.VITE_API_BASE_URL}/media-service/files/${name}`;
 }
+
+export async function deleteChunkedFile(name: string) {
+    await api.delete(`/media-service/v1/upload/chunked/files/${encodeURIComponent(name)}`);
+}
+
+export async function deleteAllChunkedFiles() {
+    await api.delete("/media-service/v1/upload/chunked/files");
+}
