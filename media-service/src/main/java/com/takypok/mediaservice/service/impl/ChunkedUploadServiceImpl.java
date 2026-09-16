@@ -27,10 +27,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Stream;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -337,32 +340,70 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
   @Override
   public Mono<List<ChunkedUploadedFile>> listFiles() {
     Path dir = Path.of(storageProperties.getFilesDir());
-    return Mono.fromCallable(
-            () -> {
-              if (!Files.isDirectory(dir)) {
-                return List.<ChunkedUploadedFile>of();
-              }
-              // ".part" files are sessions still in flight or abandoned mid-upload — not
-              // finished files, so they're excluded from what's shown as "uploaded".
-              try (Stream<Path> entries = Files.list(dir)) {
-                return entries
-                    .filter(Files::isRegularFile)
-                    .filter(path -> !path.getFileName().toString().endsWith(".part"))
-                    .map(this::toUploadedFile)
-                    .sorted(Comparator.comparing(ChunkedUploadedFile::modifiedAt).reversed())
-                    .toList();
-              }
-            })
-        .subscribeOn(Schedulers.boundedElastic());
+    return Mono.fromCallable(() -> listOnDiskFiles(dir))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(this::attachOriginalNames);
   }
 
-  private ChunkedUploadedFile toUploadedFile(Path path) {
+  private List<OnDiskFile> listOnDiskFiles(Path dir) throws IOException {
+    if (!Files.isDirectory(dir)) {
+      return List.of();
+    }
+    // ".part" files are sessions still in flight or abandoned mid-upload — not finished files,
+    // so they're excluded from what's shown as "uploaded".
+    try (Stream<Path> entries = Files.list(dir)) {
+      return entries
+          .filter(Files::isRegularFile)
+          .filter(path -> !path.getFileName().toString().endsWith(".part"))
+          .map(this::toOnDiskFile)
+          .toList();
+    }
+  }
+
+  private OnDiskFile toOnDiskFile(Path path) {
     try {
       BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
-      return new ChunkedUploadedFile(
-          path.getFileName().toString(), attrs.size(), attrs.lastModifiedTime().toInstant());
+      String diskName = path.getFileName().toString();
+      return new OnDiskFile(
+          diskName, parseIdPrefix(diskName), attrs.size(), attrs.lastModifiedTime().toInstant());
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
+
+  /**
+   * Files land on disk named {@code <upload_file.id><extension>} (see {@link #closeAndPersist}), so
+   * the id the original filename is stored under can be recovered straight from the filename — no
+   * separate on-disk index needed.
+   */
+  private UUID parseIdPrefix(String diskName) {
+    int dot = diskName.indexOf('.');
+    String idPart = dot == -1 ? diskName : diskName.substring(0, dot);
+    try {
+      return UUID.fromString(idPart);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
+
+  private Mono<List<ChunkedUploadedFile>> attachOriginalNames(List<OnDiskFile> onDiskFiles) {
+    List<UUID> ids = onDiskFiles.stream().map(OnDiskFile::id).filter(Objects::nonNull).toList();
+    return uploadFileRepository
+        .findAllById(ids)
+        .collectMap(UploadFile::getId, UploadFile::getName)
+        .map(
+            originalNamesById ->
+                onDiskFiles.stream()
+                    .map(
+                        file ->
+                            new ChunkedUploadedFile(
+                                file.diskName(),
+                                originalNamesById.getOrDefault(file.id(), file.diskName()),
+                                file.sizeBytes(),
+                                file.modifiedAt()))
+                    .sorted(Comparator.comparing(ChunkedUploadedFile::modifiedAt).reversed())
+                    .toList());
+  }
+
+  private record OnDiskFile(String diskName, UUID id, long sizeBytes, Instant modifiedAt) {}
 }

@@ -14,7 +14,10 @@ export interface ChunkAckResponse {
 }
 
 export interface ChunkedUploadedFile {
+    /** On-disk filename (`<uuid><extension>`) — what the download URL is built from. */
     name: string;
+    /** The filename as the uploader's client sent it, e.g. "report.xlsx" — what to display. */
+    originalName: string;
     sizeBytes: number;
     modifiedAt: string;
 }

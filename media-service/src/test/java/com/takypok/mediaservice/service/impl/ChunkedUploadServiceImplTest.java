@@ -22,9 +22,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -68,13 +71,24 @@ class ChunkedUploadServiceImplTest {
               return file;
             });
 
+    Map<UUID, UploadFile> savedFiles = new ConcurrentHashMap<>();
     uploadFileRepository = mock(UploadFileRepository.class);
     when(uploadFileRepository.save(any(UploadFile.class)))
         .thenAnswer(
             inv -> {
               UploadFile file = inv.getArgument(0);
               file.setId(UUID.randomUUID());
+              savedFiles.put(file.getId(), file);
               return Mono.just(file);
+            });
+    when(uploadFileRepository.findAllById(any(Iterable.class)))
+        .thenAnswer(
+            inv -> {
+              Iterable<UUID> ids = inv.getArgument(0);
+              List<UploadFile> found = new ArrayList<>();
+              ids.forEach(id -> found.add(savedFiles.get(id)));
+              found.removeIf(java.util.Objects::isNull);
+              return Flux.fromIterable(found);
             });
 
     service =
@@ -133,6 +147,7 @@ class ChunkedUploadServiceImplTest {
 
     assertThat(files).hasSize(1);
     assertThat(files.get(0).name()).isEqualTo(finished.getId() + ".txt");
+    assertThat(files.get(0).originalName()).isEqualTo("test.txt");
     assertThat(files.get(0).sizeBytes()).isEqualTo(data.length);
   }
 

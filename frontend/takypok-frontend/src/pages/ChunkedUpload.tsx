@@ -179,12 +179,12 @@ export default function ChunkedUpload() {
                                 rel="noopener noreferrer"
                                 className="flex-1 truncate"
                             >
-                                {item.name}
+                                {item.originalName}
                             </a>
                             <Text className="text-[12px] text-[var(--text-muted)]">
                                 {formatSize(item.sizeBytes)}
                             </Text>
-                            <Tag>{(item.name.split(".").pop() ?? "").toUpperCase()}</Tag>
+                            <Tag>{(item.originalName.split(".").pop() ?? "").toUpperCase()}</Tag>
                         </div>
                     </List.Item>
                 )}
