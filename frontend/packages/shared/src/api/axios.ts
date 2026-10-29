@@ -59,8 +59,10 @@ api.interceptors.response.use(
     }
 
     if (!isHealthCheck && status >= 400 && status < 500) {
-      const msg: string = error.response?.data?.status?.message;
-      message.error(msg || "Internal Server Error");
+      const content: string = error.response?.data?.status?.message || "Internal Server Error";
+      // key = content so identical errors firing from parallel/retried requests
+      // replace the same toast instead of stacking a new one each time.
+      message.error({ content, key: content });
     }
 
     return Promise.reject(error);
