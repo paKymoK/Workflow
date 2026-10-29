@@ -54,6 +54,13 @@ public class AuthenticationConfig {
                     // prefix are POST/DELETE and must fall through to .authenticated() below.
                     .pathMatchers(HttpMethod.GET, "/media-service/v1/videos/**")
                     .permitAll()
+                    // Chunked-upload downloads are followed via a plain <a href> click, which can't
+                    // attach an Authorization header either — same reasoning as
+                    // /media-service/files/** above. Listing/deleting on the same prefix stay
+                    // authenticated.
+                    .pathMatchers(
+                        HttpMethod.GET, "/media-service/v1/upload/chunked/files/*/download")
+                    .permitAll()
                     .anyExchange()
                     .authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults -> {}))

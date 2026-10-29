@@ -40,10 +40,15 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -465,5 +470,32 @@ public class ChunkedUploadServiceImpl implements ChunkedUploadService {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
+  }
+
+  @Override
+  public Mono<ResponseEntity<Resource>> downloadFile(String name) {
+    Path path = resolveFilePath(name);
+    UUID id = parseIdPrefix(name);
+    Mono<String> originalNameMono =
+        id != null
+            ? uploadFileRepository.findById(id).map(UploadFile::getName).defaultIfEmpty(name)
+            : Mono.just(name);
+    return originalNameMono.flatMap(
+        originalName ->
+            Mono.fromCallable(() -> buildDownloadResponse(path, originalName))
+                .subscribeOn(Schedulers.boundedElastic()));
+  }
+
+  private ResponseEntity<Resource> buildDownloadResponse(Path path, String originalName) {
+    if (!Files.isRegularFile(path)) {
+      throw new ApplicationException(Message.Application.ERROR, "File not found");
+    }
+    Resource resource = new FileSystemResource(path);
+    ContentDisposition disposition = ContentDisposition.attachment().filename(originalName).build();
+    // No explicit Content-Type: the resource writer detects it from the file extension (falling
+    // back to octet-stream if unrecognized), and `attachment` above forces a save either way.
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+        .body(resource);
   }
 }

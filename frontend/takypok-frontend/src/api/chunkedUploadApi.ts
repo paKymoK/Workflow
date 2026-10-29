@@ -69,8 +69,9 @@ export async function listChunkedFiles() {
     return data;
 }
 
-export function getChunkedFileUrl(name: string) {
-    return `${import.meta.env.VITE_API_BASE_URL}/media-service/files/${name}`;
+/** Streams the file back with a Content-Disposition carrying its original filename, so the browser saves it under a real name instead of the on-disk UUID. */
+export function getChunkedFileDownloadUrl(name: string) {
+    return `${import.meta.env.VITE_API_BASE_URL}/media-service/v1/upload/chunked/files/${name}/download`;
 }
 
 export async function deleteChunkedFile(name: string) {

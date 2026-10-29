@@ -11,8 +11,10 @@ import com.takypok.mediaservice.service.ChunkedUploadService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -75,6 +77,11 @@ public class ChunkedUploadController {
   @GetMapping("/files")
   public Mono<List<ChunkedUploadedFile>> listFiles() {
     return chunkedUploadService.listFiles();
+  }
+
+  @GetMapping("/files/{name}/download")
+  public Mono<ResponseEntity<Resource>> downloadFile(@PathVariable String name) {
+    return chunkedUploadService.downloadFile(name);
   }
 
   @DeleteMapping("/files/{name}")

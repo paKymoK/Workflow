@@ -44,6 +44,12 @@ public class SecurityConfig {
                     // /v1/videos prefix are POST/DELETE and fall through to .authenticated() below.
                     .pathMatchers(HttpMethod.GET, "/v1/videos/**")
                     .permitAll()
+                    // Chunked-upload downloads are followed via a plain <a href> click, which can't
+                    // attach an Authorization header either — same reasoning as /files/** above,
+                    // just routed through a controller instead of the static handler so it can set
+                    // Content-Disposition. Listing/deleting on the same prefix stay authenticated.
+                    .pathMatchers(HttpMethod.GET, "/v1/upload/chunked/files/*/download")
+                    .permitAll()
                     .anyExchange()
                     .authenticated())
         .oauth2ResourceServer(

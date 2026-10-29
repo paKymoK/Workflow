@@ -8,7 +8,9 @@ import com.takypok.mediaservice.model.dto.StartChunkedUploadRequest;
 import com.takypok.mediaservice.model.dto.StartChunkedUploadResponse;
 import com.takypok.mediaservice.model.entity.UploadFile;
 import java.util.List;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -47,4 +49,11 @@ public interface ChunkedUploadService {
 
   /** Deletes every finished upload currently in the files directory (file + DB row each). */
   Mono<Void> deleteAllFiles();
+
+  /**
+   * Streams a finished upload back with a {@code Content-Disposition} header carrying the original
+   * filename the uploader sent (not the on-disk {@code <uuid><extension>} name), so browsers save
+   * it under a sensible name instead of the UUID.
+   */
+  Mono<ResponseEntity<Resource>> downloadFile(String name);
 }
