@@ -31,6 +31,7 @@ public abstract class TicketMapper {
 
   @Mapping(target = "id", expression = "java(null)")
   @Mapping(target = "createdAt", expression = "java(null)")
+  @Mapping(target = "version", expression = "java(null)")
   @Mapping(target = "createdBy", expression = "java(null)")
   @Mapping(target = "modifiedAt", expression = "java(null)")
   @Mapping(target = "modifiedBy", expression = "java(null)")

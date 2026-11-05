@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1330" viewBox="0 0 1760 1330" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d97706"/></marker><marker id="l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker><marker id="t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker></defs>
+<rect width="1760" height="1330" fill="#ffffff"/>
+<text x="30" y="36" font-size="24" font-weight="700" fill="#111827">Takypok Workflow — Monitoring &amp; Observability Architecture</text>
+<text x="30" y="58" font-size="13" fill="#6b7280">Nguồn: infrastructure/{alloy,monitor,...}, docker-compose.yaml, core-v1/management.yml. Nét liền = đã có trong repo; nét đứt xanh lá = ĐỀ XUẤT bổ sung; nét đứt đỏ = lỗ hổng/cảnh báo.</text>
+<rect x="1180" y="14" width="550" height="46" rx="6" fill="#f9fafb" stroke="#e5e7eb"/>
+<line x1="1194" y1="28" x2="1220" y2="28" stroke="#d97706" stroke-width="3"/><text x="1226" y="32" font-size="11" fill="#374151">Metrics</text>
+<line x1="1302" y1="28" x2="1328" y2="28" stroke="#2563eb" stroke-width="3"/><text x="1334" y="32" font-size="11" fill="#374151">Logs</text>
+<line x1="1410" y1="28" x2="1436" y2="28" stroke="#7c3aed" stroke-width="3"/><text x="1442" y="32" font-size="11" fill="#374151">Traces</text>
+<line x1="1518" y1="28" x2="1544" y2="28" stroke="#dc2626" stroke-width="3"/><text x="1550" y="32" font-size="11" fill="#374151">Alert</text>
+<line x1="1626" y1="28" x2="1652" y2="28" stroke="#16a34a" stroke-width="3"/><text x="1658" y="32" font-size="11" fill="#374151">Đề xuất</text>
+<text x="1194" y="50" font-size="10.5" fill="#6b7280">Tất cả container chung network Docker `takypok_default` (container-DNS)</text>
+<rect x="30" y="80" width="1700" height="92" rx="12" fill="#f9fafb" stroke="#6b7280" stroke-width="1.5"/>
+<text x="44" y="102" font-size="14" font-weight="700" fill="#6b7280">1 · Người dùng &amp; Edge</text>
+<rect x="60" y="106" width="230" height="52" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.6"/>
+<text x="175.0" y="124" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Web SPA (takypok-frontend)</text>
+<text x="175.0" y="139" text-anchor="middle" font-size="11" fill="#374151">React 19 · Vite · :5173/:3000</text>
+<rect x="310" y="106" width="230" height="52" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.6"/>
+<text x="425.0" y="124" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Mobile App</text>
+<text x="425.0" y="139" text-anchor="middle" font-size="11" fill="#374151">com.takypok.workflow://</text>
+<rect x="560" y="106" width="230" height="52" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.6"/>
+<text x="675.0" y="124" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Postman / API client</text>
+<text x="675.0" y="139" text-anchor="middle" font-size="11" fill="#374151">oauth.pstmn.io</text>
+<rect x="830" y="106" width="250" height="52" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="955.0" y="124" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] Grafana Faro (RUM)</text>
+<text x="955.0" y="139" text-anchor="middle" font-size="11" fill="#374151">FE errors, Web Vitals → Alloy faro.receiver</text>
+<rect x="1120" y="106" width="240" height="52" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="1240.0" y="124" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Blackbox / Synthetic probe</text>
+<text x="1240.0" y="139" text-anchor="middle" font-size="11" fill="#374151">[ĐỀ XUẤT] /actuator/health, login flow</text>
+<rect x="1400" y="106" width="300" height="52" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+<text x="1550.0" y="124" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Reverse proxy / Cloudflare Tunnel</text>
+<text x="1550.0" y="139" text-anchor="middle" font-size="11" fill="#374151">app.thaiha.website · grafana.* (GF_SERVER_ROOT_URL)</text>
+<rect x="30" y="190" width="1700" height="250" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+<text x="44" y="212" font-size="14" font-weight="700" fill="#16a34a">2 · Application services (Spring Boot 3.5 · WebFlux)</text>
+<rect x="50" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+<text x="158.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">gateway-service</text>
+<text x="158.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:8080 (mgmt :8090)</text>
+<text x="158.0" y="270" text-anchor="middle" font-size="11" fill="#374151">JWT + Revocation filter</text>
+<text x="158.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing ON · sampling 1.0</text>
+<text x="158.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="291" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="399.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">discovery-service</text>
+<text x="399.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:8761 · Eureka</text>
+<text x="399.0" y="270" text-anchor="middle" font-size="11" fill="#374151">registry (healthcheck wget)</text>
+<text x="399.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing OFF (!)</text>
+<text x="399.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="532" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+<text x="640.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">auth-service</text>
+<text x="640.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:9000</text>
+<text x="640.0" y="270" text-anchor="middle" font-size="11" fill="#374151">OAuth2 AS · LDAP · Redis</text>
+<text x="640.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing ON · health details</text>
+<text x="640.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="773" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+<text x="881.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">workflow-service</text>
+<text x="881.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:8085</text>
+<text x="881.0" y="270" text-anchor="middle" font-size="11" fill="#374151">tickets · SLA · WS · Debezium</text>
+<text x="881.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing ON · offset volume</text>
+<text x="881.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="1014" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+<text x="1122.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">media-service</text>
+<text x="1122.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:8082</text>
+<text x="1122.0" y="270" text-anchor="middle" font-size="11" fill="#374151">MinIO · HLS · uploads</text>
+<text x="1122.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing ON</text>
+<text x="1122.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="1255" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+<text x="1363.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">chat-service</text>
+<text x="1363.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:8083</text>
+<text x="1363.0" y="270" text-anchor="middle" font-size="11" fill="#374151">Qdrant · Ollama · Kafka</text>
+<text x="1363.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing ON</text>
+<text x="1363.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="1496" y="222" width="216" height="112" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+<text x="1604.0" y="240" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">employee-service</text>
+<text x="1604.0" y="255" text-anchor="middle" font-size="11" fill="#374151">:8086</text>
+<text x="1604.0" y="270" text-anchor="middle" font-size="11" fill="#374151">Kafka · Postgres</text>
+<text x="1604.0" y="285" text-anchor="middle" font-size="11" fill="#374151">tracing ON</text>
+<text x="1604.0" y="300" text-anchor="middle" font-size="11" fill="#374151">/actuator/prometheus · /health</text>
+<rect x="50" y="350" width="1650" height="74" rx="8" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.6"/>
+<text x="875.0" y="368" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Mỗi service (qua core-v1 management.yml + infrastructure lib): Prometheus registry · tag application=${spring.application.name} · histogram http.server.requests</text>
+<text x="875.0" y="383" text-anchor="middle" font-size="11" fill="#374151">Logs: Log4j2 → stdout (pattern có [XRequestId][UserId], trace_id) → Docker json-file (max 500m)  ·  Traces: micrometer-tracing-bridge-otel → OTLP HTTP tới MANAGEMENT_OTLP_TRACING_ENDPOINT (tempo:4318)</text>
+<rect x="30" y="458" width="1700" height="190" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+<text x="44" y="480" font-size="14" font-weight="700" fill="#d97706">3 · Data &amp; Messaging infrastructure</text>
+<rect x="50" y="488" width="312" height="74" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="206.0" y="506" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">PostgreSQL 16 (:5433→5432)</text>
+<text x="206.0" y="521" text-anchor="middle" font-size="11" fill="#374151">5 schema: authentication, workflow, media, chat, employee</text>
+<text x="206.0" y="536" text-anchor="middle" font-size="11" fill="#374151">pg_isready healthcheck · mem 2G</text>
+<rect x="50" y="574" width="312" height="58" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="206.0" y="592" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] exporter</text>
+<text x="206.0" y="607" text-anchor="middle" font-size="11" fill="#374151">postgres_exporter (pg_stat, locks, repl lag)</text>
+<rect x="383" y="488" width="312" height="74" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="539.0" y="506" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Redis 7 (:6379)</text>
+<text x="539.0" y="521" text-anchor="middle" font-size="11" fill="#374151">session, revocation, single-tab</text>
+<text x="539.0" y="536" text-anchor="middle" font-size="11" fill="#374151">(không healthcheck)</text>
+<rect x="383" y="574" width="312" height="58" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="539.0" y="592" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] exporter</text>
+<text x="539.0" y="607" text-anchor="middle" font-size="11" fill="#374151">redis_exporter (mem, evictions, clients)</text>
+<rect x="716" y="488" width="312" height="74" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="872.0" y="506" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Kafka 3.8 KRaft (:29092)</text>
+<text x="872.0" y="521" text-anchor="middle" font-size="11" fill="#374151">topix.* (Debezium CDC), chat/employee</text>
+<text x="872.0" y="536" text-anchor="middle" font-size="11" fill="#374151">healthcheck broker-api-versions</text>
+<rect x="716" y="574" width="312" height="58" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="872.0" y="592" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] exporter</text>
+<text x="872.0" y="607" text-anchor="middle" font-size="11" fill="#374151">kafka_exporter / JMX (consumer lag)</text>
+<rect x="1049" y="488" width="312" height="74" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="1205.0" y="506" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">MinIO (:9100 S3, :9101 UI)</text>
+<text x="1205.0" y="521" text-anchor="middle" font-size="11" fill="#374151">media-images · media-videos</text>
+<text x="1205.0" y="536" text-anchor="middle" font-size="11" fill="#374151">healthcheck mc ready</text>
+<rect x="1049" y="574" width="312" height="58" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="1205.0" y="592" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] exporter</text>
+<text x="1205.0" y="607" text-anchor="middle" font-size="11" fill="#374151">/minio/v2/metrics/cluster (Prometheus bearer)</text>
+<rect x="1382" y="488" width="312" height="74" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="1538.0" y="506" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">OpenLDAP (:389) + phpLDAPadmin</text>
+<text x="1538.0" y="521" text-anchor="middle" font-size="11" fill="#374151">UI :9090 — TRÙNG cổng Prometheus</text>
+<text x="1538.0" y="536" text-anchor="middle" font-size="11" fill="#374151">local/dev, auth-service ldap</text>
+<rect x="1382" y="574" width="312" height="58" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="1538.0" y="592" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] exporter</text>
+<text x="1538.0" y="607" text-anchor="middle" font-size="11" fill="#374151">blackbox tcp probe :389</text>
+<rect x="30" y="666" width="1180" height="250" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="44" y="688" font-size="14" font-weight="700" fill="#2563eb">4 · Collection — Grafana Alloy v1.4.3</text>
+<rect x="50" y="700" width="270" height="70" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+<text x="185.0" y="718" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">discovery.docker</text>
+<text x="185.0" y="733" text-anchor="middle" font-size="10" fill="#374151">+ discovery.relabel</text>
+<text x="185.0" y="748" text-anchor="middle" font-size="10" fill="#374151">container, service, project, stream</text>
+<rect x="335" y="700" width="270" height="70" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+<text x="470.0" y="718" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">loki.source.docker</text>
+<text x="470.0" y="733" text-anchor="middle" font-size="10" fill="#374151">→ loki.process</text>
+<text x="470.0" y="748" text-anchor="middle" font-size="10" fill="#374151">regex tách level TRACE..ERROR → label level</text>
+<rect x="620" y="700" width="270" height="70" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+<text x="755.0" y="718" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">prometheus.exporter.unix</text>
+<text x="755.0" y="733" text-anchor="middle" font-size="10" fill="#374151">(node_exporter)</text>
+<text x="755.0" y="748" text-anchor="middle" font-size="10" fill="#374151">host CPU / RAM / disk / net</text>
+<rect x="905" y="700" width="270" height="70" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1040.0" y="718" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">prometheus.exporter.cadvisor</text>
+<text x="1040.0" y="733" text-anchor="middle" font-size="10" fill="#374151">(docker_only)</text>
+<text x="1040.0" y="748" text-anchor="middle" font-size="10" fill="#374151">CPU/RAM/IO mỗi container ⚠ lỗi trên Docker Desktop Mac</text>
+<rect x="50" y="784" width="560" height="56" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="330.0" y="802" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">prometheus.scrape "app"  (APP_SCRAPE_TARGET = &lt;svc&gt;:&lt;port&gt;)</text>
+<text x="330.0" y="817" text-anchor="middle" font-size="10" fill="#374151">metrics_path /actuator/prometheus · 15s · bỏ qua nếu env rỗng (VPS Kafka/Redis)</text>
+<rect x="625" y="784" width="285" height="56" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+<text x="767.5" y="802" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">prometheus.scrape "exporters"</text>
+<text x="767.5" y="817" text-anchor="middle" font-size="10" fill="#374151">unix + cadvisor · 15s</text>
+<rect x="925" y="784" width="270" height="56" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1060.0" y="802" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">loki.write</text>
+<text x="1060.0" y="817" text-anchor="middle" font-size="10" fill="#374151">LOKI_URL (:3100/loki/api/v1/push)</text>
+<rect x="50" y="852" width="1145" height="52" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="622.5" y="870" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] thêm vào config.alloy: scrape exporters redis/postgres/kafka/minio · otelcol.receiver.otlp (OTLP → batch → Tempo) · faro.receiver</text>
+<text x="622.5" y="885" text-anchor="middle" font-size="10" fill="#374151">Prod: 1 Alloy/VPS (app VPS + kafka/redis VPS); chỉ APP_SCRAPE_TARGET khác nhau → remote_write/push về monitor VPS qua private IP</text>
+<rect x="1230" y="690" width="500" height="100" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+<text x="1480.0" y="708" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">Prometheus static scrape (prometheus.yml)</text>
+<text x="1480.0" y="723" text-anchor="middle" font-size="10" fill="#374151">7 job: workflow:8085 · auth:9000 · gateway:8090(!) · media:8082</text>
+<text x="1480.0" y="738" text-anchor="middle" font-size="10" fill="#374151">discovery:8761 · chat:8083 · employee:8086 · pull 15s</text>
+<text x="1480.0" y="753" text-anchor="middle" font-size="10" fill="#374151">⚠ TRÙNG với Alloy scrape app → series nhân đôi nếu chạy cả hai</text>
+<rect x="1230" y="690" width="500" height="100" rx="8" fill="none" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="3 3"/>
+<rect x="1230" y="806" width="500" height="98" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="1480.0" y="824" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">Rủi ro cần xử lý</text>
+<text x="1480.0" y="839" text-anchor="middle" font-size="10" fill="#374151">/actuator/prometheus công khai trên host port (8085,9000...) không auth</text>
+<text x="1480.0" y="854" text-anchor="middle" font-size="10" fill="#374151">Prometheus chỉ cần đọc từ mạng nội bộ → bỏ publish port / bind 127.0.0.1</text>
+<text x="1480.0" y="869" text-anchor="middle" font-size="10" fill="#374151">Gateway: gán management.server.port 8090 → target phải là :8090, KHÔNG :8080</text>
+<rect x="30" y="934" width="1700" height="250" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="44" y="956" font-size="14" font-weight="700" fill="#7c3aed">5 · Monitor stack</text>
+<rect x="50" y="966" width="380" height="122" rx="8" fill="#fff7ed" stroke="#d97706" stroke-width="1.6"/>
+<text x="240.0" y="984" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Prometheus v2.54.1  :9090</text>
+<text x="240.0" y="999" text-anchor="middle" font-size="11" fill="#374151">TSDB retention 15d · volume prometheus_data</text>
+<text x="240.0" y="1014" text-anchor="middle" font-size="11" fill="#374151">--web.enable-remote-write-receiver (nhận Alloy)</text>
+<text x="240.0" y="1029" text-anchor="middle" font-size="11" fill="#374151">--enable-feature=exemplar-storage (metric → trace)</text>
+<text x="240.0" y="1044" text-anchor="middle" font-size="11" fill="#374151">--web.enable-lifecycle · scrape_interval 15s</text>
+<rect x="455" y="966" width="380" height="122" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6"/>
+<text x="645.0" y="984" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Loki 3.2.1  :3101→3100</text>
+<text x="645.0" y="999" text-anchor="middle" font-size="11" fill="#374151">tsdb v13 · filesystem · retention 168h (7d)</text>
+<text x="645.0" y="1014" text-anchor="middle" font-size="11" fill="#374151">allow_structured_metadata · compactor retention</text>
+<text x="645.0" y="1029" text-anchor="middle" font-size="11" fill="#374151">labels: container, service, project, stream, level</text>
+<text x="645.0" y="1044" text-anchor="middle" font-size="11" fill="#374151">derivedField trace_id (32 hex) → Tempo</text>
+<rect x="860" y="966" width="380" height="122" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="1050.0" y="984" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Tempo 2.6.1  :3200 (API) · 4317 gRPC · 4318 HTTP</text>
+<text x="1050.0" y="999" text-anchor="middle" font-size="11" fill="#374151">OTLP receiver · local backend · block_retention 48h</text>
+<text x="1050.0" y="1014" text-anchor="middle" font-size="11" fill="#374151">tracesToMetrics → Prometheus · nodeGraph ON</text>
+<text x="1050.0" y="1029" text-anchor="middle" font-size="11" fill="#374151">[ĐỀ XUẤT] metrics_generator: service-graphs + span-metrics</text>
+<text x="1050.0" y="1044" text-anchor="middle" font-size="11" fill="#374151">→ remote_write Prometheus (RED metrics theo span)</text>
+<rect x="1265" y="966" width="465" height="122" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.6"/>
+<text x="1497.5" y="984" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Grafana 11.2.0  :3100→3000 (admin/admin ⚠ đổi)</text>
+<text x="1497.5" y="999" text-anchor="middle" font-size="11" fill="#374151">Datasource provisioned: Prometheus (default) · Loki · Tempo</text>
+<text x="1497.5" y="1014" text-anchor="middle" font-size="11" fill="#374151">Dashboards: spring-boot.json (home) · container-logs.json</text>
+<text x="1497.5" y="1029" text-anchor="middle" font-size="11" fill="#374151">Alerting: rule log-alerts/service-error-rate (30s) · policy group_by service</text>
+<text x="1497.5" y="1044" text-anchor="middle" font-size="11" fill="#374151">contact point error-webhook (URL = REPLACE_ME ⚠)</text>
+<rect x="50" y="1100" width="1180" height="70" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="640.0" y="1118" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] Dashboards bổ sung: Infra (Postgres/Redis/Kafka/MinIO) · Host &amp; Container (node/cAdvisor) · Eureka registry · Debezium CDC lag · RED per-endpoint · SLO/Error budget</text>
+<text x="640.0" y="1133" text-anchor="middle" font-size="10" fill="#374151">[ĐỀ XUẤT] Alert rules metrics-based: up==0 · 5xx rate · p95 latency · JVM heap&gt;85% · HikariCP/R2DBC pool · Kafka lag · Redis mem · disk&lt;15% · container restart · cert/health</text>
+<rect x="30" y="1200" width="1700" height="110" rx="12" fill="#f9fafb" stroke="#6b7280" stroke-width="1.5"/>
+<text x="44" y="1222" font-size="14" font-weight="700" fill="#6b7280">6 · Người dùng / Kênh cảnh báo</text>
+<rect x="60" y="1232" width="300" height="56" rx="8" fill="#ffffff" stroke="#6b7280" stroke-width="1.6"/>
+<text x="210.0" y="1250" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">DevOps / Dev on-call</text>
+<text x="210.0" y="1265" text-anchor="middle" font-size="11" fill="#374151">Grafana UI (Explore, Dashboards)</text>
+<rect x="400" y="1232" width="330" height="56" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="1.6"/>
+<text x="565.0" y="1250" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">Webhook (cần cấu hình thật)</text>
+<text x="565.0" y="1265" text-anchor="middle" font-size="11" fill="#374151">Slack / Telegram / MS Teams / Email</text>
+<rect x="770" y="1232" width="330" height="56" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="935.0" y="1250" text-anchor="middle" font-size="13" fill="#1f2937" font-weight="700">[ĐỀ XUẤT] Alertmanager hoặc Grafana OnCall</text>
+<text x="935.0" y="1265" text-anchor="middle" font-size="11" fill="#374151">routing theo severity, silence, escalation</text>
+<rect x="1140" y="1232" width="560" height="56" rx="8" fill="#ffffff" stroke="#6b7280" stroke-width="1.6"/>
+<text x="1420.0" y="1250" text-anchor="middle" font-size="12" fill="#1f2937" font-weight="700">Debug UI: Alloy :12345 · Prometheus :9090 · Loki :3101 · Tempo :3200</text>
+<text x="1420.0" y="1265" text-anchor="middle" font-size="10" fill="#374151">Eureka dashboard :8761 · Swagger qua gateway /swagger-ui.html</text>
+<polyline points="18,300 18,812 48,812" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#m)"/>
+<text transform="translate(12,560) rotate(-90)" text-anchor="middle" font-size="10.5" fill="#d97706">pull /actuator/prometheus (Alloy, 15s)</text>
+<polyline points="470,648 470,700" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#l)"/>
+<rect x="572.8" y="673" width="254.39999999999998" height="15" fill="#fff" fill-opacity="0.92"/>
+<text x="700" y="684" text-anchor="middle" font-size="10.5" fill="#2563eb">stdout json-file ← docker.sock (app + infra)</text>
+<polyline points="760,770 760,784" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#m)"/>
+<polyline points="472,770 472,778 1060,778 1060,784" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#l)"/>
+<polyline points="767,904 767,934 240,934 240,966" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#m)"/>
+<rect x="343.2" y="919" width="153.6" height="15" fill="#fff" fill-opacity="0.92"/>
+<text x="420" y="930" text-anchor="middle" font-size="10.5" fill="#d97706">remote_write /api/v1/write</text>
+<polyline points="1060,904 1060,926 645,926 645,966" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#l)"/>
+<rect x="814.4" y="911" width="131.2" height="15" fill="#fff" fill-opacity="0.92"/>
+<text x="880" y="922" text-anchor="middle" font-size="10.5" fill="#2563eb">push /loki/api/v1/push</text>
+<polyline points="1736,300 1744,300 1744,925 1100,925 1100,966" fill="none" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#t)"/>
+<rect x="1250.4" y="909" width="299.2" height="15" fill="#fff" fill-opacity="0.92"/>
+<text x="1400" y="920" text-anchor="middle" font-size="10.5" fill="#7c3aed">OTLP HTTP :4318 /v1/traces (trực tiếp, bypass Alloy)</text>
+<polyline points="1480,690 1480,440" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#m)"/>
+<rect x="1414.4" y="459" width="131.2" height="15" fill="#fff" fill-opacity="0.92"/>
+<text x="1480" y="470" text-anchor="middle" font-size="10.5" fill="#d97706">pull trực tiếp (trùng)</text>
+<polyline points="1497,1088 1497,1190 565,1190 565,1232" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#r)"/>
+<rect x="926.0" y="1175" width="148.0" height="15" fill="#fff" fill-opacity="0.92"/>
+<text x="1000" y="1186" text-anchor="middle" font-size="10.5" fill="#dc2626">alert notification (POST)</text>
+<polyline points="430,1010 455,1010" fill="none" stroke="#0891b2" stroke-width="1.8" marker-end="url(#a)"/>
+<polyline points="835,1010 860,1010" fill="none" stroke="#0891b2" stroke-width="1.8" marker-end="url(#a)"/>
+<polyline points="1240,1010 1265,1010" fill="none" stroke="#0891b2" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="645" y="1060" text-anchor="middle" font-size="10.5" fill="#6b7280"></text>
+<text x="30" y="1322" font-size="11" fill="#9ca3af">Grafana đọc 3 datasource qua mạng nội bộ; liên kết chéo: exemplar (Prometheus→Tempo) · derivedField trace_id (Loki→Tempo) · tracesToMetrics (Tempo→Prometheus).</text>
+</svg>
