@@ -1,0 +1,52 @@
+BẢNG GIÁM SÁT SERVICE — Takypok Workflow
+(Nguồn: build.gradle, application.yaml, docker-compose của từng service)
+
+=== 1. SERVICE ỨNG DỤNG ===
+
+| Service           | Cổng                    | Phụ thuộc                                                   | Nếu chết thì...                                                                                                                                                                                              |
+|-------------------|-------------------------|-------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| discovery-service | 8761                    | Không có                                                    | Service đã cache registry vẫn chạy được một lúc. Service mới/restart không đăng ký được. Gateway không phân giải lb:// khi cache hết hạn. Hỏng dần, không sập ngay.                                           |
+| gateway-service   | 8080 (actuator 8090)    | Eureka, Redis, auth-service (issuer-uri)                    | Toàn bộ API và WebSocket phía client không vào được. Redis chết thì FAIL_OPEN (SINGLE_TAB_REDIS_ON_FAILURE) nên vẫn cho qua, nhưng mất kiểm soát đăng nhập một tab.                                           |
+| auth-service      | 9000                    | Postgres (JDBC), Redis, OpenLDAP, Eureka, Kafka (producer)  | Không ai đăng nhập/lấy được token mới. Token còn hạn vẫn dùng nếu resource server đã cache JWKS. Mất LDAP: chỉ đăng nhập LDAP lỗi. Mất Kafka: event account/unit/department không đến employee-service.      |
+| workflow-service  | 8085                    | Postgres (R2DBC + Debezium), Redis, Eureka, auth (JWT)      | Không tạo/xử lý được workflow. Debezium dừng thì audit log và SLA tracker ngừng cập nhật. Cần giữ /data/offset.dat; mất file này có thể đọc lại hoặc bỏ sót sự kiện.                                         |
+| media-service     | 8082                    | Postgres (R2DBC), Eureka, auth (JWT), đĩa local ./uploads   | Không upload/tải file, ảnh, video được. Đĩa đầy hoặc mất volume thì mất file.                                                                                                                               |
+| chat-service      | 8083                    | Postgres, Redis, Eureka, Qdrant :6334, Ollama :11434        | Chat và WebSocket lỗi. Qdrant/Ollama chết thì chỉ tính năng AI/RAG lỗi, chat thường vẫn chạy. Hai thứ này chưa có trong compose, mặc định trỏ localhost.                                                      |
+| employee-service  | 8086                    | Postgres, Kafka (producer + consumer), Eureka, auth (JWT)   | Không xem/sửa được nhân sự. Kafka chết thì không nhận được account/unit/department event, dữ liệu lệch với auth-service. Event không gửi đi được thì mất thông báo và device token.                          |
+
+=== 2. HẠ TẦNG ===
+
+| Thành phần      | Cổng host     | Phụ thuộc | Nếu chết thì...                                                                                        |
+|-----------------|---------------|-----------|--------------------------------------------------------------------------------------------------------|
+| Postgres        | 5433          | Không có  | Auth, workflow, media, chat, employee đều lỗi. Điểm chết đơn lớn nhất.                                 |
+| Redis           | 6379          | Không có  | Gateway (fail-open), session auth, cache workflow/chat bị ảnh hưởng. Đăng nhập và session lỗi.         |
+| Kafka           | 29092         | Không có  | Đồng bộ auth -> employee dừng, producer lỗi hoặc backlog. Employee-service đứng consumer.              |
+| OpenLDAP        | 389           | Không có  | Chỉ đăng nhập qua LDAP lỗi. Phần còn lại vẫn chạy.                                                     |
+| MinIO           | 9100 / 9101   | Không có  | Không service nào đang dùng. Chết cũng không ảnh hưởng hiện tại.                                       |
+| Qdrant / Ollama | 6334 / 11434  | Không có  | Chỉ ảnh hưởng tính năng AI của chat-service.                                                           |
+
+=== 3. STACK MONITORING ===
+
+| Thành phần      | Cổng               | Phụ thuộc                                    | Nếu chết thì...                                                                                                          |
+|-----------------|--------------------|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| Prometheus      | 9090               | Alloy (remote_write) hoặc scrape trực tiếp   | Mất metrics và alert metrics. App vẫn chạy bình thường.                                                                  |
+| Loki            | 3101               | Alloy                                        | Mất log mới. Alert service-error-rate (alert duy nhất hiện có) dựa trên log nên cũng tắt theo.                           |
+| Tempo           | 3200 / 4317 / 4318 | App gửi OTLP trực tiếp                       | Mất trace. Gửi lỗi thì chỉ log cảnh báo.                                                                                 |
+| Grafana         | 3100               | Prometheus, Loki, Tempo                      | Mất dashboard và alert rule (alert chạy trong Grafana). Không ai được báo gì cả.                                         |
+| Alloy (mỗi VPS) | 12345              | Prometheus, Loki                             | VPS đó mất metrics và log.                                                                                               |
+
+=== 4. LƯU Ý KHÁC VỚI monitoring-architecture.md ===
+
+1. MinIO không được dùng: media-service lưu thẳng ra ./uploads (images/raw/hls/files),
+   không có code hay dependency MinIO. Cần giám sát dung lượng đĩa và volume uploads.
+2. auth-service cũng là producer Kafka (UserServiceImpl dùng KafkaTemplate<String, AccountEvent>),
+   không chỉ employee-service. Chưa thấy spring-kafka trong build.gradle của auth-service/core-v1,
+   cần kiểm tra lại nó được kéo vào qua đường nào.
+
+=== 5. THỨ TỰ ƯU TIÊN GIÁM SÁT ===
+
+1. Postgres (mọi service phụ thuộc).
+2. up{job=~".*-service"} == 0 cho 7 service (gateway scrape ở :8090).
+3. Kafka consumer lag của employee-service (account.events, unit.events, department.events).
+4. Debezium offset và độ trễ của workflow-service.
+5. Dung lượng đĩa uploads.
+6. Sức khỏe của chính Grafana và Loki (nếu chết thì alert cũng không gửi được).
