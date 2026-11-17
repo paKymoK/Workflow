@@ -1,6 +1,6 @@
 # Takypok Workflow — Kiến trúc Monitoring & Observability
 
-Sơ đồ chi tiết: [`monitoring-architecture.svg`](monitoring-architecture.svg) / [`monitoring-architecture.png`](monitoring-architecture.png).
+Sơ đồ (chỉ thành phần monitoring cơ bản, đúng thực tế triển khai nhiều VPS): [`monitoring-architecture.svg`](monitoring-architecture.svg) / [`monitoring-architecture.png`](monitoring-architecture.png).
 Nguồn: `infrastructure/{alloy,monitor,...}`, `docker-compose.yaml`, `core-v1/.../management.yml`, `application.yaml` của từng service.
 
 ![architecture](monitoring-architecture.png)
