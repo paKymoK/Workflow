@@ -1,0 +1,123 @@
+DOCKER: IMAGE vs CONTAINER, LAYER & CACHE, MULTI-STAGE BUILD, .dockerignore
+(Ví dụ minh họa dùng chính file auth-service/Dockerfile trong repo Workflow)
+
+Nội dung Dockerfile ví dụ (auth-service/Dockerfile):
+--------------------------------------------------
+FROM gradle:8.14.3-jdk21-alpine AS builder
+WORKDIR /app
+
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+
+COPY infrastructure infrastructure
+COPY core-v1 core-v1
+COPY auth-service auth-service
+
+RUN gradle :auth-service:bootJar -x test --no-daemon
+
+FROM amazoncorretto:21-alpine
+WORKDIR /app
+COPY --from=builder /app/auth-service/build/libs/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
+--------------------------------------------------
+
+1. IMAGE vs CONTAINER
+----------------------
+- Image: bản đóng gói tĩnh, chỉ-đọc, gồm filesystem + metadata (ENTRYPOINT, ENV,
+  CMD...). Nó là "khuôn" - không chạy gì cả, chỉ nằm trên disk hoặc registry.
+- Container: một instance đang chạy của image, cộng thêm một layer ghi-được
+  (writable layer) nằm trên cùng, cộng thêm process, network namespace,
+  filesystem riêng.
+
+Ví dụ:
+  docker build -t auth-service .   -> tạo IMAGE
+  docker run auth-service          -> tạo 1 CONTAINER từ image đó
+  docker run auth-service          -> tạo thêm 1 CONTAINER KHÁC, cùng image
+
+=> 1 image có thể sinh ra N container độc lập (giống class vs object). Container
+ghi dữ liệu runtime (log, file tạm) vào writable layer riêng của nó - xóa
+container là mất layer đó, image gốc không đổi.
+
+2. LAYER VÀ CACHE
+------------------
+Mỗi instruction (FROM, COPY, RUN, ...) trong Dockerfile tạo ra một layer mới,
+xếp chồng lên layer trước (giống git commit theo diff). Layer là immutable và
+được cache theo hash của (layer cha + instruction + nội dung file liên quan).
+
+Vấn đề cache trong file ví dụ: COPY auth-service auth-service nằm TRƯỚC
+RUN gradle ... Mỗi lần sửa 1 dòng code trong auth-service, Docker thấy nội
+dung file COPY đổi -> cache layer đó miss -> layer RUN gradle ... cũng miss
+theo (vì phụ thuộc layer trước) -> build lại toàn bộ, download lại dependency
+Gradle nếu cache Gradle không được mount riêng.
+
+Cách tối ưu kinh điển: tách phần "chỉ đổi khi đổi dependency" ra copy trước,
+resolve dependency trước, rồi mới COPY source code:
+
+  COPY build.gradle settings.gradle gradle/ ./
+  RUN gradle dependencies --no-daemon   # cache layer này nếu deps không đổi
+  COPY infrastructure infrastructure
+  COPY core-v1 core-v1
+  COPY auth-service auth-service
+  RUN gradle :auth-service:bootJar -x test --no-daemon
+
+=> Sửa code Java không làm invalidate layer download dependency, build nhanh
+hơn nhiều.
+
+3. MULTI-STAGE BUILD
+---------------------
+File ví dụ đã dùng kỹ thuật này - 2 FROM:
+
+  FROM gradle:8.14.3-jdk21-alpine AS builder   # stage 1: đủ JDK + Gradle để compile
+  ...
+  FROM amazoncorretto:21-alpine                # stage 2: image runtime, nhẹ hơn
+  WORKDIR /app
+  COPY --from=builder /app/auth-service/build/libs/*.jar app.jar
+  ENTRYPOINT ["java", "-jar", "app.jar"]
+
+- Stage "builder": image to (có Gradle, JDK đầy đủ, cache .gradle, source
+  code...) - chỉ dùng để compile ra file .jar.
+- Stage cuối (chính là stage được build ra image thật): chỉ copy đúng 1 file
+  .jar từ stage builder qua, dùng base image amazoncorretto:21-alpine nhẹ hơn
+  (chỉ có JRE, không có Gradle/source).
+- Mọi thứ ở stage builder (source code, Gradle cache, JDK compiler...) bị loại
+  bỏ hoàn toàn khỏi image cuối - image production nhỏ gọn, không lộ source
+  code, giảm attack surface.
+
+=> Nên dùng multi-stage cho tất cả service Spring Boot build bằng Gradle/Maven
+thay vì build 1 stage duy nhất (sẽ kéo theo cả JDK+Gradle+source vào image
+chạy production).
+
+4. .dockerignore
+-----------------
+Repo Workflow hiện KHÔNG có file .dockerignore nào (đã kiểm tra ở root và
+trong từng service). Đây là điểm nên bổ sung, vì:
+
+- Build context của auth-service/Dockerfile là root của cả monorepo (vì nó
+  COPY infrastructure, COPY core-v1... - các thư mục nằm ở root, không riêng
+  trong auth-service/). Khi chạy "docker build ." từ root, TOÀN BỘ repo bị
+  đóng gói gửi lên Docker daemon làm build context, bao gồm:
+    - .git/ (~39MB)
+    - .gradle/, build/, */build/ của mọi service (artifact biên dịch cũ)
+    - frontend/node_modules/
+    - uploads/, workflow-service-boot.log, offset.dat...
+- Không cái nào trong số này cần thiết để build auth-service, nhưng vẫn được
+  gửi lên daemon -> build context lớn, chậm, tốn I/O, và vì COPY scope rộng
+  nên nguy cơ vô tình copy nhầm file nhạy cảm (.env, log chứa secret...) vào
+  image.
+
+.dockerignore hoạt động giống .gitignore - loại các path khỏi build context
+TRƯỚC KHI Docker daemon nhận, nên các instruction COPY/ADD không bao giờ thấy
+chúng (khác với COPY rồi RUN rm - cách đó vẫn tốn 1 layer chứa file đã xóa).
+
+Gợi ý .dockerignore đặt ở root cho monorepo này:
+
+  .git
+  .gradle
+  .idea
+  **/build
+  frontend/node_modules
+  uploads
+  *.log
+  offset.dat
+  local.properties

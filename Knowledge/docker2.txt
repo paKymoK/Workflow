@@ -1,0 +1,124 @@
+DOCKER: VOLUME, NETWORK DẠNG BRIDGE, DNS NỘI BỘ THEO TÊN SERVICE
+(Ví dụ minh họa dùng các file docker-compose.yml thật trong repo Workflow)
+
+1. VOLUME
+---------
+Volume là nơi lưu dữ liệu sống ngoài vòng đời container - container bị xóa
+(docker rm) thì volume vẫn còn, dữ liệu không mất. Có 2 kiểu chính, cả hai đều
+có trong repo:
+
+a) Named volume - Docker tự quản lý, lưu trong /var/lib/docker/volumes/...
+trên host:
+
+  # infrastructure/postgres/docker-compose.yml
+  volumes:
+    - postgres-data:/var/lib/postgresql/data
+  ...
+  volumes:
+    postgres-data:
+      name: pg_data
+      driver: local
+
+postgres-data là tên volume trong file compose, còn "name: pg_data" là tên
+thật Docker tạo trên host (docker volume ls sẽ thấy pg_data). Dữ liệu
+Postgres (toàn bộ 5 schema) nằm ở đây - docker compose down (không -v) không
+đụng tới volume này, data sống sót qua restart/rebuild container.
+
+Tương tự workflow-service/docker-compose.yml:
+
+  volumes:
+    - workflow-data:/data
+  ...
+  volumes:
+    workflow-data:
+      name: offset_debezium
+      driver: local
+
+Dùng để lưu DEBEZIUM_OFFSET_PATH: /data/offset.dat - offset CDC của Debezium
+phải sống sót qua restart, nếu không service sẽ đọc lại toàn bộ Kafka log từ
+đầu.
+
+b) Bind mount - map trực tiếp 1 path trên host vào container, Docker không
+quản lý nội dung:
+
+  - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+  - ./init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+
+Dùng cho config/script mà bạn muốn sửa trực tiếp trên host và thấy hiệu lực
+ngay (không cần rebuild image) - :ro (read-only) đảm bảo container không ghi
+ngược lại host.
+
+=> Quy tắc chọn: data cần Docker quản lý + persist -> named volume.
+Config/script bạn tự control trên host -> bind mount.
+
+2. NETWORK DẠNG BRIDGE
+-----------------------
+Theo mặc định mỗi container nằm trên 1 bridge network riêng do Docker tạo
+(docker0) - đó là default bridge, các container trên đó chỉ thấy nhau qua IP,
+không có DNS tên service.
+
+Repo dùng user-defined bridge network tên takypok_default, được khai báo ở
+đúng 1 nơi là "người tạo":
+
+  # infrastructure/postgres/docker-compose.yml - người tạo network thật
+  networks:
+    takypok_default:
+      name: takypok_default
+
+còn mọi service khác (auth-service, gateway-service, workflow-service,
+media-service...) chỉ attach vào network đã tồn tại:
+
+  networks:
+    takypok_default:
+      external: true
+
+Comment trong file postgres/docker-compose.yml giải thích rất rõ lý do:
+"Named explicitly (not external) so whichever of the independent infra
+stacks (postgres/kafka/redis) happens to start first creates it; the others
+just attach."
+
+=> Vì mỗi infra stack (postgres, kafka, redis...) được start độc lập (project
+riêng), không ai chắc cái nào lên trước, nên bất kỳ stack nào chạy đầu tiên
+sẽ tạo network, các stack sau chỉ cần external: true để nối vào network đã
+có sẵn - tránh lỗi "network không tồn tại" khi thứ tự start không cố định.
+
+Về port: ví dụ gateway-service có ports: ["8080:8080", "8090:8090"] - đây là
+publish port ra host (map cổng container -> cổng máy host), hoàn toàn khác
+với network nội bộ. Không có dòng ports thì container vẫn gọi được container
+khác qua network nội bộ, chỉ là máy host (hoặc bên ngoài) không truy cập
+được trực tiếp cổng đó.
+
+3. DNS NỘI BỘ THEO TÊN SERVICE
+-------------------------------
+Đây là tính năng chỉ có trên user-defined bridge network (không có trên
+default bridge): Docker chạy một embedded DNS server (luôn ở địa chỉ
+127.0.0.11 trong mỗi container) tự động resolve tên container/service sang
+IP nội bộ của nó trên network đó.
+
+Thấy rõ nhất qua các biến môi trường dùng tên service thay vì IP, trải khắp
+các file compose:
+
+  AUTH_ISSUER_URI: http://auth-service:9000
+  DB_HOST: postgres
+  SPRING_DATA_REDIS_HOST: redis
+  EUREKA_URI: http://discovery-service:8761/eureka
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  MANAGEMENT_OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+
+auth-service, postgres, redis, discovery-service, kafka, tempo ở đây không
+phải hostname thật, mà là container_name (hoặc service name) - vì tất cả
+container cùng nằm trên takypok_default, Docker DNS tự ánh xạ các tên này
+sang IP nội bộ hiện tại của container đó. Nếu container restart và nhận IP
+khác, tên vẫn resolve đúng (khác hẳn việc hardcode IP, sẽ gãy ngay khi
+container đổi IP).
+
+Riêng LDAP lại dùng cách khác:
+
+  LDAP_URL: ldap://host.docker.internal:389
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+host.docker.internal không phải DNS container-tên-service, mà là tên đặc
+biệt Docker cấp để container gọi ngược về máy host (vì LDAP chạy ngoài
+Docker, trên host) - extra_hosts ở đây cần thiết trên Linux (Docker Desktop
+Mac/Windows có sẵn, không cần dòng này).

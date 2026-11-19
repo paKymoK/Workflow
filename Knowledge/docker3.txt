@@ -1,0 +1,166 @@
+DOCKER: HEALTHCHECK, DEPENDS_ON VỚI CONDITION: SERVICE_HEALTHY,
+BIẾN MÔI TRƯỜNG, GIỚI HẠN CPU VÀ RAM
+(Ví dụ minh họa dùng các file docker-compose.yml thật trong repo Workflow)
+
+1. HEALTHCHECK
+---------------
+healthcheck định nghĩa cách Docker tự kiểm tra xem process bên trong container
+có thực sự "sống" (không chỉ là process chưa chết, mà app đã sẵn sàng nhận
+request) hay không. Container có thể đang ở trạng thái starting -> healthy ->
+unhealthy.
+
+Ví dụ discovery-service/docker-compose.yml:
+
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1"]
+    interval: 15s
+    timeout: 5s
+    retries: 5
+
+- test: lệnh chạy từ trong container để kiểm tra. Ở đây dùng wget gọi vào
+  endpoint actuator Spring Boot - nếu HTTP call fail, "|| exit 1" trả exit
+  code khác 0 -> Docker coi là unhealthy.
+- interval: 15s: cứ 15 giây chạy lại test 1 lần.
+- timeout: 5s: mỗi lần test tối đa 5s, quá thì tính là fail.
+- retries: 5: phải fail liên tiếp 5 lần mới chuyển trạng thái sang unhealthy
+  (không phải fail 1 lần là chết ngay).
+- (file này không có start_period - nếu service khởi động chậm, nên thêm
+  start_period: 30s để các lần fail trong lúc app đang boot không bị tính
+  vào retries).
+
+Mỗi loại service dùng command test khác nhau phù hợp với bản chất của nó:
+
+  # infrastructure/postgres - dùng tool có sẵn của Postgres
+  test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+
+  # infrastructure/minio - dùng CLI mc để check cluster ready
+  test: ["CMD", "mc", "ready", "local"]
+
+  # infrastructure/kafka - gọi API broker thật để xác nhận broker trả lời
+  test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"]
+
+=> Không có công thức chung - mỗi hạ tầng có cách "tự xác nhận còn sống"
+riêng, bạn chọn công cụ sẵn có bên trong image đó.
+
+Lưu ý: trong sơ đồ monitoring (monitoring-architecture.svg) có ghi chú
+"redis (không healthcheck)" - đúng, infrastructure/redis/docker-compose.yml
+không có khối healthcheck nào, nên Docker không biết Redis "healthy" hay
+chưa (service khác không thể depends_on: redis: condition: service_healthy).
+
+2. DEPENDS_ON VỚI CONDITION: SERVICE_HEALTHY
+----------------------------------------------
+depends_on thường (không có condition) chỉ đảm bảo thứ tự start container,
+không đảm bảo app bên trong đã sẵn sàng. Thêm condition: service_healthy thì
+Compose sẽ chờ đến khi container phụ thuộc chuyển trạng thái healthy (dựa
+trên healthcheck của nó) rồi mới start container hiện tại.
+
+Pattern lặp lại ở hầu hết service trong repo - tất cả đều chờ
+discovery-service (Eureka) healthy trước khi start:
+
+  # auth-service, gateway-service, media-service, workflow-service,
+  # employee-service, chat-service - tất cả giống nhau:
+  depends_on:
+    discovery-service:
+      condition: service_healthy
+
+Lý do: các service này đăng ký vào Eureka ngay khi khởi động (EUREKA_URI),
+nếu discovery-service chưa thật sự nhận request (chỉ mới "container đã lên"
+nhưng Spring Boot app chưa load xong) thì lần đăng ký đầu tiên sẽ fail.
+
+Một ví dụ khác, infrastructure/minio/docker-compose.yml:
+
+  minio-init:
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "mc alias set local http://minio:9000 minioadmin minioadmin && ..."
+
+minio-init là container chạy 1 lần để tạo bucket - nó phải chờ MinIO healthy
+thật (API /minio/health trả OK) thì mới chạy "mc alias set...", nếu không sẽ
+connect refused vì MinIO server chưa kịp bind port.
+
+=> Lưu ý quan trọng: condition: service_healthy CHỈ hoạt động nếu service đó
+có khai báo healthcheck. Vì vậy postgres, kafka, minio, discovery-service
+đều phải có healthcheck để các service khác dùng được điều kiện này - còn
+redis (không có healthcheck) thì không service nào trong repo đang chờ nó
+theo kiểu service_healthy.
+
+3. BIẾN MÔI TRƯỜNG (ENVIRONMENT)
+----------------------------------
+Repo dùng pattern ${VAR:-default} lặp lại rất nhiều - cú pháp của
+shell/Compose interpolation, không phải của Spring:
+
+  environment:
+    AUTH_ISSUER_URI: ${AUTH_ISSUER_URI:-http://auth-service:9000}
+    DB_HOST: ${DB_HOST:-postgres}
+    KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+
+Ý nghĩa: ${VAR:-default} -> nếu biến VAR tồn tại trong môi trường chạy
+"docker compose" (biến shell, hoặc file .env cùng cấp docker-compose.yaml)
+thì dùng giá trị đó; nếu không có thì dùng default sau dấu :-.
+
+=> Lợi ích thấy rõ trong repo: cùng 1 file compose chạy được cho cả dev local
+(mặc định auth-service:9000, kafka:9092 - DNS tên service nội bộ) và
+production/VPS (chỉ cần set AUTH_ISSUER_URI=https://...,
+KAFKA_BOOTSTRAP_SERVERS=... trong .env hoặc biến môi trường host, không cần
+sửa file compose).
+
+Phân biệt 2 tầng biến môi trường dễ nhầm:
+- Build-time (ARG): không thấy dùng trong Dockerfile của repo - nếu cần build
+  khác nhau theo biến, dùng ARG trong Dockerfile + --build-arg.
+- Run-time (ENV / "environment:" trong compose): đây là cái repo đang dùng -
+  set vào container khi nó chạy, Spring Boot đọc qua ${AUTH_ISSUER_URI} trong
+  application.yml hoặc qua System.getenv().
+
+4. GIỚI HẠN CPU VÀ RAM
+------------------------
+Compose giới hạn resource qua khối deploy.resources.limits (chuẩn Compose
+Spec - "docker compose" V2 áp dụng được cả khi KHÔNG chạy Swarm, không như
+"docker-compose" V1 cũ bỏ qua khối này ngoài swarm mode).
+
+Ví dụ duy nhất trong repo set limit, ở infrastructure/postgres/docker-compose.yml:
+
+  deploy:
+    resources:
+      limits:
+        # TODO(prod split): this 2048M is for LOCAL dev only, where one container hosts all 5
+        # service databases. Once each service gets its own dedicated instance (plan: 4 cores /
+        # 8GB each), raise this to match - e.g. memory: 8192M - and update postgresql.conf's
+        # shared_buffers/effective_cache_size together with it...
+        memory: 2048M
+
+- memory: 2048M: container Postgres không được vượt quá 2GB RAM - nếu vượt,
+  kernel OOM-kill process bên trong container (không phải crash cả máy host).
+- Comment TODO rất quan trọng: 2048M hiện tại là cho local dev nơi 1 Postgres
+  container host chung 5 schema của 5 service. Khi tách mỗi service 1
+  Postgres riêng ở production, phải ĐỒNG THỜI nâng memory VÀ
+  shared_buffers/effective_cache_size trong postgresql.conf - vì Postgres tự
+  tính toán cache dựa trên các config đó, nếu chỉ nâng memory limit của
+  container mà không nâng config Postgres thì phí RAM (Postgres không dùng
+  tới), còn nếu chỉ nâng config mà không nâng container limit thì Postgres sẽ
+  bị OOM-kill ngay khi cần nhiều buffer hơn giới hạn container.
+
+Giới hạn CPU dùng cú pháp tương tự nhưng HIỆN CHƯA CÓ ở đâu trong repo (đã
+grep toàn bộ, không service nào set cpus:):
+
+  deploy:
+    resources:
+      limits:
+        cpus: "1.5"      # tối đa 1.5 core
+        memory: 2048M
+      reservations:      # (tuỳ chọn) đảm bảo tối thiểu, không phải giới hạn tối đa
+        cpus: "0.5"
+        memory: 512M
+
+- limits: trần tối đa được dùng (container bị throttle nếu vượt, không bị
+  kill như vượt memory).
+- reservations: mức tối thiểu Docker cố gắng đảm bảo khi scheduler phân bổ
+  (chủ yếu có ý nghĩa trong Swarm; ở single-host thường chỉ dùng limits là
+  đủ).
+
+=> Vì tất cả service Spring Boot (gateway, auth, workflow...) đều chưa set
+cpus/memory limit nào, nếu 1 service bị leak hoặc traffic spike, nó có thể
+chiếm hết CPU/RAM của cả máy host, ảnh hưởng các service khác cùng chạy chung
+- đây là điểm có thể bổ sung thêm deploy.resources.limits tương tự Postgres
+cho từng service production.
